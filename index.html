@@ -472,6 +472,58 @@ body {
   padding: 13px 32px; border-radius: 10px; border: none; cursor: pointer;
 }
 
+/* ── SUPPLY SIDE SECTION ── */
+.supply-section {
+  padding: 2.5rem 1.5rem;
+  max-width: 680px; margin: 0 auto; width: 100%;
+  border-top: 0.5px solid var(--gray-100);
+}
+.supply-band {
+  background: var(--gray-50);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 16px;
+  padding: 2rem;
+}
+.supply-eyebrow {
+  display: inline-block;
+  font-size: 12px; font-weight: 500;
+  background: var(--amber-light); color: var(--amber-dark);
+  padding: 4px 14px; border-radius: 999px;
+  margin-bottom: 1rem;
+}
+.supply-headline {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 500;
+  color: var(--gray-900);
+  line-height: 1.3; margin-bottom: 0.75rem;
+}
+.supply-body { font-size: 14px; color: var(--gray-600); line-height: 1.6; margin-bottom: 1.25rem; }
+.supply-steps { margin-bottom: 1.25rem; }
+.supply-step {
+  display: flex; gap: 12px; align-items: flex-start;
+  margin-bottom: 0.85rem;
+}
+.supply-step:last-child { margin-bottom: 0; }
+.supply-step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--amber-light); color: var(--amber-dark);
+  font-size: 12px; font-weight: 500;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+}
+.supply-step-text { font-size: 13px; color: var(--gray-600); line-height: 1.5; }
+.supply-step-text strong { color: var(--gray-900); font-weight: 500; }
+.supply-cta {
+  font-size: 13px; font-weight: 500; font-family: var(--font-body);
+  background: var(--gray-900); color: var(--white);
+  padding: 10px 22px; border-radius: 8px; border: none; cursor: pointer;
+}
+.hero-supply-cta {
+  font-size: 14px; font-weight: 500; font-family: var(--font-body);
+  background: var(--white); color: var(--gray-900);
+  border: 1px solid var(--gray-200);
+  padding: 11px 22px; border-radius: 10px; cursor: pointer;
+}
+
 /* ─────────────────────────────────────────
    SCREEN 2: SIGN UP
 ───────────────────────────────────────── */
@@ -593,7 +645,7 @@ body {
     <p class="hero-sub">Track every onesie, plan every size, and pass along what your little one has outgrown — to a family who needs it most.</p>
     <div class="hero-btns">
       <button class="hero-cta" onclick="go('screen-signup')">Get started free</button>
-      <button class="hero-secondary" onclick="document.querySelector('.mission-section').scrollIntoView({behavior:'smooth'})">See how it works</button>
+      <button class="hero-supply-cta" onclick="document.querySelector('.supply-section').scrollIntoView({behavior:'smooth'})">Have clothes to pass on?</button>
     </div>
   </div>
 
@@ -625,22 +677,9 @@ body {
     </div>
   </div>
 
-  <div class="mission-section">
-    <div class="mission-band">
-      <div class="mission-headline">Every baby deserves a full wardrobe.</div>
-      <p class="mission-body">Babies outgrow clothes in weeks. Thousands of families nearby need exactly what's sitting in your closet. Littleloop makes it easy to pass it on — free, to families who need it most.</p>
-      <button class="mission-cta" onclick="go('screen-signup')">Join the community</button>
-      <div class="stat-row">
-        <div><div class="stat-num">0–24mo</div><div class="stat-label">Sizes covered</div></div>
-        <div><div class="stat-num">Free</div><div class="stat-label">Always, for all families</div></div>
-        <div><div class="stat-num">Local</div><div class="stat-label">Matched by zip code</div></div>
-      </div>
-    </div>
-  </div>
-
   <div class="how-section">
     <h2 class="features-title" style="margin-bottom:6px;">Simple from day one</h2>
-    <p class="features-sub" style="margin-bottom:1.5rem;">Three steps to an organized wardrobe and a connected community.</p>
+    <p class="features-sub" style="margin-bottom:1.5rem;">For parents building and managing a wardrobe.</p>
     <div class="how-step">
       <div class="how-num">1</div>
       <div><div class="how-text-title">Add your baby and your clothes</div><div class="how-text-body">Set up in minutes. Log what you have, or start planning what you'll need.</div></div>
@@ -651,13 +690,51 @@ body {
     </div>
     <div class="how-step">
       <div class="how-num">3</div>
-      <div><div class="how-text-title">Pass it on when they outgrow it</div><div class="how-text-body">One tap to list outgrown clothes. Give directly to families who need it nearby.</div></div>
+      <div><div class="how-text-title">Find what you need nearby</div><div class="how-text-body">When you have a gap, browse the exchange. Families nearby are passing on exactly what you need.</div></div>
+    </div>
+  </div>
+
+  <!-- SUPPLY SIDE -->
+  <div class="supply-section">
+    <div class="supply-band">
+      <div class="supply-eyebrow">Have outgrown clothes?</div>
+      <h2 class="supply-headline">Your 0–3M pile has a<br>family nearby waiting for it.</h2>
+      <p class="supply-body">Babies grow fast. The clothes sitting in your closet are exactly what another family needs right now. Passing them on takes one tap — no selling, no shipping, no charity drop-off.</p>
+      <div class="supply-steps">
+        <div class="supply-step">
+          <div class="supply-step-num">1</div>
+          <div class="supply-step-text"><strong>List what you have.</strong> A few taps — size, category, condition. Done.</div>
+        </div>
+        <div class="supply-step">
+          <div class="supply-step-num">2</div>
+          <div class="supply-step-text"><strong>A family nearby claims it.</strong> We match by zip code. They reach out to arrange pickup.</div>
+        </div>
+        <div class="supply-step">
+          <div class="supply-step-num">3</div>
+          <div class="supply-step-text"><strong>It goes to someone who needs it.</strong> Free. Direct. Personal.</div>
+        </div>
+      </div>
+      <button class="supply-cta" onclick="go('screen-signup')">Pass on your outgrown clothes</button>
+    </div>
+  </div>
+
+  <!-- MISSION (below both journeys) -->
+  <div class="mission-section">
+    <div class="mission-band">
+      <div class="mission-headline">Every baby deserves a full wardrobe.</div>
+      <p class="mission-body">Babies outgrow clothes in weeks. Thousands of families nearby need exactly what's sitting in your closet. Littleloop connects them — free, local, and direct.</p>
+      <button class="mission-cta" onclick="go('screen-signup')">Join the community</button>
+      <div class="stat-row">
+        <div><div class="stat-num">0–24mo</div><div class="stat-label">Sizes covered</div></div>
+        <div><div class="stat-num">Free</div><div class="stat-label">Always, for all families</div></div>
+        <div><div class="stat-num">Local</div><div class="stat-label">Matched by zip code</div></div>
+      </div>
     </div>
   </div>
 
   <div class="final-cta-section">
-    <div class="final-headline">Ready to get organized?</div>
-    <p class="final-sub">Free for every family. Always.</p>
+    <div class="final-headline">Ready to get started?</div>
+    <p class="final-sub">Organize your wardrobe, find what you need, or pass on what you don't. Free for every family. Always.</p>
     <button class="final-cta-btn" onclick="go('screen-signup')">Create your account</button>
   </div>
 </div>
@@ -955,6 +1032,15 @@ body {
             <button class="qty-btn" onclick="chQty(1)">+</button>
             <span class="qty-label">items of this type and size</span>
           </div>
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+              <span style="font-size:11px;color:var(--gray-400);">Progress toward recommended</span>
+              <span style="font-size:11px;font-weight:500;color:var(--gray-600);" id="add-rec-label">1 / 6 recommended</span>
+            </div>
+            <div style="background:var(--gray-100);border-radius:999px;height:6px;overflow:hidden;">
+              <div id="add-rec-bar" style="height:6px;border-radius:999px;background:var(--teal);width:16%;transition:width 0.2s;"></div>
+            </div>
+          </div>
           <div class="divider"></div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <div class="section-label" style="margin:0;">Optional details</div>
@@ -1021,27 +1107,28 @@ body {
             <div class="size-bar-row">
               <div class="size-bar-label">0–3M</div>
               <div class="size-bar-track"><div class="size-bar-fill" style="width:85%;background:var(--teal);"></div></div>
-              <div class="size-bar-count" style="color:var(--teal-dark);">11</div>
+              <div class="size-bar-count" style="color:var(--teal-dark);">11/13</div>
             </div>
             <div class="size-bar-row">
               <div class="size-bar-label" style="color:var(--teal);font-weight:600;">3–6M</div>
               <div class="size-bar-track"><div class="size-bar-fill" style="width:60%;background:var(--teal);"></div></div>
-              <div class="size-bar-count" style="color:var(--teal-dark);">8</div>
+              <div class="size-bar-count" style="color:var(--teal-dark);">8/13</div>
             </div>
             <div class="size-bar-row">
               <div class="size-bar-label">6–9M</div>
               <div class="size-bar-track"><div class="size-bar-fill" style="width:15%;background:var(--amber);"></div></div>
-              <div class="size-bar-count" style="color:var(--amber-dark);">2</div>
+              <div class="size-bar-count" style="color:var(--amber-dark);">2/13</div>
             </div>
             <div class="size-bar-row">
               <div class="size-bar-label">9–12M</div>
               <div class="size-bar-track"><div class="size-bar-fill" style="width:0%;background:var(--gray-200);"></div></div>
-              <div class="size-bar-count">0</div>
+              <div class="size-bar-count">0/13</div>
             </div>
             <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
               <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--gray-400);"><span style="width:8px;height:8px;border-radius:2px;background:var(--teal);display:inline-block;"></span>Good</span>
               <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--gray-400);"><span style="width:8px;height:8px;border-radius:2px;background:var(--amber);display:inline-block;"></span>Low</span>
               <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--gray-400);"><span style="width:8px;height:8px;border-radius:2px;background:var(--gray-200);display:inline-block;"></span>None</span>
+              <span style="font-size:10px;color:var(--gray-400);">/ = out of recommended</span>
             </div>
           </div>
 
@@ -1060,9 +1147,10 @@ body {
 
           <div class="cat-header" onclick="toggleCat('tops-owned')">
             <span class="cat-title">Tops and bodysuits</span>
-            <span style="display:flex;align-items:center;gap:6px;"><span class="cat-count">5 items</span><span id="chev-tops-owned" style="font-size:11px;color:var(--gray-400);">▾</span></span>
+            <span style="display:flex;align-items:center;gap:6px;"><span class="cat-count">3 owned · rec. 6</span><span id="chev-tops-owned" style="font-size:11px;color:var(--gray-400);">▾</span></span>
           </div>
           <div class="cat-items" id="cat-tops-owned">
+            <div style="padding:6px 14px 2px;"><div style="background:var(--gray-100);border-radius:999px;height:4px;overflow:hidden;"><div style="height:4px;border-radius:999px;background:var(--teal);width:50%;"></div></div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400);margin-top:3px;"><span>3 owned</span><span>6 recommended</span></div></div>
             <div class="item-row" onclick="go('screen-item-detail')">
               <div class="item-thumb" style="background:var(--teal-light);"></div>
               <div style="flex:1"><div class="item-name">Short-sleeve onesie</div><div class="item-meta">0–3M · Carter's · ×3</div></div>
@@ -1082,9 +1170,10 @@ body {
 
           <div class="cat-header" onclick="toggleCat('onepieces-owned')">
             <span class="cat-title">One-pieces</span>
-            <span style="display:flex;align-items:center;gap:6px;"><span class="cat-count">4 items</span><span id="chev-onepieces-owned" style="font-size:11px;color:var(--gray-400);">▾</span></span>
+            <span style="display:flex;align-items:center;gap:6px;"><span class="cat-count">2 owned · rec. 4</span><span id="chev-onepieces-owned" style="font-size:11px;color:var(--gray-400);">▾</span></span>
           </div>
           <div class="cat-items" id="cat-onepieces-owned">
+            <div style="padding:6px 14px 2px;"><div style="background:var(--gray-100);border-radius:999px;height:4px;overflow:hidden;"><div style="height:4px;border-radius:999px;background:var(--teal);width:50%;"></div></div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400);margin-top:3px;"><span>2 owned</span><span>4 recommended</span></div></div>
             <div class="item-row" onclick="go('screen-item-detail')">
               <div class="item-thumb" style="background:var(--teal-light);"></div>
               <div style="flex:1"><div class="item-name">Sleepsuit / footie</div><div class="item-meta">0–3M · Carter's · ×4</div></div>
@@ -1099,9 +1188,10 @@ body {
 
           <div class="cat-header" onclick="toggleCat('bottoms-owned')">
             <span class="cat-title">Bottoms</span>
-            <span style="display:flex;align-items:center;gap:6px;"><span class="cat-count">2 items</span><span id="chev-bottoms-owned" style="font-size:11px;color:var(--gray-400);">▾</span></span>
+            <span style="display:flex;align-items:center;gap:6px;"><span class="cat-count" style="color:var(--amber-dark);">2 owned · rec. 5</span><span id="chev-bottoms-owned" style="font-size:11px;color:var(--gray-400);">▾</span></span>
           </div>
           <div class="cat-items" id="cat-bottoms-owned">
+            <div style="padding:6px 14px 2px;"><div style="background:var(--gray-100);border-radius:999px;height:4px;overflow:hidden;"><div style="height:4px;border-radius:999px;background:var(--amber);width:40%;"></div></div><div style="display:flex;justify-content:space-between;font-size:10px;margin-top:3px;"><span style="color:var(--amber-dark);font-weight:500;">2 owned — 6–9M coming up soon</span><span style="color:var(--gray-400);">5 recommended</span></div></div>
             <div class="item-row" onclick="go('screen-item-detail')">
               <div class="item-thumb" style="background:var(--teal-light);"></div>
               <div style="flex:1"><div class="item-name">Leggings</div><div class="item-meta">3–6M · H&M · ×2</div></div>
@@ -1206,10 +1296,18 @@ body {
           <div class="detail-row"><span class="detail-key">Size</span><span class="detail-val">3–6M</span></div>
           <div class="detail-row">
             <span class="detail-key">Quantity</span>
-            <div class="qty-row" style="margin:0;">
-              <button class="qty-btn" onclick="chDetailQty(-1)">−</button>
-              <span class="qty-val" id="detail-qty">2</span>
-              <button class="qty-btn" onclick="chDetailQty(1)">+</button>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+              <div class="qty-row" style="margin:0;">
+                <button class="qty-btn" onclick="chDetailQty(-1)">−</button>
+                <span class="qty-val" id="detail-qty">2</span>
+                <button class="qty-btn" onclick="chDetailQty(1)">+</button>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:120px;">
+                <span style="font-size:10px;color:var(--gray-400);" id="detail-rec-label">2 / 6 recommended</span>
+                <div style="width:100px;background:var(--gray-100);border-radius:999px;height:4px;overflow:hidden;">
+                  <div id="detail-rec-bar" style="height:4px;border-radius:999px;background:var(--teal);width:33%;transition:width 0.2s;"></div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="detail-row"><span class="detail-key">Season</span><span class="detail-val">All-season</span></div>
@@ -1264,6 +1362,21 @@ let addStep = 1;
 let addQty = 1;
 let detailQty = 2;
 let addMode = 'have';
+const REC_QTY = 6;
+
+function updateAddRec() {
+  const pct = Math.min(100, Math.round((addQty / REC_QTY) * 100));
+  document.getElementById('add-rec-label').textContent = addQty + ' / ' + REC_QTY + ' recommended';
+  document.getElementById('add-rec-bar').style.width = pct + '%';
+  document.getElementById('add-rec-bar').style.background = pct >= 100 ? 'var(--teal)' : pct >= 50 ? 'var(--teal)' : 'var(--amber)';
+}
+
+function updateDetailRec() {
+  const pct = Math.min(100, Math.round((detailQty / REC_QTY) * 100));
+  document.getElementById('detail-rec-label').textContent = detailQty + ' / ' + REC_QTY + ' recommended';
+  document.getElementById('detail-rec-bar').style.width = pct + '%';
+  document.getElementById('detail-rec-bar').style.background = pct >= 100 ? 'var(--teal)' : pct >= 50 ? 'var(--teal)' : 'var(--amber)';
+}
 
 function go(id) {
   prevScreen = currentScreen;
@@ -1309,8 +1422,8 @@ function addNext(step) {
   });
 }
 
-function chQty(d) { addQty = Math.max(1, addQty + d); document.getElementById('add-qty').textContent = addQty; }
-function chDetailQty(d) { detailQty = Math.max(1, detailQty + d); document.getElementById('detail-qty').textContent = detailQty; }
+function chQty(d) { addQty = Math.max(1, addQty + d); document.getElementById('add-qty').textContent = addQty; updateAddRec(); }
+function chDetailQty(d) { detailQty = Math.max(1, detailQty + d); document.getElementById('detail-qty').textContent = detailQty; updateDetailRec(); }
 
 function invTab(tab) {
   document.getElementById('inv-owned').style.display = tab === 'owned' ? 'block' : 'none';
