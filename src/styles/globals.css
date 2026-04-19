@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --teal:          #1D9E75;
+  --teal-light:    #E1F5EE;
+  --teal-mid:      #9FE1CB;
+  --teal-dark:     #085041;
+  --purple:        #534AB7;
+  --purple-light:  #EEEDFE;
+  --purple-mid:    #AFA9EC;
+  --purple-dark:   #3C3489;
+  --amber:         #EF9F27;
+  --amber-light:   #FAEEDA;
+  --amber-dark:    #633806;
+  --gray-50:       #F9F9F7;
+  --gray-100:      #F1EFE8;
+  --gray-200:      #D3D1C7;
+  --gray-400:      #888780;
+  --gray-600:      #5F5E5A;
+  --gray-900:      #2C2C2A;
+  --white:         #FFFFFF;
+  --font-display:  'Fraunces', serif;
+  --font-body:     'DM Sans', sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--gray-50);
+  color: var(--gray-900);
+  min-height: 100vh;
+}
+
+/* Hide scrollbars globally */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
