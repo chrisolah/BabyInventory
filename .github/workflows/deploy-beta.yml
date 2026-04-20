@@ -51,7 +51,11 @@ jobs:
           VITE_ENV: beta
 
       - name: Deploy to Vercel (beta)
-        run: npx vercel@latest --token=${{ secrets.VERCEL_TOKEN }} --yes
+        # --prod promotes this deploy to the project's production alias
+        # (baby-inventory.vercel.app). Without it, every push gets its own
+        # ephemeral preview URL, which makes Supabase's auth-redirect
+        # allowlist unmanageable.
+        run: npx vercel@latest --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
