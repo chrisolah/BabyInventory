@@ -1,16 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { getSessionId } from '../lib/analytics'
 
-// Mock Supabase so tests don't need a real connection
 vi.mock('../lib/supabase', () => ({
   supabase: {
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
     },
-    from: vi.fn(() => ({
-      insert: vi.fn().mockResolvedValue({ error: null }),
-    })),
+    schema: vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        insert: vi.fn().mockResolvedValue({ error: null }),
+      }),
+    }),
   },
+  currentSchema: 'beta',
 }))
 
 describe('analytics', () => {
