@@ -2,10 +2,6 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-// Schema switches automatically based on environment:
-// - local dev and beta branch → 'beta' schema
-// - main branch / production build → 'production' schema
 const schema = import.meta.env.VITE_SCHEMA || 'beta'
 
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -14,6 +10,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   db: { schema },
+  global: {
+    headers: {
+      'Accept-Profile': schema,
+      'Content-Profile': schema,
+    },
+  },
   auth: {
     autoRefreshToken: true,
     persistSession: true,
