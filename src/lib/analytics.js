@@ -1,7 +1,5 @@
-import { supabase } from './supabase'
-
-// Session ID persisted for the lifetime of the browser session.
-// Used to stitch anonymous events to a user_id on signup.
+import { supabase, currentSchema } from './supabase'
+console.log('Analytics schema:', currentSchema)
 function getSessionId() {
   let sessionId = sessionStorage.getItem('ll_session_id')
   if (!sessionId) {
@@ -18,7 +16,6 @@ function getDeviceType() {
   return 'web'
 }
 
-// Queue for offline/failed events — flushed on next successful write
 const eventQueue = []
 
 async function flushQueue() {
@@ -26,24 +23,14 @@ async function flushQueue() {
   const batch = [...eventQueue]
   eventQueue.length = 0
   try {
-    await supabase.from('events').insert(batch)
+    await supabase.schema(currentSchema).from('events').insert(batch)
   } catch {
-    // If flush fails, re-queue (up to 50 events max to avoid memory issues)
     if (eventQueue.length < 50) {
       eventQueue.push(...batch)
     }
   }
 }
 
-/**
- * Log an analytics event.
- * Fire-and-forget — never throws, never blocks the UI.
- *
- * @param {string} eventName   e.g. 'signup_completed'
- * @param {string} eventGroup  e.g. 'acquisition'
- * @param {object} properties  Any event-specific data
- * @param {object} funnel      Optional: { id: 'acquisition', step: 5 }
- */
 export async function logEvent(eventName, eventGroup, properties = {}, funnel = null) {
   try {
     const { data: { user } } = await supabase.auth.getUser()
@@ -59,14 +46,11 @@ export async function logEvent(eventName, eventGroup, properties = {}, funnel = 
       funnel_step: funnel?.step ?? null,
     }
 
-    // Try direct insert first
-    const { error } = await supabase.from('events').insert(event)
+    const { error } = await supabase.schema(currentSchema).from('events').insert(event)
 
     if (error) {
-      // Queue for retry
       eventQueue.push(event)
     } else {
-      // Flush any queued events on a successful write
       flushQueue()
     }
   } catch {
@@ -74,9 +58,7 @@ export async function logEvent(eventName, eventGroup, properties = {}, funnel = 
   }
 }
 
-// Convenience wrappers for each funnel
 export const track = {
-  // Acquisition funnel
   pageViewed: (props = {}) =>
     logEvent('page_viewed', 'acquisition', props, { id: 'acquisition', step: 1 }),
   ctaClicked: (cta) =>
@@ -88,7 +70,6 @@ export const track = {
   signupCompleted: () =>
     logEvent('signup_completed', 'acquisition', { method: 'email' }, { id: 'acquisition', step: 5 }),
 
-  // Onboarding funnel
   onboardingStarted: () =>
     logEvent('onboarding_started', 'onboarding', {}, { id: 'onboarding', step: 1 }),
   householdNamed: () =>
@@ -104,7 +85,6 @@ export const track = {
   firstItemAdded: (props) =>
     logEvent('first_item_added', 'onboarding', props, { id: 'onboarding', step: 7 }),
 
-  // Inventory
   addItemStarted: (props) =>
     logEvent('add_item_started', 'inventory', props, { id: 'add_item', step: 1 }),
   itemCategorySelected: (category) =>
@@ -122,7 +102,6 @@ export const track = {
   gapAlertActioned: (props) =>
     logEvent('gap_alert_actioned', 'inventory', props),
 
-  // Engagement
   appOpened: (screen) =>
     logEvent('app_opened', 'engagement', { screen }),
   recommendationViewed: (props) =>
@@ -131,5 +110,4 @@ export const track = {
     logEvent('recommendation_clicked', 'engagement', props),
 }
 
-// Export session ID so it can be passed to Supabase on signup
 export { getSessionId }
