@@ -115,6 +115,10 @@ export const track = {
 
   appOpened: (screen) =>
     logEvent('app_opened', 'engagement', { screen }),
+  householdInviteOpened: (from) =>
+    logEvent('household_invite_opened', 'engagement', { from }),
+  householdInviteSubmitted: (props) =>
+    logEvent('household_invite_submitted', 'engagement', props),
   recommendationViewed: (props) =>
     logEvent('recommendation_viewed', 'engagement', props),
   recommendationClicked: (props) =>
