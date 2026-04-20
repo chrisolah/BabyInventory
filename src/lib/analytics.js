@@ -102,6 +102,17 @@ export const track = {
   gapAlertActioned: (props) =>
     logEvent('gap_alert_actioned', 'inventory', props),
 
+  loginPageViewed: () =>
+    logEvent('login_page_viewed', 'engagement', {}, { id: 'login', step: 1 }),
+  loginStarted: (method) =>
+    logEvent('login_started', 'engagement', { method }, { id: 'login', step: 2 }),
+  loginCompleted: (method) =>
+    logEvent('login_completed', 'engagement', { method }, { id: 'login', step: 3 }),
+  passwordResetRequested: () =>
+    logEvent('password_reset_requested', 'engagement', {}),
+  passwordResetCompleted: () =>
+    logEvent('password_reset_completed', 'engagement', {}),
+
   appOpened: (screen) =>
     logEvent('app_opened', 'engagement', { screen }),
   recommendationViewed: (props) =>
