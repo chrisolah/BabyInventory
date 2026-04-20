@@ -4,6 +4,8 @@ import './styles/globals.css'
 
 import Landing from './screens/Landing'
 import Signup from './screens/Signup'
+import Login from './screens/Login'
+import ResetPassword from './screens/ResetPassword'
 import Onboarding from './screens/Onboarding'
 import Home from './screens/Home'
 import Inventory from './screens/Inventory'
@@ -27,6 +29,9 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
       <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      {/* /reset-password is unguarded — it needs to render whether the user is signed in (recovery session) or not (expired link), and handles both cases itself. */}
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/onboarding/*" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
       <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
       <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
