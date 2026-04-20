@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
 import styles from './Home.module.css'
@@ -7,16 +9,63 @@ import styles from './Home.module.css'
 // shell: a persistent header (brand + "Invite member" button) and an empty-
 // state card where the inventory list will eventually live.
 //
+// Home ALSO acts as the onboarding gate. PublicRoute's declarative redirect
+// beats Signup/Login's imperative `navigate('/onboarding')` when the auth
+// state flips, so any post-auth path funnels through /home first. We check
+// user_activity_summary.onboarding_step here and bounce incomplete users to
+// /onboarding. This keeps the gate in one place instead of trying to win
+// the race in every auth screen.
+//
 // The "Invite household member" button lives in the header so it's accessible
 // from any scroll position and survives as we build out more body content.
 // Invite plumbing (pending_invites + email delivery) isn't wired yet, so the
 // modal currently just collects the email and fires an analytics event — we
 // say so in the helper note to set expectations honestly.
 export default function Home() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [showInvite, setShowInvite] = useState(false)
+  // 'checking' until we know onboarding is complete; 'ready' once we do.
+  // We never transition to an "incomplete" state because we just redirect.
+  const [status, setStatus] = useState('checking')
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] ?? ''
+
+  // Onboarding gate. Runs once per mounted user. If the summary query fails
+  // (e.g. migration 003 hasn't been applied in this env), we log and let the
+  // user stay on Home rather than trapping them in a redirect loop.
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+
+    async function check() {
+      const { data, error } = await supabase
+        .schema(currentSchema)
+        .from('user_activity_summary')
+        .select('onboarding_step')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (cancelled) return
+
+      if (error) {
+        // eslint-disable-next-line no-console
+        console.warn('Onboarding gate: user_activity_summary query failed —', error.message)
+        setStatus('ready')
+        return
+      }
+
+      const step = data?.onboarding_step ?? 0
+      if (step < 4) {
+        navigate('/onboarding', { replace: true })
+        return
+      }
+      setStatus('ready')
+    }
+
+    check()
+    return () => { cancelled = true }
+  }, [user, navigate])
 
   function openInvite() {
     track.householdInviteOpened('home_header')
@@ -25,6 +74,12 @@ export default function Home() {
 
   function closeInvite() {
     setShowInvite(false)
+  }
+
+  if (status === 'checking') {
+    // Brief blank screen while we resolve the gate. Keeps the page from
+    // flashing "Welcome" at users we're about to redirect.
+    return <div className={styles.page} />
   }
 
   return (
