@@ -1,0 +1,309 @@
+.page {
+  min-height: 100vh;
+  background: var(--white);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 420px;
+  padding: 2rem 1.5rem;
+}
+
+/* ── Progress pips ───────────────────────────────────────── */
+.progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 2rem;
+}
+
+.pip {
+  height: 3px;
+  flex: 1;
+  border-radius: 999px;
+  background: var(--gray-200);
+  transition: background 0.2s;
+}
+
+.pipDone {
+  background: var(--teal);
+}
+
+.stepLabel {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+  margin-bottom: 4px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.sub {
+  font-size: 14px;
+  color: var(--gray-600);
+  margin-bottom: 1.75rem;
+  line-height: 1.5;
+}
+
+/* ── Form shared ─────────────────────────────────────────── */
+.formGroup {
+  margin-bottom: 14px;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-600);
+  margin-bottom: 5px;
+}
+
+.input {
+  width: 100%;
+  padding: 11px 13px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--gray-900);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: var(--teal);
+}
+
+.error {
+  font-size: 13px;
+  color: #A32D2D;
+  background: #FDF2F2;
+  border: 0.5px solid #F09595;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.primaryBtn {
+  width: 100%;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: var(--teal);
+  color: var(--teal-light);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: opacity 0.15s;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Segmented "already born / expecting" ────────────────── */
+.segToggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--gray-100);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 12px;
+}
+
+.segBtn {
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--gray-600);
+  transition: all 0.15s;
+}
+
+.segActive {
+  background: var(--white);
+  color: var(--gray-900);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* ── Chips (gender) ──────────────────────────────────────── */
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.sectionLabelNote {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--gray-400);
+}
+
+.chipGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.chip {
+  padding: 10px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: var(--gray-100);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 8px;
+  color: var(--gray-600);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.chipSel {
+  background: var(--teal-light);
+  border-color: var(--teal);
+  color: var(--teal-dark);
+}
+
+/* ── Cards (size mode) ───────────────────────────────────── */
+.cardStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  padding: 14px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  font-family: var(--font-body);
+}
+
+.card:hover {
+  border-color: var(--gray-400);
+}
+
+.cardSel {
+  background: var(--teal-light);
+  border-color: var(--teal);
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 2px;
+}
+
+.cardSel .cardTitle {
+  color: var(--teal-dark);
+}
+
+.cardSub {
+  font-size: 12px;
+  color: var(--gray-600);
+  line-height: 1.4;
+}
+
+.cardSel .cardSub {
+  color: #0F6E56;
+}
+
+/* ── Skip link ──────────────────────────────────────────── */
+.skipLink {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.skipBtn {
+  background: none;
+  border: none;
+  color: var(--gray-600);
+  font-size: 13px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  padding: 8px 16px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Done state ─────────────────────────────────────────── */
+.doneIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--teal-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem auto 1.5rem;
+}
+
+.doneTitle {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.doneSub {
+  font-size: 15px;
+  color: var(--gray-600);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.doneBtn {
+  max-width: 280px;
+  margin: 0 auto;
+  display: block;
+}
+
+/* ── Loading state ──────────────────────────────────────── */
+.loadingState {
+  padding: 3rem 0;
+  text-align: center;
+  color: var(--gray-600);
+  font-size: 14px;
+}
+
+/* ── Note beneath invite step ───────────────────────────── */
+.helperNote {
+  font-size: 12px;
+  color: var(--gray-400);
+  margin-top: 12px;
+  line-height: 1.5;
+}

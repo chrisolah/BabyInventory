@@ -46,7 +46,7 @@ create table if not exists beta.babies (
   date_of_birth  date,
   due_date       date,
   gender         text        check (gender in ('boy','girl','neutral') or gender is null),
-  size_mode      text        not null default 'by_age' check (size_mode in ('by_age','by_weight','exact')),
+  size_mode      text        not null default 'by_age' check (size_mode in ('by_age','by_weight','both')),
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now(),
   -- Either a DOB (already born) or a due date (expecting) must be present.
