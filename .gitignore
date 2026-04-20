@@ -1,9 +1,9 @@
+.vite/
 # Dependencies
 node_modules/
 
 # Build output
 dist/
-
 # Environment files — never commit these
 .env.local
 .env.*.local
