@@ -9,6 +9,7 @@ import ResetPassword from './screens/ResetPassword'
 import Onboarding from './screens/Onboarding'
 import Home from './screens/Home'
 import Inventory from './screens/Inventory'
+import AddItem from './screens/AddItem'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -35,6 +36,7 @@ function AppRoutes() {
       <Route path="/onboarding/*" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
       <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
       <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+      <Route path="/add-item" element={<ProtectedRoute><AddItem /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
