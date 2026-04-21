@@ -49,15 +49,29 @@
   to { opacity: 1; transform: scale(1); }
 }
 
-/* Delays are roughly synced to when the stem's growing tip reaches each
-   leaf's base, so leaves appear to sprout from the stem rather than pop
-   into existence all at once. */
-.leafDelay1 { animation-delay: 1.6s; }
-.leafDelay2 { animation-delay: 2.8s; }
-.leafDelay3 { animation-delay: 4.0s; }
-.leafDelay4 { animation-delay: 5.2s; }
-.leafDelay5 { animation-delay: 6.4s; }
-.leafDelay6 { animation-delay: 7.6s; }
+/* Leaves are held back until the stem is roughly halfway up (stem animates
+   over 9s, so ~4.3s is the midpoint). From there they appear in sequence,
+   with the last few bunching near the top-right where the vine blooms out.
+   .leafBig bumps the final scale past 1.0 so top leaves feel more mature
+   than the ones lower on the stem. */
+.leafDelay1 { animation-delay: 4.3s; }
+.leafDelay2 { animation-delay: 5.0s; }
+.leafDelay3 { animation-delay: 5.7s; }
+.leafDelay4 { animation-delay: 6.4s; }
+.leafDelay5 { animation-delay: 7.1s; }
+.leafDelay6 { animation-delay: 7.8s; }
+.leafDelay7 { animation-delay: 8.3s; }
+
+/* Larger final scale for the top cluster — same unfurl animation, just
+   lands bigger. Keyframe target needs to match so the tween ends here
+   instead of at scale(1). */
+.leafBig {
+  animation-name: unfurlBig;
+}
+
+@keyframes unfurlBig {
+  to { opacity: 1; transform: scale(1.2); }
+}
 
 /* Hide on narrow viewports — below ~960px there's not enough gutter for
    the ivy to fit without overlapping the centered content column. */
@@ -76,5 +90,8 @@
     animation: none;
     opacity: 1;
     transform: scale(1);
+  }
+  .leafBig {
+    transform: scale(1.2);
   }
 }

@@ -4,12 +4,12 @@ import styles from './IvyDecoration.module.css'
 // CSS — no JS state, no layout impact — the container is position:fixed
 // with pointer-events:none so it never gets in the way of actual content.
 //
-// The stem is drawn bottom-up with a stroke-dashoffset tween (pathLength=1
-// normalizes the length math). Leaves unfurl on stagger so they appear to
-// grow out of the stem as the tip passes each attachment. Total run time
-// lands around 9 seconds, which is slow enough to feel like growth rather
-// than a loading spinner but short enough that it's settled before a user
-// scans the page.
+// The stem travels diagonally from the bottom-left corner to the top-right
+// of the gutter section, waving side-to-side as it climbs. Leaves stay
+// hidden until the growing tip reaches the midway point (~4.3s into the
+// 9s stem animation), then unfurl in sequence. The final three leaves are
+// tagged .leafBig and land at 1.2x scale, so the vine visibly "blooms"
+// at the top instead of tapering off.
 //
 // Hidden on viewports narrower than ~960px (no gutter to live in). Also
 // respects prefers-reduced-motion — skips the animation and shows the
@@ -25,19 +25,19 @@ export default function IvyDecoration() {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Main stem — wavy bottom-to-top path, slight left/right sway so it
-            reads as organic rather than a pipe. Stroke uses the brand teal
-            at reduced opacity so it sits behind content without demanding
-            attention. */}
+        {/* Main stem — bottom-left (10, 800) → top-right (130, 10), with
+            alternating horizontal sways to read as organic. pathLength=1
+            normalizes the dashoffset math regardless of curve length. */}
         <path
           className={styles.stem}
           pathLength="1"
-          d="M 60 800
-             C 48 740 82 680 58 620
-             C 34 560 90 500 62 440
-             C 34 380 85 320 56 260
-             C 28 200 78 140 52 80
-             L 52 0"
+          d="M 10 800
+             Q 45 720 25 620
+             Q 5 540 35 470
+             Q 65 400 45 330
+             Q 25 260 70 200
+             Q 110 140 100 80
+             L 130 10"
           stroke="#085041"
           strokeOpacity="0.55"
           strokeWidth="2"
@@ -45,20 +45,34 @@ export default function IvyDecoration() {
           fill="none"
         />
 
-        {/* Leaves. Each <g> wraps one leaf cluster so the transform-origin
-            scale can radiate out from where the leaf meets the stem. Colors
-            alternate between the brand teal and a warmer shade so it doesn't
-            feel monochrome. */}
-
-        {/* Leaf 1 — right side, low */}
+        {/* Leaf 1 — midway, right side. First to appear. */}
         <g
           className={`${styles.leaf} ${styles.leafDelay1}`}
-          transform="translate(60 720)"
+          transform="translate(30 615)"
           style={{ transformOrigin: '0 0' }}
         >
           <path
-            d="M 0 0 Q 20 -4 28 -18 Q 32 -28 20 -30 Q 4 -24 0 -8 Z"
+            d="M 0 0 Q 18 -4 26 -16 Q 30 -26 18 -28 Q 4 -22 0 -8 Z"
             fill="#1D9E75"
+            fillOpacity="0.55"
+          />
+          <path
+            d="M 0 0 L 20 -18"
+            stroke="#085041"
+            strokeOpacity="0.45"
+            strokeWidth="0.8"
+          />
+        </g>
+
+        {/* Leaf 2 — mid, left side of stem. */}
+        <g
+          className={`${styles.leaf} ${styles.leafDelay2}`}
+          transform="translate(32 470) scale(-1 1)"
+          style={{ transformOrigin: '0 0' }}
+        >
+          <path
+            d="M 0 0 Q 20 -4 28 -16 Q 32 -28 18 -30 Q 4 -22 0 -8 Z"
+            fill="#2BA883"
             fillOpacity="0.55"
           />
           <path
@@ -69,92 +83,92 @@ export default function IvyDecoration() {
           />
         </g>
 
-        {/* Leaf 2 — left side, mid-low */}
-        <g
-          className={`${styles.leaf} ${styles.leafDelay2}`}
-          transform="translate(62 600) scale(-1 1)"
-          style={{ transformOrigin: '0 0' }}
-        >
-          <path
-            d="M 0 0 Q 22 -2 32 -16 Q 36 -28 22 -32 Q 6 -26 0 -10 Z"
-            fill="#2BA883"
-            fillOpacity="0.6"
-          />
-          <path
-            d="M 0 0 L 24 -22"
-            stroke="#085041"
-            strokeOpacity="0.45"
-            strokeWidth="0.8"
-          />
-        </g>
-
-        {/* Leaf 3 — right side, mid */}
+        {/* Leaf 3 — right side, two-thirds up. */}
         <g
           className={`${styles.leaf} ${styles.leafDelay3}`}
-          transform="translate(56 460)"
+          transform="translate(48 335)"
           style={{ transformOrigin: '0 0' }}
         >
           <path
             d="M 0 0 Q 18 -6 26 -18 Q 30 -30 16 -32 Q 2 -24 0 -8 Z"
             fill="#1D9E75"
-            fillOpacity="0.5"
-          />
-          <path
-            d="M 0 0 L 20 -20"
-            stroke="#085041"
-            strokeOpacity="0.45"
-            strokeWidth="0.8"
-          />
-        </g>
-
-        {/* Leaf 4 — left side, mid-high */}
-        <g
-          className={`${styles.leaf} ${styles.leafDelay4}`}
-          transform="translate(58 340) scale(-1 1)"
-          style={{ transformOrigin: '0 0' }}
-        >
-          <path
-            d="M 0 0 Q 20 -4 28 -18 Q 32 -30 18 -32 Q 4 -24 0 -8 Z"
-            fill="#2BA883"
             fillOpacity="0.55"
           />
           <path
-            d="M 0 0 L 22 -22"
+            d="M 0 0 L 20 -22"
             stroke="#085041"
             strokeOpacity="0.45"
             strokeWidth="0.8"
           />
         </g>
 
-        {/* Leaf 5 — right side, high */}
+        {/* Leaf 4 — bigger, left-ish, starting the top bloom. */}
         <g
-          className={`${styles.leaf} ${styles.leafDelay5}`}
-          transform="translate(54 220)"
+          className={`${styles.leaf} ${styles.leafBig} ${styles.leafDelay4}`}
+          transform="translate(65 205) scale(-1 1)"
           style={{ transformOrigin: '0 0' }}
         >
           <path
-            d="M 0 0 Q 16 -4 24 -16 Q 28 -28 14 -30 Q 0 -22 0 -8 Z"
-            fill="#1D9E75"
-            fillOpacity="0.5"
-          />
-          <path
-            d="M 0 0 L 18 -18"
-            stroke="#085041"
-            strokeOpacity="0.45"
-            strokeWidth="0.8"
-          />
-        </g>
-
-        {/* Leaf 6 — small, near top, left */}
-        <g
-          className={`${styles.leaf} ${styles.leafDelay6}`}
-          transform="translate(52 100) scale(-1 1)"
-          style={{ transformOrigin: '0 0' }}
-        >
-          <path
-            d="M 0 0 Q 14 -2 20 -14 Q 22 -22 10 -24 Q 0 -18 0 -6 Z"
+            d="M 0 0 Q 22 -4 32 -18 Q 36 -30 20 -34 Q 4 -26 0 -10 Z"
             fill="#2BA883"
-            fillOpacity="0.5"
+            fillOpacity="0.6"
+          />
+          <path
+            d="M 0 0 L 24 -24"
+            stroke="#085041"
+            strokeOpacity="0.5"
+            strokeWidth="1"
+          />
+        </g>
+
+        {/* Leaf 5 — bigger, right, near the top cluster. */}
+        <g
+          className={`${styles.leaf} ${styles.leafBig} ${styles.leafDelay5}`}
+          transform="translate(95 130)"
+          style={{ transformOrigin: '0 0' }}
+        >
+          <path
+            d="M 0 0 Q 22 -4 32 -18 Q 36 -30 20 -34 Q 4 -26 0 -10 Z"
+            fill="#1D9E75"
+            fillOpacity="0.6"
+          />
+          <path
+            d="M 0 0 L 24 -24"
+            stroke="#085041"
+            strokeOpacity="0.5"
+            strokeWidth="1"
+          />
+        </g>
+
+        {/* Leaf 6 — biggest, part of the top-right bloom, up-and-right. */}
+        <g
+          className={`${styles.leaf} ${styles.leafBig} ${styles.leafDelay6}`}
+          transform="translate(115 55) rotate(-15)"
+          style={{ transformOrigin: '0 0' }}
+        >
+          <path
+            d="M 0 0 Q 22 -6 32 -20 Q 36 -32 18 -34 Q 2 -26 0 -10 Z"
+            fill="#2BA883"
+            fillOpacity="0.65"
+          />
+          <path
+            d="M 0 0 L 24 -24"
+            stroke="#085041"
+            strokeOpacity="0.5"
+            strokeWidth="1"
+          />
+        </g>
+
+        {/* Leaf 7 — biggest, the other half of the top bloom, up-and-left. */}
+        <g
+          className={`${styles.leaf} ${styles.leafBig} ${styles.leafDelay7}`}
+          transform="translate(125 25) scale(-1 1) rotate(-10)"
+          style={{ transformOrigin: '0 0' }}
+        >
+          <path
+            d="M 0 0 Q 20 -4 28 -18 Q 32 -30 16 -32 Q 2 -24 0 -8 Z"
+            fill="#1D9E75"
+            fillOpacity="0.6"
           />
         </g>
       </svg>
