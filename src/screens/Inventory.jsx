@@ -12,7 +12,7 @@ import {
   shouldShowOutgrowBanner,
   pluralize,
 } from '../lib/wardrobe'
-import LogoutButton from '../components/LogoutButton'
+import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import styles from './Inventory.module.css'
 
@@ -275,7 +275,7 @@ export default function Inventory() {
               <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </button>
-          <LogoutButton />
+          <ProfileMenu />
         </div>
       </header>
 
