@@ -65,8 +65,8 @@ export default function IvyBanner() {
           </g>
         </g>
 
-        {/* Leaf 3 — seg 2 end, tip leans slightly left */}
-        <g transform="translate(150 24) rotate(-70)">
+        {/* Leaf 3 — seg 2 end, dips downward below the stem. */}
+        <g transform="translate(150 24) rotate(115)">
           <g
             className={`${styles.leaf} ${styles.leafDelay3}`}
             style={{ '--leaf-scale': 1.0 }}
@@ -87,8 +87,8 @@ export default function IvyBanner() {
           </g>
         </g>
 
-        {/* Leaf 5 — seg 4 end, tip leans right */}
-        <g transform="translate(290 22) rotate(-55)">
+        {/* Leaf 5 — seg 4 end, dips downward below the stem. */}
+        <g transform="translate(290 22) rotate(125)">
           <g
             className={`${styles.leaf} ${styles.leafDelay5}`}
             style={{ '--leaf-scale': 1.1 }}
