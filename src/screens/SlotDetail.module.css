@@ -1,0 +1,338 @@
+.page {
+  min-height: 100vh;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--white);
+  border-bottom: 0.5px solid var(--gray-200);
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.backBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--gray-900);
+  background: transparent;
+}
+
+.backBtn:hover {
+  background: var(--gray-100);
+}
+
+.titleBlock {
+  text-align: center;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--gray-900);
+  line-height: 1.1;
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--gray-400);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ── Body ─────────────────────────────────────────────────── */
+.body {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.loading {
+  text-align: center;
+  color: var(--gray-400);
+  padding: 32px 16px;
+  font-size: 14px;
+}
+
+.error {
+  background: var(--amber-light);
+  color: #7E5510;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.linkBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #5F3F07;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── Summary block ────────────────────────────────────────── */
+.summary {
+  padding: 18px 18px 16px;
+  background: var(--cream, #FBF8F4);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 14px;
+}
+
+.count {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 500;
+  color: var(--gray-900);
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.countDenom {
+  color: var(--gray-400);
+  font-weight: 400;
+}
+
+.countSub {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--gray-600);
+  margin-top: 2px;
+  margin-bottom: 12px;
+}
+
+.detailBar {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.detailBarFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--teal);
+  transition: width 0.3s;
+}
+
+.why {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--gray-400);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* ── Section scaffolding ──────────────────────────────────── */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionTitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+
+/* ── Need-N-more card ────────────────────────────────────── */
+.needRow {
+  padding: 12px 14px;
+  background: #FDE8E8;
+  border: 0.5px solid #F5C5C5;
+  border-radius: 10px;
+}
+
+.needRowLabel {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: #7A2424;
+}
+
+.needRowSub {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: #7A2424;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.addCta {
+  padding: 12px;
+  width: 100%;
+  background: var(--teal);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.addCta:hover {
+  opacity: 0.92;
+}
+
+/* ── Complete card ────────────────────────────────────────── */
+.completeCard {
+  padding: 14px;
+  background: var(--teal-light);
+  border: 0.5px solid #B9E3D0;
+  border-radius: 10px;
+}
+
+.completeTitle {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal-dark);
+}
+
+.completeSub {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--teal-dark);
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+/* ── Item list ────────────────────────────────────────────── */
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+}
+
+.itemThumb {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  background: var(--gray-100);
+  flex-shrink: 0;
+}
+
+.itemBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemName {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemMeta {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--gray-600);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemBadge {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+.itemBadgeAmber {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--amber-light);
+  color: #7E5510;
+}
+
+.emptyNote {
+  padding: 14px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--gray-400);
+  text-align: center;
+  background: var(--gray-50);
+  border: 0.5px dashed var(--gray-200);
+  border-radius: 10px;
+}
+
+/* ── Community placeholder ─────────────────────────────────── */
+.communityCard {
+  padding: 14px;
+  background: var(--teal-light);
+  border: 0.5px solid #B9E3D0;
+  border-radius: 10px;
+}
+
+.communityTitle {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal-dark);
+}
+
+.communitySub {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--teal-dark);
+  opacity: 0.85;
+  line-height: 1.5;
+  margin-top: 4px;
+}

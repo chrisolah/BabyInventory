@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
@@ -61,6 +61,16 @@ export default function AddItem() {
   const navigate = useNavigate()
   const { user } = useAuth()
 
+  // Optional deep-link pre-fill. When the user jumped here from the slot
+  // detail page ("Add one" CTA), the URL carries:
+  //   mode=owned|needed, category=<category>, size=<size_label>, from_slot=<slot_id>
+  // Ignore anything that doesn't match the whitelists so malformed URLs
+  // don't put the form into a weird state.
+  const [searchParams] = useSearchParams()
+  const initialMode = searchParams.get('mode') === 'needed' ? 'needed' : 'owned'
+  const initialCategoryParam = searchParams.get('category')
+  const initialSizeParam = searchParams.get('size')
+
   // Figure out household + baby once, on mount. We need household_id to
   // insert; baby_id is soft-nullable but we set it when we can so items tie
   // to the baby they were added for.
@@ -68,11 +78,17 @@ export default function AddItem() {
   const [baby, setBaby] = useState(null)
   const [loadingContext, setLoadingContext] = useState(true)
 
-  // Form state
-  const [mode, setMode] = useState('owned') // 'owned' | 'needed'
-  const [category, setCategory] = useState('')
+  // Form state — pre-filled from the URL when possible, otherwise blank.
+  // Whitelist the incoming params against CATEGORIES/SIZES so a stale or
+  // typo'd URL doesn't silently lock the user into an invalid combination.
+  const [mode, setMode] = useState(initialMode)
+  const [category, setCategory] = useState(() =>
+    CATEGORIES.some(c => c.value === initialCategoryParam) ? initialCategoryParam : ''
+  )
   const [itemType, setItemType] = useState('')
-  const [sizeLabel, setSizeLabel] = useState('')
+  const [sizeLabel, setSizeLabel] = useState(() =>
+    SIZES.includes(initialSizeParam) ? initialSizeParam : ''
+  )
   const [condition, setCondition] = useState('')
   const [priority, setPriority] = useState('')
   const [brand, setBrand] = useState('')
