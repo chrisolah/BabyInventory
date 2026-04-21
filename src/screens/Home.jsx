@@ -8,14 +8,16 @@ import styles from './Home.module.css'
 
 // Home is the signed-in landing page for the inventory app. For now it's a
 // shell: a persistent header (brand + "Invite member" button) and an empty-
-// state card where the inventory list will eventually live.
+// state card inviting the user to start their inventory.
 //
-// Home ALSO acts as the onboarding gate. PublicRoute's declarative redirect
-// beats Signup/Login's imperative `navigate('/onboarding')` when the auth
-// state flips, so any post-auth path funnels through /home first. We check
-// user_activity_summary.onboarding_step here and bounce incomplete users to
-// /onboarding. This keeps the gate in one place instead of trying to win
-// the race in every auth screen.
+// Home ALSO acts as the onboarding + "already-started" gate. PublicRoute's
+// declarative redirect beats Signup/Login's imperative `navigate(...)` when
+// the auth state flips, so any post-auth path funnels through /home first.
+// From here we do two checks in order:
+//   1. onboarding_step < 4 → /onboarding (incomplete profile)
+//   2. any clothing_items exist → /inventory (they've started; the empty-
+//      state card on Home is the wrong frame once the inventory isn't empty)
+// Everyone else stays on Home and sees the "Start your inventory" card.
 //
 // The "Invite household member" button lives in the header so it's accessible
 // from any scroll position and survives as we build out more body content.
@@ -61,6 +63,33 @@ export default function Home() {
         navigate('/onboarding', { replace: true })
         return
       }
+
+      // Onboarding done — if they've already added anything, skip the empty
+      // "Start your inventory" framing and drop them straight on /inventory.
+      // RLS scopes this to households the user belongs to, so a single-row
+      // head-count query is enough; no need to resolve the household first.
+      const { count, error: countErr } = await supabase
+        .schema(currentSchema)
+        .from('clothing_items')
+        .select('id', { count: 'exact', head: true })
+        .limit(1)
+
+      if (cancelled) return
+
+      if (countErr) {
+        // Don't trap the user if the count query fails (e.g. migration 006
+        // hasn't landed in this env). Fall back to the empty-state Home.
+        // eslint-disable-next-line no-console
+        console.warn('Home: clothing_items count failed —', countErr.message)
+        setStatus('ready')
+        return
+      }
+
+      if ((count ?? 0) > 0) {
+        navigate('/inventory', { replace: true })
+        return
+      }
+
       setStatus('ready')
     }
 
