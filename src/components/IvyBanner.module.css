@@ -70,12 +70,15 @@
 
 /* Show on mobile only. Matches the 960px breakpoint used by the vertical
    vine's display:none rule so there's always exactly one version visible.
-   Negative margin-top pulls the banner up so the stem sits near the nav's
-   bottom edge and upward-growing leaves visibly overlap into the nav row. */
+   Small positive margin-top gives the vine a clear gap below the nav's
+   bottom border so the stem and both rows of leaves read as a distinct
+   element, not glued to the nav. The hero below has plenty of padding
+   before the "Free for all families" pill, so there's room for the
+   down-pointing leaves that overflow the 44px viewBox. */
 @media (max-width: 960px) {
   .banner {
     display: block;
-    margin-top: -32px;
+    margin-top: 8px;
   }
 }
 
