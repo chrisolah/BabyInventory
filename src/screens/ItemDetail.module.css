@@ -1,0 +1,474 @@
+.page {
+  min-height: 100vh;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+/* Same grid shape as SlotDetail so the back button, title cluster, and
+   logout button line up consistently across the drill-down screens. */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--white);
+  border-bottom: 0.5px solid var(--gray-200);
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.backBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--gray-900);
+  background: transparent;
+}
+
+.backBtn:hover {
+  background: var(--gray-100);
+}
+
+/* Stacks title + subtitle + optional mobile-only sprig. Flex column so each
+   child lines up centered; min-width:0 keeps long item names from blowing
+   out the 1fr header grid cell (truncation handled on .title below). */
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+}
+
+/* position:relative + z-index lift the title + subtitle above the sibling
+   IvySprig so sprig leaves peeking up sit behind the item name rather
+   than covering it. */
+.title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--gray-900);
+  line-height: 1.1;
+  position: relative;
+  z-index: 1;
+  /* Long item names (or the slot-type fallback) can sprawl — single-line
+     ellipsis keeps the header height fixed. */
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--gray-400);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-top: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Body ─────────────────────────────────────────────────── */
+.body {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.loading {
+  text-align: center;
+  color: var(--gray-400);
+  padding: 32px 16px;
+  font-size: 14px;
+}
+
+.error {
+  background: var(--amber-light);
+  color: #7E5510;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.linkBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #5F3F07;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── Summary card ─────────────────────────────────────────── */
+/* Hero block at the top of the page: thumbnail + name + type + status pill.
+   Keeps the hierarchy the user expects: what is this, and where in the
+   lifecycle does it sit. */
+.summary {
+  padding: 16px;
+  background: var(--cream, #FBF8F4);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 14px;
+}
+
+.summaryTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.itemThumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: var(--gray-100);
+  flex-shrink: 0;
+}
+
+.summaryText {
+  flex: 1;
+  min-width: 0;
+}
+
+.summaryName {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--gray-900);
+  line-height: 1.2;
+  /* Don't clamp here — the summary card has room to wrap, and clamping
+     would conflict with the header's single-line ellipsis. */
+}
+
+.summaryMeta {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--gray-600);
+  margin-top: 2px;
+}
+
+/* Status pill — soft-tinted background per status, so a glance tells you
+   whether this item is actively in the wardrobe or sitting elsewhere in
+   its lifecycle (wish / outgrown / donated). */
+.statusPill {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.statusPillOwned {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+}
+
+.statusPillWish {
+  background: var(--amber-light);
+  color: #7E5510;
+}
+
+.statusPillNeutral {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+/* ── Sections ─────────────────────────────────────────────── */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionTitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+
+/* ── Details list ─────────────────────────────────────────── */
+/* Two-column definition list. Label column fixed-width so every row lines
+   up; value column takes the rest and wraps. Using a real <dl>/<dt>/<dd>
+   for the right semantics for screen readers. */
+.detailList {
+  margin: 0;
+  padding: 14px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.detailLabel {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-400);
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.detailValue {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--gray-900);
+  margin: 0;
+  word-wrap: break-word;
+  min-width: 0;
+}
+
+/* ── Notes ────────────────────────────────────────────────── */
+.notes {
+  padding: 14px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--gray-900);
+  line-height: 1.55;
+  white-space: pre-wrap; /* preserve line breaks the user typed */
+  word-wrap: break-word;
+}
+
+/* ── Actions ──────────────────────────────────────────────── */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.primaryBtn {
+  padding: 13px;
+  width: 100%;
+  background: var(--teal);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Secondary = softer teal fill for the "mark as outgrown" action. Reads as
+   "not your main path but still constructive." */
+.secondaryBtn {
+  padding: 13px;
+  width: 100%;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  border: 0.5px solid #B9E3D0;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.secondaryBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.secondaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Danger = text-red on white with a hairline border. Destructive, but not
+   red-fill loud — the confirm modal does the hard guardrail. */
+.dangerBtn {
+  padding: 13px;
+  width: 100%;
+  background: var(--white);
+  color: #A32D2D;
+  border: 0.5px solid #F09595;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dangerBtn:hover:not(:disabled) {
+  background: #FDF2F2;
+}
+
+.dangerBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Confirm modal ────────────────────────────────────────── */
+/* position:fixed so the backdrop covers the viewport regardless of scroll.
+   z-index 100 beats the sticky header (z:10) so the modal isn't visually
+   behind it when open. */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 28, 28, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 100;
+  /* Fade the backdrop in rather than flashing so the modal doesn't feel
+     like it appears out of nowhere. */
+  animation: backdropFadeIn 0.15s ease-out;
+}
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 20px;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  animation: modalRise 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes modalRise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modalTitle {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 6px;
+}
+
+.modalBody {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+.modalActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.modalCancel {
+  padding: 11px;
+  background: var(--white);
+  color: var(--gray-900);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.modalCancel:hover:not(:disabled) {
+  background: var(--gray-100);
+}
+
+.modalCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalPrimary {
+  padding: 11px;
+  background: var(--teal);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.modalPrimary:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.modalPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalDanger {
+  padding: 11px;
+  background: #A32D2D;
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.modalDanger:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.modalDanger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
