@@ -1,0 +1,66 @@
+/* Tiny ivy sprig for mobile headers — slots in the document flow just
+   under the wardrobe name. Hidden on desktop where the vertical
+   IvyDecoration handles decoration. */
+.sprig {
+  display: none;
+  width: 100%;
+  max-width: 220px;
+  height: 14px;
+  margin: 2px auto 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Stem draws left-to-right over 2.5s — a little faster than the banner
+   since the sprig is much shorter and would feel sluggish otherwise. */
+.stem {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: grow 2.5s ease-out forwards;
+}
+
+@keyframes grow {
+  to { stroke-dashoffset: 0; }
+}
+
+.leaf {
+  opacity: 0;
+  transform: scale(0.3);
+  transform-origin: 0 0;
+  animation: unfurl 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes unfurl {
+  to {
+    opacity: 1;
+    transform: scale(var(--leaf-scale, 1));
+  }
+}
+
+/* Leaf delays tracked to the stem's left-to-right progress. */
+.leafDelay1 { animation-delay: 0.7s; }
+.leafDelay2 { animation-delay: 1.0s; }
+.leafDelay3 { animation-delay: 1.4s; }
+.leafDelay4 { animation-delay: 1.8s; }
+.leafDelay5 { animation-delay: 2.1s; }
+
+/* Mobile only — matches the 960px breakpoint the vertical vine uses. */
+@media (max-width: 960px) {
+  .sprig { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stem {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .leaf {
+    animation: none;
+    opacity: 1;
+    transform: scale(var(--leaf-scale, 1));
+  }
+}

@@ -13,6 +13,7 @@ import {
   pluralize,
 } from '../lib/wardrobe'
 import LogoutButton from '../components/LogoutButton'
+import IvySprig from '../components/IvySprig'
 import styles from './Inventory.module.css'
 
 // Inventory has two tabs:
@@ -256,7 +257,13 @@ export default function Inventory() {
         >
           ←
         </button>
-        <div className={styles.title}>{title}</div>
+        <div className={styles.titleCell}>
+          <div className={styles.title}>{title}</div>
+          {/* Tiny mobile-only vine under the wardrobe name. IvySprig hides
+              itself on desktop (≥ 960px) where the gutter IvyDecoration
+              carries the decoration instead. */}
+          <IvySprig />
+        </div>
         <div className={styles.headerActions}>
           <button
             type="button"
