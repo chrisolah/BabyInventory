@@ -1,0 +1,80 @@
+/* Fixed to the left gutter on wide screens. The centered 720px content
+   column leaves ~(vw - 720)/2 px of empty space on either side at wider
+   viewports; the ivy lives in that space on the left. On narrow screens
+   there's no gutter, so we hide it — otherwise it would overlap the
+   page content. */
+.ivy {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 140px;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+
+.svg {
+  display: block;
+  width: 140px;
+  height: auto;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+/* Stem — drawn bottom-up with a stroke-dashoffset trick. pathLength="1" on
+   the <path> normalises the geometry so the dasharray math is the same
+   regardless of exactly how long the curve is. */
+.stem {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: grow 9s ease-out forwards;
+}
+
+@keyframes grow {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Leaves unfurl after the stem passes their attachment point. Each leaf
+   picks up the delay via a .leafDelayN class below. */
+.leaf {
+  opacity: 0;
+  transform: scale(0.3);
+  transform-origin: 0% 50%;
+  animation: unfurl 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes unfurl {
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Delays are roughly synced to when the stem's growing tip reaches each
+   leaf's base, so leaves appear to sprout from the stem rather than pop
+   into existence all at once. */
+.leafDelay1 { animation-delay: 1.6s; }
+.leafDelay2 { animation-delay: 2.8s; }
+.leafDelay3 { animation-delay: 4.0s; }
+.leafDelay4 { animation-delay: 5.2s; }
+.leafDelay5 { animation-delay: 6.4s; }
+.leafDelay6 { animation-delay: 7.6s; }
+
+/* Hide on narrow viewports — below ~960px there's not enough gutter for
+   the ivy to fit without overlapping the centered content column. */
+@media (max-width: 960px) {
+  .ivy { display: none; }
+}
+
+/* Respect users who prefer reduced motion. Skip the animation entirely
+   and just show the final state. */
+@media (prefers-reduced-motion: reduce) {
+  .stem {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .leaf {
+    animation: none;
+    opacity: 1;
+    transform: scale(1);
+  }
+}
