@@ -51,7 +51,8 @@ export default function IvySprig() {
           </g>
         </g>
 
-        <g transform="translate(100 6) rotate(-65)">
+        {/* Leaf 3 — dips below the stem, pointing down-and-right. */}
+        <g transform="translate(100 6) rotate(95)">
           <g className={`${styles.leaf} ${styles.leafDelay3}`} style={{ '--leaf-scale': 1.0 }}>
             <path d="M 0 0 Q 6 -2 9 -7 Q 11 -11 5 -12 Q 1 -9 0 -3 Z" fill="#1D9E75" fillOpacity="0.6" />
           </g>
@@ -63,7 +64,8 @@ export default function IvySprig() {
           </g>
         </g>
 
-        <g transform="translate(176 8) rotate(-40)">
+        {/* Leaf 5 — dips below the stem, pointing down-and-right. */}
+        <g transform="translate(176 8) rotate(75)">
           <g className={`${styles.leaf} ${styles.leafDelay5}`} style={{ '--leaf-scale': 1.15 }}>
             <path d="M 0 0 Q 6 -2 9 -7 Q 11 -11 5 -12 Q 1 -9 0 -3 Z" fill="#1D9E75" fillOpacity="0.62" />
           </g>

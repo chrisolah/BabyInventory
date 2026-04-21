@@ -14,6 +14,8 @@
   display: block;
   width: 100%;
   height: 100%;
+  /* Leaves that dip below the stem extend past the viewBox; don't clip them. */
+  overflow: visible;
 }
 
 /* Stem — drawn left-to-right via stroke-dashoffset. pathLength=1 normalises
