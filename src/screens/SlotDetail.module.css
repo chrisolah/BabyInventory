@@ -37,8 +37,15 @@
   background: var(--gray-100);
 }
 
+/* Stacks title + subtitle + optional mobile-only sprig. Flex column so
+   each child lines up centered; min-width:0 keeps long labels from blowing
+   out the 1fr header grid cell. */
 .titleBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
+  min-width: 0;
 }
 
 .title {

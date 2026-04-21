@@ -42,6 +42,16 @@
   height: 36px;
 }
 
+/* Stacks the "Add an item" title on top of an optional mobile-only sprig.
+   Occupies the 1fr middle cell of the header grid. On desktop the sprig
+   hides itself so this cell collapses back to just the title text. */
+.titleCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
 .title {
   font-family: var(--font-display);
   font-size: 16px;

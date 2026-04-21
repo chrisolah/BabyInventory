@@ -4,6 +4,7 @@ import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
 import LogoutButton from '../components/LogoutButton'
+import IvySprig from '../components/IvySprig'
 import styles from './Home.module.css'
 
 // Home is the signed-in landing page for the inventory app. For now it's a
@@ -115,7 +116,11 @@ export default function Home() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <div className={styles.brand}>Littleloop</div>
+        <div className={styles.brandWrap}>
+          <div className={styles.brand}>Littleloop</div>
+          {/* Mobile-only sprig beneath the brand. Hidden on desktop. */}
+          <IvySprig />
+        </div>
         <div className={styles.headerActions}>
           <button
             type="button"

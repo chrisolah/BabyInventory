@@ -19,6 +19,16 @@
   gap: 12px;
 }
 
+/* Stacks the brand on top of an optional mobile-only sprig. Left-aligned
+   so the sprig lines up under the "Littleloop" wordmark; on desktop the
+   sprig hides itself so this cell collapses back to just the brand. */
+.brandWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
 .brand {
   font-family: var(--font-display);
   font-size: 18px;
