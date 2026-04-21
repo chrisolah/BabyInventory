@@ -56,28 +56,35 @@
 }
 
 /* ── Tabs ─────────────────────────────────────────────────── */
+/* Pill tabs — constrained to the same inner width as the body below
+   (max-width 720px - 32px side padding = 688px). Modern toggle pattern:
+   cream container with gap between two flush-filling pills, active pill
+   painted in the deep brand teal that's used for badges and eyebrow chips
+   throughout the site. */
 .tabs {
   display: flex;
-  gap: 0;
-  border-bottom: 0.5px solid var(--gray-200);
-  background: var(--white);
-  position: sticky;
-  top: 60px;
-  z-index: 9;
+  gap: 4px;
+  padding: 4px;
+  max-width: 688px;
+  width: calc(100% - 32px);
+  margin: 16px auto 0;
+  background: var(--gray-100);
+  border-radius: 12px;
+  box-sizing: border-box;
 }
 
 .tab {
   flex: 1;
-  padding: 12px 0;
+  padding: 10px 16px;
   font-family: var(--font-body);
   font-size: 14px;
   font-weight: 500;
   color: var(--gray-600);
   background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
 
 .tab:hover {
@@ -85,8 +92,12 @@
 }
 
 .tabActive {
-  color: var(--teal-dark);
-  border-bottom-color: var(--teal);
+  color: var(--white);
+  background: var(--teal-dark);
+}
+
+.tabActive:hover {
+  color: var(--white);
 }
 
 /* ── Body ─────────────────────────────────────────────────── */
