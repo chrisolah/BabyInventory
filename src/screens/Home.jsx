@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
+import LogoutButton from '../components/LogoutButton'
 import styles from './Home.module.css'
 
 // Home is the signed-in landing page for the inventory app. For now it's a
@@ -86,27 +87,30 @@ export default function Home() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.brand}>Littleloop</div>
-        <button
-          type="button"
-          className={styles.inviteBtn}
-          onClick={openInvite}
-          aria-label="Invite household member"
-        >
-          <svg
-            className={styles.inviteIcon}
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden="true"
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.inviteBtn}
+            onClick={openInvite}
+            aria-label="Invite household member"
           >
-            <path
-              d="M8 3.5v9M3.5 8h9"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-          Invite member
-        </button>
+            <svg
+              className={styles.inviteIcon}
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M8 3.5v9M3.5 8h9"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+            Invite member
+          </button>
+          <LogoutButton />
+        </div>
       </header>
 
       <main className={styles.body}>

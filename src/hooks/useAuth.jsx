@@ -22,8 +22,16 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Explicit sign-out. The onAuthStateChange listener above will also clear
+  // `user` when supabase emits SIGNED_OUT, but we do it imperatively here so
+  // the UI flips instantly instead of waiting a round-trip.
+  async function signOut() {
+    await supabase.auth.signOut()
+    setUser(null)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   )
