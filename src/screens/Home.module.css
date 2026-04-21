@@ -26,6 +26,13 @@
   color: var(--gray-900);
 }
 
+/* Right-side action cluster — keeps Invite and Logout grouped to the right. */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .inviteBtn {
   display: inline-flex;
   align-items: center;

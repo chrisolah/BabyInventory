@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
+import LogoutButton from '../components/LogoutButton'
 import styles from './Onboarding.module.css'
 
 // Onboarding is a single-screen state machine with four UI steps plus a done
@@ -270,6 +271,7 @@ export default function Onboarding() {
   if (status === 'loading') {
     return (
       <div className={styles.page}>
+        <div className={styles.logoutCorner}><LogoutButton /></div>
         <div className={styles.wrap}>
           <div className={styles.loadingState}>Setting things up…</div>
         </div>
@@ -281,6 +283,7 @@ export default function Onboarding() {
     const firstName = user?.user_metadata?.name?.split(' ')[0] ?? ''
     return (
       <div className={styles.page}>
+        <div className={styles.logoutCorner}><LogoutButton /></div>
         <div className={styles.wrap}>
           <div className={styles.doneIcon}>
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -311,6 +314,7 @@ export default function Onboarding() {
 
   return (
     <div className={styles.page}>
+      <div className={styles.logoutCorner}><LogoutButton /></div>
       <div className={styles.wrap}>
         <div className={styles.progress}>
           {pips.map((done, i) => (

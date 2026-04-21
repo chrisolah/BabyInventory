@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
+import LogoutButton from '../components/LogoutButton'
 import styles from './AddItem.module.css'
 
 // Add item form — the minimum viable version. Fields match the check
@@ -201,7 +202,7 @@ export default function AddItem() {
           ←
         </button>
         <div className={styles.title}>Add an item</div>
-        <div className={styles.headerSpacer} aria-hidden="true" />
+        <LogoutButton />
       </header>
 
       <main className={styles.body}>

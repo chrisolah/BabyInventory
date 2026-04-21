@@ -4,6 +4,16 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
+  position: relative;
+}
+
+/* Onboarding has no header — park the logout button in the top-right so the
+   control lives in the same visual slot as every other logged-in page. */
+.logoutCorner {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  z-index: 2;
 }
 
 .wrap {

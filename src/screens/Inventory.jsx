@@ -2,11 +2,12 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import LogoutButton from '../components/LogoutButton'
 import styles from './Inventory.module.css'
 
 // Inventory is the user's wardrobe view. Two tabs:
-//   - Owned    → items with inventory_status = 'owned' (or 'outgrown' — still visible)
-//   - Wish list → items with inventory_status = 'needed'
+//   - Have → items with inventory_status = 'owned' (or 'outgrown' — still visible)
+//   - Need → items with inventory_status = 'needed'
 // Items are grouped by category and listed beneath each category header.
 //
 // The full prototype has a size-coverage card, filter chips, and "coming up
@@ -157,16 +158,19 @@ export default function Inventory() {
           ←
         </button>
         <div className={styles.title}>{title}</div>
-        <button
-          type="button"
-          className={styles.addBtn}
-          onClick={() => navigate('/add-item')}
-          aria-label="Add item"
-        >
-          <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
-            <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </button>
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.addBtn}
+            onClick={() => navigate('/add-item')}
+            aria-label="Add item"
+          >
+            <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
+              <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+          <LogoutButton />
+        </div>
       </header>
 
       <div className={styles.tabs}>
@@ -175,14 +179,14 @@ export default function Inventory() {
           className={`${styles.tab} ${tab === 'owned' ? styles.tabActive : ''}`}
           onClick={() => setTab('owned')}
         >
-          Owned
+          Have
         </button>
         <button
           type="button"
           className={`${styles.tab} ${tab === 'wishlist' ? styles.tabActive : ''}`}
           onClick={() => setTab('wishlist')}
         >
-          Wish list
+          Need
         </button>
       </div>
 
@@ -225,8 +229,7 @@ export default function Inventory() {
 
 function EmptyState({ tab, onAdd }) {
   // Encourage-add copy, per the scoping decision. Different framing per tab:
-  // owned is about what they already have; wishlist is about what they'll
-  // need next.
+  // Have is about what they already own; Need is about what they'll need next.
   if (tab === 'owned') {
     return (
       <div className={styles.empty}>
@@ -242,12 +245,12 @@ function EmptyState({ tab, onAdd }) {
   }
   return (
     <div className={styles.empty}>
-      <div className={styles.emptyTitle}>Nothing on your wish list yet</div>
+      <div className={styles.emptyTitle}>Nothing you need yet</div>
       <div className={styles.emptyBody}>
         Add items you know you&rsquo;ll need — we&rsquo;ll help you spot gaps before you run out.
       </div>
       <button type="button" className={styles.emptyCta} onClick={onAdd}>
-        Add to wish list
+        Add a need
       </button>
     </div>
   )
