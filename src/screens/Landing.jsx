@@ -35,7 +35,7 @@ export default function Landing() {
     <div className={styles.page}>
       <nav className={styles.nav}>
         <div className={styles.logo}>littleloop</div>
-        <button className={styles.loginBtn} onClick={() => navigate('/signup')}>Log in</button>
+        <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
       </nav>
 
       <section className={styles.hero}>
