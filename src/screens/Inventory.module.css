@@ -212,13 +212,52 @@
   background: var(--white);
 }
 
+/* Rendered as a <button> so keyboard users can toggle collapse with Enter /
+   Space. `all: unset` strips the default button chrome; we redeclare the
+   display/padding/background explicitly so the card's appearance is unchanged
+   from when this was a <div>. The :last-child rule hides the bottom border
+   when the group is collapsed so the header's bottom edge sits flush with
+   the card's rounded bottom. */
 .groupHeader {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
   padding: 12px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: var(--gray-50);
   border-bottom: 0.5px solid var(--gray-200);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.groupHeader:last-child {
+  border-bottom: none;
+}
+
+.groupHeader:hover {
+  background: var(--gray-100);
+}
+
+.groupHeader:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+
+.groupHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.groupChev {
+  color: var(--gray-400);
+  transition: transform 0.2s ease;
+}
+
+.groupChevCollapsed {
+  transform: rotate(-90deg);
 }
 
 .groupTitle {

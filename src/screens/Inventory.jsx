@@ -71,6 +71,28 @@ export default function Inventory() {
   // middle-of-the-road default if we have no baby data.
   const [selectedAgeRange, setSelectedAgeRange] = useState(null)
 
+  // Per-tab collapsed category state. Default is all-expanded; category keys
+  // are added to the set when the user clicks a header to collapse it. Kept
+  // per-tab so collapsing Sleepwear on Owned doesn't hide it on Wish list too
+  // (different intent, same categories).
+  const [ownedCollapsed, setOwnedCollapsed] = useState(() => new Set())
+  const [wishCollapsed, setWishCollapsed] = useState(() => new Set())
+
+  function toggleOwnedGroup(cat) {
+    setOwnedCollapsed(prev => {
+      const next = new Set(prev)
+      if (next.has(cat)) next.delete(cat); else next.add(cat)
+      return next
+    })
+  }
+  function toggleWishGroup(cat) {
+    setWishCollapsed(prev => {
+      const next = new Set(prev)
+      if (next.has(cat)) next.delete(cat); else next.add(cat)
+      return next
+    })
+  }
+
   // ── Load household, baby, items on mount ────────────────────────────────
   useEffect(() => {
     if (!user) return
@@ -282,23 +304,28 @@ export default function Inventory() {
             {ownedGrouped.length === 0 && (
               <OwnedEmptyState onAdd={() => navigate('/add-item')} />
             )}
-            {ownedGrouped.map(group => (
-              <section className={styles.group} key={group.category}>
-                <div className={styles.groupHeader}>
-                  <span className={styles.groupTitle}>
-                    {CATEGORY_LABELS[group.category] || group.category}
-                  </span>
-                  <span className={styles.groupCount}>
-                    {group.items.length} {pluralize(group.items.length, 'item')}
-                  </span>
-                </div>
-                <div className={styles.groupItems}>
-                  {group.items.map(it => (
-                    <ItemRow key={it.id} item={it} tab="owned" />
-                  ))}
-                </div>
-              </section>
-            ))}
+            {ownedGrouped.map(group => {
+              const collapsed = ownedCollapsed.has(group.category)
+              const id = `owned-${group.category}`
+              return (
+                <section className={styles.group} key={group.category}>
+                  <GroupHeader
+                    title={CATEGORY_LABELS[group.category] || group.category}
+                    meta={`${group.items.length} ${pluralize(group.items.length, 'item')}`}
+                    collapsed={collapsed}
+                    onToggle={() => toggleOwnedGroup(group.category)}
+                    contentId={id}
+                  />
+                  {!collapsed && (
+                    <div className={styles.groupItems} id={id}>
+                      {group.items.map(it => (
+                        <ItemRow key={it.id} item={it} tab="owned" />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )
+            })}
             {/* Bottom-of-list CTA — only when there's already a list. The empty
                 state has its own CTA, so we'd just be duplicating it here. */}
             {ownedGrouped.length > 0 && (
@@ -326,6 +353,8 @@ export default function Inventory() {
             onOutgrowClick={handleOutgrowClick}
             onSlotTap={handleSlotTap}
             onAddWish={() => navigate('/add-item?mode=needed')}
+            collapsedCategories={wishCollapsed}
+            onToggleCategory={toggleWishGroup}
           />
         )}
       </main>
@@ -347,6 +376,8 @@ function WishlistView({
   onOutgrowClick,
   onSlotTap,
   onAddWish,
+  collapsedCategories,
+  onToggleCategory,
 }) {
   return (
     <>
@@ -402,28 +433,34 @@ function WishlistView({
 
       {/* Category-stacked slot groups — same .group card shape as the Owned
           tab, so the two tabs share a visual rhythm. Each group header shows
-          category label + clamped X-of-Y for this category at this age. */}
-      {coverageByCategory.map(group => (
-        <section className={styles.group} key={group.category}>
-          <div className={styles.groupHeader}>
-            <span className={styles.groupTitle}>
-              {CATEGORY_LABELS[group.category] || group.category}
-            </span>
-            <span className={styles.groupCount}>
-              {group.owned} of {group.recommended}
-            </span>
-          </div>
-          <div className={styles.groupItems}>
-            {group.rows.map(row => (
-              <SlotRow
-                key={row.slot.id}
-                row={row}
-                onClick={() => onSlotTap(row.slot.id)}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
+          category label + clamped X-of-Y for this category at this age and
+          is clickable to collapse the slot rows below it. */}
+      {coverageByCategory.map(group => {
+        const collapsed = collapsedCategories.has(group.category)
+        const id = `wish-${group.category}`
+        return (
+          <section className={styles.group} key={group.category}>
+            <GroupHeader
+              title={CATEGORY_LABELS[group.category] || group.category}
+              meta={`${group.owned} of ${group.recommended}`}
+              collapsed={collapsed}
+              onToggle={() => onToggleCategory(group.category)}
+              contentId={id}
+            />
+            {!collapsed && (
+              <div className={styles.groupItems} id={id}>
+                {group.rows.map(row => (
+                  <SlotRow
+                    key={row.slot.id}
+                    row={row}
+                    onClick={() => onSlotTap(row.slot.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )
+      })}
 
       {/* Other wishes section (non-canonical wishlist entries) */}
       <div className={styles.sectionHead} style={{ marginTop: 18 }}>
@@ -465,6 +502,44 @@ function WishlistView({
         </button>
       </div>
     </>
+  )
+}
+
+// ── Collapsible group header ───────────────────────────────────────────────
+// Shared between the Owned and Wish list tabs. Renders the card's title bar
+// as a <button> so keyboard + assistive-tech users get proper semantics, and
+// flips a chevron depending on collapsed state. The parent decides meta copy
+// (e.g. "6 items" on Owned vs "4 of 9" on Wish list) so this stays dumb.
+function GroupHeader({ title, meta, collapsed, onToggle, contentId }) {
+  return (
+    <button
+      type="button"
+      className={styles.groupHeader}
+      onClick={onToggle}
+      aria-expanded={!collapsed}
+      aria-controls={contentId}
+    >
+      <span className={styles.groupTitle}>{title}</span>
+      <span className={styles.groupHeaderRight}>
+        <span className={styles.groupCount}>{meta}</span>
+        <svg
+          className={`${styles.groupChev} ${collapsed ? styles.groupChevCollapsed : ''}`}
+          viewBox="0 0 10 6"
+          width="10"
+          height="6"
+          aria-hidden="true"
+        >
+          <path
+            d="M1 1l4 4 4-4"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
+    </button>
   )
 }
 
