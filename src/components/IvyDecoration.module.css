@@ -1,6 +1,6 @@
-/* Positioned in the horizontal centre of the left gutter and offset down
-   from the viewport top so the stem ends just below whichever nav the
-   page uses.
+/* Positioned in the horizontal centre of the left gutter. Spans the full
+   viewport height — the stem can extend all the way to the top of the
+   page.
 
    Content column across the app is ~680–720px wide, centered. With 720px
    content, the gutter runs from x=0 to x=(50vw - 360px). The centre of
@@ -13,10 +13,10 @@
    too small and the ivy would overlap the centred content column. */
 .ivy {
   position: fixed;
-  top: 64px;
   bottom: 0;
   left: calc(25vw - 240px);
   width: 140px;
+  height: 100vh;
   pointer-events: none;
   z-index: 0;
   overflow: visible;
