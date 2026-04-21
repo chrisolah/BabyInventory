@@ -23,3 +23,9 @@ where size_mode not in ('by_age','by_weight','both');
 alter table beta.babies
   add constraint babies_size_mode_check
   check (size_mode in ('by_age','by_weight','both'));
+
+-- The column default was still 'exact' from the original migration 001, so
+-- even with the new constraint in place, any INSERT that relied on the
+-- default (which is every insert — the app never sets size_mode at step 2)
+-- failed. Realign the default with the new enum.
+alter table beta.babies alter column size_mode set default 'by_age';
