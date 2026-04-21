@@ -4,7 +4,7 @@ import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
 import { SLOTS, SLOT_BY_ID } from '../lib/wardrobe'
-import LogoutButton from '../components/LogoutButton'
+import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import styles from './AddItem.module.css'
 
@@ -387,7 +387,7 @@ export default function AddItem() {
           {/* Mobile-only sprig beneath the title. Hidden on desktop. */}
           <IvySprig />
         </div>
-        <LogoutButton />
+        <ProfileMenu />
       </header>
 
       <main className={styles.body}>

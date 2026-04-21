@@ -4,7 +4,7 @@ import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
 import { SLOT_BY_ID, CATEGORY_LABELS } from '../lib/wardrobe'
-import LogoutButton from '../components/LogoutButton'
+import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import styles from './ItemDetail.module.css'
 
@@ -209,7 +209,7 @@ export default function ItemDetail() {
             <div className={styles.title}>Not found</div>
             <IvySprig />
           </div>
-          <LogoutButton />
+          <ProfileMenu />
         </header>
         <main className={styles.body}>
           <div className={styles.error}>

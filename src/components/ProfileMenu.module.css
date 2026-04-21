@@ -1,0 +1,99 @@
+/* Wrapper — position:relative anchors the absolutely-positioned menu to
+   the button's bottom-right corner regardless of where the component is
+   dropped in the header grid. */
+.root {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Same 36×36 pill as LogoutButton so the header layout stays unchanged
+   when we swap components. */
+.btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-600);
+  background: transparent;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+/* Dropdown. right:0 pins it to the button's right edge so it opens toward
+   the interior of the viewport (the button itself sits flush to the
+   right edge of the header). z-index 20 beats the sticky header (z:10)
+   so the menu floats above it. */
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  animation: menuRise 0.12s ease-out;
+}
+
+@keyframes menuRise {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Each menu item is a full-width button; icon + label separated by a gap.
+   `all: unset` strips default button chrome; we redeclare only the row
+   shape and typography. text-align:left keeps the label left-aligned. */
+.item {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--gray-900);
+  transition: background 0.12s;
+  width: 100%;
+  text-align: left;
+}
+
+.item:hover {
+  background: var(--gray-100);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+
+.item svg {
+  color: var(--gray-600);
+  flex-shrink: 0;
+}
+
+.divider {
+  height: 0.5px;
+  background: var(--gray-200);
+  margin: 2px 4px;
+}

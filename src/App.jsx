@@ -13,6 +13,7 @@ import Inventory from './screens/Inventory'
 import SlotDetail from './screens/SlotDetail'
 import AddItem from './screens/AddItem'
 import ItemDetail from './screens/ItemDetail'
+import Profile from './screens/Profile'
 import IvyDecoration from './components/IvyDecoration'
 
 // React Router v6 doesn't auto-scroll to the top on route change, so
@@ -66,6 +67,7 @@ function AppRoutes() {
       {/* /item/:id/edit reuses the AddItem form in edit mode. AddItem
           reads the :id path param to branch between INSERT and UPDATE. */}
       <Route path="/item/:id/edit" element={<ProtectedRoute><AddItem /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

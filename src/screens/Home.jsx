@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
-import LogoutButton from '../components/LogoutButton'
+import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import styles from './Home.module.css'
 
@@ -143,7 +143,7 @@ export default function Home() {
             </svg>
             Invite member
           </button>
-          <LogoutButton />
+          <ProfileMenu />
         </div>
       </header>
 
