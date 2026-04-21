@@ -118,13 +118,17 @@ export default function Home() {
           track of sizes, gaps, and outgrown items.
         </p>
 
-        <div className={styles.emptyCard}>
-          <div className={styles.emptyTitle}>Nothing here yet</div>
+        <button
+          type="button"
+          className={styles.emptyCard}
+          onClick={() => navigate('/inventory')}
+        >
+          <div className={styles.emptyTitle}>Start your inventory</div>
           <div className={styles.emptySub}>
-            The inventory view is coming soon. In the meantime, invite a
-            co-parent or grandparent so they're ready to help when it lands.
+            Tap here to see your wardrobe and add your first item — a onesie,
+            sleepsuit, anything you already have.
           </div>
-        </div>
+        </button>
       </main>
 
       {showInvite && (
