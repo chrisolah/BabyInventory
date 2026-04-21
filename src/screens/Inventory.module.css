@@ -180,6 +180,30 @@
   opacity: 0.9;
 }
 
+/* Bottom-of-list CTA on the Owned tab. Sits under the last category group as
+   a second way to add items once the header + button has scrolled out of view.
+   Kept intentionally quieter than .emptyCta — it's a repeat action, not the
+   primary "get started" nudge. */
+.addMoreBtn {
+  margin-top: 4px;
+  padding: 13px 16px;
+  width: 100%;
+  background: var(--white);
+  color: var(--teal-dark);
+  border: 1px dashed var(--gray-300);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.addMoreBtn:hover {
+  background: var(--gray-50);
+  border-color: var(--teal);
+}
+
 /* ── Category groups ──────────────────────────────────────── */
 .group {
   border: 0.5px solid var(--gray-200);
