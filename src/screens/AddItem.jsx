@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
+import { SLOTS, SLOT_BY_ID } from '../lib/wardrobe'
 import LogoutButton from '../components/LogoutButton'
 import styles from './AddItem.module.css'
 
@@ -70,6 +71,7 @@ export default function AddItem() {
   const initialMode = searchParams.get('mode') === 'needed' ? 'needed' : 'owned'
   const initialCategoryParam = searchParams.get('category')
   const initialSizeParam = searchParams.get('size')
+  const initialSlotParam = searchParams.get('from_slot')
 
   // Figure out household + baby once, on mount. We need household_id to
   // insert; baby_id is soft-nullable but we set it when we can so items tie
@@ -85,7 +87,20 @@ export default function AddItem() {
   const [category, setCategory] = useState(() =>
     CATEGORIES.some(c => c.value === initialCategoryParam) ? initialCategoryParam : ''
   )
-  const [itemType, setItemType] = useState('')
+  // Item type is now a slot id from the wardrobe taxonomy (e.g. 'bodysuits',
+  // 'pajamas'). Old free-text item_types still work on read paths — the
+  // getSlotForItem() keyword matcher handles them — but new rows are stored
+  // as slot ids so the Wish list tab can route them straight back to a slot
+  // without any guesswork.
+  const [itemType, setItemType] = useState(() => {
+    const slot = initialSlotParam ? SLOT_BY_ID[initialSlotParam] : null
+    // Only accept the incoming slot if it actually lives under the incoming
+    // category — otherwise we'd end up with a type that can't be picked from
+    // the filtered dropdown, and canSubmit would fail silently.
+    if (!slot) return ''
+    if (slot.category !== initialCategoryParam) return ''
+    return slot.id
+  })
   const [sizeLabel, setSizeLabel] = useState(() =>
     SIZES.includes(initialSizeParam) ? initialSizeParam : ''
   )
@@ -139,11 +154,29 @@ export default function AddItem() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
+  // Slots available for the current category, in wardrobe.js order. Keeping
+  // this memo-ed lets the <select> re-render without re-filtering on every
+  // keystroke in unrelated fields.
+  const typeOptions = useMemo(
+    () => (category ? SLOTS.filter(s => s.category === category) : []),
+    [category]
+  )
+
   // Fire analytics when the user narrows down specific fields — helps spot
   // drop-off points in the funnel. Keep cheap: one event per terminal choice.
   function onCategoryChange(v) {
     setCategory(v)
+    // Reset the type if it doesn't belong to the newly chosen category.
+    // Otherwise a stale selection can sneak past canSubmit (value is set,
+    // but not in the visible dropdown).
+    const currentSlot = itemType ? SLOT_BY_ID[itemType] : null
+    if (!currentSlot || currentSlot.category !== v) setItemType('')
     if (v) track.itemCategorySelected(v)
+  }
+
+  function onTypeChange(v) {
+    setItemType(v)
+    if (v) track.itemCategorySelected(v) // reuse: tracks refinement, not category
   }
 
   function onSizeChange(v) {
@@ -153,7 +186,7 @@ export default function AddItem() {
 
   function canSubmit() {
     if (!household) return false
-    if (!category || !itemType.trim() || !sizeLabel) return false
+    if (!category || !itemType || !sizeLabel) return false
     if (mode === 'owned' && !condition) return false
     if (!(quantity >= 1)) return false
     return true
@@ -170,7 +203,10 @@ export default function AddItem() {
       household_id: household.id,
       baby_id: baby?.id ?? null,
       category,
-      item_type: itemType.trim().toLowerCase().replace(/\s+/g, '_'),
+      // item_type is a slot id from the wardrobe taxonomy. Stored raw (no
+      // casing / whitespace tricks) so it round-trips cleanly through
+      // getSlotForItem on read.
+      item_type: itemType,
       size_label: sizeLabel,
       inventory_status: mode,
       condition: mode === 'owned' ? condition : null,
@@ -259,15 +295,21 @@ export default function AddItem() {
 
           <div className={styles.formGroup}>
             <label className={styles.label} htmlFor="ai-type">Type</label>
-            <input
+            <select
               id="ai-type"
               className={styles.input}
-              type="text"
-              placeholder="e.g. long-sleeve onesie, sleepsuit, cardigan"
               value={itemType}
-              onChange={e => setItemType(e.target.value)}
+              onChange={e => onTypeChange(e.target.value)}
               required
-            />
+              disabled={!category}
+            >
+              <option value="">
+                {category ? 'Pick one…' : 'Choose a category first'}
+              </option>
+              {typeOptions.map(s => (
+                <option key={s.id} value={s.id}>{s.label}</option>
+              ))}
+            </select>
           </div>
 
           <div className={styles.formGroup}>
