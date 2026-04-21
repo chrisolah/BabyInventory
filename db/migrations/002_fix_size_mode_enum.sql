@@ -12,6 +12,14 @@
 alter table beta.babies
   drop constraint if exists babies_size_mode_check;
 
+-- Migrate any pre-existing rows from the old enum ('exact') to the new one.
+-- Also defensively catch any other stale value so the new constraint doesn't
+-- fail on re-apply. On 2026-04-20, beta had a row with size_mode='exact'
+-- blocking this migration; this backfill makes the migration idempotent.
+update beta.babies
+set size_mode = 'by_age'
+where size_mode not in ('by_age','by_weight','both');
+
 alter table beta.babies
   add constraint babies_size_mode_check
   check (size_mode in ('by_age','by_weight','both'));
