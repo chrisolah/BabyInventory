@@ -542,7 +542,7 @@
 
 .slotCountComplete { color: var(--teal-dark); }
 .slotCountGap { color: var(--gray-600); }
-.slotCountEmpty { color: #C44A4A; }
+.slotCountEmpty { color: #B8572E; }
 
 .slotChev {
   color: var(--gray-300);
@@ -582,7 +582,7 @@
 }
 
 .slotHintNeed {
-  color: #C44A4A;
+  color: #B8572E;
   font-weight: 500;
 }
 
