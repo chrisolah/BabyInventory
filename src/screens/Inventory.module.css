@@ -267,3 +267,285 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
+
+/* ── Wish list tab ────────────────────────────────────────── */
+/* Age-range chip navbar. Horizontally scrollable on narrow screens; padding
+   matches the body so chips visually align with the slot list below. */
+.ageNav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 2px 4px;
+  margin: 0 -2px 4px; /* compensate for the 2px horizontal padding */
+}
+
+.ageNav::-webkit-scrollbar { display: none; }
+
+.ageChip {
+  padding: 6px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  color: var(--gray-600);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.ageChip:hover {
+  background: var(--gray-50);
+}
+
+.ageChipSelected {
+  background: var(--teal-dark);
+  border-color: var(--teal-dark);
+  color: var(--white);
+}
+
+.ageChipSelected:hover {
+  background: var(--teal-dark);
+  color: var(--white);
+}
+
+.ageChipPast {
+  opacity: 0.5;
+}
+
+/* Outgrow banner — amber, tappable to jump to the next size range. */
+.banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  margin: 4px 0 4px;
+  background: var(--amber-light);
+  border: 0.5px solid #F1D79F;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.4;
+  color: #7E5510;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.banner:hover {
+  background: #F8E5BE;
+}
+
+.bannerIcon {
+  font-size: 14px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.bannerBody strong {
+  color: #5F3F07;
+  font-weight: 600;
+}
+
+/* Shared section headers — slot table, other wishes, etc. */
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 2px 6px;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.sectionMeta {
+  font-size: 11px;
+  color: var(--gray-400);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Slot list container — rounded card with rows inside. */
+.slotList {
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.slot {
+  all: unset;
+  display: block;
+  padding: 12px 14px;
+  border-bottom: 0.5px solid var(--gray-200);
+  cursor: pointer;
+  transition: background 0.15s;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.slot:last-child {
+  border-bottom: none;
+}
+
+.slot:hover {
+  background: var(--gray-50);
+}
+
+.slotRow1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 7px;
+}
+
+.slotName {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.slotStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.slotCount {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.slotCountComplete { color: var(--teal-dark); }
+.slotCountGap { color: var(--gray-600); }
+.slotCountEmpty { color: #C44A4A; }
+
+.slotChev {
+  color: var(--gray-300);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.barTrack {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--gray-100);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--teal);
+  transition: width 0.3s;
+}
+
+.barFillComplete {
+  background: var(--teal-dark);
+}
+
+.barFillEmpty {
+  background: var(--gray-200);
+}
+
+.slotHint {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-top: 5px;
+}
+
+.slotHintNeed {
+  color: #C44A4A;
+  font-weight: 500;
+}
+
+.slotHintDone {
+  color: var(--teal-dark);
+  font-weight: 500;
+}
+
+/* Other wishes section. Same card treatment as slotList for consistency. */
+.otherWishList {
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.otherEmpty {
+  padding: 14px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--gray-400);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.wish {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 0.5px solid var(--gray-100);
+}
+
+.wish:last-of-type {
+  border-bottom: none;
+}
+
+.wishName {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--gray-900);
+}
+
+.wishPriority {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+}
+
+.wishPriorityAmber {
+  background: var(--amber-light);
+  color: #7E5510;
+}
+
+.wishAddBtn {
+  padding: 11px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--gray-600);
+  background: none;
+  border: none;
+  border-top: 0.5px solid var(--gray-200);
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+
+.wishAddBtn:hover {
+  background: var(--gray-50);
+}

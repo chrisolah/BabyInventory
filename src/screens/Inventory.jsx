@@ -2,47 +2,28 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { track } from '../lib/analytics'
+import {
+  AGE_RANGES,
+  CATEGORY_LABELS,
+  computeCoverage,
+  otherWishes,
+  inferAgeRange,
+  shouldShowOutgrowBanner,
+  pluralize,
+} from '../lib/wardrobe'
 import LogoutButton from '../components/LogoutButton'
 import styles from './Inventory.module.css'
 
-// Inventory is the user's wardrobe view. Two tabs:
-//   - Have → items with inventory_status = 'owned' (or 'outgrown' — still visible)
-//   - Need → items with inventory_status = 'needed'
-// Items are grouped by category and listed beneath each category header.
+// Inventory has two tabs:
+//   - Owned    → category-grouped list of items the user has
+//   - Wish list → recommended-wardrobe view: an age-range navbar across the
+//                 top, then one row per canonical slot (Pajamas, Bodysuits…)
+//                 with a progress bar showing owned count vs recommended.
 //
-// The full prototype has a size-coverage card, filter chips, and "coming up
-// soon" alerts — all of which need wardrobe-recommendation data we don't have
-// yet. This pass deliberately ships without them; the page is still useful
-// as the add-item landing.
-//
-// Loads: first household the user belongs to (most-recently joined), the
-// baby in that household (for the header title), and every clothing_item in
-// that household. RLS filters to just the user's household on the server.
-
-const CATEGORY_LABELS = {
-  tops_and_bodysuits: 'Tops and bodysuits',
-  one_pieces: 'One-pieces',
-  bottoms: 'Bottoms',
-  dresses_and_skirts: 'Dresses and skirts',
-  outerwear: 'Outerwear',
-  sleepwear: 'Sleepwear',
-  footwear: 'Footwear',
-  accessories: 'Accessories',
-  swimwear: 'Swimwear',
-}
-// Display order mirrors how parents naturally think about the wardrobe —
-// tops/bottoms first, seasonal/specialty last.
-const CATEGORY_ORDER = [
-  'tops_and_bodysuits',
-  'one_pieces',
-  'bottoms',
-  'dresses_and_skirts',
-  'outerwear',
-  'sleepwear',
-  'footwear',
-  'accessories',
-  'swimwear',
-]
+// Category grouping on the Owned tab is unchanged. The Wish list rewrite
+// lives below; see src/lib/wardrobe.js for the slot taxonomy and coverage
+// math.
 
 const STATUS_LABEL = {
   owned: 'Owned',
@@ -58,6 +39,19 @@ const PRIORITY_LABEL = {
   low_priority: 'Low priority',
 }
 
+// Display order for the Owned tab (categories grouping).
+const CATEGORY_ORDER = [
+  'tops_and_bodysuits',
+  'one_pieces',
+  'bottoms',
+  'dresses_and_skirts',
+  'outerwear',
+  'sleepwear',
+  'footwear',
+  'accessories',
+  'swimwear',
+]
+
 export default function Inventory() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -69,15 +63,17 @@ export default function Inventory() {
   const [items, setItems] = useState([])
   const [error, setError] = useState(null)
 
+  // The currently selected age range on the Wish list tab. Initialized from
+  // the baby's DOB once we've loaded it; falls back to '3-6M' as a reasonable
+  // middle-of-the-road default if we have no baby data.
+  const [selectedAgeRange, setSelectedAgeRange] = useState(null)
+
   // ── Load household, baby, items on mount ────────────────────────────────
   useEffect(() => {
     if (!user) return
     let cancelled = false
 
     async function load() {
-      // Membership → household. Most-recently joined wins (same policy as
-      // Onboarding resume), which is a safe default for a solo-household
-      // MVP and a reasonable starting point for multi-household later.
       const { data: memberships, error: memErr } = await supabase
         .schema(currentSchema)
         .from('household_members')
@@ -95,11 +91,11 @@ export default function Inventory() {
 
       const h = memberships[0].households
 
-      // Baby is optional — header still works without it.
+      // Grab baby including DOB/due_date so we can infer current age range.
       const { data: babies } = await supabase
         .schema(currentSchema)
         .from('babies')
-        .select('id, name')
+        .select('id, name, date_of_birth, due_date, size_mode, gender')
         .eq('household_id', h.id)
         .limit(1)
 
@@ -119,9 +115,16 @@ export default function Inventory() {
         return
       }
 
+      const loadedBaby = babies?.[0] ?? null
       setHousehold(h)
-      setBaby(babies?.[0] ?? null)
+      setBaby(loadedBaby)
       setItems(itemsData || [])
+
+      // Default the Wish list age range to the baby's current range. If we
+      // can't infer (no baby / no dates / >24M), fall back to the middle.
+      const inferred = inferAgeRange(loadedBaby)
+      setSelectedAgeRange(inferred.currentRange || '3-6M')
+
       setLoading(false)
     }
 
@@ -129,21 +132,69 @@ export default function Inventory() {
     return () => { cancelled = true }
   }, [user])
 
-  // ── Filter by tab + group by category ───────────────────────────────────
-  const grouped = useMemo(() => {
-    const targetStatus = tab === 'owned' ? 'owned' : 'needed'
-    const filtered = items.filter(i => i.inventory_status === targetStatus)
+  // ── Owned tab: items grouped by category ────────────────────────────────
+  const ownedGrouped = useMemo(() => {
+    const filtered = items.filter(i => i.inventory_status === 'owned')
     const groups = Object.fromEntries(CATEGORY_ORDER.map(c => [c, []]))
     for (const it of filtered) {
       if (groups[it.category]) groups[it.category].push(it)
     }
-    // Return only categories that have items, in defined order.
     return CATEGORY_ORDER
       .filter(c => groups[c].length > 0)
       .map(c => ({ category: c, items: groups[c] }))
-  }, [items, tab])
+  }, [items])
+
+  // ── Wish list tab: slot coverage + other wishes for selected age range ──
+  const coverage = useMemo(() => {
+    if (!selectedAgeRange) return []
+    return computeCoverage(items, selectedAgeRange)
+  }, [items, selectedAgeRange])
+
+  const otherWishItems = useMemo(() => {
+    if (!selectedAgeRange) return []
+    return otherWishes(items, selectedAgeRange)
+  }, [items, selectedAgeRange])
+
+  // Overall coverage summary for the section meta ("27 of 64"). Clamp each
+  // slot's contribution to recommended so over-stocked slots don't push the
+  // summary past 100%.
+  const coverageSummary = useMemo(() => {
+    let owned = 0
+    let recommended = 0
+    for (const row of coverage) {
+      owned += Math.min(row.ownedCount, row.recommended)
+      recommended += row.recommended
+    }
+    return { owned, recommended }
+  }, [coverage])
+
+  const ageInfo = useMemo(() => inferAgeRange(baby), [baby])
+  const showOutgrow = shouldShowOutgrowBanner(ageInfo)
 
   const title = baby?.name ? `${baby.name}'s wardrobe` : 'Your wardrobe'
+
+  // Fire analytics once per (tab, age range) visit — low-volume event that
+  // tells us how often users actually engage with recommendations.
+  useEffect(() => {
+    if (tab !== 'wishlist' || !selectedAgeRange) return
+    track.gapAlertViewed({
+      age_range: selectedAgeRange,
+      owned: coverageSummary.owned,
+      recommended: coverageSummary.recommended,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, selectedAgeRange])
+
+  function handleSlotTap(slotId) {
+    track.recommendationClicked({ age_range: selectedAgeRange, slot: slotId })
+    navigate(`/inventory/slot/${selectedAgeRange}/${slotId}`)
+  }
+
+  function handleOutgrowClick() {
+    if (!ageInfo.nextRange) return
+    track.gapAlertActioned({ from: ageInfo.currentRange, to: ageInfo.nextRange })
+    setSelectedAgeRange(ageInfo.nextRange)
+  }
 
   // ── Render ───────────────────────────────────────────────────────────
   return (
@@ -179,14 +230,14 @@ export default function Inventory() {
           className={`${styles.tab} ${tab === 'owned' ? styles.tabActive : ''}`}
           onClick={() => setTab('owned')}
         >
-          Have
+          Owned
         </button>
         <button
           type="button"
           className={`${styles.tab} ${tab === 'wishlist' ? styles.tabActive : ''}`}
           onClick={() => setTab('wishlist')}
         >
-          Need
+          Wish list
         </button>
       </div>
 
@@ -199,67 +250,244 @@ export default function Inventory() {
           </div>
         )}
 
-        {!loading && !error && grouped.length === 0 && (
-          <EmptyState tab={tab} onAdd={() => navigate('/add-item')} />
+        {/* ── Owned tab ─────────────────────────────────────────── */}
+        {!loading && !error && tab === 'owned' && (
+          <>
+            {ownedGrouped.length === 0 && (
+              <OwnedEmptyState onAdd={() => navigate('/add-item')} />
+            )}
+            {ownedGrouped.map(group => (
+              <section className={styles.group} key={group.category}>
+                <div className={styles.groupHeader}>
+                  <span className={styles.groupTitle}>
+                    {CATEGORY_LABELS[group.category] || group.category}
+                  </span>
+                  <span className={styles.groupCount}>
+                    {group.items.length} {pluralize(group.items.length, 'item')}
+                  </span>
+                </div>
+                <div className={styles.groupItems}>
+                  {group.items.map(it => (
+                    <ItemRow key={it.id} item={it} tab="owned" />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </>
         )}
 
-        {!loading && !error && grouped.map(group => (
-          <section className={styles.group} key={group.category}>
-            <div className={styles.groupHeader}>
-              <span className={styles.groupTitle}>
-                {CATEGORY_LABELS[group.category] || group.category}
-              </span>
-              <span className={styles.groupCount}>
-                {group.items.length} {group.items.length === 1 ? 'item' : 'items'}
-              </span>
-            </div>
-            <div className={styles.groupItems}>
-              {group.items.map(it => (
-                <ItemRow key={it.id} item={it} tab={tab} />
-              ))}
-            </div>
-          </section>
-        ))}
+        {/* ── Wish list tab ─────────────────────────────────────── */}
+        {!loading && !error && tab === 'wishlist' && selectedAgeRange && (
+          <WishlistView
+            ageRange={selectedAgeRange}
+            onAgeChange={setSelectedAgeRange}
+            coverage={coverage}
+            coverageSummary={coverageSummary}
+            otherWishItems={otherWishItems}
+            ageInfo={ageInfo}
+            showOutgrow={showOutgrow}
+            onOutgrowClick={handleOutgrowClick}
+            onSlotTap={handleSlotTap}
+            onAddWish={() => navigate('/add-item?mode=needed')}
+          />
+        )}
       </main>
     </div>
   )
 }
 
-// ── Components ────────────────────────────────────────────────────────────
+// ── Wish list view ──────────────────────────────────────────────────────────
+// Kept as a separate component so Inventory's main function stays scannable.
+// Pure presentational — all state + callbacks come from the parent.
+function WishlistView({
+  ageRange,
+  onAgeChange,
+  coverage,
+  coverageSummary,
+  otherWishItems,
+  ageInfo,
+  showOutgrow,
+  onOutgrowClick,
+  onSlotTap,
+  onAddWish,
+}) {
+  return (
+    <>
+      {/* Age-range chip navbar — horizontally scrollable on narrow screens */}
+      <div className={styles.ageNav}>
+        {AGE_RANGES.map(range => {
+          const isSelected = range === ageRange
+          const isPast =
+            ageInfo.currentRange &&
+            AGE_RANGES.indexOf(range) < AGE_RANGES.indexOf(ageInfo.currentRange)
+          return (
+            <button
+              key={range}
+              type="button"
+              className={
+                `${styles.ageChip} ` +
+                (isSelected ? styles.ageChipSelected : '') + ' ' +
+                (isPast ? styles.ageChipPast : '')
+              }
+              onClick={() => onAgeChange(range)}
+            >
+              {range}
+            </button>
+          )
+        })}
+      </div>
 
-function EmptyState({ tab, onAdd }) {
-  // Encourage-add copy, per the scoping decision. Different framing per tab:
-  // Have is about what they already own; Need is about what they'll need next.
-  if (tab === 'owned') {
-    return (
-      <div className={styles.empty}>
-        <div className={styles.emptyTitle}>Start your inventory</div>
-        <div className={styles.emptyBody}>
-          Let&rsquo;s start with something you already have — a onesie, a sleepsuit, anything.
-        </div>
-        <button type="button" className={styles.emptyCta} onClick={onAdd}>
-          Add first item
+      {/* Outgrow banner — amber, only when baby is ~3 weeks from the next range */}
+      {showOutgrow && (
+        <button
+          type="button"
+          className={styles.banner}
+          onClick={onOutgrowClick}
+        >
+          <span className={styles.bannerIcon} aria-hidden="true">⏰</span>
+          <span className={styles.bannerBody}>
+            <strong>
+              Rolling into {ageInfo.nextRange} in ~{Math.max(ageInfo.daysToNextRange, 1)}{' '}
+              {pluralize(Math.max(ageInfo.daysToNextRange, 1), 'day')}.
+            </strong>{' '}
+            Start planning ahead →
+          </span>
+        </button>
+      )}
+
+      {/* Coverage summary header */}
+      <div className={styles.sectionHead}>
+        <span className={styles.sectionTitle}>Recommended wardrobe</span>
+        <span className={styles.sectionMeta}>
+          {coverageSummary.owned} of {coverageSummary.recommended}
+        </span>
+      </div>
+
+      {/* Slot list */}
+      <div className={styles.slotList}>
+        {coverage.map(row => (
+          <SlotRow
+            key={row.slot.id}
+            row={row}
+            onClick={() => onSlotTap(row.slot.id)}
+          />
+        ))}
+      </div>
+
+      {/* Other wishes section (non-canonical wishlist entries) */}
+      <div className={styles.sectionHead} style={{ marginTop: 18 }}>
+        <span className={styles.sectionTitle}>Other wishes</span>
+        <span className={styles.sectionMeta}>
+          {otherWishItems.length} in {ageRange}
+        </span>
+      </div>
+      <div className={styles.otherWishList}>
+        {otherWishItems.length === 0 && (
+          <div className={styles.otherEmpty}>
+            Anything specific on your list? Add it here — it&rsquo;ll live alongside the
+            recommended wardrobe.
+          </div>
+        )}
+        {otherWishItems.map(item => (
+          <div className={styles.wish} key={item.id}>
+            <div className={styles.wishName}>
+              {item.name || humanizeItemType(item.item_type)}
+            </div>
+            {item.priority && (
+              <span
+                className={
+                  `${styles.wishPriority} ` +
+                  (item.priority === 'nice_to_have' ? styles.wishPriorityAmber : '')
+                }
+              >
+                {PRIORITY_LABEL[item.priority]}
+              </span>
+            )}
+          </div>
+        ))}
+        <button
+          type="button"
+          className={styles.wishAddBtn}
+          onClick={onAddWish}
+        >
+          + Add wish
         </button>
       </div>
-    )
+    </>
+  )
+}
+
+// ── Slot row ────────────────────────────────────────────────────────────────
+function SlotRow({ row, onClick }) {
+  const { slot, ownedCount, recommended, needed, status } = row
+  const percent = recommended > 0
+    ? Math.min(100, Math.round((ownedCount / recommended) * 100))
+    : 0
+
+  let hintText = null
+  let hintClass = null
+  if (status === 'complete') {
+    hintText = '✓ Complete'
+    hintClass = styles.slotHintDone
+  } else if (status === 'empty') {
+    hintText = 'None yet'
+    hintClass = styles.slotHintNeed
+  } else {
+    hintText = `Need ${needed} more`
+    hintClass = styles.slotHintNeed
   }
+
+  const countClass =
+    status === 'complete' ? styles.slotCountComplete :
+    status === 'empty'    ? styles.slotCountEmpty   :
+                            styles.slotCountGap
+  const barFillClass =
+    status === 'complete' ? styles.barFillComplete :
+    status === 'empty'    ? styles.barFillEmpty   :
+                            ''
+
+  return (
+    <button type="button" className={styles.slot} onClick={onClick}>
+      <div className={styles.slotRow1}>
+        <span className={styles.slotName}>{slot.label}</span>
+        <span className={styles.slotStatus}>
+          <span className={`${styles.slotCount} ${countClass}`}>
+            {ownedCount} of {recommended}
+          </span>
+          <span className={styles.slotChev} aria-hidden="true">›</span>
+        </span>
+      </div>
+      <div className={styles.barTrack}>
+        <div
+          className={`${styles.barFill} ${barFillClass}`}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <div className={styles.slotHint}>
+        <span className={hintClass}>{hintText}</span>
+        {slot.hint && <span>{slot.hint}</span>}
+      </div>
+    </button>
+  )
+}
+
+// ── Owned-tab empty state ──────────────────────────────────────────────────
+function OwnedEmptyState({ onAdd }) {
   return (
     <div className={styles.empty}>
-      <div className={styles.emptyTitle}>Nothing you need yet</div>
+      <div className={styles.emptyTitle}>Start your inventory</div>
       <div className={styles.emptyBody}>
-        Add items you know you&rsquo;ll need — we&rsquo;ll help you spot gaps before you run out.
+        Let&rsquo;s start with something you already have — a onesie, a sleepsuit, anything.
       </div>
       <button type="button" className={styles.emptyCta} onClick={onAdd}>
-        Add a need
+        Add first item
       </button>
     </div>
   )
 }
 
+// ── Item row (Owned tab) ───────────────────────────────────────────────────
 function ItemRow({ item, tab }) {
-  // Badge text differs by tab:
-  //   - Owned tab: show inventory_status (Owned / Outgrown / etc.)
-  //   - Wishlist tab: show priority (Must have / Nice to have) if set
   const badge = tab === 'owned'
     ? (STATUS_LABEL[item.inventory_status] ?? item.inventory_status)
     : (PRIORITY_LABEL[item.priority] ?? 'Needed')
@@ -280,8 +508,6 @@ function ItemRow({ item, tab }) {
   )
 }
 
-// item_type is free text in the DB ("long_sleeve_onesie", "sleepsuit", etc.).
-// For display, turn snake_case into "Snake case".
 function humanizeItemType(s) {
   if (!s) return 'Item'
   return s.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())
