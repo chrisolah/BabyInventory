@@ -11,12 +11,16 @@ import Home from './screens/Home'
 import Inventory from './screens/Inventory'
 import SlotDetail from './screens/SlotDetail'
 import AddItem from './screens/AddItem'
+import IvyDecoration from './components/IvyDecoration'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <div />
   if (!user) return <Navigate to="/" replace />
-  return children
+  // IvyDecoration is fixed-positioned with pointer-events:none, so it lives
+  // alongside children without wrapping them in a layout container. Hidden
+  // on narrow viewports via its own CSS.
+  return <>{children}<IvyDecoration /></>
 }
 
 function PublicRoute({ children }) {
