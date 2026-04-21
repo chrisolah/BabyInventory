@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import './styles/globals.css'
 
@@ -12,6 +13,23 @@ import Inventory from './screens/Inventory'
 import SlotDetail from './screens/SlotDetail'
 import AddItem from './screens/AddItem'
 import IvyDecoration from './components/IvyDecoration'
+
+// React Router v6 doesn't auto-scroll to the top on route change, so
+// scroll position carries between pages. Most noticeable on mobile:
+// after scrolling down the Login form to tap submit, you'd land on
+// /home with the page already scrolled past the sticky header, making
+// it look like the header was missing. This effect resets scroll to
+// the top every time pathname changes.
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    // `instant` avoids a smooth-scroll animation on page-to-page jumps,
+    // which feels laggy when you've just tapped Log in and expect the
+    // next page to start at the top.
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [pathname])
+  return null
+}
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -52,6 +70,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ScrollToTop />
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>

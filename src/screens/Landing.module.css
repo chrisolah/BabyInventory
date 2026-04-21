@@ -6,12 +6,21 @@
 }
 
 /* ── Nav ── */
+/* position:relative + z-index lift the nav above the IvyBanner that sits
+   directly below it in the DOM. Combined with the banner's -32px margin-top
+   on mobile, this causes any upward-growing ivy leaves to visually tuck
+   behind the nav — the vine reads as peeking out from under the Littleloop
+   wordmark instead of crashing across it. Solid white background is what
+   actually masks the leaves behind the nav. */
 .nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
   border-bottom: 0.5px solid var(--gray-100);
+  background: var(--white);
+  position: relative;
+  z-index: 2;
 }
 .logo {
   font-family: var(--font-display);

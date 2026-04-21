@@ -52,12 +52,16 @@
   min-width: 0;
 }
 
+/* position:relative + z-index lift the title above the sibling IvySprig so
+   sprig leaves peeking up sit behind the title rather than covering it. */
 .title {
   font-family: var(--font-display);
   font-size: 16px;
   font-weight: 500;
   text-align: center;
   color: var(--gray-900);
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Body ─────────────────────────────────────────────────── */
