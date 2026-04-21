@@ -326,7 +326,12 @@ export default function Inventory() {
                   {!collapsed && (
                     <div className={styles.groupItems} id={id}>
                       {group.items.map(it => (
-                        <ItemRow key={it.id} item={it} tab="owned" />
+                        <ItemRow
+                          key={it.id}
+                          item={it}
+                          tab="owned"
+                          onClick={() => navigate(`/item/${it.id}`)}
+                        />
                       ))}
                     </div>
                   )}
@@ -360,6 +365,7 @@ export default function Inventory() {
             onOutgrowClick={handleOutgrowClick}
             onSlotTap={handleSlotTap}
             onAddWish={() => navigate('/add-item?mode=needed')}
+            onItemTap={(itemId) => navigate(`/item/${itemId}`)}
             collapsedCategories={wishCollapsed}
             onToggleCategory={toggleWishGroup}
           />
@@ -383,6 +389,7 @@ function WishlistView({
   onOutgrowClick,
   onSlotTap,
   onAddWish,
+  onItemTap,
   collapsedCategories,
   onToggleCategory,
 }) {
@@ -484,7 +491,13 @@ function WishlistView({
           </div>
         )}
         {otherWishItems.map(item => (
-          <div className={styles.wish} key={item.id}>
+          <button
+            type="button"
+            className={styles.wish}
+            key={item.id}
+            onClick={() => onItemTap(item.id)}
+            aria-label={`Open ${item.name || humanizeItemType(item.item_type)}`}
+          >
             <div className={styles.wishName}>
               {item.name || humanizeItemType(item.item_type)}
             </div>
@@ -498,7 +511,7 @@ function WishlistView({
                 {PRIORITY_LABEL[item.priority]}
               </span>
             )}
-          </div>
+          </button>
         ))}
         <button
           type="button"
@@ -620,7 +633,10 @@ function OwnedEmptyState({ onAdd }) {
 }
 
 // ── Item row (Owned tab) ───────────────────────────────────────────────────
-function ItemRow({ item, tab }) {
+// Rendered as a <button> so tapping anywhere on the row opens the item
+// detail page. `all: unset` on .itemRow in the stylesheet strips the
+// default button chrome; we redeclare only the visual bits we want.
+function ItemRow({ item, tab, onClick }) {
   const badge = tab === 'owned'
     ? (STATUS_LABEL[item.inventory_status] ?? item.inventory_status)
     : (PRIORITY_LABEL[item.priority] ?? 'Needed')
@@ -630,14 +646,19 @@ function ItemRow({ item, tab }) {
     .filter(Boolean)
 
   return (
-    <div className={styles.itemRow}>
+    <button
+      type="button"
+      className={styles.itemRow}
+      onClick={onClick}
+      aria-label={`Open ${displayName}`}
+    >
       <div className={styles.itemThumb} aria-hidden="true" />
       <div className={styles.itemBody}>
         <div className={styles.itemName}>{displayName}</div>
         <div className={styles.itemMeta}>{metaParts.join(' · ')}</div>
       </div>
       <span className={styles.itemBadge}>{badge}</span>
-    </div>
+    </button>
   )
 }
 

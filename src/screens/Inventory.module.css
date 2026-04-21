@@ -304,16 +304,36 @@
 }
 
 /* ── Item row ─────────────────────────────────────────────── */
+/* Rendered as a <button> so tapping anywhere on the row opens the item
+   detail page. `all: unset` strips the default button chrome; we redeclare
+   the display/padding/background/border explicitly to match the card-row
+   look it had when it was a <div>. text-align:left keeps multi-line
+   content left-aligned the way a div would be. */
 .itemRow {
+  all: unset;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
   border-bottom: 0.5px solid var(--gray-100);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s;
 }
 
 .itemRow:last-child {
   border-bottom: none;
+}
+
+.itemRow:hover {
+  background: var(--gray-50);
+}
+
+.itemRow:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
 }
 
 .itemThumb {
@@ -590,16 +610,34 @@
   text-align: center;
 }
 
+/* Rendered as a <button> so tapping the row opens the item detail page.
+   `all: unset` strips the default button chrome; we redeclare only what
+   we need to match the previous <div> appearance. */
 .wish {
+  all: unset;
+  box-sizing: border-box;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 14px;
   border-bottom: 0.5px solid var(--gray-100);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s;
 }
 
 .wish:last-of-type {
   border-bottom: none;
+}
+
+.wish:hover {
+  background: var(--gray-50);
+}
+
+.wish:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
 }
 
 .wishName {

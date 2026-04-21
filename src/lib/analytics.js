@@ -95,6 +95,10 @@ export const track = {
     logEvent('item_quantity_set', 'inventory', props, { id: 'add_item', step: 4 }),
   itemSaved: (props) =>
     logEvent('item_saved', 'inventory', props, { id: 'add_item', step: 5 }),
+  itemEdited: (props) =>
+    logEvent('item_edited', 'inventory', props),
+  itemDeleted: (props) =>
+    logEvent('item_deleted', 'inventory', props),
   itemMarkedOutgrown: (props) =>
     logEvent('item_marked_outgrown', 'inventory', props),
   gapAlertViewed: (props) =>

@@ -268,7 +268,13 @@ export default function SlotDetail() {
               {ownedItems.length > 0 && (
                 <div className={styles.itemList}>
                   {ownedItems.map(item => (
-                    <div className={styles.item} key={item.id}>
+                    <button
+                      type="button"
+                      className={styles.item}
+                      key={item.id}
+                      onClick={() => navigate(`/item/${item.id}`)}
+                      aria-label={`Open ${item.name || humanizeItemType(item.item_type)}`}
+                    >
                       <div className={styles.itemThumb} aria-hidden="true" />
                       <div className={styles.itemBody}>
                         <div className={styles.itemName}>
@@ -281,7 +287,7 @@ export default function SlotDetail() {
                         </div>
                       </div>
                       <span className={styles.itemBadge}>Owned</span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -295,7 +301,13 @@ export default function SlotDetail() {
                 </div>
                 <div className={styles.itemList}>
                   {neededItems.map(item => (
-                    <div className={styles.item} key={item.id}>
+                    <button
+                      type="button"
+                      className={styles.item}
+                      key={item.id}
+                      onClick={() => navigate(`/item/${item.id}`)}
+                      aria-label={`Open ${item.name || humanizeItemType(item.item_type)}`}
+                    >
                       <div className={styles.itemThumb} aria-hidden="true" />
                       <div className={styles.itemBody}>
                         <div className={styles.itemName}>
@@ -306,7 +318,7 @@ export default function SlotDetail() {
                         </div>
                       </div>
                       <span className={styles.itemBadgeAmber}>Wish</span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </section>

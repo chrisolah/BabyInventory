@@ -254,7 +254,13 @@
   gap: 8px;
 }
 
+/* Rendered as a <button> so tapping the row opens the item detail page.
+   `all: unset` strips default button chrome; we redeclare only the card
+   shape to match the previous <div> look. text-align:left keeps the
+   name/meta left-justified. */
 .item {
+  all: unset;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -262,6 +268,20 @@
   background: var(--white);
   border: 0.5px solid var(--gray-200);
   border-radius: 10px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.item:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
 }
 
 .itemThumb {
