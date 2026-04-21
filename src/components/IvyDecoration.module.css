@@ -1,30 +1,45 @@
-/* Fixed to the left gutter on wide screens. The centered 720px content
-   column leaves ~(vw - 720)/2 px of empty space on either side at wider
-   viewports; the ivy lives in that space on the left. On narrow screens
-   there's no gutter, so we hide it — otherwise it would overlap the
-   page content. */
+/* Positioned in the horizontal centre of the left gutter and offset down
+   from the viewport top so the stem ends just below whichever nav the
+   page uses.
+
+   Content column across the app is ~680–720px wide, centered. With 720px
+   content, the gutter runs from x=0 to x=(50vw - 360px). The centre of
+   that gutter is at 25vw - 180px, so a 140-wide container needs a left
+   edge of (25vw - 180px) - 70px = 25vw - 250px. Using 240px gives us a
+   tiny nudge toward the content — looks more intentional next to the
+   copy than pinned dead-centre in the gutter.
+
+   Hidden on viewports narrower than 960px — below that, the gutter is
+   too small and the ivy would overlap the centred content column. */
 .ivy {
   position: fixed;
-  left: 0;
+  top: 64px;
   bottom: 0;
+  left: calc(25vw - 240px);
   width: 140px;
-  height: 100vh;
   pointer-events: none;
   z-index: 0;
   overflow: visible;
 }
 
+/* Fill the container vertically; width scales proportionally via the
+   viewBox aspect ratio (140:800). preserveAspectRatio="xMidYMax meet"
+   on the SVG element itself keeps the stem bottom-anchored. On
+   viewports shorter than ~800px the whole vine shrinks proportionally
+   (smaller leaves, same shape). */
 .svg {
-  display: block;
-  width: 140px;
-  height: auto;
   position: absolute;
   bottom: 0;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 100%;
+  max-height: 800px;
+  width: auto;
+  display: block;
 }
 
-/* Stem — drawn bottom-up with a stroke-dashoffset trick. pathLength="1" on
-   the <path> normalises the geometry so the dasharray math is the same
+/* Stem — drawn bottom-up with a stroke-dashoffset trick. pathLength="1"
+   on the <path> normalises the geometry so the dasharray math is the same
    regardless of exactly how long the curve is. */
 .stem {
   stroke-dasharray: 1;
@@ -37,41 +52,35 @@
 }
 
 /* Leaves unfurl after the stem passes their attachment point. Each leaf
-   picks up the delay via a .leafDelayN class below. */
+   sets its own --leaf-scale custom property inline so the unfurl keyframe
+   can tween to different final sizes without needing N separate keyframes. */
 .leaf {
   opacity: 0;
   transform: scale(0.3);
-  transform-origin: 0% 50%;
+  transform-origin: 0 0;
   animation: unfurl 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 @keyframes unfurl {
-  to { opacity: 1; transform: scale(1); }
+  to {
+    opacity: 1;
+    transform: scale(var(--leaf-scale, 1));
+  }
 }
 
-/* Leaves are held back until the stem is roughly halfway up (stem animates
-   over 9s, so ~4.3s is the midpoint). From there they appear in sequence,
-   with the last few bunching near the top-right where the vine blooms out.
-   .leafBig bumps the final scale past 1.0 so top leaves feel more mature
-   than the ones lower on the stem. */
-.leafDelay1 { animation-delay: 4.3s; }
-.leafDelay2 { animation-delay: 5.0s; }
-.leafDelay3 { animation-delay: 5.7s; }
-.leafDelay4 { animation-delay: 6.4s; }
-.leafDelay5 { animation-delay: 7.1s; }
-.leafDelay6 { animation-delay: 7.8s; }
-.leafDelay7 { animation-delay: 8.3s; }
-
-/* Larger final scale for the top cluster — same unfurl animation, just
-   lands bigger. Keyframe target needs to match so the tween ends here
-   instead of at scale(1). */
-.leafBig {
-  animation-name: unfurlBig;
-}
-
-@keyframes unfurlBig {
-  to { opacity: 1; transform: scale(1.2); }
-}
+/* Leaves are held back until the stem is past the midway point. From 4.3s
+   they unfurl every ~0.4s, with the last two leaves spaced slightly wider
+   so the top bloom lands last. */
+.leafDelay1  { animation-delay: 4.3s; }
+.leafDelay2  { animation-delay: 4.7s; }
+.leafDelay3  { animation-delay: 5.1s; }
+.leafDelay4  { animation-delay: 5.5s; }
+.leafDelay5  { animation-delay: 5.9s; }
+.leafDelay6  { animation-delay: 6.3s; }
+.leafDelay7  { animation-delay: 6.7s; }
+.leafDelay8  { animation-delay: 7.1s; }
+.leafDelay9  { animation-delay: 7.6s; }
+.leafDelay10 { animation-delay: 8.2s; }
 
 /* Hide on narrow viewports — below ~960px there's not enough gutter for
    the ivy to fit without overlapping the centered content column. */
@@ -80,7 +89,7 @@
 }
 
 /* Respect users who prefer reduced motion. Skip the animation entirely
-   and just show the final state. */
+   and just show the final state at each leaf's declared --leaf-scale. */
 @media (prefers-reduced-motion: reduce) {
   .stem {
     animation: none;
@@ -89,9 +98,6 @@
   .leaf {
     animation: none;
     opacity: 1;
-    transform: scale(1);
-  }
-  .leafBig {
-    transform: scale(1.2);
+    transform: scale(var(--leaf-scale, 1));
   }
 }

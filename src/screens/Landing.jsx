@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { track } from '../lib/analytics'
+import IvyDecoration from '../components/IvyDecoration'
 import styles from './Landing.module.css'
 
 export default function Landing() {
@@ -33,6 +34,9 @@ export default function Landing() {
 
   return (
     <div className={styles.page}>
+      {/* Decorative ivy in the left gutter. Fixed-position, pointer-events:none,
+          hides itself below 960px viewport — can't affect layout. */}
+      <IvyDecoration />
       <nav className={styles.nav}>
         <div className={styles.logo}>littleloop</div>
         <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
