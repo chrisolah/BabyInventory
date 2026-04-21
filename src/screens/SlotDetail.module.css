@@ -48,12 +48,17 @@
   min-width: 0;
 }
 
+/* position:relative + z-index lift the title + subtitle above the sibling
+   IvySprig so sprig leaves peeking up sit behind the slot label rather
+   than covering it. */
 .title {
   font-family: var(--font-display);
   font-size: 16px;
   font-weight: 500;
   color: var(--gray-900);
   line-height: 1.1;
+  position: relative;
+  z-index: 1;
 }
 
 .subtitle {
@@ -64,6 +69,8 @@
   text-transform: uppercase;
   font-weight: 500;
   margin-top: 2px;
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Body ─────────────────────────────────────────────────── */

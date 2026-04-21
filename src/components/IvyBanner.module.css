@@ -3,20 +3,19 @@
    document flow so it naturally fills the space between whatever comes
    above (nav) and below (first hero element).
 
-   position:relative + z-index lift the banner above the static nav so
-   leaves that grow upward past the viewBox visually pass in front of the
-   Littleloop nav bar instead of being covered by it. overflow:visible
-   lets those leaves render past the container's 44px box. pointer-events
-   is off on the container so the nav underneath stays fully clickable
-   even where a leaf overlaps a button. */
+   overflow:visible lets leaves that dip above or below the 44px viewBox
+   render past the container. pointer-events:none on the container keeps
+   the nav fully clickable even when a leaf overlaps a button. We do NOT
+   set z-index here — the Landing page's .nav sits above the banner in
+   the stacking order, so upward-growing leaves that overlap the nav get
+   visually hidden behind it (reads as the vine peeking out from under
+   the nav bar rather than crashing across the Littleloop wordmark). */
 .banner {
   display: none;
   width: 100%;
   height: 44px;
   box-sizing: border-box;
   padding: 0 20px;
-  position: relative;
-  z-index: 2;
   overflow: visible;
   pointer-events: none;
 }

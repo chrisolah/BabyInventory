@@ -29,11 +29,17 @@
   min-width: 0;
 }
 
+/* position:relative promotes the brand into a later paint step than its
+   sibling IvySprig (static siblings otherwise paint in tree order, putting
+   the sprig on top). Ensures sprig leaves peeking up sit behind the
+   "Littleloop" wordmark rather than obscuring it. */
 .brand {
   font-family: var(--font-display);
   font-size: 18px;
   font-weight: 500;
   color: var(--gray-900);
+  position: relative;
+  z-index: 1;
 }
 
 /* Right-side action cluster — keeps Invite and Logout grouped to the right. */
