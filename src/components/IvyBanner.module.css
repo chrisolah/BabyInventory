@@ -1,0 +1,77 @@
+/* Horizontal ivy banner for mobile. Hidden on desktop (where the vertical
+   IvyDecoration handles decoration in the left gutter). Sits in the normal
+   document flow so it naturally fills the space between whatever comes
+   above (nav) and below (first hero element). */
+.banner {
+  display: none;
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 20px;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Stem — drawn left-to-right via stroke-dashoffset. pathLength=1 normalises
+   the dasharray math regardless of exact curve length. 3.5s is the full
+   width; on this shorter vine a slower stem starts to feel laggy. */
+.stem {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: grow 3.5s ease-out forwards;
+}
+
+@keyframes grow {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Each leaf declares its final scale via the --leaf-scale custom property
+   inline so the keyframe can tween to different end-states without N
+   separate keyframes. */
+.leaf {
+  opacity: 0;
+  transform: scale(0.3);
+  transform-origin: 0 0;
+  animation: unfurl 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes unfurl {
+  to {
+    opacity: 1;
+    transform: scale(var(--leaf-scale, 1));
+  }
+}
+
+/* Leaf delays track the stem's ease-out progress left-to-right: each
+   leaf appears just after the tip passes its attachment point. Last
+   two are spaced a little wider so the final bloom leaf lands last. */
+.leafDelay1 { animation-delay: 1.0s; }
+.leafDelay2 { animation-delay: 1.4s; }
+.leafDelay3 { animation-delay: 1.9s; }
+.leafDelay4 { animation-delay: 2.3s; }
+.leafDelay5 { animation-delay: 2.8s; }
+.leafDelay6 { animation-delay: 3.2s; }
+
+/* Show on mobile only. Matches the 960px breakpoint used by the vertical
+   vine's display:none rule so there's always exactly one version visible. */
+@media (max-width: 960px) {
+  .banner { display: block; }
+}
+
+/* Respect prefers-reduced-motion — skip the animation and land each leaf
+   at its declared final scale. */
+@media (prefers-reduced-motion: reduce) {
+  .stem {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .leaf {
+    animation: none;
+    opacity: 1;
+    transform: scale(var(--leaf-scale, 1));
+  }
+}

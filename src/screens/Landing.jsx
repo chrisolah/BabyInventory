@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { track } from '../lib/analytics'
 import IvyDecoration from '../components/IvyDecoration'
+import IvyBanner from '../components/IvyBanner'
 import styles from './Landing.module.css'
 
 export default function Landing() {
@@ -41,6 +42,11 @@ export default function Landing() {
         <div className={styles.logo}>littleloop</div>
         <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
       </nav>
+
+      {/* Horizontal vine between the nav and the hero — mobile only.
+          IvyBanner's own CSS hides itself ≥ 960px (where IvyDecoration
+          handles the gutter). */}
+      <IvyBanner />
 
       <section className={styles.hero}>
         <div className={styles.eyebrow}>Free for all families</div>
