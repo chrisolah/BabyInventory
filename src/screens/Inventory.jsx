@@ -273,6 +273,17 @@ export default function Inventory() {
                 </div>
               </section>
             ))}
+            {/* Bottom-of-list CTA — only when there's already a list. The empty
+                state has its own CTA, so we'd just be duplicating it here. */}
+            {ownedGrouped.length > 0 && (
+              <button
+                type="button"
+                className={styles.addMoreBtn}
+                onClick={() => navigate('/add-item')}
+              >
+                + Add item
+              </button>
+            )}
           </>
         )}
 
