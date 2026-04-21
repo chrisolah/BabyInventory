@@ -115,8 +115,10 @@ export default function IvyDecoration() {
           </g>
         </g>
 
-        {/* Leaf 5 — seg 4 end. */}
-        <g transform="translate(90 240)">
+        {/* Leaf 5 — seg 4 end. Flipped and rotated so it points upward and
+            to the left of the stem, standing noticeably more vertical than
+            the right-side leaves below/above it. */}
+        <g transform="translate(90 240) scale(-1 1) rotate(-30)">
           <g
             className={`${styles.leaf} ${styles.leafDelay5}`}
             style={{ '--leaf-scale': 1.05 }}
