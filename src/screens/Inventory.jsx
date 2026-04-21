@@ -18,12 +18,15 @@ import styles from './Inventory.module.css'
 // Inventory has two tabs:
 //   - Owned    → category-grouped list of items the user has
 //   - Wish list → recommended-wardrobe view: an age-range navbar across the
-//                 top, then one row per canonical slot (Pajamas, Bodysuits…)
-//                 with a progress bar showing owned count vs recommended.
+//                 top, then one card per top-level category (Sleepwear,
+//                 Footwear…) containing rows for each canonical slot
+//                 (Pajamas, Sleep sacks…) with a progress bar showing owned
+//                 count vs recommended.
 //
-// Category grouping on the Owned tab is unchanged. The Wish list rewrite
-// lives below; see src/lib/wardrobe.js for the slot taxonomy and coverage
-// math.
+// Category grouping on the Owned tab is unchanged. The Wish list mirrors it
+// — same .group / .groupHeader treatment — so users see the same visual
+// hierarchy on both tabs. See src/lib/wardrobe.js for the slot taxonomy and
+// coverage math.
 
 const STATUS_LABEL = {
   owned: 'Owned',
@@ -168,6 +171,29 @@ export default function Inventory() {
     return { owned, recommended }
   }, [coverage])
 
+  // Coverage rows grouped by top-level category, preserving CATEGORY_ORDER so
+  // the Wish list tab stacks cards in the same order as the Owned tab. Each
+  // group carries its own clamped owned/recommended totals so the group
+  // header can show "X of Y" the same way the macro summary does.
+  const coverageByCategory = useMemo(() => {
+    const buckets = Object.fromEntries(CATEGORY_ORDER.map(c => [c, []]))
+    for (const row of coverage) {
+      const c = row.slot.category
+      if (buckets[c]) buckets[c].push(row)
+    }
+    return CATEGORY_ORDER
+      .filter(c => buckets[c].length > 0)
+      .map(c => {
+        let owned = 0
+        let recommended = 0
+        for (const row of buckets[c]) {
+          owned += Math.min(row.ownedCount, row.recommended)
+          recommended += row.recommended
+        }
+        return { category: c, rows: buckets[c], owned, recommended }
+      })
+  }, [coverage])
+
   const ageInfo = useMemo(() => inferAgeRange(baby), [baby])
   const showOutgrow = shouldShowOutgrowBanner(ageInfo)
 
@@ -292,7 +318,7 @@ export default function Inventory() {
           <WishlistView
             ageRange={selectedAgeRange}
             onAgeChange={setSelectedAgeRange}
-            coverage={coverage}
+            coverageByCategory={coverageByCategory}
             coverageSummary={coverageSummary}
             otherWishItems={otherWishItems}
             ageInfo={ageInfo}
@@ -313,7 +339,7 @@ export default function Inventory() {
 function WishlistView({
   ageRange,
   onAgeChange,
-  coverage,
+  coverageByCategory,
   coverageSummary,
   otherWishItems,
   ageInfo,
@@ -374,16 +400,30 @@ function WishlistView({
         </span>
       </div>
 
-      {/* Slot list */}
-      <div className={styles.slotList}>
-        {coverage.map(row => (
-          <SlotRow
-            key={row.slot.id}
-            row={row}
-            onClick={() => onSlotTap(row.slot.id)}
-          />
-        ))}
-      </div>
+      {/* Category-stacked slot groups — same .group card shape as the Owned
+          tab, so the two tabs share a visual rhythm. Each group header shows
+          category label + clamped X-of-Y for this category at this age. */}
+      {coverageByCategory.map(group => (
+        <section className={styles.group} key={group.category}>
+          <div className={styles.groupHeader}>
+            <span className={styles.groupTitle}>
+              {CATEGORY_LABELS[group.category] || group.category}
+            </span>
+            <span className={styles.groupCount}>
+              {group.owned} of {group.recommended}
+            </span>
+          </div>
+          <div className={styles.groupItems}>
+            {group.rows.map(row => (
+              <SlotRow
+                key={row.slot.id}
+                row={row}
+                onClick={() => onSlotTap(row.slot.id)}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
 
       {/* Other wishes section (non-canonical wishlist entries) */}
       <div className={styles.sectionHead} style={{ marginTop: 18 }}>
