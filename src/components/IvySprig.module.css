@@ -1,12 +1,17 @@
 /* Tiny ivy sprig for mobile headers — slots in the document flow just
-   under the wardrobe name. Hidden on desktop where the vertical
-   IvyDecoration handles decoration. */
+   under whatever title/brand the page uses. Hidden on desktop where the
+   vertical IvyDecoration handles decoration.
+
+   No horizontal margin — the parent container decides alignment. In
+   flex-column parents with align-items: center (Inventory titleCell,
+   SlotDetail titleBlock, AddItem titleCell) it lands centered; in
+   align-items: flex-start parents (Home brandWrap) it lands left. */
 .sprig {
   display: none;
   width: 100%;
   max-width: 220px;
   height: 14px;
-  margin: 2px auto 0;
+  margin-top: 2px;
 }
 
 .svg {

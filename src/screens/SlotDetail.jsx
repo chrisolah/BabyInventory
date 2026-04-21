@@ -11,6 +11,7 @@ import {
   pluralize,
 } from '../lib/wardrobe'
 import LogoutButton from '../components/LogoutButton'
+import IvySprig from '../components/IvySprig'
 import styles from './SlotDetail.module.css'
 
 // Slot detail is the drill-down page for a single slot at a single age range.
@@ -119,6 +120,7 @@ export default function SlotDetail() {
           </button>
           <div className={styles.titleBlock}>
             <div className={styles.title}>Not found</div>
+            <IvySprig />
           </div>
           <LogoutButton />
         </header>
@@ -181,6 +183,8 @@ export default function SlotDetail() {
           <div className={styles.subtitle}>
             {ageRange} · {CATEGORY_LABELS[slot.category] || slot.category}
           </div>
+          {/* Mobile-only sprig beneath the subtitle. Hidden on desktop. */}
+          <IvySprig />
         </div>
         <LogoutButton />
       </header>

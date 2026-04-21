@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
 import { SLOTS, SLOT_BY_ID } from '../lib/wardrobe'
 import LogoutButton from '../components/LogoutButton'
+import IvySprig from '../components/IvySprig'
 import styles from './AddItem.module.css'
 
 // Add item form — the minimum viable version. Fields match the check
@@ -253,7 +254,11 @@ export default function AddItem() {
         >
           ←
         </button>
-        <div className={styles.title}>Add an item</div>
+        <div className={styles.titleCell}>
+          <div className={styles.title}>Add an item</div>
+          {/* Mobile-only sprig beneath the title. Hidden on desktop. */}
+          <IvySprig />
+        </div>
         <LogoutButton />
       </header>
 
