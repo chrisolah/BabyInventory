@@ -27,6 +27,17 @@ create table if not exists beta.user_activity_summary (
   updated_at      timestamptz not null default now()
 );
 
+-- Defensive: if the table already existed (e.g. from an earlier manual bring-up
+-- of the fuller data_model_v2 columns), make sure the columns this migration
+-- relies on are present before we attach the updated_at trigger. On 2026-04-20
+-- beta had a pre-existing user_activity_summary missing updated_at/created_at,
+-- which silently caused the trigger to crash with "record 'new' has no field
+-- 'updated_at'" mid-onboarding. These ALTERs are idempotent.
+alter table beta.user_activity_summary
+  add column if not exists updated_at timestamptz not null default now();
+alter table beta.user_activity_summary
+  add column if not exists created_at timestamptz not null default now();
+
 -- ─── updated_at trigger (reuses helper from migration 001) ─────────────────
 
 drop trigger if exists uas_set_updated_at on beta.user_activity_summary;
