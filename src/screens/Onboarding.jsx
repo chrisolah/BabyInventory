@@ -23,6 +23,49 @@ import styles from './Onboarding.module.css'
 const STEPS = ['household', 'baby', 'sizemode', 'invite']
 const STEP_TO_INDEX = Object.fromEntries(STEPS.map((s, i) => [s, i]))
 
+// Step 2 lets the user add one or more babies before advancing — twins and
+// triplets are common enough that forcing a second pass through onboarding
+// would feel hostile. Each entry is an independent form in local state; all
+// of them INSERT together when the user hits Continue.
+function makeBabyForm(expanded = true) {
+  return {
+    name: '',
+    birthMode: 'born',   // 'born' | 'expecting'
+    birthDate: '',
+    gender: null,        // 'girl' | 'boy' | 'neutral' | null
+    expanded,
+  }
+}
+
+// Copy helpers — keep multi-baby wording centralised so twins/triplets read
+// naturally everywhere instead of each call site reimplementing the logic.
+function joinNames(names) {
+  if (names.length === 0) return ''
+  if (names.length === 1) return names[0]
+  if (names.length === 2) return `${names[0]} and ${names[1]}`
+  return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`
+}
+
+function doneSubCopy(babies) {
+  const named = babies.map(b => b.name).filter(Boolean)
+  if (named.length === babies.length && named.length > 0) {
+    const noun = named.length === 1 ? 'wardrobe' : 'wardrobes'
+    return `${joinNames(named)}'s ${noun} ${named.length === 1 ? 'is' : 'are'} ready. Start by adding what you have, or browse what you need.`
+  }
+  return babies.length > 1
+    ? 'Your wardrobes are ready. Start by adding what you have.'
+    : 'Your wardrobe is ready. Start by adding what you have.'
+}
+
+function inviteWardrobeCopy(babies) {
+  const named = babies.map(b => b.name).filter(Boolean)
+  if (named.length === babies.length && named.length > 0) {
+    const noun = named.length === 1 ? 'wardrobe' : 'wardrobes'
+    return `${joinNames(named)}'s ${noun}`
+  }
+  return babies.length > 1 ? 'the wardrobes' : 'the wardrobe'
+}
+
 export default function Onboarding() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -30,16 +73,16 @@ export default function Onboarding() {
   const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'done'
   const [step, setStep] = useState('household')
   const [household, setHousehold] = useState(null)
-  const [baby, setBaby] = useState(null)
+  // Post-insert rows from beta.babies. Driven by either the step 2 submit or
+  // the resume path. Used by steps 3 + 4 and the done screen.
+  const [babies, setBabies] = useState([])
 
   // Step 1 — household
   const [householdName, setHouseholdName] = useState('')
 
-  // Step 2 — baby
-  const [babyName, setBabyName] = useState('')
-  const [birthMode, setBirthMode] = useState('born') // 'born' | 'expecting'
-  const [birthDate, setBirthDate] = useState('')
-  const [gender, setGender] = useState(null) // 'girl' | 'boy' | 'neutral' | null
+  // Step 2 — babies. One form entry per baby; array grows as the user taps
+  // "+ Add another". First form is always expanded on entry.
+  const [babyForms, setBabyForms] = useState([makeBabyForm(true)])
 
   // Step 3 — size mode
   const [sizeMode, setSizeMode] = useState('by_age')
@@ -105,19 +148,22 @@ export default function Onboarding() {
           setHouseholdName(existing.name ?? '')
 
           if (onboardingStep >= 2) {
-            const { data: babies, error: babyErr } = await supabase
+            // Fetch ALL babies, not just one — step 3 applies size_mode to
+            // every baby in the household, and the done screen wants their
+            // names. Ordered so twins resume in a stable order.
+            const { data: rows, error: babyErr } = await supabase
               .schema(currentSchema)
               .from('babies')
               .select('*')
               .eq('household_id', existing.id)
-              .limit(1)
+              .order('created_at', { ascending: true })
 
             if (cancelled) return
             if (babyErr) {
               setError(babyErr.message)
-            } else if (babies && babies.length > 0) {
-              setBaby(babies[0])
-              setSizeMode(babies[0].size_mode ?? 'by_age')
+            } else if (rows && rows.length > 0) {
+              setBabies(rows)
+              setSizeMode(rows[0].size_mode ?? 'by_age')
             }
           }
         }
@@ -181,30 +227,43 @@ export default function Onboarding() {
     setStep('baby')
   }
 
-  // ── Step 2 — create baby ──────────────────────────────────────────────
-  async function submitBaby(e) {
+  // ── Step 2 — create babies ────────────────────────────────────────────
+  // Every form must have a name + date before we'll submit. We INSERT them
+  // all in a single batch so either every baby lands or none do — a partial
+  // write here would leave the household in a weird state for resume.
+  async function submitBabies(e) {
     e.preventDefault()
-    if (!babyName.trim() || !birthDate) return
+
+    const trimmed = babyForms.map(f => ({ ...f, name: f.name.trim() }))
+    const invalid = trimmed.some(f => !f.name || !f.birthDate)
+    if (invalid) {
+      // Expand any form that's missing data so the user can see where the
+      // gap is, rather than silently re-enabling a disabled button.
+      setBabyForms(trimmed.map(f => ({
+        ...f,
+        expanded: f.expanded || !f.name || !f.birthDate,
+      })))
+      return
+    }
 
     setLoading(true)
     setError(null)
 
-    const row = {
+    const rows = trimmed.map(f => ({
       household_id: household.id,
-      name: babyName.trim(),
-      gender,
-      // size_mode stays at its DB default for now; updated in step 3.
-      ...(birthMode === 'born'
-        ? { date_of_birth: birthDate }
-        : { due_date: birthDate }),
-    }
+      name: f.name,
+      gender: f.gender,
+      // size_mode stays at its DB default here; step 3 sets it for everyone.
+      ...(f.birthMode === 'born'
+        ? { date_of_birth: f.birthDate }
+        : { due_date: f.birthDate }),
+    }))
 
     const { data, error: insertErr } = await supabase
       .schema(currentSchema)
       .from('babies')
-      .insert(row)
+      .insert(rows)
       .select()
-      .single()
 
     setLoading(false)
 
@@ -213,26 +272,64 @@ export default function Onboarding() {
       return
     }
 
-    setBaby(data)
-    track.babyAdded({
-      mode: birthMode, // 'born' | 'expecting'
-      has_gender: !!gender,
-    })
+    setBabies(data ?? [])
+    // One event per baby keeps the existing funnel analysis intact and lets
+    // us count twin/triplet households by grouping user_id → count(events).
+    for (const f of trimmed) {
+      track.babyAdded({
+        mode: f.birthMode, // 'born' | 'expecting'
+        has_gender: !!f.gender,
+      })
+    }
+    if (trimmed.length > 1) {
+      track.babiesAddedOnboarding({ count: trimmed.length })
+    }
     await bumpOnboardingStep(2)
     setStep('sizemode')
   }
 
+  // ── Step 2 — baby form helpers ────────────────────────────────────────
+  function updateBabyForm(idx, patch) {
+    setBabyForms(forms =>
+      forms.map((f, i) => (i === idx ? { ...f, ...patch } : f))
+    )
+  }
+
+  function addBabyForm() {
+    // Collapse existing forms and expand the new one, so the user's focus
+    // lands in exactly one place.
+    setBabyForms(forms => [
+      ...forms.map(f => ({ ...f, expanded: false })),
+      makeBabyForm(true),
+    ])
+  }
+
+  function removeBabyForm(idx) {
+    setBabyForms(forms => forms.filter((_, i) => i !== idx))
+  }
+
+  function toggleBabyFormExpanded(idx) {
+    setBabyForms(forms =>
+      forms.map((f, i) => (i === idx ? { ...f, expanded: !f.expanded } : f))
+    )
+  }
+
   // ── Step 3 — pick size mode ──────────────────────────────────────────
+  // Applies to every baby in the household. Tracking style tends to be a
+  // household-level preference (what the parent's brain is used to), so we
+  // don't ask per-baby. The Profile surface lets them diverge later if they
+  // ever want to.
   async function selectSizeMode(mode) {
     setSizeMode(mode)
     setLoading(true)
     setError(null)
 
+    const ids = babies.map(b => b.id)
     const { error: updateErr } = await supabase
       .schema(currentSchema)
       .from('babies')
       .update({ size_mode: mode })
-      .eq('id', baby.id)
+      .in('id', ids)
 
     setLoading(false)
 
@@ -294,9 +391,7 @@ export default function Onboarding() {
             You're all set{firstName ? `, ${firstName}` : ''}!
           </div>
           <div className={styles.doneSub}>
-            {baby?.name
-              ? `${baby.name}'s wardrobe is ready. Start by adding what you have, or browse what you need.`
-              : "Your wardrobe is ready. Start by adding what you have."}
+            {doneSubCopy(babies)}
           </div>
           <button
             className={`${styles.primaryBtn} ${styles.doneBtn}`}
@@ -362,75 +457,134 @@ export default function Onboarding() {
 
         {step === 'baby' && (
           <>
-            <h1 className={styles.title}>Tell us about your baby</h1>
+            <h1 className={styles.title}>
+              {babyForms.length > 1 ? 'Tell us about your babies' : 'Tell us about your baby'}
+            </h1>
             <p className={styles.sub}>
               We'll use this to track sizes and plan ahead for you.
             </p>
-            <form onSubmit={submitBaby}>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>Baby's name</label>
-                <input
-                  className={styles.input}
-                  type="text"
-                  placeholder="Lily"
-                  value={babyName}
-                  onChange={e => setBabyName(e.target.value)}
-                  autoFocus
-                  required
-                />
-              </div>
+            <form onSubmit={submitBabies}>
+              {babyForms.map((form, idx) => {
+                const canRemove = babyForms.length > 1
+                const headerLabel = form.name.trim() || `Baby ${idx + 1}`
+                return (
+                  <div key={idx} className={styles.babyCard}>
+                    {/* Collapsed header shows the baby's label + an expand
+                        toggle. We render it for every form so the card style
+                        stays consistent; the first form is expanded on entry
+                        but can still be collapsed once a second one exists. */}
+                    <div className={styles.babyCardHead}>
+                      <button
+                        type="button"
+                        className={styles.babyCardToggle}
+                        onClick={() => toggleBabyFormExpanded(idx)}
+                        aria-expanded={form.expanded}
+                      >
+                        <span className={styles.babyCardLabel}>{headerLabel}</span>
+                        <span
+                          className={`${styles.babyCardChevron} ${form.expanded ? styles.babyCardChevronOpen : ''}`}
+                          aria-hidden="true"
+                        >
+                          ▾
+                        </span>
+                      </button>
+                      {canRemove && (
+                        <button
+                          type="button"
+                          className={styles.babyCardRemove}
+                          onClick={() => removeBabyForm(idx)}
+                          aria-label={`Remove ${headerLabel}`}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
 
-              <div className={styles.segToggle}>
-                <button
-                  type="button"
-                  className={`${styles.segBtn} ${birthMode === 'born' ? styles.segActive : ''}`}
-                  onClick={() => setBirthMode('born')}
-                >
-                  Already born
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.segBtn} ${birthMode === 'expecting' ? styles.segActive : ''}`}
-                  onClick={() => setBirthMode('expecting')}
-                >
-                  Expecting
-                </button>
-              </div>
+                    {form.expanded && (
+                      <div className={styles.babyCardBody}>
+                        <div className={styles.formGroup}>
+                          <label className={styles.label}>Baby's name</label>
+                          <input
+                            className={styles.input}
+                            type="text"
+                            placeholder="Lily"
+                            value={form.name}
+                            onChange={e => updateBabyForm(idx, { name: e.target.value })}
+                            autoFocus={idx === 0 && babyForms.length === 1}
+                          />
+                        </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.label}>
-                  {birthMode === 'born' ? 'Date of birth' : 'Due date'}
-                </label>
-                <input
-                  className={styles.input}
-                  type="date"
-                  value={birthDate}
-                  onChange={e => setBirthDate(e.target.value)}
-                  required
-                />
-              </div>
+                        <div className={styles.segToggle}>
+                          <button
+                            type="button"
+                            className={`${styles.segBtn} ${form.birthMode === 'born' ? styles.segActive : ''}`}
+                            onClick={() => updateBabyForm(idx, { birthMode: 'born' })}
+                          >
+                            Already born
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.segBtn} ${form.birthMode === 'expecting' ? styles.segActive : ''}`}
+                            onClick={() => updateBabyForm(idx, { birthMode: 'expecting' })}
+                          >
+                            Expecting
+                          </button>
+                        </div>
 
-              <div className={styles.sectionLabel}>
-                Gender tag <span className={styles.sectionLabelNote}>(optional)</span>
-              </div>
-              <div className={styles.chipGrid}>
-                {['girl', 'boy', 'neutral'].map(g => (
-                  <button
-                    key={g}
-                    type="button"
-                    className={`${styles.chip} ${gender === g ? styles.chipSel : ''}`}
-                    onClick={() => setGender(gender === g ? null : g)}
-                  >
-                    {g.charAt(0).toUpperCase() + g.slice(1)}
-                  </button>
-                ))}
-              </div>
+                        <div className={styles.formGroup}>
+                          <label className={styles.label}>
+                            {form.birthMode === 'born' ? 'Date of birth' : 'Due date'}
+                          </label>
+                          <input
+                            className={styles.input}
+                            type="date"
+                            value={form.birthDate}
+                            onChange={e => updateBabyForm(idx, { birthDate: e.target.value })}
+                          />
+                        </div>
+
+                        <div className={styles.sectionLabel}>
+                          Gender tag <span className={styles.sectionLabelNote}>(optional)</span>
+                        </div>
+                        <div className={styles.chipGrid}>
+                          {['girl', 'boy', 'neutral'].map(g => (
+                            <button
+                              key={g}
+                              type="button"
+                              className={`${styles.chip} ${form.gender === g ? styles.chipSel : ''}`}
+                              onClick={() =>
+                                updateBabyForm(idx, { gender: form.gender === g ? null : g })
+                              }
+                            >
+                              {g.charAt(0).toUpperCase() + g.slice(1)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              <button
+                type="button"
+                className={styles.addAnotherBtn}
+                onClick={addBabyForm}
+              >
+                + Add another{' '}
+                <span className={styles.addAnotherHint}>
+                  (twins? triplets? bring &rsquo;em all)
+                </span>
+              </button>
 
               {error && <div className={styles.error}>{error}</div>}
               <button
                 type="submit"
                 className={styles.primaryBtn}
-                disabled={loading || !babyName.trim() || !birthDate}
+                disabled={
+                  loading ||
+                  babyForms.some(f => !f.name.trim() || !f.birthDate)
+                }
               >
                 {loading ? 'Saving…' : 'Continue'}
               </button>
@@ -482,7 +636,7 @@ export default function Onboarding() {
             <h1 className={styles.title}>Invite a family member?</h1>
             <p className={styles.sub}>
               Co-parents, grandparents, anyone helping out — they'll get access to
-              {baby?.name ? ` ${baby.name}'s` : ' the'} wardrobe.
+              {' '}{inviteWardrobeCopy(babies)}.
             </p>
             <div className={styles.formGroup}>
               <label className={styles.label}>Email address</label>

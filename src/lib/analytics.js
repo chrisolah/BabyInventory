@@ -76,6 +76,8 @@ export const track = {
     logEvent('household_named', 'onboarding', {}, { id: 'onboarding', step: 2 }),
   babyAdded: (props) =>
     logEvent('baby_added', 'onboarding', props, { id: 'onboarding', step: 3 }),
+  babiesAddedOnboarding: (props) =>
+    logEvent('babies_added_onboarding', 'onboarding', props),
   sizeModeSelected: (mode) =>
     logEvent('size_mode_selected', 'onboarding', { mode }, { id: 'onboarding', step: 4 }),
   inviteSent: (skipped) =>

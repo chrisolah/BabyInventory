@@ -200,6 +200,113 @@
   color: var(--teal-dark);
 }
 
+/* ── Baby forms (step 2 — supports twins/triplets) ───────── */
+/* Each baby gets a bordered card. When collapsed, the body hides and only
+   the header row (label + remove ×) is visible. The first card has no top
+   margin so it sits flush with the sub-copy; subsequent cards stack with
+   a small gap between them. */
+.babyCard {
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  background: var(--white);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.babyCardHead {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+}
+
+.babyCardToggle {
+  all: unset;
+  box-sizing: border-box;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 2px 0;
+  font-family: var(--font-body);
+}
+
+.babyCardLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.babyCardChevron {
+  font-size: 14px;
+  color: var(--gray-400);
+  transition: transform 0.15s;
+  margin-left: 8px;
+}
+
+.babyCardChevronOpen {
+  transform: rotate(180deg);
+}
+
+.babyCardRemove {
+  all: unset;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--gray-400);
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.babyCardRemove:hover {
+  color: #B8572E;
+  background: var(--gray-100);
+}
+
+.babyCardBody {
+  padding: 0 12px 12px;
+  border-top: 0.5px solid var(--gray-100);
+  padding-top: 12px;
+}
+
+/* "+ Add another" — subdued secondary action so it doesn't compete with the
+   primary Continue button directly below it. Full width to mirror the
+   overall column layout. */
+.addAnotherBtn {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal-dark);
+  background: var(--teal-light);
+  border: 0.5px dashed var(--teal);
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 14px;
+  transition: background 0.15s;
+}
+
+.addAnotherBtn:hover {
+  background: #E1F2EC;
+}
+
+.addAnotherHint {
+  color: var(--gray-600);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
 /* ── Cards (size mode) ───────────────────────────────────── */
 .cardStack {
   display: flex;
