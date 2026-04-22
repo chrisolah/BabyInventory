@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useHousehold } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import { SLOTS, SLOT_BY_ID } from '../lib/wardrobe'
 import ProfileMenu from '../components/ProfileMenu'
@@ -64,6 +65,17 @@ const PRIORITIES = [
 export default function AddItem() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  // Household + currently-selected baby come from context. On create we
+  // pre-attach selectedBabyId as baby_id so items "inherit" the Inventory
+  // view the user was just looking at. On edit we leave baby_id alone —
+  // re-assigning an item across babies is a separate flow (not built yet).
+  const {
+    household,
+    babies,
+    currentBaby,
+    loading: householdLoading,
+    error: householdError,
+  } = useHousehold()
 
   // Edit vs create is decided by whether the route captured an :id. The
   // ItemDetail screen links to /item/:id/edit; the Home/Inventory CTAs
@@ -83,13 +95,6 @@ export default function AddItem() {
   const initialCategoryParam = searchParams.get('category')
   const initialSizeParam = searchParams.get('size')
   const initialSlotParam = searchParams.get('from_slot')
-
-  // Figure out household + baby once, on mount. We need household_id to
-  // insert; baby_id is soft-nullable but we set it when we can so items tie
-  // to the baby they were added for.
-  const [household, setHousehold] = useState(null)
-  const [baby, setBaby] = useState(null)
-  const [loadingContext, setLoadingContext] = useState(true)
 
   // In edit mode, we also need the existing row's fields to prefill. We
   // load it alongside household context so the form isn't partially
@@ -137,52 +142,34 @@ export default function AddItem() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
+  // Fire add_item_started once per create session. Edit sessions belong to
+  // a different funnel, so we gate it on !isEditMode. Waits on the context
+  // so we don't double-fire if the component re-renders while household is
+  // still loading.
   useEffect(() => {
-    if (!user) return
-    let cancelled = false
-
-    async function loadContext() {
-      const { data: memberships, error: memErr } = await supabase
-        .schema(currentSchema)
-        .from('household_members')
-        .select('household_id, households(id, name)')
-        .eq('user_id', user.id)
-        .order('joined_at', { ascending: false })
-        .limit(1)
-
-      if (cancelled) return
-      if (memErr || !memberships?.[0]?.households) {
-        setError(memErr?.message || 'No household found — finish onboarding first.')
-        setLoadingContext(false)
-        return
-      }
-      const h = memberships[0].households
-
-      const { data: babies } = await supabase
-        .schema(currentSchema)
-        .from('babies')
-        .select('id, name')
-        .eq('household_id', h.id)
-        .limit(1)
-
-      if (cancelled) return
-      setHousehold(h)
-      setBaby(babies?.[0] ?? null)
-      setLoadingContext(false)
-      // Only fire add_item_started in create mode — edit sessions are a
-      // different funnel and shouldn't pollute the add-item conversion
-      // numbers. Edit completion logs via itemEdited at submit time.
-      if (!isEditMode) track.addItemStarted({ mode })
-    }
-
-    loadContext()
-    return () => { cancelled = true }
+    if (isEditMode) return
+    if (householdLoading) return
+    if (!household) return
+    track.addItemStarted({ mode })
+    // Fire once on mount per session. Mode changes after mount aren't
+    // "starts" — suppressing exhaustive-deps keeps the single-fire contract.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+  }, [householdLoading, household])
+
+  // Surface household-load errors inline. Rare — pre-onboarding users get
+  // redirected before reaching /add-item — but a bad RLS read shouldn't
+  // silently yield an "insert without household" crash later.
+  useEffect(() => {
+    if (householdError) {
+      setError(householdError)
+    } else if (!householdLoading && !household) {
+      setError('No household found — finish onboarding first.')
+    }
+  }, [householdError, householdLoading, household])
 
   // In edit mode, load the existing row and hydrate every form field from
-  // it. Runs in parallel with loadContext; both have to finish before the
-  // form can render (see the combined loading gate below).
+  // it. Runs in parallel with the household context load; both have to
+  // finish before the form can render (see the combined loading gate below).
   useEffect(() => {
     if (!user || !isEditMode || !editId) return
     let cancelled = false
@@ -327,10 +314,17 @@ export default function AddItem() {
       return
     }
 
-    // Create path.
+    // Create path. baby_id follows the chip switcher's current selection:
+    //   - specific baby picked → attach their id, the item lives in their wardrobe
+    //   - 'all' picked         → null, the item is shared across babies
+    //   - single-baby household → context forces selectedBabyId to that baby,
+    //                              so currentBaby is populated and we attach it
+    // The "unassigned / shared" semantic is deliberate — it matches how we
+    // filter (null baby_id shows under every specific baby) so there's a
+    // single mental model for how null is treated.
     const row = {
       household_id: household.id,
-      baby_id: baby?.id ?? null,
+      baby_id: currentBaby?.id ?? null,
       ...fields,
       inventory_status: mode,
       name: null, // Reserved for the parent-supplied nickname; not collected yet.
@@ -355,7 +349,7 @@ export default function AddItem() {
   // In edit mode we need both the household context AND the existing row
   // before we can render meaningful inputs. Single gate keeps the form
   // from flashing create-mode defaults while the row is in flight.
-  if (loadingContext || loadingItem) {
+  if (householdLoading || loadingItem) {
     return (
       <div className={styles.page}>
         <div className={styles.loading}>Loading…</div>
@@ -368,6 +362,17 @@ export default function AddItem() {
   // list where the + Add CTAs live.
   const backDest = isEditMode && existingItem ? `/item/${existingItem.id}` : '/inventory'
   const backLabel = isEditMode ? 'Back to item' : 'Back to inventory'
+
+  // On a multi-baby household, show a subtle subtitle so the user knows who
+  // this item will attach to. Single-baby households don't need the noise —
+  // there's only one possible answer. 'All' selection means the item is
+  // shared (baby_id null), which is worth surfacing since the user probably
+  // switched to 'All' on purpose and wants to know what happens next.
+  const subtitle = !isEditMode && babies.length > 1
+    ? currentBaby?.name
+      ? `For ${currentBaby.name}`
+      : 'Shared across babies'
+    : null
 
   return (
     <div className={styles.page}>
@@ -384,6 +389,9 @@ export default function AddItem() {
           <div className={styles.title}>
             {isEditMode ? 'Edit item' : 'Add an item'}
           </div>
+          {subtitle && (
+            <div className={styles.subtitle}>{subtitle}</div>
+          )}
           {/* Mobile-only sprig beneath the title. Hidden on desktop. */}
           <IvySprig />
         </div>

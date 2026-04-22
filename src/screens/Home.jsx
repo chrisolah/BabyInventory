@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
+import BabySwitcher from '../components/BabySwitcher'
 import InviteMemberModal from '../components/InviteMemberModal'
 import styles from './Home.module.css'
 
@@ -147,6 +148,11 @@ export default function Home() {
           <ProfileMenu />
         </div>
       </header>
+
+      {/* Chip switcher — self-hides for single-baby households. Lets a
+          multi-baby parent pre-scope from the landing page, though the
+          actual filtering happens once they hit /inventory. */}
+      <BabySwitcher from="home" />
 
       <main className={styles.body}>
         <h1 className={styles.greeting}>

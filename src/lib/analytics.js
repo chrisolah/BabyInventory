@@ -133,6 +133,8 @@ export const track = {
     logEvent('baby_removed', 'engagement', props),
   babyRemovalBlocked: (props) =>
     logEvent('baby_removal_blocked', 'engagement', props),
+  babySwitched: (props) =>
+    logEvent('baby_switched', 'engagement', props),
   recommendationViewed: (props) =>
     logEvent('recommendation_viewed', 'engagement', props),
   recommendationClicked: (props) =>
