@@ -7,6 +7,7 @@ import { track } from '../lib/analytics'
 import { SLOTS, SLOT_BY_ID } from '../lib/wardrobe'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
+import TagScanner from '../components/TagScanner'
 import styles from './AddItem.module.css'
 
 // Add / edit item form. Same component serves two routes:
@@ -84,9 +85,11 @@ export default function AddItem() {
   const { id: editId } = useParams()
   const isEditMode = Boolean(editId)
 
-  // Optional deep-link pre-fill. When the user jumped here from the slot
-  // detail page ("Add one" CTA), the URL carries:
-  //   mode=owned|needed, category=<category>, size=<size_label>, from_slot=<slot_id>
+  // Optional deep-link pre-fill. Two entry points populate search params:
+  //   1. Slot detail page ("Add one" CTA): mode, category, size, from_slot
+  //   2. Home scan CTA (photo-scan landed here): mode=owned, category,
+  //      size, from_slot (as item_type), brand — all best-effort from the
+  //      model. Users still confirm before save.
   // Ignore anything that doesn't match the whitelists so malformed URLs
   // don't put the form into a weird state. Search params are ignored in
   // edit mode — the loaded row is the source of truth.
@@ -95,6 +98,7 @@ export default function AddItem() {
   const initialCategoryParam = searchParams.get('category')
   const initialSizeParam = searchParams.get('size')
   const initialSlotParam = searchParams.get('from_slot')
+  const initialBrandParam = searchParams.get('brand')
 
   // In edit mode, we also need the existing row's fields to prefill. We
   // load it alongside household context so the form isn't partially
@@ -134,13 +138,24 @@ export default function AddItem() {
   })
   const [condition, setCondition] = useState('')
   const [priority, setPriority] = useState('')
-  const [brand, setBrand] = useState('')
+  const [brand, setBrand] = useState(() => {
+    if (isEditMode) return ''
+    // Brand is free-text so we trim + length-cap rather than whitelist.
+    // Matches the 80-char cap the Edge Function already applies, so a
+    // handcrafted URL can't blow past what photo-scan would send.
+    if (typeof initialBrandParam !== 'string') return ''
+    return initialBrandParam.trim().slice(0, 80)
+  })
   const [season, setSeason] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState('')
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  // Count of fields the most recent scan just filled in. Drives the "we
+  // filled in N fields — confirm below and save" banner so the user knows
+  // why the form looks different. Reset on mount; not persisted.
+  const [scanFilledCount, setScanFilledCount] = useState(0)
 
   // Fire add_item_started once per create session. Edit sessions belong to
   // a different funnel, so we gate it on !isEditMode. Waits on the context
@@ -256,6 +271,43 @@ export default function AddItem() {
     if (mode === 'owned' && !condition) return false
     if (!(quantity >= 1)) return false
     return true
+  }
+
+  // Called by <TagScanner> after a successful scan. Prefills the form
+  // fields we recognize; leaves untouched fields as-is so a second scan
+  // can progressively refine earlier ones. Individual fields may be null
+  // (low confidence or unreadable) — we skip those rather than blanking
+  // out whatever the user already typed. Never auto-saves.
+  function onScanResult(fields) {
+    if (!fields) return
+    let filled = 0
+
+    if (fields.category && CATEGORIES.some(c => c.value === fields.category)) {
+      setCategory(fields.category)
+      filled += 1
+      // If the incoming item_type is valid AND matches the scanned category,
+      // accept it too; otherwise let the user pick from the now-filtered list.
+      const slot = fields.item_type ? SLOT_BY_ID[fields.item_type] : null
+      if (slot && slot.category === fields.category) {
+        setItemType(slot.id)
+        filled += 1
+      } else {
+        setItemType('')
+      }
+    }
+
+    if (fields.size_label && SIZES.includes(fields.size_label)) {
+      setSizeLabel(fields.size_label)
+      filled += 1
+    }
+
+    if (fields.brand && typeof fields.brand === 'string') {
+      setBrand(fields.brand.trim().slice(0, 80))
+      filled += 1
+    }
+
+    setScanFilledCount(filled)
+    track.tagScanCompleted({ filled, mode })
   }
 
   async function submit(e) {
@@ -399,6 +451,21 @@ export default function AddItem() {
       </header>
 
       <main className={styles.body}>
+        {/* Photo-scan entry point. Only surfaced on create — editing an
+            existing row shouldn't invite a re-scan (the user is here to
+            tweak, not reseed). The component handles its own loading and
+            error states; we just get the fields back via onResult. */}
+        {!isEditMode && (
+          <div className={styles.scanRow}>
+            <TagScanner variant="inline" onResult={onScanResult} disabled={saving} />
+            {scanFilledCount > 0 && (
+              <div className={styles.scanHint}>
+                Autofilled {scanFilledCount} field{scanFilledCount === 1 ? '' : 's'} from your photo. Review below and save.
+              </div>
+            )}
+          </div>
+        )}
+
         <form onSubmit={submit} className={styles.form}>
           {/* Mode toggle — decides what status the item gets saved as. */}
           <div className={styles.segToggle}>
