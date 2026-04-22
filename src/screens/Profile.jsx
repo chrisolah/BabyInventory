@@ -448,45 +448,383 @@ function capitalize(s) {
 }
 
 // ── Account tab ────────────────────────────────────────────────────────
-// Scaffold only — #57 fills in the upper "Your account" section with: display
-// name edit, email change (triggers confirm-both-addresses via Supabase),
-// password change. #59 fills in the lower "Leaving Littleloop" section with
-// leave-household + delete-account flows.
+// Two stacked groups:
 //
-// The two groups are on the same tab intentionally. Destructive actions used
-// to live in their own "Danger zone" tab, but that's engineer register —
-// nobody opens their profile intending to delete the account, and surfacing
-// it as a peer tab over-weights a rare, scary action. Tucking it at the
-// bottom under a subdued heading follows Account-settings convention in
-// consumer apps and keeps the tab bar tuned to things parents actually
-// visit on purpose.
+//   "Your account" — inline-editable display name, email change request, and
+//   password update. Supabase owns the primitives: updateUser({ data: ... })
+//   for metadata, updateUser({ email }) fires the double-opt-in flow where a
+//   confirmation email goes to BOTH the old and new addresses, and
+//   updateUser({ password }) sets the password on the active session.
+//
+//   "Leaving Littleloop" — leave household + delete account. Destructive
+//   actions sit here intentionally rather than in their own "Danger zone"
+//   tab — that's engineer register, and nobody opens their profile
+//   planning to delete their account. Muted styling + a subdued heading
+//   keep them findable without over-indexing on a rare, scary action.
+//
+// Delete-account specifically routes through support-mail rather than
+// actually deleting auth.users. A client-side deletion would need a
+// SECURITY DEFINER RPC and careful fanout over household_members, babies
+// they own, clothing_items, etc. During the beta we'd rather confirm
+// intent manually than ship an untested hard-delete pipeline.
 function AccountTab() {
   const { user } = useAuth()
-  const name = user?.user_metadata?.name || ''
-  const email = user?.email || ''
+  const navigate = useNavigate()
+
+  const currentName = user?.user_metadata?.name || ''
+  const currentEmail = user?.email || ''
+
+  // ── Name edit ───────────────────────────────────────────────────────
+  // Same inline-edit pattern as the household rename (click Edit, save on
+  // blur/Enter, Escape cancels). On success we also stash the new name in
+  // an optimistic display state so the UI updates before Supabase fires
+  // the auth state-change that would eventually refresh `user`.
+  const [editingName, setEditingName] = useState(false)
+  const [nameDraft, setNameDraft] = useState(currentName)
+  const [savingName, setSavingName] = useState(false)
+  const [nameError, setNameError] = useState(null)
+  const [optimisticName, setOptimisticName] = useState(null)
+  const displayName = optimisticName ?? currentName
+
+  // ── Email change ────────────────────────────────────────────────────
+  const [editingEmail, setEditingEmail] = useState(false)
+  const [emailDraft, setEmailDraft] = useState(currentEmail)
+  const [savingEmail, setSavingEmail] = useState(false)
+  const [emailError, setEmailError] = useState(null)
+  // After requestEmailChange succeeds we store the pending address so the
+  // "check your inbox" banner can name it back to the user.
+  const [pendingEmail, setPendingEmail] = useState(null)
+
+  // ── Password update ─────────────────────────────────────────────────
+  const [pwModalOpen, setPwModalOpen] = useState(false)
+  const [newPw, setNewPw] = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [savingPw, setSavingPw] = useState(false)
+  const [pwError, setPwError] = useState(null)
+  const [pwSuccess, setPwSuccess] = useState(false)
+
+  // ── Danger zone modal state ─────────────────────────────────────────
+  // Separate pending flags for the two destructive actions. Each owns its
+  // own loading + error so a failed leave attempt doesn't poison the
+  // delete-account modal and vice versa.
+  const [leaveOpen, setLeaveOpen] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+  const [leaveError, setLeaveError] = useState(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteSent, setDeleteSent] = useState(false)
+
+  async function saveName() {
+    const trimmed = nameDraft.trim()
+    if (!trimmed) {
+      setEditingName(false)
+      setNameDraft(currentName)
+      return
+    }
+    if (trimmed === currentName) {
+      setEditingName(false)
+      return
+    }
+    setSavingName(true)
+    setNameError(null)
+    const { error: updErr } = await supabase.auth.updateUser({
+      data: { name: trimmed },
+    })
+    setSavingName(false)
+    if (updErr) {
+      setNameError(updErr.message)
+      return
+    }
+    setOptimisticName(trimmed)
+    setEditingName(false)
+    track.profileNameUpdated()
+  }
+
+  async function saveEmail() {
+    const trimmed = emailDraft.trim()
+    if (!trimmed || trimmed === currentEmail) {
+      setEditingEmail(false)
+      setEmailDraft(currentEmail)
+      return
+    }
+    // Minimal client-side shape check — Supabase will reject bad addresses
+    // too, but we'd rather not burn a network round-trip on an obvious typo.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setEmailError('That doesn\u2019t look like a valid email address.')
+      return
+    }
+    setSavingEmail(true)
+    setEmailError(null)
+    const { error: updErr } = await supabase.auth.updateUser({ email: trimmed })
+    setSavingEmail(false)
+    if (updErr) {
+      setEmailError(updErr.message)
+      return
+    }
+    setPendingEmail(trimmed)
+    setEditingEmail(false)
+    track.profileEmailChangeRequested()
+  }
+
+  async function savePassword() {
+    setPwError(null)
+    if (newPw.length < 8) {
+      setPwError('Password must be at least 8 characters.')
+      return
+    }
+    if (newPw !== confirmPw) {
+      setPwError('Passwords don\u2019t match.')
+      return
+    }
+    setSavingPw(true)
+    const { error: updErr } = await supabase.auth.updateUser({ password: newPw })
+    setSavingPw(false)
+    if (updErr) {
+      setPwError(updErr.message)
+      return
+    }
+    setPwSuccess(true)
+    setNewPw('')
+    setConfirmPw('')
+    track.profilePasswordUpdated()
+  }
+
+  function closePwModal() {
+    if (savingPw) return
+    setPwModalOpen(false)
+    setNewPw('')
+    setConfirmPw('')
+    setPwError(null)
+    setPwSuccess(false)
+  }
+
+  // ── Leave household ─────────────────────────────────────────────────
+  // Beta-scope policy:
+  //   - Member (non-owner): can leave. Deletes their household_members row;
+  //     RLS only lets them delete their own row so this is safe.
+  //   - Owner with other members: blocked. "Transfer ownership first" — we
+  //     don't ship that UI until post-beta, so blocking is the honest answer.
+  //   - Sole owner (no other members): blocked with "contact support" copy.
+  //     Letting them leave would orphan the household (and every baby +
+  //     clothing_items under it) with nothing wired to clean it up yet.
+  async function handleLeaveHousehold() {
+    if (!user || leaving) return
+    setLeaving(true)
+    setLeaveError(null)
+
+    // Re-read role + member count at action time so a stale cache can't
+    // let the user past the block. A tiny extra query beats an orphaned
+    // household caused by a race.
+    const { data: myRow, error: myErr } = await supabase
+      .schema(currentSchema)
+      .from('household_members')
+      .select('role, household_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (myErr || !myRow) {
+      setLeaving(false)
+      setLeaveError(myErr?.message || 'Couldn\u2019t look up your membership.')
+      return
+    }
+
+    if (myRow.role === 'owner') {
+      const { count, error: cntErr } = await supabase
+        .schema(currentSchema)
+        .from('household_members')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('household_id', myRow.household_id)
+
+      if (cntErr) {
+        setLeaving(false)
+        setLeaveError(cntErr.message)
+        return
+      }
+
+      if ((count ?? 1) <= 1) {
+        setLeaving(false)
+        setLeaveError(
+          'You\u2019re the only one in this household, so leaving would ' +
+          'orphan the wardrobe. Email support and we\u2019ll help you wind ' +
+          'it down cleanly.',
+        )
+        track.householdLeaveBlocked({ reason: 'sole_owner' })
+        return
+      }
+
+      setLeaving(false)
+      setLeaveError(
+        'You\u2019re the owner. Transfer ownership to another member first — ' +
+        'that UI lands post-beta; ping support if you need to leave sooner.',
+      )
+      track.householdLeaveBlocked({ reason: 'owner_with_members' })
+      return
+    }
+
+    const { error: delErr } = await supabase
+      .schema(currentSchema)
+      .from('household_members')
+      .delete()
+      .eq('user_id', user.id)
+
+    if (delErr) {
+      setLeaving(false)
+      setLeaveError(delErr.message)
+      return
+    }
+
+    track.householdLeft({ role: myRow.role })
+    // Sign out so the next PublicRoute redirect lands on /. Leaving the
+    // session open would send the user to Home, which would then try to
+    // re-route to onboarding — but they don't have a household anymore,
+    // so that flow would fail in a confusing way. A clean logout and
+    // fresh start is kinder.
+    await supabase.auth.signOut()
+    navigate('/', { replace: true })
+  }
+
+  function handleDeleteAccount() {
+    // Route through support. Compose a mailto with the user's identifying
+    // info pre-filled so we can verify the request without a back-and-forth.
+    const subject = encodeURIComponent('Delete my Littleloop account')
+    const body = encodeURIComponent(
+      `Hi Littleloop team,\n\n` +
+      `Please delete my account.\n\n` +
+      `Email on file: ${currentEmail}\n` +
+      `User ID: ${user?.id ?? '(unknown)'}\n\n` +
+      `Thanks.`,
+    )
+    track.accountDeletionRequested()
+    window.location.href = `mailto:support@littleloop.app?subject=${subject}&body=${body}`
+    setDeleteSent(true)
+  }
 
   return (
     <div className={styles.tabPanel} role="tabpanel">
+      {/* ── Your account ───────────────────────────────────────────── */}
       <section className={styles.section}>
         <div className={styles.sectionTitle}>Your account</div>
-        <dl className={styles.kv}>
-          <div className={styles.kvRow}>
-            <dt className={styles.kvLabel}>Name</dt>
-            <dd className={styles.kvValue}>{name || '—'}</dd>
+
+        {/* Name row */}
+        <div className={styles.fieldRow}>
+          <div className={styles.fieldLabel}>Name</div>
+          {editingName ? (
+            <div className={styles.fieldEdit}>
+              <input
+                className={styles.fieldInput}
+                type="text"
+                value={nameDraft}
+                onChange={e => setNameDraft(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') saveName()
+                  if (e.key === 'Escape') {
+                    setNameDraft(currentName)
+                    setEditingName(false)
+                    setNameError(null)
+                  }
+                }}
+                autoFocus
+                disabled={savingName}
+                autoComplete="name"
+              />
+              <button
+                type="button"
+                className={styles.fieldSave}
+                onClick={saveName}
+                disabled={savingName || !nameDraft.trim()}
+              >
+                {savingName ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          ) : (
+            <div className={styles.fieldDisplay}>
+              <div className={styles.fieldValue}>{displayName || '—'}</div>
+              <button
+                type="button"
+                className={styles.editLink}
+                onClick={() => {
+                  setNameDraft(displayName)
+                  setEditingName(true)
+                }}
+              >
+                Edit
+              </button>
+            </div>
+          )}
+          {nameError && <div className={styles.fieldError}>{nameError}</div>}
+        </div>
+
+        {/* Email row */}
+        <div className={styles.fieldRow}>
+          <div className={styles.fieldLabel}>Email</div>
+          {editingEmail ? (
+            <div className={styles.fieldEdit}>
+              <input
+                className={styles.fieldInput}
+                type="email"
+                value={emailDraft}
+                onChange={e => setEmailDraft(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') saveEmail()
+                  if (e.key === 'Escape') {
+                    setEmailDraft(currentEmail)
+                    setEditingEmail(false)
+                    setEmailError(null)
+                  }
+                }}
+                autoFocus
+                disabled={savingEmail}
+                autoComplete="email"
+              />
+              <button
+                type="button"
+                className={styles.fieldSave}
+                onClick={saveEmail}
+                disabled={savingEmail || !emailDraft.trim()}
+              >
+                {savingEmail ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          ) : (
+            <div className={styles.fieldDisplay}>
+              <div className={styles.fieldValue}>{currentEmail || '—'}</div>
+              <button
+                type="button"
+                className={styles.editLink}
+                onClick={() => {
+                  setEmailDraft(currentEmail)
+                  setEditingEmail(true)
+                }}
+              >
+                Change
+              </button>
+            </div>
+          )}
+          {emailError && <div className={styles.fieldError}>{emailError}</div>}
+          {pendingEmail && (
+            <div className={styles.fieldHint}>
+              We sent confirmation links to <strong>{currentEmail}</strong> and{' '}
+              <strong>{pendingEmail}</strong>. Click both to finish the change.
+            </div>
+          )}
+        </div>
+
+        {/* Password row */}
+        <div className={styles.fieldRow}>
+          <div className={styles.fieldLabel}>Password</div>
+          <div className={styles.fieldDisplay}>
+            <div className={styles.fieldValue}>••••••••</div>
+            <button
+              type="button"
+              className={styles.editLink}
+              onClick={() => setPwModalOpen(true)}
+            >
+              Change
+            </button>
           </div>
-          <div className={styles.kvRow}>
-            <dt className={styles.kvLabel}>Email</dt>
-            <dd className={styles.kvValue}>{email || '—'}</dd>
-          </div>
-        </dl>
-        <div className={styles.emptyNote}>
-          Editing name, email, and password lands here next.
         </div>
       </section>
 
-      {/* Separator before the destructive group — the muted heading + extra
-          top margin signal "you're leaving the safe part of the page" without
-          shouting about it. */}
+      {/* ── Leaving Littleloop ─────────────────────────────────────── */}
       <section className={`${styles.section} ${styles.sectionQuiet}`}>
         <div className={styles.sectionTitleQuiet}>Leaving Littleloop</div>
 
@@ -497,14 +835,13 @@ function AccountTab() {
               Remove yourself from this household. Other members keep access.
             </div>
           </div>
-          {/* Button styling lands with #59 — keep it as a disabled preview so
-              the layout is stable when the real handler drops in. */}
           <button
             type="button"
             className={styles.quietBtn}
-            disabled
-            aria-disabled="true"
-            title="Coming soon"
+            onClick={() => {
+              setLeaveError(null)
+              setLeaveOpen(true)
+            }}
           >
             Leave
           </button>
@@ -522,40 +859,389 @@ function AccountTab() {
           <button
             type="button"
             className={styles.quietBtn}
-            disabled
-            aria-disabled="true"
-            title="Coming soon"
+            onClick={() => {
+              setDeleteSent(false)
+              setDeleteOpen(true)
+            }}
           >
             Delete
           </button>
         </div>
       </section>
+
+      {/* ── Password modal ─────────────────────────────────────────── */}
+      {pwModalOpen && (
+        <div
+          className={styles.modalBackdrop}
+          onClick={() => !savingPw && closePwModal()}
+          role="presentation"
+        >
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pw-modal-title"
+            onClick={e => e.stopPropagation()}
+          >
+            <div id="pw-modal-title" className={styles.modalTitle}>
+              Change password
+            </div>
+            {pwSuccess ? (
+              <>
+                <div className={styles.modalBody}>
+                  Password updated. You&rsquo;re still signed in on this device.
+                </div>
+                <div className={styles.modalActions}>
+                  <button
+                    type="button"
+                    className={styles.modalPrimary}
+                    onClick={closePwModal}
+                  >
+                    Done
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={styles.modalBody}>
+                  Pick a new password (at least 8 characters).
+                </div>
+                <label className={styles.modalField}>
+                  <span className={styles.modalFieldLabel}>New password</span>
+                  <input
+                    type="password"
+                    className={styles.modalFieldInput}
+                    value={newPw}
+                    onChange={e => setNewPw(e.target.value)}
+                    autoFocus
+                    disabled={savingPw}
+                    minLength={8}
+                    autoComplete="new-password"
+                  />
+                </label>
+                <label className={styles.modalField}>
+                  <span className={styles.modalFieldLabel}>
+                    Confirm new password
+                  </span>
+                  <input
+                    type="password"
+                    className={styles.modalFieldInput}
+                    value={confirmPw}
+                    onChange={e => setConfirmPw(e.target.value)}
+                    disabled={savingPw}
+                    minLength={8}
+                    autoComplete="new-password"
+                  />
+                </label>
+                {pwError && (
+                  <div className={styles.modalError}>{pwError}</div>
+                )}
+                <div className={styles.modalActions}>
+                  <button
+                    type="button"
+                    className={styles.modalCancel}
+                    onClick={closePwModal}
+                    disabled={savingPw}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.modalPrimary}
+                    onClick={savePassword}
+                    disabled={savingPw || !newPw || !confirmPw}
+                  >
+                    {savingPw ? 'Saving…' : 'Update password'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Leave household modal ──────────────────────────────────── */}
+      {leaveOpen && (
+        <div
+          className={styles.modalBackdrop}
+          onClick={() => !leaving && setLeaveOpen(false)}
+          role="presentation"
+        >
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="leave-modal-title"
+            onClick={e => e.stopPropagation()}
+          >
+            <div id="leave-modal-title" className={styles.modalTitle}>
+              Leave this household?
+            </div>
+            <div className={styles.modalBody}>
+              You&rsquo;ll lose access to this household&rsquo;s wardrobe on
+              this account. The other members keep everything they&rsquo;ve
+              added. You can be invited back anytime.
+            </div>
+            {leaveError && (
+              <div className={styles.modalError}>{leaveError}</div>
+            )}
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalCancel}
+                onClick={() => setLeaveOpen(false)}
+                disabled={leaving}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.modalDanger}
+                onClick={handleLeaveHousehold}
+                disabled={leaving}
+              >
+                {leaving ? 'Leaving…' : 'Leave household'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete account modal ───────────────────────────────────── */}
+      {deleteOpen && (
+        <div
+          className={styles.modalBackdrop}
+          onClick={() => setDeleteOpen(false)}
+          role="presentation"
+        >
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
+            onClick={e => e.stopPropagation()}
+          >
+            <div id="delete-modal-title" className={styles.modalTitle}>
+              Delete your account?
+            </div>
+            {deleteSent ? (
+              <>
+                <div className={styles.modalBody}>
+                  We opened a pre-filled email to our support team. Send it
+                  from {currentEmail || 'your email'} and we&rsquo;ll confirm
+                  before deleting anything.
+                </div>
+                <div className={styles.modalActions}>
+                  <button
+                    type="button"
+                    className={styles.modalPrimary}
+                    onClick={() => setDeleteOpen(false)}
+                  >
+                    Got it
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={styles.modalBody}>
+                  During the beta we confirm deletions by email so nothing
+                  irreversible happens by accident. Tapping Continue opens a
+                  pre-filled message to support — just hit send.
+                </div>
+                <div className={styles.modalActions}>
+                  <button
+                    type="button"
+                    className={styles.modalCancel}
+                    onClick={() => setDeleteOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.modalDanger}
+                    onClick={handleDeleteAccount}
+                  >
+                    Continue
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 // ── Notifications tab ──────────────────────────────────────────────────
-// Scaffold only — #58 fills this in with toggle rows persisted to
-// auth.users.raw_user_meta_data.prefs.
+// Persisted placeholder: toggle rows DO save to auth.users.raw_user_meta_data.
+// prefs, but we don't send any notifications yet. The banner at the top is
+// the honest framing — parents can opt in now and their preferences survive
+// until the notification + exchange loops ship, at which point we honor
+// whatever they'd already set without a second setup pass.
+//
+// Keys live under a single `prefs` object so adding categories later
+// doesn't collide with other future metadata. laundry_reminders / outgrow_
+// warnings / exchange_alerts are the notification categories; pass_on /
+// receive are the exchange preferences.
+const PREF_DEFAULTS = {
+  notify: {
+    laundry_reminders: true,
+    outgrow_warnings: true,
+    exchange_alerts: true,
+  },
+  exchange: {
+    pass_on: true,
+    receive: true,
+  },
+}
+
 function NotificationsTab() {
+  const { user } = useAuth()
+
+  // Seed from user_metadata so the toggles reflect whatever the user saved
+  // on a prior visit. useState gets a lazy initializer to keep the
+  // deep-merge out of every render.
+  const [prefs, setPrefs] = useState(() => mergePrefs(user?.user_metadata?.prefs))
+  const [saving, setSaving] = useState(null) // "notify.laundry_reminders" etc.
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    // Re-seed if the user object updates (e.g. the auth listener fires a
+    // refresh after another device changed prefs). Only resets state we
+    // haven't just modified — we gate on `saving` being null so an in-
+    // flight toggle isn't clobbered by a stale re-seed.
+    if (saving) return
+    setPrefs(mergePrefs(user?.user_metadata?.prefs))
+  }, [user, saving])
+
+  async function toggle(group, key) {
+    const next = {
+      ...prefs,
+      [group]: { ...prefs[group], [key]: !prefs[group][key] },
+    }
+    const path = `${group}.${key}`
+    setPrefs(next)
+    setSaving(path)
+    setError(null)
+
+    // Merge into existing user_metadata so we don't clobber `name` or any
+    // other keys Auth stores alongside prefs.
+    const existingMeta = user?.user_metadata || {}
+    const { error: updErr } = await supabase.auth.updateUser({
+      data: { ...existingMeta, prefs: next },
+    })
+    setSaving(null)
+    if (updErr) {
+      // Revert the toggle on failure so the UI doesn't lie about saved
+      // state. The error message sits above the sections so it's visible
+      // without needing to scroll.
+      setPrefs(prefs)
+      setError(updErr.message)
+      return
+    }
+    track.prefsUpdated({ key: path, value: next[group][key] })
+  }
+
   return (
     <div className={styles.tabPanel} role="tabpanel">
+      {/* Top banner — expectation-setting. Parents who toggle things on
+          tonight shouldn't be surprised that their phone stays quiet for
+          weeks; this line tells them why. */}
+      <div className={styles.prefsBanner}>
+        Settings save now, but we&rsquo;ll only start sending anything once
+        notifications and the exchange loop are live. Toggling early means
+        you&rsquo;re opted in from day one.
+      </div>
+
+      {error && <div className={styles.errorBox}>{error}</div>}
+
       <section className={styles.section}>
         <div className={styles.sectionTitle}>Notifications</div>
-        <div className={styles.emptyNote}>
-          Toggle row reminders, outgrow warnings, and exchange alerts when
-          the preferences UI lands here.
-        </div>
+
+        <PrefToggle
+          title="Laundry reminders"
+          sub="A weekly nudge to rotate clean clothes back into the drawer."
+          checked={prefs.notify.laundry_reminders}
+          busy={saving === 'notify.laundry_reminders'}
+          onToggle={() => toggle('notify', 'laundry_reminders')}
+        />
+        <PrefToggle
+          title="Outgrow warnings"
+          sub="Heads-up when a baby is close to sizing out of their current range."
+          checked={prefs.notify.outgrow_warnings}
+          busy={saving === 'notify.outgrow_warnings'}
+          onToggle={() => toggle('notify', 'outgrow_warnings')}
+        />
+        <PrefToggle
+          title="Exchange alerts"
+          sub="Ping when a nearby family posts an item you&rsquo;re wishing for."
+          checked={prefs.notify.exchange_alerts}
+          busy={saving === 'notify.exchange_alerts'}
+          onToggle={() => toggle('notify', 'exchange_alerts')}
+        />
       </section>
 
       <section className={styles.section}>
         <div className={styles.sectionTitle}>Exchange preferences</div>
-        <div className={styles.emptyNote}>
-          Let families nearby know what you&rsquo;re willing to pass on or
-          receive. Coming once the exchange loop is live.
-        </div>
+
+        <PrefToggle
+          title="Pass on outgrown items"
+          sub="Let other families claim things your babies have grown out of."
+          checked={prefs.exchange.pass_on}
+          busy={saving === 'exchange.pass_on'}
+          onToggle={() => toggle('exchange', 'pass_on')}
+        />
+        <PrefToggle
+          title="Receive from nearby families"
+          sub="See passed-on clothes families within a few miles are offering."
+          checked={prefs.exchange.receive}
+          busy={saving === 'exchange.receive'}
+          onToggle={() => toggle('exchange', 'receive')}
+        />
       </section>
     </div>
   )
+}
+
+// Tiny toggle row used by NotificationsTab. The visible "switch" is really a
+// styled button — pure CSS (no native <input>) so we can lay it out
+// predictably across mobile + desktop. `busy` dims it while a save is in
+// flight; the outer toggle() still short-circuits spam clicks, this is
+// just the visual affordance.
+function PrefToggle({ title, sub, checked, busy, onToggle }) {
+  return (
+    <div className={styles.prefRow}>
+      <div className={styles.prefRowBody}>
+        <div className={styles.prefRowTitle}>{title}</div>
+        <div className={styles.prefRowSub}>{sub}</div>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={`${title} — ${checked ? 'on' : 'off'}`}
+        className={
+          `${styles.switch} ${checked ? styles.switchOn : ''} ` +
+          (busy ? styles.switchBusy : '')
+        }
+        onClick={onToggle}
+        disabled={busy}
+      >
+        <span className={styles.switchKnob} aria-hidden="true" />
+      </button>
+    </div>
+  )
+}
+
+// Merge saved prefs over the defaults so newly-added categories (added in
+// code after a user's prefs were first written) still fall back cleanly
+// instead of reading `undefined` and rendering a blank toggle.
+function mergePrefs(saved) {
+  const s = saved || {}
+  return {
+    notify: { ...PREF_DEFAULTS.notify, ...(s.notify || {}) },
+    exchange: { ...PREF_DEFAULTS.exchange, ...(s.exchange || {}) },
+  }
 }
 

@@ -572,3 +572,337 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ── Account: field rows ────────────────────────────────────
+   Three-line layout per field (label, display/edit row, optional
+   error + hint). Labels are muted so the user's value stays visually
+   dominant; the Edit / Change link on the right is a quiet text button
+   rather than a prominent CTA so the section doesn't read as "do
+   something urgent here". */
+.fieldRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 0.5px solid var(--gray-100);
+}
+
+.fieldRow:first-of-type {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-600);
+}
+
+.fieldDisplay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fieldValue {
+  font-size: 14px;
+  color: var(--gray-900);
+  word-break: break-word;
+  flex: 1;
+  min-width: 0;
+}
+
+.fieldEdit {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.fieldInput {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  border: 0.5px solid var(--teal);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--gray-900);
+  outline: none;
+  min-width: 0;
+}
+
+.fieldSave {
+  all: unset;
+  box-sizing: border-box;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--teal);
+  color: var(--teal-light);
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.fieldSave:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fieldError {
+  font-size: 12px;
+  color: #A32D2D;
+  background: #FDF2F2;
+  border: 0.5px solid #F09595;
+  border-radius: 8px;
+  padding: 8px 10px;
+  line-height: 1.4;
+}
+
+.fieldHint {
+  font-size: 12px;
+  color: var(--gray-600);
+  background: var(--teal-light);
+  border: 0.5px solid var(--teal);
+  border-radius: 8px;
+  padding: 8px 10px;
+  line-height: 1.45;
+}
+
+/* ── Modals (shared: password change, leave-household, delete-account) ──
+   Fullscreen backdrop + centered card. Same look as ItemDetail's confirm
+   modal for consistency — a parent who saw the delete-item confirm should
+   recognize the shape of leave-household. */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.modal {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modalTitle {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.modalBody {
+  font-size: 14px;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+.modalField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modalFieldLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-600);
+}
+
+.modalFieldInput {
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--gray-900);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.modalFieldInput:focus {
+  border-color: var(--teal);
+}
+
+.modalError {
+  font-size: 13px;
+  color: #A32D2D;
+  background: #FDF2F2;
+  border: 0.5px solid #F09595;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.modalActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.modalCancel {
+  all: unset;
+  box-sizing: border-box;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.modalCancel:hover:not(:disabled) {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.modalCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalPrimary {
+  all: unset;
+  box-sizing: border-box;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal-light);
+  background: var(--teal);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.modalPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Terracotta/red for destructive actions (leave household, continue to
+   support-mail). Enough contrast to signal "this is the serious button"
+   without shouting the way a saturated red would. */
+.modalDanger {
+  all: unset;
+  box-sizing: border-box;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #FFF;
+  background: #A32D2D;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.modalDanger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Notifications: banner + prefs rows + switch ───────────
+   The banner sits above the first section and sets expectations: settings
+   are saved but we're not sending yet. Same warm amber as errorBox so it
+   reads as informational rather than alarm — think "heads-up" over "danger". */
+.prefsBanner {
+  font-size: 13px;
+  color: #633806;
+  background: #FAEEDA;
+  border: 0.5px solid #EF9F27;
+  border-radius: 10px;
+  padding: 10px 12px;
+  line-height: 1.45;
+}
+
+.prefRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 0.5px solid var(--gray-100);
+}
+
+.prefRow:first-of-type {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.prefRowBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.prefRowTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 2px;
+}
+
+.prefRowSub {
+  font-size: 12px;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+/* Custom switch — styled button with a sliding knob. role="switch" +
+   aria-checked on the button carries the semantics; the visual is a pill
+   track with a circular knob that translates on the X axis when the
+   switch is on. */
+.switch {
+  all: unset;
+  box-sizing: border-box;
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--gray-200);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: background 0.18s;
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.switchKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition: transform 0.18s;
+}
+
+.switchOn {
+  background: var(--teal);
+}
+
+.switchOn .switchKnob {
+  transform: translateX(18px);
+}
+
+.switchBusy {
+  opacity: 0.6;
+  cursor: wait;
+}
