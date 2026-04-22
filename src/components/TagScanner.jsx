@@ -191,7 +191,16 @@ export default function TagScanner({
         // eslint-disable-next-line no-console
         console.warn('TagScanner fn error:', info, fnErr)
         setError(errorMessageFor(info.code))
-        setErrorDebug(`code: ${info.code}${info.status ? ` · HTTP ${info.status}` : ''}`)
+        // Pull the error's name/message too — `code: unknown` alone told us
+        // nothing about *why* it was unknown. Showing the raw class + message
+        // lets a phone tester tell us whether it's FunctionsHttpError,
+        // FunctionsFetchError, or something supabase-js didn't classify.
+        const name = fnErr?.name ?? fnErr?.constructor?.name ?? 'Error'
+        const msg  = String(fnErr?.message ?? '').slice(0, 140)
+        const extra = info.detail ? ` · ${String(info.detail).slice(0, 140)}` : ''
+        setErrorDebug(
+          `code: ${info.code}${info.status ? ` · HTTP ${info.status}` : ''} · ${name}: ${msg}${extra}`,
+        )
         return
       }
 
