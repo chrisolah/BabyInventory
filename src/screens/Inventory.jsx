@@ -579,11 +579,15 @@ function WishlistView({
 
 // ── Age-range chip navbar ──────────────────────────────────────────────────
 // Shared between the Owned and Wish list tabs. The chip matching the baby's
-// current (DOB- or override-derived) age band gets a .ageChipCurrent marker
-// so the user never loses track of where the baby actually is while browsing
-// future sizes. Past bands are dimmed (.ageChipPast) to signal "you probably
-// don't need to shop here anymore" without hiding them — outgrown items
-// still live there.
+// current (DOB- or override-derived) age band sprouts a tiny leaf out the
+// bottom so the user never loses track of where the baby actually is while
+// browsing future sizes. Past bands are dimmed (.ageChipPast) to signal
+// "you probably don't need to shop here anymore" without hiding them —
+// outgrown items still live there.
+//
+// The sprout is absolutely-positioned inside the ageNav's bottom padding,
+// so the chip itself stays the same size as its siblings (no margin-bottom
+// that would squeeze the flex row and offset the chip vertically).
 function AgeNav({ ageRange, onAgeChange, ageInfo }) {
   return (
     <div className={styles.ageNav}>
@@ -608,10 +612,45 @@ function AgeNav({ ageRange, onAgeChange, ageInfo }) {
             aria-label={isCurrent ? `${range} (current size band)` : range}
           >
             {range}
+            {isCurrent && <Sprout />}
           </button>
         )
       })}
     </div>
+  )
+}
+
+// ── Sprout marker ──────────────────────────────────────────────────────────
+// Tiny two-leaf seedling that grows out of the bottom of the "current age
+// band" chip. The <g> gets a gentle sway so it reads as alive; the wrapper
+// handles the one-time grow-in on mount. Both animations are disabled for
+// users who've opted out of motion (see Inventory.module.css).
+function Sprout() {
+  return (
+    <span className={styles.sprout} aria-hidden="true">
+      <svg viewBox="0 0 20 14" width="20" height="14">
+        <g className={styles.sproutStem}>
+          {/* Stem — a short vertical line emerging from the chip's bottom edge. */}
+          <path
+            d="M10 0 L10 12"
+            stroke="currentColor"
+            strokeWidth="1.25"
+            fill="none"
+            strokeLinecap="round"
+          />
+          {/* Left leaf. */}
+          <path
+            d="M10 7 Q3 5 2 10 Q7 11 10 9 Z"
+            fill="currentColor"
+          />
+          {/* Right leaf — slightly higher + smaller so the pair feels organic. */}
+          <path
+            d="M10 5 Q16 3.5 17 7 Q13 8 10 6.5 Z"
+            fill="currentColor"
+          />
+        </g>
+      </svg>
+    </span>
   )
 }
 
