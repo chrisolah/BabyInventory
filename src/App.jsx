@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useLayoutEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { HouseholdProvider } from './contexts/HouseholdContext'
@@ -21,16 +21,57 @@ import IvyDecoration from './components/IvyDecoration'
 // scroll position carries between pages. Most noticeable on mobile:
 // after scrolling down the Login form to tap submit, you'd land on
 // /home with the page already scrolled past the sticky header, making
-// it look like the header was missing. This effect resets scroll to
-// the top every time pathname changes.
+// it look like the header was missing. This component resets scroll to
+// the top on every pathname change AND on initial load / bfcache restore.
+//
+// Why this is trickier than it looks on mobile Safari:
+//   1. The browser's default `history.scrollRestoration` is 'auto', which
+//      means after a back/forward or refresh, Safari restores the previous
+//      scroll position AFTER React has mounted — racing (and winning)
+//      against any useEffect-driven scroll reset. Setting it to 'manual'
+//      hands scroll ownership to us.
+//   2. `behavior: 'instant'` is silently unsupported on older iOS Safari;
+//      the call becomes a no-op. Using the legacy two-arg form
+//      `scrollTo(0, 0)` is universally supported and effectively instant.
+//   3. iOS Safari's bfcache restores pages WITHOUT re-running effects, so
+//      reopening a tab can land you exactly where you left off. We listen
+//      for `pageshow` with `event.persisted` and reset scroll there too.
+//   4. `useLayoutEffect` runs after DOM mutation but before paint, so the
+//      user never sees a frame of the previous scroll position flashing
+//      before the reset.
 function ScrollToTop() {
   const { pathname } = useLocation()
+
+  // One-time: take scroll restoration out of the browser's hands.
   useEffect(() => {
-    // `instant` avoids a smooth-scroll animation on page-to-page jumps,
-    // which feels laggy when you've just tapped Log in and expect the
-    // next page to start at the top.
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual'
+    }
+  }, [])
+
+  // Fires on initial mount AND on every subsequent pathname change.
+  useLayoutEffect(() => {
+    // Legacy 2-arg form — works on every mobile browser we care about.
+    window.scrollTo(0, 0)
+    // Belt-and-suspenders for the cases where the scrolling element is
+    // <html> or <body> directly (varies by iOS version + engine mode).
+    if (document.documentElement) document.documentElement.scrollTop = 0
+    if (document.body) document.body.scrollTop = 0
   }, [pathname])
+
+  // bfcache restore path — effects above don't re-run, so we hook pageshow.
+  useEffect(() => {
+    const onPageShow = (e) => {
+      if (e.persisted) {
+        window.scrollTo(0, 0)
+        if (document.documentElement) document.documentElement.scrollTop = 0
+        if (document.body) document.body.scrollTop = 0
+      }
+    }
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
+  }, [])
+
   return null
 }
 
