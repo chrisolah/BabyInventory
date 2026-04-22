@@ -1,0 +1,55 @@
+/* Horizontally scrollable chip row — mirrors the age-range nav on the
+   Wish list tab so the visual language stays consistent across the two
+   "filter by" controls a user encounters. Scroll container hides its bar
+   on desktop and trims the glow on mobile so the row reads as a single
+   continuous band. */
+
+.row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 10px 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--white);
+  border-bottom: 0.5px solid var(--gray-100);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.row::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  all: unset;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
+  background: var(--gray-50);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.chipActive {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  border-color: var(--teal);
+}
+
+.chipActive:hover {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+}

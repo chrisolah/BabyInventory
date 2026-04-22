@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useHousehold, matchesBabyFilter } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import {
   AGE_RANGES,
@@ -14,6 +15,7 @@ import {
 } from '../lib/wardrobe'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
+import BabySwitcher from '../components/BabySwitcher'
 import styles from './Inventory.module.css'
 
 // Inventory has two tabs:
@@ -59,11 +61,19 @@ const CATEGORY_ORDER = [
 export default function Inventory() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  // Household + babies + selection come from context now so the chip
+  // switcher can drive what Inventory renders without a re-fetch.
+  const {
+    household,
+    babies,
+    selectedBabyId,
+    currentBaby,
+    loading: householdLoading,
+    error: householdError,
+  } = useHousehold()
 
   const [tab, setTab] = useState('owned') // 'owned' | 'wishlist'
-  const [loading, setLoading] = useState(true)
-  const [household, setHousehold] = useState(null)
-  const [baby, setBaby] = useState(null)
+  const [itemsLoading, setItemsLoading] = useState(true)
   const [items, setItems] = useState([])
   const [error, setError] = useState(null)
 
@@ -94,73 +104,77 @@ export default function Inventory() {
     })
   }
 
-  // ── Load household, baby, items on mount ────────────────────────────────
+  // ── Load items once household is known ──────────────────────────────────
+  // Household + babies come from context; items are Inventory-specific so
+  // they still live here. We fetch everything for the household and filter
+  // by baby client-side — switching chips doesn't need a round trip.
   useEffect(() => {
-    if (!user) return
+    if (!user || !household) return
     let cancelled = false
 
-    async function load() {
-      const { data: memberships, error: memErr } = await supabase
-        .schema(currentSchema)
-        .from('household_members')
-        .select('household_id, households(id, name)')
-        .eq('user_id', user.id)
-        .order('joined_at', { ascending: false })
-        .limit(1)
-
-      if (cancelled) return
-      if (memErr || !memberships?.[0]?.households) {
-        setError(memErr?.message || 'No household found')
-        setLoading(false)
-        return
-      }
-
-      const h = memberships[0].households
-
-      // Grab baby including DOB/due_date so we can infer current age range.
-      const { data: babies } = await supabase
-        .schema(currentSchema)
-        .from('babies')
-        .select('id, name, date_of_birth, due_date, size_mode, gender')
-        .eq('household_id', h.id)
-        .limit(1)
-
-      if (cancelled) return
+    async function loadItems() {
+      setItemsLoading(true)
+      setError(null)
 
       const { data: itemsData, error: itemsErr } = await supabase
         .schema(currentSchema)
         .from('clothing_items')
         .select('*')
-        .eq('household_id', h.id)
+        .eq('household_id', household.id)
         .order('created_at', { ascending: false })
 
       if (cancelled) return
       if (itemsErr) {
         setError(itemsErr.message)
-        setLoading(false)
+        setItemsLoading(false)
         return
       }
 
-      const loadedBaby = babies?.[0] ?? null
-      setHousehold(h)
-      setBaby(loadedBaby)
       setItems(itemsData || [])
-
-      // Default the Wish list age range to the baby's current range. If we
-      // can't infer (no baby / no dates / >24M), fall back to the middle.
-      const inferred = inferAgeRange(loadedBaby)
-      setSelectedAgeRange(inferred.currentRange || '3-6M')
-
-      setLoading(false)
+      setItemsLoading(false)
     }
 
-    load()
+    loadItems()
     return () => { cancelled = true }
-  }, [user])
+  }, [user, household])
+
+  // Surface household-load errors too — they're rare but should not be
+  // silently swallowed (no household = pre-onboarding; caller gets redirected
+  // by Home's gate anyway, so this only triggers on a genuine query failure).
+  useEffect(() => {
+    if (householdError) setError(householdError)
+  }, [householdError])
+
+  // Anchor used for age-range inference + outgrow banner. When a specific
+  // baby is selected we follow that baby; "All" falls back to the first
+  // baby so multi-baby households still see a sensible default.
+  const ageAnchor = currentBaby ?? babies[0] ?? null
+
+  // When the anchor baby changes (chip switch or initial load), snap the
+  // Wish list selector to that baby's current age range. Overwrites the
+  // user's manual selection intentionally — a chip switch is a context
+  // swap, not a back-nav, and each baby's "current age" is the most useful
+  // starting point.
+  useEffect(() => {
+    const inferred = inferAgeRange(ageAnchor)
+    setSelectedAgeRange(inferred.currentRange || '3-6M')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ageAnchor?.id])
+
+  const loading = householdLoading || itemsLoading
+
+  // Client-side filter for the current baby selection. Null baby_id items
+  // are intentionally visible under every specific baby — they're "shared"
+  // inventory (hand-me-downs, pre-arrival gifts) and semantically available
+  // to any baby in the household. Every downstream view derives from this.
+  const babyFilteredItems = useMemo(
+    () => items.filter(it => matchesBabyFilter(it, selectedBabyId)),
+    [items, selectedBabyId],
+  )
 
   // ── Owned tab: items grouped by category ────────────────────────────────
   const ownedGrouped = useMemo(() => {
-    const filtered = items.filter(i => i.inventory_status === 'owned')
+    const filtered = babyFilteredItems.filter(i => i.inventory_status === 'owned')
     const groups = Object.fromEntries(CATEGORY_ORDER.map(c => [c, []]))
     for (const it of filtered) {
       if (groups[it.category]) groups[it.category].push(it)
@@ -168,18 +182,21 @@ export default function Inventory() {
     return CATEGORY_ORDER
       .filter(c => groups[c].length > 0)
       .map(c => ({ category: c, items: groups[c] }))
-  }, [items])
+  }, [babyFilteredItems])
 
   // ── Wish list tab: slot coverage + other wishes for selected age range ──
+  // Coverage math runs on the baby-filtered set, so switching to Roo shows
+  // Roo's coverage (with shared items counted toward him) rather than the
+  // whole household's aggregate.
   const coverage = useMemo(() => {
     if (!selectedAgeRange) return []
-    return computeCoverage(items, selectedAgeRange)
-  }, [items, selectedAgeRange])
+    return computeCoverage(babyFilteredItems, selectedAgeRange)
+  }, [babyFilteredItems, selectedAgeRange])
 
   const otherWishItems = useMemo(() => {
     if (!selectedAgeRange) return []
-    return otherWishes(items, selectedAgeRange)
-  }, [items, selectedAgeRange])
+    return otherWishes(babyFilteredItems, selectedAgeRange)
+  }, [babyFilteredItems, selectedAgeRange])
 
   // Overall coverage summary for the section meta ("27 of 64"). Clamp each
   // slot's contribution to recommended so over-stocked slots don't push the
@@ -217,10 +234,20 @@ export default function Inventory() {
       })
   }, [coverage])
 
-  const ageInfo = useMemo(() => inferAgeRange(baby), [baby])
+  const ageInfo = useMemo(() => inferAgeRange(ageAnchor), [ageAnchor])
   const showOutgrow = shouldShowOutgrowBanner(ageInfo)
 
-  const title = baby?.name ? `${baby.name}'s wardrobe` : 'Your wardrobe'
+  // Title follows the selection. With a specific baby picked, use their
+  // name. With 'All' on a multi-baby household, "Your wardrobes" reads more
+  // naturally than "Everyone's wardrobe". Zero/single unnamed baby keeps
+  // the existing singular fallback.
+  const title = currentBaby?.name
+    ? `${currentBaby.name}'s wardrobe`
+    : babies.length > 1
+      ? 'Your wardrobes'
+      : babies[0]?.name
+        ? `${babies[0].name}'s wardrobe`
+        : 'Your wardrobe'
 
   // Fire analytics once per (tab, age range) visit — low-volume event that
   // tells us how often users actually engage with recommendations.
@@ -278,6 +305,12 @@ export default function Inventory() {
           <ProfileMenu />
         </div>
       </header>
+
+      {/* Multi-baby chip switcher — self-hides for 0/1 baby households,
+          so the layout is unchanged in the common single-baby case. Sits
+          between the sticky header and the tabs so it scrolls with the
+          rest of the page (header stays fixed, switcher doesn't). */}
+      <BabySwitcher from="inventory" />
 
       <div className={styles.tabs}>
         <button

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useHousehold, matchesBabyFilter } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import {
   AGE_RANGES,
@@ -12,6 +13,7 @@ import {
 } from '../lib/wardrobe'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
+import BabySwitcher from '../components/BabySwitcher'
 import styles from './SlotDetail.module.css'
 
 // Slot detail is the drill-down page for a single slot at a single age range.
@@ -31,69 +33,77 @@ export default function SlotDetail() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { ageRange, slotId } = useParams()
+  const {
+    household,
+    selectedBabyId,
+    loading: householdLoading,
+    error: householdError,
+  } = useHousehold()
 
   const slot = slotId ? SLOT_BY_ID[slotId] : null
   const ageRangeValid = AGE_RANGES.includes(ageRange)
 
-  const [loading, setLoading] = useState(true)
+  const [itemsLoading, setItemsLoading] = useState(true)
   const [items, setItems] = useState([])
-  const [household, setHousehold] = useState(null)
   const [error, setError] = useState(null)
 
-  // ── Load household + items ──────────────────────────────────────────────
+  // ── Load items once household is known ──────────────────────────────────
+  // Household is supplied by context; items are slot-specific in intent but
+  // we fetch all household items and let computeCoverage do the slot bucket
+  // match. Keeps the query shape identical to Inventory so the two pages
+  // never disagree about counts.
   useEffect(() => {
-    if (!user) return
+    if (!user || !household) return
     let cancelled = false
 
-    async function load() {
-      const { data: memberships, error: memErr } = await supabase
-        .schema(currentSchema)
-        .from('household_members')
-        .select('household_id, households(id, name)')
-        .eq('user_id', user.id)
-        .order('joined_at', { ascending: false })
-        .limit(1)
-
-      if (cancelled) return
-      if (memErr || !memberships?.[0]?.households) {
-        setError(memErr?.message || 'No household found')
-        setLoading(false)
-        return
-      }
-
-      const h = memberships[0].households
+    async function loadItems() {
+      setItemsLoading(true)
+      setError(null)
 
       const { data: itemsData, error: itemsErr } = await supabase
         .schema(currentSchema)
         .from('clothing_items')
         .select('*')
-        .eq('household_id', h.id)
+        .eq('household_id', household.id)
         .order('created_at', { ascending: false })
 
       if (cancelled) return
       if (itemsErr) {
         setError(itemsErr.message)
-        setLoading(false)
+        setItemsLoading(false)
         return
       }
 
-      setHousehold(h)
       setItems(itemsData || [])
-      setLoading(false)
+      setItemsLoading(false)
     }
 
-    load()
+    loadItems()
     return () => { cancelled = true }
-  }, [user])
+  }, [user, household])
+
+  useEffect(() => {
+    if (householdError) setError(householdError)
+  }, [householdError])
+
+  const loading = householdLoading || itemsLoading
+
+  // Filter by the switcher selection BEFORE computing coverage so the slot
+  // detail page shows this baby's counts (plus shared items), matching what
+  // the Wish list tab shows for the same selection.
+  const babyFilteredItems = useMemo(
+    () => items.filter(it => matchesBabyFilter(it, selectedBabyId)),
+    [items, selectedBabyId],
+  )
 
   // Reuse computeCoverage and pick out the row for this slot — keeps the
   // mapping logic in one place and ensures the slot detail screen agrees
   // with the main Wish list tab about "how many do I have."
   const row = useMemo(() => {
     if (!slot || !ageRangeValid) return null
-    const all = computeCoverage(items, ageRange)
+    const all = computeCoverage(babyFilteredItems, ageRange)
     return all.find(r => r.slot.id === slot.id) || null
-  }, [items, slot, ageRange, ageRangeValid])
+  }, [babyFilteredItems, slot, ageRange, ageRangeValid])
 
   useEffect(() => {
     if (!slot || !ageRangeValid || !row) return
@@ -150,9 +160,11 @@ export default function SlotDetail() {
   const neededItems = row?.neededItems ?? []
 
   function handleAddOne() {
-    // Pre-fill AddItem from the slot's category + current age range. We can't
-    // pre-fill item_type (free text), but category + size is enough to drop
-    // the user right into the useful part of the form.
+    // Pre-fill AddItem from the slot's category + current age range. The
+    // baby the user is currently looking at comes through the context on
+    // the other side, so we don't encode it in the URL — that way a
+    // shared/copied link is baby-agnostic and picks up whoever the viewer
+    // has selected.
     const params = new URLSearchParams({
       mode: 'owned',
       category: slot.category,
@@ -188,6 +200,11 @@ export default function SlotDetail() {
         </div>
         <ProfileMenu />
       </header>
+
+      {/* Chip switcher — self-hides for single-baby households. Sits under
+          the header so toggling a baby re-scopes the coverage math below
+          it without leaving the page. */}
+      <BabySwitcher from="slot_detail" />
 
       <main className={styles.body}>
         {loading && <div className={styles.loading}>Loading…</div>}

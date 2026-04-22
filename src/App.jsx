@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
+import { HouseholdProvider } from './contexts/HouseholdContext'
 import './styles/globals.css'
 
 import Landing from './screens/Landing'
@@ -37,10 +38,20 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <div />
   if (!user) return <Navigate to="/" replace />
+  // HouseholdProvider wraps every authed route so household + babies load
+  // once, and the baby-switcher selection survives navigation. Placed
+  // inside the auth gate because the provider needs a valid user before it
+  // can query household_members.
+  //
   // IvyDecoration is fixed-positioned with pointer-events:none, so it lives
   // alongside children without wrapping them in a layout container. Hidden
   // on narrow viewports via its own CSS.
-  return <>{children}<IvyDecoration /></>
+  return (
+    <HouseholdProvider>
+      {children}
+      <IvyDecoration />
+    </HouseholdProvider>
+  )
 }
 
 function PublicRoute({ children }) {

@@ -64,6 +64,21 @@
   z-index: 1;
 }
 
+/* "For Roo" subtitle — rendered on multi-baby households so the user
+   knows which wardrobe the new item lands in. Muted so it sits quietly
+   beneath the page title without competing for attention. */
+.subtitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-600);
+  text-align: center;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+  position: relative;
+  z-index: 1;
+}
+
 /* ── Body ─────────────────────────────────────────────────── */
 .body {
   flex: 1;
