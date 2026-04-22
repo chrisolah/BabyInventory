@@ -84,3 +84,14 @@
   padding: 10px 12px;
   line-height: 1.45;
 }
+
+/* Tiny mono hint under the error — the raw code + status so a phone tester
+   can relay it without opening devtools. Intentionally dim. */
+.errorDebug {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--gray-600);
+  margin-top: 6px;
+  opacity: 0.85;
+  word-break: break-all;
+}

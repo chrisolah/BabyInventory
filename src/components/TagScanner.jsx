@@ -89,8 +89,9 @@ async function compressToBase64(file, { maxDim = 1024, quality = 0.8 } = {}) {
 }
 
 // Map known Edge Function error codes to user-friendly copy. Anything we
-// don't recognize falls back to the generic retry prompt — worst case the
-// raw code still appears in the analytics event for debugging.
+// don't recognize falls back to the generic retry prompt — the raw code is
+// still surfaced in a small debug line below so a tester (read: Chris on a
+// phone) can tell us what went wrong without opening devtools.
 function errorMessageFor(code) {
   switch (code) {
     case 'rate_limited':
@@ -102,6 +103,12 @@ function errorMessageFor(code) {
     case 'missing_bearer':
     case 'invalid_jwt':
       return 'Your session expired. Sign in again and retry.'
+    case 'missing_anthropic_key':
+      return 'Scan isn\u2019t configured yet. Add by hand for now.'
+    case 'not_deployed':
+      return 'The scan service isn\u2019t reachable. Add by hand for now.'
+    case 'network_error':
+      return 'Couldn\u2019t reach the scan service. Check your connection and retry.'
     case 'anthropic_bad_json':
     case 'anthropic_http_error':
     case 'anthropic_fetch_failed':
@@ -109,6 +116,41 @@ function errorMessageFor(code) {
     default:
       return 'Something went wrong. Try again, or add by hand for now.'
   }
+}
+
+// Pry the real error code out of whatever supabase-js v2 threw. In v2:
+//   - FunctionsHttpError  → err.context is a Response (2xx check failed).
+//   - FunctionsRelayError → err.context is a Response (relay/CORS failure).
+//   - FunctionsFetchError → no context; fetch itself threw (network / 404
+//                           at the functions host / DNS / offline).
+// We try Response.json() first (what our function returns on errors), then
+// Response.text() as a fallback, and finally give up and return a synthetic
+// code so the UI can at least tell the user something actionable.
+async function extractFnErrorCode(fnErr) {
+  const ctx = fnErr?.context
+  if (ctx && typeof ctx.clone === 'function') {
+    // It's a Response. Clone so we can try json() then fall back to text().
+    try {
+      const cloned = ctx.clone()
+      const parsed = await cloned.json()
+      if (parsed?.error) return { code: parsed.error, status: ctx.status }
+    } catch { /* not JSON — try text */ }
+    try {
+      const txt = await ctx.text()
+      if (txt) return { code: 'non_json_response', status: ctx.status, detail: txt.slice(0, 200) }
+    } catch { /* give up */ }
+    // Known-status fallbacks for empty bodies.
+    if (ctx.status === 404) return { code: 'not_deployed', status: 404 }
+    if (ctx.status === 401) return { code: 'invalid_jwt', status: 401 }
+    return { code: 'http_' + ctx.status, status: ctx.status }
+  }
+  // No context → fetch itself threw. Most common causes on mobile:
+  //   offline, DNS flake, or the function simply isn't deployed at this URL.
+  const msg = String(fnErr?.message ?? fnErr ?? '')
+  if (/failed to fetch|networkerror|load failed/i.test(msg)) {
+    return { code: 'network_error', status: 0, detail: msg }
+  }
+  return { code: 'unknown', status: 0, detail: msg }
 }
 
 export default function TagScanner({
@@ -120,6 +162,10 @@ export default function TagScanner({
   const inputRef = useRef(null)
   const [scanning, setScanning] = useState(false)
   const [error, setError] = useState(null)
+  // Debug detail surfaced under the error — the underlying code + status so
+  // a tester without devtools can read off what actually failed. Kept small
+  // and muted in the CSS; not a long-term user-facing surface.
+  const [errorDebug, setErrorDebug] = useState(null)
 
   const onPick = useCallback(async (e) => {
     const file = e.target.files?.[0]
@@ -130,6 +176,7 @@ export default function TagScanner({
 
     setScanning(true)
     setError(null)
+    setErrorDebug(null)
 
     try {
       const { base64, mime } = await compressToBase64(file)
@@ -140,22 +187,18 @@ export default function TagScanner({
       )
 
       if (fnErr) {
-        // supabase-js wraps non-2xx responses. The body JSON we returned
-        // from the function is on fnErr.context when available.
-        let code = 'unknown'
-        try {
-          const ctx = fnErr.context?.body
-            ? JSON.parse(await fnErr.context.body.text())
-            : null
-          code = ctx?.error ?? code
-        } catch { /* fall back to unknown */ }
-        setError(errorMessageFor(code))
+        const info = await extractFnErrorCode(fnErr)
+        // eslint-disable-next-line no-console
+        console.warn('TagScanner fn error:', info, fnErr)
+        setError(errorMessageFor(info.code))
+        setErrorDebug(`code: ${info.code}${info.status ? ` · HTTP ${info.status}` : ''}`)
         return
       }
 
       const fields = data?.fields
       if (!fields) {
         setError(errorMessageFor('unknown'))
+        setErrorDebug('code: empty_response')
         return
       }
 
@@ -164,6 +207,7 @@ export default function TagScanner({
       // eslint-disable-next-line no-console
       console.warn('TagScanner failed:', err)
       setError(errorMessageFor('unknown'))
+      setErrorDebug(`code: client_exception · ${String(err?.message ?? err).slice(0, 120)}`)
     } finally {
       setScanning(false)
     }
@@ -206,7 +250,12 @@ export default function TagScanner({
         tabIndex={-1}
         aria-hidden="true"
       />
-      {error && <div className={styles.error}>{error}</div>}
+      {error && (
+        <div className={styles.error}>
+          {error}
+          {errorDebug && <div className={styles.errorDebug}>{errorDebug}</div>}
+        </div>
+      )}
     </div>
   )
 }
