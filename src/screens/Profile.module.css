@@ -204,6 +204,294 @@
   word-break: break-word;
 }
 
+/* ── Shared loading + error states ──────────────────────── */
+.loading {
+  font-size: 14px;
+  color: var(--gray-600);
+  padding: 12px 4px;
+  text-align: center;
+}
+
+.errorBox {
+  font-size: 13px;
+  color: #633806;
+  background: #FAEEDA;
+  border: 0.5px solid #EF9F27;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 1rem;
+  line-height: 1.45;
+}
+
+/* ── Section with an action button on the right ─────────── */
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sectionHead .sectionTitle {
+  margin-bottom: 0;
+}
+
+.secondaryBtn {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal-dark);
+  background: var(--teal-light);
+  border: 0.5px solid var(--teal);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.secondaryBtn:hover {
+  opacity: 0.85;
+}
+
+/* ── Household name row ─────────────────────────────────── */
+.namedRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.namedText {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--gray-900);
+  word-break: break-word;
+}
+
+.editLink {
+  all: unset;
+  box-sizing: border-box;
+  font-size: 13px;
+  color: var(--teal-dark);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.editLink:hover {
+  background: var(--teal-light);
+}
+
+.renameRow {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.renameInput {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  border: 0.5px solid var(--teal);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--gray-900);
+  outline: none;
+}
+
+.renameSave {
+  all: unset;
+  box-sizing: border-box;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--teal);
+  color: var(--teal-light);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.renameSave:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Members ────────────────────────────────────────────── */
+.memberRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 0.5px solid var(--gray-100);
+}
+
+.memberRow:first-of-type {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.memberAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.memberBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.memberName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  word-break: break-word;
+}
+
+.memberSelfTag {
+  font-weight: 400;
+  color: var(--gray-400);
+}
+
+.memberEmail {
+  font-size: 12px;
+  color: var(--gray-600);
+  word-break: break-all;
+  margin-top: 1px;
+}
+
+.roleBadge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gray-600);
+  background: var(--gray-100);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.memberHint {
+  font-size: 12px;
+  color: var(--gray-400);
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+/* ── Babies list ────────────────────────────────────────── */
+.babyList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.babyRow {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--gray-50);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.babyRow:hover {
+  background: var(--white);
+  border-color: var(--teal);
+}
+
+.babyRow:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.babyAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--amber-light);
+  color: var(--amber-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.babyBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.babyName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  word-break: break-word;
+}
+
+.babyMeta {
+  font-size: 12px;
+  color: var(--gray-600);
+  margin-top: 2px;
+}
+
+.babyEditChevron {
+  font-size: 20px;
+  line-height: 1;
+  color: var(--gray-400);
+  flex-shrink: 0;
+  padding-left: 4px;
+}
+
+.addBabyBtn {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  color: var(--teal-dark);
+  background: var(--white);
+  border: 0.5px dashed var(--teal);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.addBabyBtn:hover {
+  background: var(--teal-light);
+}
+
+.addBabyHint {
+  font-size: 12px;
+  color: var(--gray-400);
+  line-height: 1.5;
+  margin-top: 8px;
+  text-align: center;
+}
+
 /* ── Quiet / subdued section (destructive actions under Account) ─────
    Used for "Leaving Littleloop" — the group that holds leave-household and
    delete-account. Deliberately duller than the main sections: muted

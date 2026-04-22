@@ -123,6 +123,14 @@ export const track = {
     logEvent('household_invite_opened', 'engagement', { from }),
   householdInviteSubmitted: (props) =>
     logEvent('household_invite_submitted', 'engagement', props),
+  householdRenamed: () =>
+    logEvent('household_renamed', 'engagement', {}),
+  babyEdited: (props) =>
+    logEvent('baby_edited', 'engagement', props),
+  babyRemoved: (props) =>
+    logEvent('baby_removed', 'engagement', props),
+  babyRemovalBlocked: (props) =>
+    logEvent('baby_removal_blocked', 'engagement', props),
   recommendationViewed: (props) =>
     logEvent('recommendation_viewed', 'engagement', props),
   recommendationClicked: (props) =>
