@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useHousehold } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import IvySprig from '../components/IvySprig'
 import InviteMemberModal from '../components/InviteMemberModal'
@@ -105,6 +106,12 @@ export default function Profile() {
 // for now the invite modal just captures intent.
 function HouseholdTab() {
   const { user } = useAuth()
+  // Pull the context's refresh handle so baby edits here also update the
+  // shared state that Inventory, SlotDetail, and AddItem read from. Without
+  // this, saving (for example) a manual age-band override from Profile would
+  // update Profile's local babies list but leave stale data in Inventory's
+  // sprout / chip coverage logic until a hard reload.
+  const { refresh: refreshHousehold } = useHousehold()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [household, setHousehold] = useState(null)
@@ -220,7 +227,10 @@ function HouseholdTab() {
   }
   async function onBabySaved() {
     setBabyModal(null)
-    await load()
+    // Refresh Profile's local state AND the shared HouseholdContext so
+    // anything keyed off babies (Inventory's current-band sprout, AddItem's
+    // default baby, etc.) picks up the change without a reload.
+    await Promise.all([load(), refreshHousehold()])
   }
 
   // ── Render ──────────────────────────────────────────────────────────

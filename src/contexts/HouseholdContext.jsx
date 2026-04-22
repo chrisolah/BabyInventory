@@ -123,7 +123,7 @@ export function HouseholdProvider({ children }) {
     const { data: babyRows, error: babyErr } = await supabase
       .schema(currentSchema)
       .from('babies')
-      .select('id, name, date_of_birth, due_date, size_mode, gender, household_id, created_at')
+      .select('id, name, date_of_birth, due_date, size_mode, gender, household_id, age_range_override, created_at')
       .eq('household_id', h.id)
       .order('created_at', { ascending: true })
 
