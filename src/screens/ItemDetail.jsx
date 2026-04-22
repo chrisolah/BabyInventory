@@ -254,7 +254,7 @@ export default function ItemDetail() {
           {/* Mobile-only sprig beneath the subtitle. Hidden on desktop. */}
           <IvySprig />
         </div>
-        <LogoutButton />
+        <ProfileMenu />
       </header>
 
       <main className={styles.body}>
