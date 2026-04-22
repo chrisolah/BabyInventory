@@ -172,9 +172,16 @@ export default function Inventory() {
     [items, selectedBabyId],
   )
 
-  // ── Owned tab: items grouped by category ────────────────────────────────
+  // ── Owned tab: items grouped by category, filtered by selected age range ─
+  // The Owned tab now has an age-range nav mirroring the Wish list. Users
+  // plan ahead by adding clothes for future age bands — so filtering here
+  // lets them see exactly what they have for a given size without wading
+  // through newborn burp cloths when they're prepping for 12-18M.
   const ownedGrouped = useMemo(() => {
-    const filtered = babyFilteredItems.filter(i => i.inventory_status === 'owned')
+    const filtered = babyFilteredItems.filter(i =>
+      i.inventory_status === 'owned' &&
+      (!selectedAgeRange || i.size_label === selectedAgeRange)
+    )
     const groups = Object.fromEntries(CATEGORY_ORDER.map(c => [c, []]))
     for (const it of filtered) {
       if (groups[it.category]) groups[it.category].push(it)
@@ -182,7 +189,16 @@ export default function Inventory() {
     return CATEGORY_ORDER
       .filter(c => groups[c].length > 0)
       .map(c => ({ category: c, items: groups[c] }))
-  }, [babyFilteredItems])
+  }, [babyFilteredItems, selectedAgeRange])
+
+  // Total owned-item count for the whole household (across all age ranges)
+  // for this baby — used to decide which empty state to show on the Owned
+  // tab: "Start your inventory" when there's literally nothing, vs.
+  // "Nothing in {range} yet" when other ranges have items.
+  const totalOwnedCount = useMemo(
+    () => babyFilteredItems.filter(i => i.inventory_status === 'owned').length,
+    [babyFilteredItems],
+  )
 
   // ── Wish list tab: slot coverage + other wishes for selected age range ──
   // Coverage math runs on the baby-filtered set, so switching to Roo shows
@@ -339,10 +355,27 @@ export default function Inventory() {
         )}
 
         {/* ── Owned tab ─────────────────────────────────────────── */}
-        {!loading && !error && tab === 'owned' && (
+        {!loading && !error && tab === 'owned' && selectedAgeRange && (
           <>
+            {/* Age-range chip navbar — mirrors the Wish list nav so users can
+                stock forward (12-18M in April when baby is 3-6M) without
+                switching tabs. The baby's current band gets a teal dot so
+                you always see "where you are" even when browsing a future
+                band. Past bands are dimmed to match the Wish list treatment. */}
+            <AgeNav
+              ageRange={selectedAgeRange}
+              onAgeChange={setSelectedAgeRange}
+              ageInfo={ageInfo}
+            />
+
             {ownedGrouped.length === 0 && (
-              <OwnedEmptyState onAdd={() => navigate('/add-item')} />
+              <OwnedEmptyState
+                ageRange={selectedAgeRange}
+                totalOwnedCount={totalOwnedCount}
+                onAdd={() =>
+                  navigate(`/add-item?mode=owned&size=${encodeURIComponent(selectedAgeRange)}`)
+                }
+              />
             )}
             {ownedGrouped.map(group => {
               const collapsed = ownedCollapsed.has(group.category)
@@ -372,14 +405,18 @@ export default function Inventory() {
               )
             })}
             {/* Bottom-of-list CTA — only when there's already a list. The empty
-                state has its own CTA, so we'd just be duplicating it here. */}
+                state has its own CTA, so we'd just be duplicating it here.
+                Size param pre-fills AddItem so users can keep stocking the
+                same age band without resetting the filter. */}
             {ownedGrouped.length > 0 && (
               <button
                 type="button"
                 className={styles.addMoreBtn}
-                onClick={() => navigate('/add-item')}
+                onClick={() =>
+                  navigate(`/add-item?mode=owned&size=${encodeURIComponent(selectedAgeRange)}`)
+                }
               >
-                + Add item
+                + Add item in {selectedAgeRange}
               </button>
             )}
           </>
@@ -428,29 +465,11 @@ function WishlistView({
 }) {
   return (
     <>
-      {/* Age-range chip navbar — horizontally scrollable on narrow screens */}
-      <div className={styles.ageNav}>
-        {AGE_RANGES.map(range => {
-          const isSelected = range === ageRange
-          const isPast =
-            ageInfo.currentRange &&
-            AGE_RANGES.indexOf(range) < AGE_RANGES.indexOf(ageInfo.currentRange)
-          return (
-            <button
-              key={range}
-              type="button"
-              className={
-                `${styles.ageChip} ` +
-                (isSelected ? styles.ageChipSelected : '') + ' ' +
-                (isPast ? styles.ageChipPast : '')
-              }
-              onClick={() => onAgeChange(range)}
-            >
-              {range}
-            </button>
-          )
-        })}
-      </div>
+      <AgeNav
+        ageRange={ageRange}
+        onAgeChange={onAgeChange}
+        ageInfo={ageInfo}
+      />
 
       {/* Outgrow banner — amber, only when baby is ~3 weeks from the next range */}
       {showOutgrow && (
@@ -558,6 +577,44 @@ function WishlistView({
   )
 }
 
+// ── Age-range chip navbar ──────────────────────────────────────────────────
+// Shared between the Owned and Wish list tabs. The chip matching the baby's
+// current (DOB- or override-derived) age band gets a .ageChipCurrent marker
+// so the user never loses track of where the baby actually is while browsing
+// future sizes. Past bands are dimmed (.ageChipPast) to signal "you probably
+// don't need to shop here anymore" without hiding them — outgrown items
+// still live there.
+function AgeNav({ ageRange, onAgeChange, ageInfo }) {
+  return (
+    <div className={styles.ageNav}>
+      {AGE_RANGES.map(range => {
+        const isSelected = range === ageRange
+        const isCurrent =
+          ageInfo.currentRange && range === ageInfo.currentRange
+        const isPast =
+          ageInfo.currentRange &&
+          AGE_RANGES.indexOf(range) < AGE_RANGES.indexOf(ageInfo.currentRange)
+        return (
+          <button
+            key={range}
+            type="button"
+            className={
+              `${styles.ageChip} ` +
+              (isSelected ? styles.ageChipSelected : '') + ' ' +
+              (isCurrent ? styles.ageChipCurrent : '') + ' ' +
+              (isPast ? styles.ageChipPast : '')
+            }
+            onClick={() => onAgeChange(range)}
+            aria-label={isCurrent ? `${range} (current size band)` : range}
+          >
+            {range}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Collapsible group header ───────────────────────────────────────────────
 // Shared between the Owned and Wish list tabs. Renders the card's title bar
 // as a <button> so keyboard + assistive-tech users get proper semantics, and
@@ -651,15 +708,33 @@ function SlotRow({ row, onClick }) {
 }
 
 // ── Owned-tab empty state ──────────────────────────────────────────────────
-function OwnedEmptyState({ onAdd }) {
+// Two flavors depending on whether the user has any items at all.
+//  • totalOwnedCount === 0 → "Start your inventory" (whole-wardrobe empty)
+//  • totalOwnedCount > 0   → "Nothing in {range} yet" (this age band only,
+//                            common when stocking forward for a future size)
+function OwnedEmptyState({ ageRange, totalOwnedCount, onAdd }) {
+  if (totalOwnedCount === 0) {
+    return (
+      <div className={styles.empty}>
+        <div className={styles.emptyTitle}>Start your inventory</div>
+        <div className={styles.emptyBody}>
+          Let&rsquo;s start with something you already have — a onesie, a sleepsuit, anything.
+        </div>
+        <button type="button" className={styles.emptyCta} onClick={onAdd}>
+          Add first item
+        </button>
+      </div>
+    )
+  }
   return (
     <div className={styles.empty}>
-      <div className={styles.emptyTitle}>Start your inventory</div>
+      <div className={styles.emptyTitle}>Nothing in {ageRange} yet</div>
       <div className={styles.emptyBody}>
-        Let&rsquo;s start with something you already have — a onesie, a sleepsuit, anything.
+        Stocking forward? Add pieces for this size so they&rsquo;re waiting when the
+        baby grows into them.
       </div>
       <button type="button" className={styles.emptyCta} onClick={onAdd}>
-        Add first item
+        Add item in {ageRange}
       </button>
     </div>
   )

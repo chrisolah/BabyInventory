@@ -99,6 +99,16 @@
   margin-left: 4px;
 }
 
+/* Helper caption shown under an input. Used by the manual age-band
+   override field to explain when to reach for it. Deliberately muted so
+   it reads as advice, not a requirement. */
+.helperText {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--gray-500);
+  margin-top: 6px;
+}
+
 .input {
   width: 100%;
   padding: 11px 13px;
