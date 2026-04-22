@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
+import InviteMemberModal from '../components/InviteMemberModal'
 import styles from './Home.module.css'
 
 // Home is the signed-in landing page for the inventory app. For now it's a
@@ -170,97 +171,8 @@ export default function Home() {
       </main>
 
       {showInvite && (
-        <InviteMemberModal onClose={closeInvite} />
+        <InviteMemberModal from="home_header" onClose={closeInvite} />
       )}
-    </div>
-  )
-}
-
-// ── Invite modal ────────────────────────────────────────────────────────
-// Kept in the same file because it's small and tightly coupled to Home's
-// "persistent button → modal" UX. If a third place needs to invite
-// (settings, inventory header, etc.), promote to its own component.
-function InviteMemberModal({ onClose }) {
-  const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
-
-  function submit(e) {
-    e.preventDefault()
-    const trimmed = email.trim()
-    if (!trimmed) return
-    // Fire-and-forget. Real invite delivery is a follow-up; for now we log
-    // intent so we can measure demand before building the plumbing.
-    track.householdInviteSubmitted({ from: 'home_header' })
-    setSent(true)
-  }
-
-  // Close on backdrop click but not on modal click.
-  function onBackdropClick(e) {
-    if (e.target === e.currentTarget) onClose()
-  }
-
-  return (
-    <div className={styles.overlay} onClick={onBackdropClick}>
-      <div className={styles.modal} role="dialog" aria-modal="true">
-        <div className={styles.modalHead}>
-          <div className={styles.modalTitle}>Invite a household member</div>
-          <button
-            type="button"
-            className={styles.closeBtn}
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-        <p className={styles.modalSub}>
-          Co-parents, grandparents, anyone helping out — they'll get access to
-          your wardrobe once invites are live.
-        </p>
-
-        {sent ? (
-          <>
-            <div className={styles.success}>
-              Got it. We'll reach out to {email.trim()} as soon as invites are
-              live.
-            </div>
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={onClose}
-            >
-              Done
-            </button>
-          </>
-        ) : (
-          <form onSubmit={submit}>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Email address</label>
-              <input
-                className={styles.input}
-                type="email"
-                placeholder="partner@example.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                autoComplete="email"
-                autoFocus
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              className={styles.primaryBtn}
-              disabled={!email.trim()}
-            >
-              Send invite
-            </button>
-            <p className={styles.helperNote}>
-              Invites are coming soon. We'll capture who you'd like to bring in
-              and reach out when the feature launches.
-            </p>
-          </form>
-        )}
-      </div>
     </div>
   )
 }

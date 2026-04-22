@@ -1,6 +1,11 @@
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { track } from '../lib/analytics'
 import IvySprig from '../components/IvySprig'
+import InviteMemberModal from '../components/InviteMemberModal'
+import BabyFormModal from '../components/BabyFormModal'
 import styles from './Profile.module.css'
 
 // Profile is the settings / account hub. Entry point is ProfileMenu's "Profile"
@@ -93,31 +98,353 @@ export default function Profile() {
 }
 
 // ── Household tab ──────────────────────────────────────────────────────
-// Scaffold only — #56 fills this in with: members list, invite member,
-// babies list with per-baby edit (name, DOB, gender, size_mode), add
-// another baby, remove baby.
+// Members list, babies CRUD, household rename. RLS gotcha: hm_select only
+// returns your own membership, so the "members" section will always be a
+// one-row list (you) until we build a SECURITY DEFINER RPC that can expose
+// other members' identities. That lands alongside real invite delivery;
+// for now the invite modal just captures intent.
 function HouseholdTab() {
+  const { user } = useAuth()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [household, setHousehold] = useState(null)
+  const [myRole, setMyRole] = useState(null)       // 'owner' | 'member'
+  const [babies, setBabies] = useState([])
+
+  // Inline rename state for the household name. Saved on blur or Enter.
+  const [renaming, setRenaming] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
+  const [savingName, setSavingName] = useState(false)
+
+  const [showInvite, setShowInvite] = useState(false)
+
+  // babyModal is null (closed) or { mode: 'create'|'edit', baby? }.
+  const [babyModal, setBabyModal] = useState(null)
+
+  // Friendly name for the current user. Falls back to email, then "You".
+  const myName = user?.user_metadata?.name || user?.email || 'You'
+  const myEmail = user?.email || ''
+
+  // Pulled out so the modal-saved handlers can refresh without hitting
+  // the effect cleanup/mount cycle.
+  const load = useCallback(async () => {
+    if (!user) return
+    setLoading(true)
+    setError(null)
+
+    const { data: memberships, error: memErr } = await supabase
+      .schema(currentSchema)
+      .from('household_members')
+      .select('role, joined_at, household_id, households(id, name)')
+      .eq('user_id', user.id)
+      .order('joined_at', { ascending: false })
+      .limit(1)
+
+    if (memErr || !memberships?.[0]?.households) {
+      setError(memErr?.message || 'No household found.')
+      setLoading(false)
+      return
+    }
+
+    const m = memberships[0]
+    setHousehold(m.households)
+    setMyRole(m.role)
+    setNameDraft(m.households.name || '')
+
+    const { data: babiesData, error: babiesErr } = await supabase
+      .schema(currentSchema)
+      .from('babies')
+      .select('*')
+      .eq('household_id', m.household_id)
+      .order('created_at', { ascending: true })
+
+    if (babiesErr) {
+      setError(babiesErr.message)
+      setLoading(false)
+      return
+    }
+
+    setBabies(babiesData || [])
+    setLoading(false)
+  }, [user])
+
+  useEffect(() => {
+    let cancelled = false
+    load().then(() => { if (cancelled) { /* noop */ } })
+    return () => { cancelled = true }
+  }, [load])
+
+  // ── Household rename ────────────────────────────────────────────────
+  async function saveHouseholdName() {
+    const trimmed = nameDraft.trim()
+    if (!trimmed || !household) {
+      setRenaming(false)
+      setNameDraft(household?.name || '')
+      return
+    }
+    if (trimmed === (household.name || '')) {
+      setRenaming(false)
+      return
+    }
+    setSavingName(true)
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('households')
+      .update({ name: trimmed })
+      .eq('id', household.id)
+    setSavingName(false)
+
+    if (updErr) {
+      // RLS will reject non-owners. Surface the error and revert the draft
+      // so we don't leave a dirty input lying around.
+      setError(updErr.message)
+      setNameDraft(household.name || '')
+      setRenaming(false)
+      return
+    }
+
+    setHousehold({ ...household, name: trimmed })
+    track.householdRenamed()
+    setRenaming(false)
+  }
+
+  // ── Baby modal handlers ─────────────────────────────────────────────
+  function openAddBaby() {
+    setBabyModal({ mode: 'create' })
+  }
+  function openEditBaby(baby) {
+    setBabyModal({ mode: 'edit', baby })
+  }
+  function closeBabyModal() {
+    setBabyModal(null)
+  }
+  async function onBabySaved() {
+    setBabyModal(null)
+    await load()
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className={styles.tabPanel} role="tabpanel">
+        <div className={styles.loading}>Loading…</div>
+      </div>
+    )
+  }
+
+  if (error && !household) {
+    return (
+      <div className={styles.tabPanel} role="tabpanel">
+        <div className={styles.errorBox}>{error}</div>
+      </div>
+    )
+  }
+
+  const ownerOnly = myRole === 'owner'
+
   return (
     <div className={styles.tabPanel} role="tabpanel">
+      {/* Non-fatal errors surface above the content so later sections
+          still render — keeps the tab from going blank after a stray
+          update failure (e.g. a non-owner trying to rename). */}
+      {error && household && (
+        <div className={styles.errorBox}>{error}</div>
+      )}
+
+      {/* ── Household name ─────────────────────────────────────────── */}
       <section className={styles.section}>
-        <div className={styles.sectionTitle}>Household members</div>
-        <div className={styles.emptyNote}>
-          Managing co-parents, grandparents, and other helpers lands here
-          next. You&rsquo;ll be able to invite people by email and set who
-          can edit the wardrobe.
+        <div className={styles.sectionTitle}>Household</div>
+        {renaming ? (
+          <div className={styles.renameRow}>
+            <input
+              className={styles.renameInput}
+              type="text"
+              value={nameDraft}
+              onChange={e => setNameDraft(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') saveHouseholdName()
+                if (e.key === 'Escape') {
+                  setNameDraft(household?.name || '')
+                  setRenaming(false)
+                }
+              }}
+              autoFocus
+              disabled={savingName}
+            />
+            <button
+              type="button"
+              className={styles.renameSave}
+              onClick={saveHouseholdName}
+              disabled={savingName || !nameDraft.trim()}
+            >
+              {savingName ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        ) : (
+          <div className={styles.namedRow}>
+            <div className={styles.namedText}>
+              {household?.name || 'Untitled household'}
+            </div>
+            {ownerOnly && (
+              <button
+                type="button"
+                className={styles.editLink}
+                onClick={() => setRenaming(true)}
+              >
+                Rename
+              </button>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* ── Members ────────────────────────────────────────────────── */}
+      <section className={styles.section}>
+        <div className={styles.sectionHead}>
+          <div className={styles.sectionTitle}>Members</div>
+          <button
+            type="button"
+            className={styles.secondaryBtn}
+            onClick={() => {
+              track.householdInviteOpened('profile_household')
+              setShowInvite(true)
+            }}
+          >
+            + Invite
+          </button>
+        </div>
+
+        <div className={styles.memberRow}>
+          <div className={styles.memberAvatar} aria-hidden="true">
+            {(myName[0] || '?').toUpperCase()}
+          </div>
+          <div className={styles.memberBody}>
+            <div className={styles.memberName}>
+              {myName} <span className={styles.memberSelfTag}>· You</span>
+            </div>
+            {myEmail && <div className={styles.memberEmail}>{myEmail}</div>}
+          </div>
+          <span className={styles.roleBadge}>
+            {myRole === 'owner' ? 'Owner' : 'Member'}
+          </span>
+        </div>
+
+        <div className={styles.memberHint}>
+          Co-parents and helpers you invite will appear here once invites
+          go live.
         </div>
       </section>
 
+      {/* ── Babies ─────────────────────────────────────────────────── */}
       <section className={styles.section}>
-        <div className={styles.sectionTitle}>Babies</div>
-        <div className={styles.emptyNote}>
-          Add another baby (new pregnancy, twins, triplets — bring &rsquo;em
-          all). Each baby gets its own inventory so sizes and gaps stay
-          separate.
+        <div className={styles.sectionHead}>
+          <div className={styles.sectionTitle}>
+            {babies.length === 0
+              ? 'Babies'
+              : `Babies (${babies.length})`}
+          </div>
         </div>
+
+        {babies.length === 0 ? (
+          <div className={styles.emptyNote}>
+            No babies yet. Add one to start tracking their wardrobe.
+          </div>
+        ) : (
+          <div className={styles.babyList}>
+            {babies.map(baby => (
+              <button
+                key={baby.id}
+                type="button"
+                className={styles.babyRow}
+                onClick={() => openEditBaby(baby)}
+              >
+                <div className={styles.babyAvatar} aria-hidden="true">
+                  {babyInitial(baby)}
+                </div>
+                <div className={styles.babyBody}>
+                  <div className={styles.babyName}>
+                    {baby.name || (baby.due_date ? 'Expecting' : 'Baby')}
+                  </div>
+                  <div className={styles.babyMeta}>
+                    {babyMetaLine(baby)}
+                  </div>
+                </div>
+                <span className={styles.babyEditChevron} aria-hidden="true">
+                  ›
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          className={styles.addBabyBtn}
+          onClick={openAddBaby}
+        >
+          + Add another baby
+        </button>
+        <p className={styles.addBabyHint}>
+          Twins, triplets, a sibling on the way — bring &rsquo;em all.
+        </p>
       </section>
+
+      {showInvite && (
+        <InviteMemberModal
+          from="profile_household"
+          onClose={() => setShowInvite(false)}
+        />
+      )}
+
+      {babyModal && (
+        <BabyFormModal
+          mode={babyModal.mode}
+          household={household}
+          baby={babyModal.baby}
+          onClose={closeBabyModal}
+          onSaved={onBabySaved}
+        />
+      )}
     </div>
   )
+}
+
+// Quick one-letter avatar for baby rows. Uses name's first char, else 'B'.
+function babyInitial(baby) {
+  const n = (baby.name || '').trim()
+  if (n) return n[0].toUpperCase()
+  return baby.due_date ? '•' : 'B'
+}
+
+// Secondary line on a baby row: "Born DATE · Girl · By age" or
+// "Due DATE · Expecting". Empty segments get filtered so missing gender,
+// etc., just collapses out instead of leaving stray separators.
+function babyMetaLine(baby) {
+  const parts = []
+  if (baby.date_of_birth) {
+    parts.push(`Born ${formatDate(baby.date_of_birth)}`)
+  } else if (baby.due_date) {
+    parts.push(`Due ${formatDate(baby.due_date)}`)
+  }
+  if (baby.gender) {
+    parts.push(capitalize(baby.gender))
+  }
+  return parts.join(' · ')
+}
+
+function formatDate(isoDate) {
+  // Parse YYYY-MM-DD as a local-date (avoid the UTC-midnight-timezone-slip
+  // that "new Date('2026-01-01')" triggers in west-of-GMT locales).
+  const [y, m, d] = isoDate.split('-').map(Number)
+  const dt = new Date(y, (m || 1) - 1, d || 1)
+  return dt.toLocaleDateString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+  })
+}
+
+function capitalize(s) {
+  if (!s) return ''
+  return s[0].toUpperCase() + s.slice(1)
 }
 
 // ── Account tab ────────────────────────────────────────────────────────
