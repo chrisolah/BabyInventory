@@ -139,6 +139,21 @@ export const track = {
     logEvent('recommendation_viewed', 'engagement', props),
   recommendationClicked: (props) =>
     logEvent('recommendation_clicked', 'engagement', props),
+
+  profileNameUpdated: () =>
+    logEvent('profile_name_updated', 'engagement', {}),
+  profileEmailChangeRequested: () =>
+    logEvent('profile_email_change_requested', 'engagement', {}),
+  profilePasswordUpdated: () =>
+    logEvent('profile_password_updated', 'engagement', {}),
+  prefsUpdated: (props) =>
+    logEvent('prefs_updated', 'engagement', props),
+  householdLeft: (props) =>
+    logEvent('household_left', 'engagement', props),
+  householdLeaveBlocked: (props) =>
+    logEvent('household_leave_blocked', 'engagement', props),
+  accountDeletionRequested: () =>
+    logEvent('account_deletion_requested', 'engagement', {}),
 }
 
 export { getSessionId }
