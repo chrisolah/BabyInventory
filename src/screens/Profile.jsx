@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import IvySprig from '../components/IvySprig'
@@ -8,11 +7,15 @@ import styles from './Profile.module.css'
 // item (which now lives on every authed screen). Route: /profile.
 //
 // We use section tabs rather than a long scrolling list because the sections
-// have very different shapes (CRUD lists, form inputs, destructive actions)
-// and tabs let each one own its own loading state without fighting for the
-// user's attention. Deep-linking via ?tab= keeps "open the danger zone"
-// bookmarkable and lets the inevitable in-app links (e.g. "Manage members"
-// from an invite email) land on the right tab.
+// have very different shapes (CRUD lists, form inputs, preferences) and tabs
+// let each one own its own loading state without fighting for the user's
+// attention. Deep-linking via ?tab= keeps "Manage members" in an email able
+// to land on the right tab.
+//
+// Destructive actions (leave household, delete account) live tucked under
+// Account, not in their own tab — "Danger zone" is engineer jargon, and
+// nobody opens their profile intending to close the account; surfacing it
+// as a peer tab would over-weight a rare action for a parent audience.
 //
 // Each tab is a self-contained function in this file for now. As #56–#59
 // land they'll grow substantially; we'll promote them to their own files
@@ -22,7 +25,6 @@ const TABS = [
   { id: 'household',     label: 'Household'     },
   { id: 'account',       label: 'Account'       },
   { id: 'notifications', label: 'Notifications' },
-  { id: 'danger',        label: 'Danger zone'   },
 ]
 
 const TAB_IDS = TABS.map(t => t.id)
@@ -85,7 +87,6 @@ export default function Profile() {
         {activeTab === 'household'     && <HouseholdTab />}
         {activeTab === 'account'       && <AccountTab />}
         {activeTab === 'notifications' && <NotificationsTab />}
-        {activeTab === 'danger'        && <DangerTab />}
       </main>
     </div>
   )
@@ -120,8 +121,18 @@ function HouseholdTab() {
 }
 
 // ── Account tab ────────────────────────────────────────────────────────
-// Scaffold only — #57 fills this in with: display name edit, email change
-// (triggers confirm-both-addresses via Supabase), password change.
+// Scaffold only — #57 fills in the upper "Your account" section with: display
+// name edit, email change (triggers confirm-both-addresses via Supabase),
+// password change. #59 fills in the lower "Leaving Littleloop" section with
+// leave-household + delete-account flows.
+//
+// The two groups are on the same tab intentionally. Destructive actions used
+// to live in their own "Danger zone" tab, but that's engineer register —
+// nobody opens their profile intending to delete the account, and surfacing
+// it as a peer tab over-weights a rare, scary action. Tucking it at the
+// bottom under a subdued heading follows Account-settings convention in
+// consumer apps and keeps the tab bar tuned to things parents actually
+// visit on purpose.
 function AccountTab() {
   const { user } = useAuth()
   const name = user?.user_metadata?.name || ''
@@ -143,6 +154,53 @@ function AccountTab() {
         </dl>
         <div className={styles.emptyNote}>
           Editing name, email, and password lands here next.
+        </div>
+      </section>
+
+      {/* Separator before the destructive group — the muted heading + extra
+          top margin signal "you're leaving the safe part of the page" without
+          shouting about it. */}
+      <section className={`${styles.section} ${styles.sectionQuiet}`}>
+        <div className={styles.sectionTitleQuiet}>Leaving Littleloop</div>
+
+        <div className={styles.quietRow}>
+          <div className={styles.quietRowBody}>
+            <div className={styles.quietRowTitle}>Leave household</div>
+            <div className={styles.quietRowSub}>
+              Remove yourself from this household. Other members keep access.
+            </div>
+          </div>
+          {/* Button styling lands with #59 — keep it as a disabled preview so
+              the layout is stable when the real handler drops in. */}
+          <button
+            type="button"
+            className={styles.quietBtn}
+            disabled
+            aria-disabled="true"
+            title="Coming soon"
+          >
+            Leave
+          </button>
+        </div>
+
+        <div className={styles.quietRow}>
+          <div className={styles.quietRowBody}>
+            <div className={styles.quietRowTitle}>Delete account</div>
+            <div className={styles.quietRowSub}>
+              Permanently delete your account and everything associated with
+              it. During the beta we&rsquo;ll route this through support so
+              we can confirm before anything irreversible happens.
+            </div>
+          </div>
+          <button
+            type="button"
+            className={styles.quietBtn}
+            disabled
+            aria-disabled="true"
+            title="Coming soon"
+          >
+            Delete
+          </button>
         </div>
       </section>
     </div>
@@ -174,29 +232,3 @@ function NotificationsTab() {
   )
 }
 
-// ── Danger zone tab ────────────────────────────────────────────────────
-// Scaffold only — #59 fills this in with: leave household (DELETE from
-// household_members where user_id = me; handles "last owner" guard), and
-// delete account (for MVP, a mailto: to support with a pre-filled subject).
-function DangerTab() {
-  return (
-    <div className={styles.tabPanel} role="tabpanel">
-      <section className={styles.section}>
-        <div className={styles.sectionTitle}>Leave household</div>
-        <div className={styles.emptyNote}>
-          Remove yourself from this household. Other members keep access.
-          Wiring coming with #59.
-        </div>
-      </section>
-
-      <section className={styles.section}>
-        <div className={styles.sectionTitle}>Delete account</div>
-        <div className={styles.emptyNote}>
-          Permanently delete your account and everything associated with it.
-          We&rsquo;ll route this through support during the beta so we can
-          confirm before anything irreversible happens.
-        </div>
-      </section>
-    </div>
-  )
-}
