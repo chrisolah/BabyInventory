@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase, currentSchema } from '../lib/supabase'
 import { track } from '../lib/analytics'
+import { AGE_RANGES } from '../lib/wardrobe'
 import styles from './BabyFormModal.module.css'
 
 // Add / edit / remove a baby. One modal covers all three actions so the
@@ -42,6 +43,12 @@ export default function BabyFormModal({ mode, household, baby, onClose, onSaved 
   )
   const [gender, setGender] = useState(baby?.gender ?? null)
   const [sizeMode, setSizeMode] = useState(baby?.size_mode ?? 'by_age')
+  // Optional manual age-band override. Empty string = "Auto" (follow DOB).
+  // Stored as null in the DB so downstream consumers (inferAgeRange, RLS
+  // policies if we add any) don't have to special-case the empty string.
+  const [ageRangeOverride, setAgeRangeOverride] = useState(
+    baby?.age_range_override ?? ''
+  )
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -79,6 +86,7 @@ export default function BabyFormModal({ mode, household, baby, onClose, onSaved 
       size_mode: sizeMode,
       date_of_birth: birthMode === 'born' ? dateStr : null,
       due_date: birthMode === 'expecting' ? dateStr : null,
+      age_range_override: ageRangeOverride || null,
     }
 
     let supErr
@@ -274,6 +282,27 @@ export default function BabyFormModal({ mode, household, baby, onClose, onSaved 
                 <option key={sm.value} value={sm.value}>{sm.label}</option>
               ))}
             </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label} htmlFor="bf-age-override">
+              Current size band
+            </label>
+            <select
+              id="bf-age-override"
+              className={styles.input}
+              value={ageRangeOverride}
+              onChange={e => setAgeRangeOverride(e.target.value)}
+            >
+              <option value="">Auto (based on age)</option>
+              {AGE_RANGES.map(range => (
+                <option key={range} value={range}>{range}</option>
+              ))}
+            </select>
+            <div className={styles.helperText}>
+              Big or small for their age? Pin the band you actually shop in
+              and we&rsquo;ll stop using their birthday to guess.
+            </div>
           </div>
 
           {error && (

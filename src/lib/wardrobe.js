@@ -372,24 +372,45 @@ export function otherWishes(items, ageRange) {
 // are mapped to the earliest range so the Wish list tab defaults to "what
 // you'll need when they're born."
 //
-// Returns: { currentRange, monthsOld, daysToNextRange, nextRange }
+// When baby.age_range_override is set, that value wins. The override exists
+// for big-for-age / small-for-age babies whose clothing size doesn't track
+// calendar age (95th-percentile 4-month-olds already wearing 6-9M, etc.).
+// We still compute monthsOld for debugging, but daysToNextRange is nulled so
+// the outgrow banner — which is a calendar-age signal — stays quiet.
+//
+// Returns: { currentRange, monthsOld, daysToNextRange, nextRange, overridden }
 // - currentRange: one of AGE_RANGES or null if out of supported range (>24M)
 // - monthsOld: decimal months since birth (negative for expecting)
 // - daysToNextRange: days until the upper boundary of currentRange, or null
-//   if already in the last range / not yet born
+//   if already in the last range / not yet born / override in effect
 // - nextRange: the age range after currentRange, or null if none
+// - overridden: true when the currentRange came from age_range_override
 export function inferAgeRange(baby, now = new Date()) {
-  if (!baby) return { currentRange: null, monthsOld: null, daysToNextRange: null, nextRange: null }
+  if (!baby) return { currentRange: null, monthsOld: null, daysToNextRange: null, nextRange: null, overridden: false }
 
   const dob = baby.date_of_birth ? new Date(baby.date_of_birth) : null
   const due = baby.due_date ? new Date(baby.due_date) : null
   const effective = dob || due
-  if (!effective) return { currentRange: null, monthsOld: null, daysToNextRange: null, nextRange: null }
+  if (!effective) return { currentRange: null, monthsOld: null, daysToNextRange: null, nextRange: null, overridden: false }
 
   const msPerDay = 1000 * 60 * 60 * 24
   const daysOld = (now - effective) / msPerDay
   // Use 30.4375 days/month (average Gregorian) so 24 months lands where parents expect.
   const monthsOld = daysOld / 30.4375
+
+  // Manual override wins. We trust the parent over our calendar math; they
+  // have a body in their arms and a pediatrician on speed-dial.
+  const override = baby.age_range_override
+  if (override && AGE_RANGES.includes(override)) {
+    const idx = AGE_RANGES.indexOf(override)
+    return {
+      currentRange: override,
+      monthsOld,
+      daysToNextRange: null,
+      nextRange: AGE_RANGES[idx + 1] ?? null,
+      overridden: true,
+    }
+  }
 
   // Expecting: baby not yet born. Default to the first age range.
   if (!dob && due && now < due) {
@@ -398,6 +419,7 @@ export function inferAgeRange(baby, now = new Date()) {
       monthsOld,
       daysToNextRange: null,
       nextRange: AGE_RANGES[1] ?? null,
+      overridden: false,
     }
   }
 
@@ -421,7 +443,7 @@ export function inferAgeRange(baby, now = new Date()) {
     daysToNextRange = Math.round(monthsToNext * 30.4375)
   }
 
-  return { currentRange, monthsOld, daysToNextRange, nextRange }
+  return { currentRange, monthsOld, daysToNextRange, nextRange, overridden: false }
 }
 
 // ── Outgrow banner trigger ─────────────────────────────────────────────────
