@@ -7,6 +7,7 @@ import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import BabySwitcher from '../components/BabySwitcher'
 import InviteMemberModal from '../components/InviteMemberModal'
+import TagScanner from '../components/TagScanner'
 import styles from './Home.module.css'
 
 // Home is the signed-in landing page for the inventory app. For now it's a
@@ -109,6 +110,24 @@ export default function Home() {
     setShowInvite(false)
   }
 
+  // Home's scan entry point hands off to /add-item with the scanned fields
+  // on the URL. We funnel everything through the same AddItem screen so
+  // there's one confirm surface to maintain, and so a user who scans and
+  // then edits an existing field still lands in the same familiar form.
+  // Fields the model returned as null are just omitted from the URL.
+  function onHomeScanResult(fields) {
+    if (!fields) return
+    const params = new URLSearchParams({ mode: 'owned' })
+    if (fields.category)   params.set('category',  fields.category)
+    if (fields.item_type)  params.set('from_slot', fields.item_type)
+    if (fields.size_label) params.set('size',      fields.size_label)
+    if (fields.brand)      params.set('brand',     fields.brand.slice(0, 80))
+    const filled = ['category','item_type','size_label','brand']
+      .reduce((n, k) => n + (fields[k] ? 1 : 0), 0)
+    track.tagScanCompleted({ filled, from: 'home' })
+    navigate(`/add-item?${params.toString()}`)
+  }
+
   if (status === 'checking') {
     // Brief blank screen while we resolve the gate. Keeps the page from
     // flashing "Welcome" at users we're about to redirect.
@@ -162,6 +181,16 @@ export default function Home() {
           Your inventory lives here. Add what you have, and we'll help you keep
           track of sizes, gaps, and outgrown items.
         </p>
+
+        {/* Scan-a-tag is the headline CTA. "Start your inventory" remains
+            beneath it for users who prefer to go straight to manual entry
+            or for cases where the camera hand-off fails. */}
+        <div className={styles.scanBlock}>
+          <TagScanner variant="primary" onResult={onHomeScanResult} />
+          <div className={styles.scanCaption}>
+            Snap a clothing tag and we&rsquo;ll fill in brand, size, and type.
+          </div>
+        </div>
 
         <button
           type="button"
