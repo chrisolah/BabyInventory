@@ -1,0 +1,38 @@
+filename,tag_visibility,brand,size,category,item_type,notes
+# Fill one row per photo you drop into pilot/images/.
+# Columns:
+#   filename         — basename of the image file (e.g. "onesie_01.jpg"). Must match exactly.
+#   tag_visibility   — how much of the tag is in the frame:
+#                        visible — tag fills a good chunk of frame, brand/size readable.
+#                        partial — tag is in frame but small, folded, or partly obscured.
+#                        none    — no tag in frame at all (pure garment photo).
+#                      For `none` rows, the harness grades a null brand/size prediction as
+#                      CORRECT — the model can't read a tag that isn't in the shot, and the
+#                      user fills those fields in manually. Non-null wrong predictions on a
+#                      `none` row count as hallucinations (the thing we most want to avoid).
+#                      Category and item_type are graded normally in all visibility buckets —
+#                      the model should always be able to tell a onesie from a pair of pants.
+#   brand            — brand name as printed on the tag (or as you know it — even if the
+#                      tag isn't in frame, fill this in for your own records). Leave blank
+#                      if unbranded. Only graded strictly when tag_visibility is visible/partial.
+#   size             — canonical enum: 0-3M | 3-6M | 6-9M | 9-12M | 12-18M | 18-24M
+#   category         — canonical enum: tops_and_bodysuits | one_pieces | bottoms |
+#                      dresses_and_skirts | outerwear | sleepwear | footwear |
+#                      accessories | swimwear
+#   item_type        — canonical slot: bodysuits | day_tops | one_pieces | shorts |
+#                      pants_leggings | dresses | sleep_sacks | pajamas | rain_gear |
+#                      jackets | socks | shoes | hats | mittens | bibs | burp_cloths |
+#                      swimwear
+#   notes            — free text for you (ignored by the harness). Useful for flagging
+#                      tricky cases like "tag worn, size partially obscured" or "brand
+#                      is a logo, not text".
+#
+# What a good pilot set looks like: ~5 tag-visible, ~5 partial, ~10 garment-only.
+# That's the distribution that most resembles what parents will actually photograph.
+#
+# Delete these comment lines before running the eval — the CSV reader treats them as data.
+#
+# Examples:
+# onesie_01.jpg,visible,Carter's,3-6M,tops_and_bodysuits,bodysuits,flat on changing pad, tag fills frame
+# sleeper_02.jpg,partial,,6-9M,sleepwear,pajamas,tag folded, size barely readable
+# dress_03.jpg,none,Old Navy,12-18M,dresses_and_skirts,dresses,whole-item shot on hanger, no tag visible

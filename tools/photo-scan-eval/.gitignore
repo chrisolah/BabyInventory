@@ -1,0 +1,29 @@
+# photo-scan-eval — what NOT to commit
+#
+# The eval harness writes generated images, per-image results, and reports
+# into the same directory tree it runs from. Those are run artifacts, not
+# source — they churn on every re-run and some of them are multi-MB PNGs.
+# Keep them local.
+
+# Generated synthetic datasets — anything matching ./synth or ./synth_*.
+# These directories contain images/, ground_truth.csv, and results/.
+synth/
+synth_*/
+
+# Pilot datasets — your own photos + ground truth CSV. Keep local. The
+# pilot template (pilot_template.csv) is tracked; pilot/ is not.
+pilot/
+pilot_*/
+
+# Any stray results directory passed via --out somewhere else.
+results/
+
+# Batch logs written by `tee` during multi-call runs.
+*.log
+
+# Ad-hoc preview / sample copies made when eyeballing synthetic output.
+eval-preview/
+
+# Python
+__pycache__/
+*.pyc
