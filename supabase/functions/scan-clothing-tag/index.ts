@@ -217,11 +217,20 @@ Deno.serve(async (req) => {
       body: JSON.stringify(anthropicBody),
     })
   } catch (e) {
+    console.error('scan-clothing-tag anthropic_fetch_failed', String(e))
     return json(502, { error: 'anthropic_fetch_failed', detail: String(e) })
   }
 
   if (!anthropicResp.ok) {
     const txt = await anthropicResp.text().catch(() => '')
+    // Log before returning so the detail lands in Supabase's Logs pane too
+    // (the HTTP response body already carries it, but logs give us a
+    // persistent record when the tester can't paste the in-app detail).
+    console.error('scan-clothing-tag anthropic_http_error', {
+      status: anthropicResp.status,
+      model: anthropicModel,
+      body: txt.slice(0, 800),
+    })
     return json(502, { error: 'anthropic_http_error', status: anthropicResp.status, detail: txt.slice(0, 500) })
   }
 
@@ -229,6 +238,7 @@ Deno.serve(async (req) => {
   const text = anthropicJson?.content?.[0]?.text ?? ''
   const parsed = extractJson(text)
   if (!parsed) {
+    console.error('scan-clothing-tag anthropic_bad_json', { raw: text.slice(0, 500) })
     return json(502, { error: 'anthropic_bad_json', raw: text.slice(0, 500) })
   }
 
