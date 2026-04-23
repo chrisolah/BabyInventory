@@ -255,3 +255,26 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Hint that appears under a disabled Save, naming the fields the user
+   still needs to fill in. Tone matches the muted-error / warning palette
+   — it's not a destructive error, just a nudge — and the field names are
+   clickable to focus the input directly. Kept small and close to the
+   button so the relationship is obvious. */
+.saveHint {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--gray-600);
+  text-align: center;
+  margin-top: 8px;
+}
+
+.saveHint a {
+  color: var(--teal);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.saveHint a:hover {
+  opacity: 0.8;
+}

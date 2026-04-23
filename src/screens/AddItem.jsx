@@ -18,10 +18,17 @@ import styles from './AddItem.module.css'
 //
 // Fields match the check constraints on beta.clothing_items (migration 006):
 //   - category, item_type, size_label, inventory_status: required
-//   - condition: required when owning, optional otherwise (enforced here, not
-//     in DB, so future flows like "marking as outgrown" can leave it null)
+//   - condition: optional (even for owned items — a lot of real inventory
+//     gets added without knowing the item's condition yet, and the photo
+//     scan can't infer it. Keep null-able here and in the DB.)
 //   - priority: only relevant on wishlist items
 //   - brand / season / notes / quantity: always optional (except qty defaults 1)
+//
+// Required-field UX contract: canSubmit() reads from getMissingRequiredFields(),
+// which returns a list of { label, domId } entries. The disabled-Save hint
+// below the button reads the same list, so a new required field added to that
+// function is automatically flagged to the user — we never want someone
+// clicking a disabled Save with no explanation.
 //
 // The fuller prototype has photos, colors, weight ranges, fit notes, occasion,
 // exchange toggles. Those come later — this form ships enough to close the
@@ -265,12 +272,23 @@ export default function AddItem() {
     if (v) track.itemSizeSelected(v)
   }
 
+  // Which required fields are still empty, in the order they appear in the
+  // form. Used in two places: canSubmit() gates the Save button off the
+  // length of this list, and the disabled-Save hint below the button renders
+  // the labels so the user never has to guess why Save is grey. Adding a
+  // new required field? Push it into this function and both places update.
+  function getMissingRequiredFields() {
+    const missing = []
+    if (!category)  missing.push({ label: 'Category', domId: 'ai-category' })
+    if (!itemType)  missing.push({ label: 'Type',     domId: 'ai-type' })
+    if (!sizeLabel) missing.push({ label: 'Size',     domId: 'ai-size' })
+    if (!(quantity >= 1)) missing.push({ label: 'Quantity', domId: 'ai-quantity' })
+    return missing
+  }
+
   function canSubmit() {
     if (!household) return false
-    if (!category || !itemType || !sizeLabel) return false
-    if (mode === 'owned' && !condition) return false
-    if (!(quantity >= 1)) return false
-    return true
+    return getMissingRequiredFields().length === 0
   }
 
   // Called by <TagScanner> after a successful scan. Prefills the form
@@ -538,15 +556,16 @@ export default function AddItem() {
 
           {mode === 'owned' && (
             <div className={styles.formGroup}>
-              <label className={styles.label} htmlFor="ai-condition">Condition</label>
+              <label className={styles.label} htmlFor="ai-condition">
+                Condition <span className={styles.optional}>(optional)</span>
+              </label>
               <select
                 id="ai-condition"
                 className={styles.input}
                 value={condition}
                 onChange={e => setCondition(e.target.value)}
-                required
               >
-                <option value="">Pick one…</option>
+                <option value="">Not set</option>
                 {CONDITIONS.map(c => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
@@ -637,17 +656,55 @@ export default function AddItem() {
 
           {error && <div className={styles.error}>{error}</div>}
 
-          <button
-            type="submit"
-            className={styles.submitBtn}
-            disabled={!canSubmit() || saving}
-          >
-            {saving
-              ? 'Saving…'
-              : isEditMode
-                ? 'Save changes'
-                : 'Save item'}
-          </button>
+          {(() => {
+            // Compute once per render — used both to disable Save and to
+            // render the "what's missing?" hint below. We only surface the
+            // hint when there's an actionable list (household loaded, not
+            // mid-save); otherwise the button is disabled for a reason the
+            // user can't fix by clicking fields.
+            const missing = getMissingRequiredFields()
+            const disabled = !canSubmit() || saving
+            return (
+              <>
+                <button
+                  type="submit"
+                  className={styles.submitBtn}
+                  disabled={disabled}
+                >
+                  {saving
+                    ? 'Saving…'
+                    : isEditMode
+                      ? 'Save changes'
+                      : 'Save item'}
+                </button>
+                {disabled && !saving && household && missing.length > 0 && (
+                  <div className={styles.saveHint} role="status">
+                    Still needed to save:{' '}
+                    {missing.map((m, i) => (
+                      <span key={m.domId}>
+                        <a
+                          href={`#${m.domId}`}
+                          onClick={e => {
+                            // Smooth-focus the field so the user can act on
+                            // the hint without hunting for it on long forms.
+                            e.preventDefault()
+                            const el = document.getElementById(m.domId)
+                            if (el) {
+                              el.focus()
+                              el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                            }
+                          }}
+                        >
+                          {m.label}
+                        </a>
+                        {i < missing.length - 1 ? ', ' : ''}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </>
+            )
+          })()}
         </form>
       </main>
     </div>
