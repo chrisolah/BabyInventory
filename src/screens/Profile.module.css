@@ -906,3 +906,125 @@
   opacity: 0.6;
   cursor: wait;
 }
+
+/* ── Receiving hand-me-downs section ────────────────────────────────
+   Sub-preferences revealed under the main toggle when the household is
+   opted in. Laid out as a vertical stack of labeled fields with soft
+   separators (not full dividers) so they read as one cohesive form
+   rather than a list of distinct settings. */
+.receivingDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--gray-100);
+}
+
+.receivingField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.receivingFieldLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.receivingFieldHint {
+  font-size: 12px;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+.receivingRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.receivingDate {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--gray-900);
+  padding: 8px 10px;
+  border: 0.5px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+  min-width: 160px;
+}
+
+.receivingDate:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+  border-color: var(--teal);
+}
+
+.receivingTextarea {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--gray-900);
+  padding: 10px 12px;
+  border: 0.5px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 64px;
+}
+
+.receivingTextarea:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+  border-color: var(--teal);
+}
+
+/* Chip group for multi-select (sizes, clothing style). Each chip is a
+   toggle button styled as a rounded pill. Selected state uses the teal
+   brand accent with white text so the on/off distinction is obvious at
+   a glance without relying on icons. */
+.chipGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-900);
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--gray-400);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+
+.chipOn {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--white);
+}
+
+.chipOn:hover:not(:disabled) {
+  border-color: var(--teal-dark);
+  background: var(--teal-dark);
+}
+
+.chip:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

@@ -1,0 +1,772 @@
+/* PassAlongBatch — sender-side detail screen for a community exchange
+   batch. Mirrors the structural conventions of ItemDetail (sticky header,
+   summary card, section blocks, action stack, confirm modal) so the
+   screen feels native inside the drill-down family. */
+
+.page {
+  min-height: 100vh;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+/* Matches ItemDetail / SlotDetail grid so the back button, title, and
+   profile menu align pixel-for-pixel across detail screens. */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--white);
+  border-bottom: 0.5px solid var(--gray-200);
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.backBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--gray-900);
+  background: transparent;
+}
+.backBtn:hover {
+  background: var(--gray-100);
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--gray-900);
+  line-height: 1.1;
+  position: relative;
+  z-index: 1;
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--gray-400);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-top: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Body ─────────────────────────────────────────────────── */
+.body {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.loading {
+  text-align: center;
+  color: var(--gray-400);
+  padding: 32px 16px;
+  font-size: 14px;
+}
+
+.errorBanner {
+  background: #FDF2F2;
+  color: #A32D2D;
+  border: 0.5px solid #F09595;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.infoBanner {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  border: 0.5px solid #B9E3D0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.linkBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #5F3F07;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── Summary card ─────────────────────────────────────────── */
+/* Hero block: reference code (the paper-trail identifier) in large
+   type, with status pill on the right so the user can see at a glance
+   where in the lifecycle the box sits. */
+.summary {
+  padding: 16px;
+  background: var(--cream, #FBF8F4);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 14px;
+}
+
+.summaryTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summaryText {
+  flex: 1;
+  min-width: 0;
+}
+
+.summaryName {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--gray-900);
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+.summaryMeta {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--gray-600);
+  margin-top: 4px;
+}
+
+.statusPill {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.statusPillDraft {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+.statusPillActive {
+  background: var(--amber-light);
+  color: #7E5510;
+}
+.statusPillFulfilled {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+}
+.statusPillCanceled {
+  background: var(--gray-100);
+  color: var(--gray-400);
+}
+
+/* ── Sections ─────────────────────────────────────────────── */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionTitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.sectionTitleCount {
+  font-size: 11px;
+  color: var(--gray-400);
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-weight: 400;
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--gray-400);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ── Destination stack ────────────────────────────────────── */
+/* Each destination is a full-width card — taller, more narrative than
+   a radio row. Gives room for the sub-copy that explains each path
+   (especially the family one, which has the non-obvious "routes through
+   HQ" mechanic). */
+.destStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.destCard {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: var(--font-body);
+}
+
+.destCard:hover:not(:disabled) {
+  border-color: var(--gray-400);
+}
+
+.destCard:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.destCardSel {
+  background: var(--teal-light);
+  border-color: var(--teal);
+}
+
+/* Readonly card — used post-draft. Same box but no hover reaction and
+   the dot is omitted (it's not a choice anymore, it's a fact). */
+.destCardReadonly {
+  cursor: default;
+  background: var(--white);
+  border-color: var(--gray-200);
+}
+
+.destCardTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.destDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1px solid var(--gray-400);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.destCardSel .destDot {
+  border-color: var(--teal);
+  background: var(--teal);
+}
+
+.destDotInner {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--white);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.destCardSel .destDotInner {
+  opacity: 1;
+}
+
+.destCardLabel {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.destCardSel .destCardLabel {
+  color: var(--teal-dark);
+}
+
+.destCardSub {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--gray-600);
+  line-height: 1.45;
+  margin-top: 4px;
+  padding-left: 26px; /* aligns with label (past the dot) */
+}
+
+.destCardReadonly .destCardSub {
+  padding-left: 0;
+}
+
+/* Explainer block shown under the destination stack when "family" is
+   selected — ships via HQ is non-obvious, so we spell it out. */
+.familyExplainer {
+  background: var(--cream, #FBF8F4);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--gray-900);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+.familyMatchedLine {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--teal-dark);
+}
+
+/* ── Form fields ──────────────────────────────────────────── */
+.fieldStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fieldLabel {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-600);
+  letter-spacing: 0.02em;
+}
+
+.input,
+.textarea {
+  display: block;
+  width: 100%;
+  padding: 11px 13px;
+  margin-top: 5px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  color: var(--gray-900);
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.textarea {
+  resize: vertical;
+  line-height: 1.5;
+  min-height: 60px;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--teal);
+}
+
+.input:disabled,
+.textarea:disabled {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  cursor: not-allowed;
+}
+
+/* ── Items list ───────────────────────────────────────────── */
+.itemList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.itemRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+}
+
+.itemRowText {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemRowName {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--gray-900);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemRowMeta {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--gray-600);
+  margin-top: 2px;
+}
+
+.itemRowQty {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--gray-600);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.itemRowRemove {
+  all: unset;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--gray-400);
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.itemRowRemove:hover:not(:disabled) {
+  background: var(--gray-100);
+  color: #B8572E;
+}
+
+.itemRowRemove:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.emptyItems {
+  padding: 14px;
+  background: var(--gray-100);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ── Timeline ─────────────────────────────────────────────── */
+/* Vertical step list with a dot per step and a faint connector line
+   between dots. Done steps are filled teal; current step is filled
+   amber (matches active status pill); upcoming steps are hollow gray. */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tlItem {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  position: relative;
+}
+
+.tlDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gray-200);
+  border: 1px solid var(--gray-200);
+  display: inline-block;
+  margin-left: 4px;
+}
+
+.tl_done .tlDot {
+  background: var(--teal);
+  border-color: var(--teal);
+}
+.tl_current .tlDot {
+  background: #D49A3E;
+  border-color: #D49A3E;
+  box-shadow: 0 0 0 3px var(--amber-light);
+}
+.tl_upcoming .tlDot {
+  background: var(--white);
+  border-color: var(--gray-200);
+}
+
+.tlLabel {
+  color: var(--gray-900);
+}
+
+.tl_upcoming .tlLabel {
+  color: var(--gray-400);
+}
+
+.tlDate {
+  font-size: 11px;
+  color: var(--gray-400);
+  letter-spacing: 0.02em;
+}
+
+/* Connector hairline between dots — drawn as a pseudo-element on each
+   item except the last. Sits behind the dot, aligned with its center. */
+.tlItem:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 18px;
+  bottom: -10px;
+  width: 1px;
+  background: var(--gray-200);
+}
+
+/* ── Packing instructions ─────────────────────────────────── */
+.instructionsBox {
+  padding: 14px 16px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+}
+
+.instructionsList {
+  margin: 0;
+  padding-left: 18px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--gray-900);
+  line-height: 1.6;
+}
+
+.instructionsList li + li {
+  margin-top: 6px;
+}
+
+/* ── Actions ──────────────────────────────────────────────── */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.primaryBtn {
+  padding: 13px;
+  width: 100%;
+  background: var(--teal);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.primaryBtn:hover:not(:disabled) { opacity: 0.92; }
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondaryBtn {
+  padding: 13px;
+  width: 100%;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  border: 0.5px solid #B9E3D0;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.secondaryBtn:hover:not(:disabled) { opacity: 0.9; }
+.secondaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dangerBtn {
+  padding: 13px;
+  width: 100%;
+  background: var(--white);
+  color: #A32D2D;
+  border: 0.5px solid #F09595;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.dangerBtn:hover:not(:disabled) { background: #FDF2F2; }
+.dangerBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Confirm modal ────────────────────────────────────────── */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 28, 28, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 100;
+  animation: backdropFadeIn 0.15s ease-out;
+}
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 20px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  animation: modalRise 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes modalRise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modalTitle {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 6px;
+}
+
+.modalBody {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.modalInput {
+  display: block;
+  width: 100%;
+  padding: 11px 13px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  color: var(--gray-900);
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  outline: none;
+  box-sizing: border-box;
+  resize: vertical;
+  line-height: 1.5;
+}
+.modalInput:focus {
+  border-color: var(--teal);
+}
+
+.modalActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.modalCancel {
+  padding: 11px;
+  background: var(--white);
+  color: var(--gray-900);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.modalCancel:hover:not(:disabled) { background: var(--gray-100); }
+.modalCancel:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.modalPrimary {
+  padding: 11px;
+  background: var(--teal);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.modalPrimary:hover:not(:disabled) { opacity: 0.92; }
+.modalPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.modalDanger {
+  padding: 11px;
+  background: #A32D2D;
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.modalDanger:hover:not(:disabled) { opacity: 0.92; }
+.modalDanger:disabled { opacity: 0.5; cursor: not-allowed; }

@@ -194,21 +194,25 @@
   line-height: 1.5;
 }
 
-/* ── Supply ── */
-.supply {
+/* ── Pass-along hub ──
+   The V1.9 centerpiece. Four-destination grid that sits in place of the
+   old peer-to-peer "supply" band. Visual echo of the features section
+   (four cards in a responsive grid) but inside a warm cream-on-gray
+   containing band so it reads as a featured pitch, not a bullet list. */
+.hub {
   padding: 2.5rem 1.5rem;
   max-width: 680px;
   margin: 0 auto;
   width: 100%;
   border-top: 0.5px solid var(--gray-100);
 }
-.supplyBand {
+.hubBand {
   background: var(--gray-50);
   border: 0.5px solid var(--gray-200);
   border-radius: 16px;
   padding: 2rem;
 }
-.supplyEyebrow {
+.hubEyebrow {
   display: inline-block;
   font-size: 12px;
   font-weight: 500;
@@ -218,7 +222,87 @@
   border-radius: 999px;
   margin-bottom: 1rem;
 }
-.supplyHeadline {
+.hubHeadline {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--gray-900);
+  line-height: 1.25;
+  margin-bottom: 0.75rem;
+}
+.hubBody {
+  font-size: 14px;
+  color: var(--gray-600);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+.hubGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+.hubCard {
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+}
+.hubCardIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.hubCardTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+.hubCardBody {
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+.hubCta {
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: var(--teal);
+  color: var(--teal-light);
+  padding: 11px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+/* ── Receiver opt-in ──
+   Neutral-framed section that sits directly below the hub. Three numbered
+   bullets in a single horizontal flow on desktop, stacked on mobile. No
+   containing band — reads as a continuation of the story, not a sales
+   pitch. Copy stays strictly non-stigmatizing (see
+   feedback_pass_along_framing). */
+.optIn {
+  padding: 2rem 1.5rem 2.5rem;
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+}
+.optInEyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 1rem;
+}
+.optInHeadline {
   font-family: var(--font-display);
   font-size: 22px;
   font-weight: 500;
@@ -226,57 +310,40 @@
   line-height: 1.3;
   margin-bottom: 0.75rem;
 }
-.supplyBody {
+.optInBody {
   font-size: 14px;
   color: var(--gray-600);
   line-height: 1.6;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+  max-width: 560px;
 }
-.supplySteps {
-  margin-bottom: 1.25rem;
+.optInRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
 }
-.supplyStep {
+.optInBullet {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: flex-start;
-  margin-bottom: 0.85rem;
 }
-.supplyStep:last-child {
-  margin-bottom: 0;
-}
-.supplyStepNum {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--amber-light);
-  color: var(--amber-dark);
-  font-size: 12px;
+.optInBulletNum {
+  font-family: var(--font-display);
+  font-size: 14px;
   font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: var(--teal);
   flex-shrink: 0;
-  margin-top: 1px;
+  margin-top: 2px;
+  letter-spacing: 0.02em;
 }
-.supplyStepText {
+.optInBulletText {
   font-size: 13px;
   color: var(--gray-600);
-  line-height: 1.5;
+  line-height: 1.55;
 }
-.supplyStepText strong {
+.optInBulletText strong {
   color: var(--gray-900);
   font-weight: 500;
-}
-.supplyCta {
-  font-size: 13px;
-  font-weight: 500;
-  font-family: var(--font-body);
-  background: var(--gray-900);
-  color: var(--white);
-  padding: 10px 22px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
 }
 
 /* ── Mission ── */

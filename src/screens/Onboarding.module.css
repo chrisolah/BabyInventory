@@ -424,3 +424,88 @@
   margin-top: 12px;
   line-height: 1.5;
 }
+
+/* ── Receiving step (step 4) ────────────────────────────────
+   Card-shaped toggle at the top of the step so the main decision
+   (opt in vs. not) reads as the primary affordance. Sub-preferences
+   (sizes, style, notes) reveal underneath only when opted in — we
+   don't want to overwhelm parents who'll quickly tap "Not right now."
+   The switch reuses the same visual language as Profile's ReceivingSection
+   so the control feels familiar across both surfaces. */
+.receivingToggleCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.receivingToggleBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.receivingToggleTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+
+.receivingToggleSub {
+  font-size: 12px;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+.receivingDetails {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+/* Switch — same geometry + motion as Profile's to feel identical across
+   the two surfaces. Declared here rather than imported so Onboarding
+   doesn't cross-reference Profile's stylesheet. */
+.switch {
+  all: unset;
+  box-sizing: border-box;
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--gray-200);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: background 0.18s;
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.switchKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition: transform 0.18s;
+}
+
+.switchOn {
+  background: var(--teal);
+}
+
+.switchOn .switchKnob {
+  transform: translateX(18px);
+}

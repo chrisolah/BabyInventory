@@ -165,6 +165,52 @@ export const track = {
     logEvent('household_leave_blocked', 'engagement', props),
   accountDeletionRequested: () =>
     logEvent('account_deletion_requested', 'engagement', {}),
+
+  // Community exchange — receiver side (opt-in flag lives on the household,
+  // matches land via Chris-as-concierge). Split into two events so product
+  // analytics can answer two different questions cleanly:
+  //   • receiving_opt_in_toggled — what share of households ever opt in,
+  //     and how often do they flip back off?
+  //   • receiving_preferences_updated — among opted-in households, how
+  //     many narrow their preferences vs. stay wide-open?
+  receivingOptInToggled: (props) =>
+    logEvent('receiving_opt_in_toggled', 'engagement', props),
+  receivingPreferencesUpdated: (props) =>
+    logEvent('receiving_preferences_updated', 'engagement', props),
+
+  // Community exchange — sender side. Each event carries the destination
+  // ('littleloop' | 'family' | 'person' | 'charity') so we can compare
+  // which path parents actually choose. Item counts let us learn what a
+  // "typical" batch size looks like — informs packaging + concierge load.
+  // List-level events: "did the user even enter the hub?" is the first
+  // question; "where did the batch get created from?" the second. The
+  // `from` prop on passAlongBatchCreated will also carry values like
+  // 'inventory' and 'item_detail' once task #4 wires those entry points.
+  passAlongListViewed: (props) =>
+    logEvent('pass_along_list_viewed', 'engagement', props),
+  passAlongBatchCreated: (props) =>
+    logEvent('pass_along_batch_created', 'engagement', props),
+  // Item-level add event — fired whenever a clothing_items row gets its
+  // pass_along_batch_id set. `from` is the entry point ('item_detail',
+  // 'inventory_bulk' eventually); `created_new_batch` tells us how often
+  // the add auto-created a draft vs. joined an existing one.
+  passAlongItemAdded: (props) =>
+    logEvent('pass_along_item_added', 'engagement', props),
+  passAlongBatchViewed: (props) =>
+    logEvent('pass_along_batch_viewed', 'engagement', props),
+  passAlongBatchDestinationChanged: (props) =>
+    logEvent('pass_along_batch_destination_changed', 'engagement', props),
+  passAlongBatchItemRemoved: (props) =>
+    logEvent('pass_along_batch_item_removed', 'engagement', props),
+  passAlongBatchShipped: (props) =>
+    logEvent('pass_along_batch_shipped', 'engagement', props),
+  passAlongBatchDeleted: (props) =>
+    logEvent('pass_along_batch_deleted', 'engagement', props),
+  // Label request is a signal of intent specifically to use Littleloop's
+  // concierge path — tracked separately so we can measure the lift over
+  // "ship it yourself" once concierge goes live.
+  passAlongLabelRequested: (props) =>
+    logEvent('pass_along_label_requested', 'engagement', props),
 }
 
 export { getSessionId }

@@ -392,6 +392,27 @@ export default function Inventory() {
           <IvySprig />
         </div>
         <div className={styles.headerActions}>
+          {/* Pass-along hub entry — soft-gray circle so it reads as a
+              secondary action next to the solid-teal + button. Icon is
+              a simple open-box glyph; aria-label carries the meaning for
+              screen readers. */}
+          <button
+            type="button"
+            className={styles.passBtn}
+            onClick={() => navigate('/pass-along')}
+            aria-label="Pass-along"
+          >
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+              <path
+                d="M2 5l6-3 6 3v6l-6 3-6-3V5z M2 5l6 3 6-3 M8 8v6"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </svg>
+          </button>
           <button
             type="button"
             className={styles.addBtn}
