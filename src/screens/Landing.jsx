@@ -58,6 +58,41 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Photo-scan differentiator. No other baby wardrobe app has this — the
+          closest adjacent tools (BabyTogs, generic wardrobe apps like Acloset,
+          care-label decoders like LaundryLens) all require manual entry for
+          brand/size/category. Worth its own section above the features grid
+          because it's the thing that makes "seed my stash" feel effortless
+          on first run. */}
+      <section className={styles.scan}>
+        <div className={styles.scanBand}>
+          <div className={styles.scanEyebrow}>New — and only on Littleloop</div>
+          <h2 className={styles.scanHeadline}>Snap the tag.<br /><em>Skip</em> the typing.</h2>
+          <p className={styles.scanBody}>Point your phone at a clothing tag. Littleloop reads the brand, size, and category and pre‑fills the form — so adding an item takes a tap, not a minute. No other baby wardrobe app does this.</p>
+
+          <div className={styles.scanVisual} aria-hidden="true">
+            <div className={styles.scanTag}>
+              <div className={styles.scanTagHole} />
+              <div className={styles.scanTagBrand}>carter's</div>
+              <div className={styles.scanTagLine}>100% COTTON</div>
+              <div className={styles.scanTagSize}>6M</div>
+            </div>
+            <div className={styles.scanArrow}>
+              <svg viewBox="0 0 40 20" width="40" height="20" fill="none">
+                <path d="M2 10 H34 M28 4 L34 10 L28 16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <div className={styles.scanChips}>
+              <div className={styles.scanChip}><span className={styles.scanChipLabel}>Brand</span><span className={styles.scanChipValue}>Carter's</span></div>
+              <div className={styles.scanChip}><span className={styles.scanChipLabel}>Size</span><span className={styles.scanChipValue}>3–6M</span></div>
+              <div className={styles.scanChip}><span className={styles.scanChipLabel}>Category</span><span className={styles.scanChipValue}>Bodysuit</span></div>
+            </div>
+          </div>
+
+          <button className={styles.scanCta} onClick={handleGetStarted}>Try it free</button>
+        </div>
+      </section>
+
       <section className={styles.features}>
         <h2 className={styles.sectionTitle}>Everything in one place</h2>
         <p className={styles.sectionSub}>Whether you're expecting or already knee-deep in laundry.</p>
@@ -90,7 +125,7 @@ export default function Landing() {
         <h2 className={styles.sectionTitle} style={{ marginBottom: '6px' }}>Simple from day one</h2>
         <p className={styles.sectionSub} style={{ marginBottom: '1.5rem' }}>For parents building and managing a wardrobe.</p>
         {[
-          { n: 1, title: 'Add your baby and your clothes', body: "Set up in minutes. Log what you have, or start planning what you'll need." },
+          { n: 1, title: 'Add your baby and your clothes', body: "Set up in minutes. Snap a tag to auto‑fill the details, or log items by hand if you prefer." },
           { n: 2, title: 'Stay on top of every size', body: "We track what's coming up and surface gaps before you need them." },
           { n: 3, title: 'Find what you need nearby', body: 'When you have a gap, browse the exchange. Families nearby are passing on exactly what you need.' },
         ].map(({ n, title, body }) => (

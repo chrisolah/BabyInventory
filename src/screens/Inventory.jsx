@@ -82,12 +82,16 @@ export default function Inventory() {
   // middle-of-the-road default if we have no baby data.
   const [selectedAgeRange, setSelectedAgeRange] = useState(null)
 
-  // Per-tab collapsed category state. Default is all-expanded; category keys
-  // are added to the set when the user clicks a header to collapse it. Kept
-  // per-tab so collapsing Sleepwear on Owned doesn't hide it on Wish list too
-  // (different intent, same categories).
-  const [ownedCollapsed, setOwnedCollapsed] = useState(() => new Set())
-  const [wishCollapsed, setWishCollapsed] = useState(() => new Set())
+  // Per-tab collapsed category state. Default is ALL-COLLAPSED: we seed each
+  // set with every known category so a fresh Inventory view shows a compact
+  // stack of headers instead of a wall of rows — easier to scan on mobile,
+  // lets the user drill into just the category they care about. Tapping a
+  // header removes it from the set (expands), tapping again re-adds (collapses).
+  // Kept per-tab so expanding Sleepwear on Owned doesn't also expand it on
+  // Wish list (different intent, same categories). Categories not in
+  // CATEGORY_ORDER get filtered out upstream, so the seed is exhaustive.
+  const [ownedCollapsed, setOwnedCollapsed] = useState(() => new Set(CATEGORY_ORDER))
+  const [wishCollapsed, setWishCollapsed] = useState(() => new Set(CATEGORY_ORDER))
 
   function toggleOwnedGroup(cat) {
     setOwnedCollapsed(prev => {
