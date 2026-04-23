@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -82,15 +82,22 @@ export default function Inventory() {
   // middle-of-the-road default if we have no baby data.
   const [selectedAgeRange, setSelectedAgeRange] = useState(null)
 
-  // Per-tab collapsed category state. Default is ALL-COLLAPSED: we seed each
-  // set with every known category so a fresh Inventory view shows a compact
-  // stack of headers instead of a wall of rows — easier to scan on mobile,
-  // lets the user drill into just the category they care about. Tapping a
-  // header removes it from the set (expands), tapping again re-adds (collapses).
-  // Kept per-tab so expanding Sleepwear on Owned doesn't also expand it on
-  // Wish list (different intent, same categories). Categories not in
-  // CATEGORY_ORDER get filtered out upstream, so the seed is exhaustive.
-  const [ownedCollapsed, setOwnedCollapsed] = useState(() => new Set(CATEGORY_ORDER))
+  // Per-tab collapsed category state. Seeds differ by tab:
+  //   - Owned starts ALL-EXPANDED; a layout-effect pass below measures the
+  //     fully-expanded page and collapses everything only if it would
+  //     overflow the viewport. Small inventories stay fully visible; large
+  //     ones land on a compact header stack. See the auto-fit effect below
+  //     for the full contract.
+  //   - Wish list stays ALL-COLLAPSED by default — the recommended-wardrobe
+  //     view is dense even with zero items (every slot shows a progress bar),
+  //     so a compact stack of headers is the right starting point regardless
+  //     of viewport size.
+  // Tapping a header removes the category from the set (expands), tapping
+  // again re-adds (collapses). Kept per-tab so expanding Sleepwear on Owned
+  // doesn't also expand it on Wish list (different intent, same categories).
+  // Categories not in CATEGORY_ORDER get filtered out upstream, so the
+  // Wish-list seed is exhaustive.
+  const [ownedCollapsed, setOwnedCollapsed] = useState(() => new Set())
   const [wishCollapsed, setWishCollapsed] = useState(() => new Set(CATEGORY_ORDER))
 
   function toggleOwnedGroup(cat) {
@@ -194,6 +201,79 @@ export default function Inventory() {
       .filter(c => groups[c].length > 0)
       .map(c => ({ category: c, items: groups[c] }))
   }, [babyFilteredItems, selectedAgeRange])
+
+  // ── Owned tab: auto-collapse only when content overflows the viewport ────
+  // The rule: Owned-tab groups should stay EXPANDED by default on small
+  // inventories (nothing to hide), and COLLAPSE by default only when the
+  // fully-expanded layout would extend past the bottom of the viewport. This
+  // has to be viewport-driven rather than item-count-driven because the same
+  // inventory fits on a desktop browser but not on a phone — the measurement
+  // is the only honest answer.
+  //
+  // How it works:
+  //   1. Render the Owned tab with ownedCollapsed=∅ (everything expanded).
+  //   2. useLayoutEffect measures document.scrollHeight vs window.innerHeight
+  //      AFTER the DOM commits but BEFORE paint, so any correction we make is
+  //      invisible to the user (no flash).
+  //   3. If overflow, set ownedCollapsed to the full CATEGORY_ORDER set.
+  //   4. Remember the "key" we just measured for — subsequent renders with
+  //      the same key (e.g. user tapped a header) skip the measurement, so
+  //      manual toggles stick instead of getting overridden on every render.
+  //
+  // Key is selectedAgeRange — not item counts — so adding or removing an
+  // item doesn't re-run the measurement. Re-mounting the screen after
+  // /add-item already resets state from scratch, which is the right moment
+  // to re-measure. Window resize clears the key via the resize handler, so
+  // rotating a phone or resizing a desktop window re-applies the rule.
+  const autoFitKeyRef = useRef(null)
+  const [resizeTick, setResizeTick] = useState(0)
+
+  useEffect(() => {
+    let t = null
+    function onResize() {
+      // Debounce — resize events can fire many times per second on drag.
+      clearTimeout(t)
+      t = setTimeout(() => {
+        autoFitKeyRef.current = null
+        setResizeTick(x => x + 1)
+      }, 150)
+    }
+    window.addEventListener('resize', onResize)
+    return () => {
+      clearTimeout(t)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [])
+
+  useLayoutEffect(() => {
+    if (tab !== 'owned') return
+    if (itemsLoading) return
+    if (!selectedAgeRange) return
+    if (ownedGrouped.length === 0) return
+
+    const key = selectedAgeRange
+    if (autoFitKeyRef.current === key) return
+
+    // The measurement has to run against the fully-expanded layout. If any
+    // group is still collapsed (from a prior age-range's auto-collapse),
+    // reset first; the effect re-fires on the next commit and takes the
+    // measurement then. This two-pass dance happens synchronously inside a
+    // single layout phase, so the user never sees the intermediate state.
+    if (ownedCollapsed.size > 0) {
+      setOwnedCollapsed(new Set())
+      return
+    }
+
+    autoFitKeyRef.current = key
+    const overflow = document.documentElement.scrollHeight > window.innerHeight
+    if (overflow) {
+      setOwnedCollapsed(new Set(CATEGORY_ORDER))
+    }
+    // ownedGrouped is a dep because item-load races mean we need to re-run
+    // once the first batch of items lands (length goes 0 → N). resizeTick
+    // lets the resize handler force a re-measure under a new viewport size.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, itemsLoading, selectedAgeRange, ownedGrouped, ownedCollapsed, resizeTick])
 
   // Total owned-item count for the whole household (across all age ranges)
   // for this baby — used to decide which empty state to show on the Owned
