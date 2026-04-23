@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { HouseholdProvider } from './contexts/HouseholdContext'
 import './styles/globals.css'
@@ -77,21 +77,29 @@ function ScrollToTop() {
   return null
 }
 
-function ProtectedRoute({ children }) {
+// ProtectedLayout is the shared parent for every authed route. Written as a
+// *layout route* (rendered via <Outlet />) rather than a wrapper component, so
+// the HouseholdProvider mounts ONCE on first entry to a protected screen and
+// stays mounted across /home ↔ /inventory ↔ /add-item ↔ … navigation.
+//
+// The prior shape — `<Route element={<ProtectedRoute><Home /></ProtectedRoute>} />`
+// — put HouseholdProvider inside each route's element tree. Because Router
+// unmounts the previous route's element on navigation, the provider unmounted
+// and remounted on every route change, re-running memberships + babies queries
+// every time. The context's "survives navigation" promise only holds when the
+// provider itself isn't torn down, which requires the layout-route shape.
+//
+// HouseholdProvider needs a valid user before it can query household_members,
+// so the auth gate stays here (above the provider). IvyDecoration is fixed-
+// positioned with pointer-events:none, so it lives alongside <Outlet /> without
+// a wrapping layout container. Hidden on narrow viewports via its own CSS.
+function ProtectedLayout() {
   const { user, loading } = useAuth()
   if (loading) return <div />
   if (!user) return <Navigate to="/" replace />
-  // HouseholdProvider wraps every authed route so household + babies load
-  // once, and the baby-switcher selection survives navigation. Placed
-  // inside the auth gate because the provider needs a valid user before it
-  // can query household_members.
-  //
-  // IvyDecoration is fixed-positioned with pointer-events:none, so it lives
-  // alongside children without wrapping them in a layout container. Hidden
-  // on narrow viewports via its own CSS.
   return (
     <HouseholdProvider>
-      {children}
+      <Outlet />
       <IvyDecoration />
     </HouseholdProvider>
   )
@@ -112,23 +120,28 @@ function AppRoutes() {
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       {/* /reset-password is unguarded — it needs to render whether the user is signed in (recovery session) or not (expired link), and handles both cases itself. */}
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/onboarding/*" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-      <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-      <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
-      <Route path="/inventory/slot/:ageRange/:slotId" element={<ProtectedRoute><SlotDetail /></ProtectedRoute>} />
-      <Route path="/add-item" element={<ProtectedRoute><AddItem /></ProtectedRoute>} />
-      <Route path="/item/:id" element={<ProtectedRoute><ItemDetail /></ProtectedRoute>} />
-      {/* /item/:id/edit reuses the AddItem form in edit mode. AddItem
-          reads the :id path param to branch between INSERT and UPDATE. */}
-      <Route path="/item/:id/edit" element={<ProtectedRoute><AddItem /></ProtectedRoute>} />
-      {/* Community exchange — /pass-along is the hub (list of all the
-          household's batches + "start a new batch" CTA). /pass-along/:id
-          is the per-batch detail screen. Order matters: the :id route
-          must come second so the bare /pass-along string matches the
-          list, not a batch with id "/pass-along". */}
-      <Route path="/pass-along" element={<ProtectedRoute><PassAlongList /></ProtectedRoute>} />
-      <Route path="/pass-along/:id" element={<ProtectedRoute><PassAlongBatch /></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      {/* All authed routes share ProtectedLayout so HouseholdProvider stays
+          mounted across navigation. Adding a new authed screen? Add it as a
+          child of this route, not as its own top-level <Route>. */}
+      <Route element={<ProtectedLayout />}>
+        <Route path="/onboarding/*" element={<Onboarding />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/inventory" element={<Inventory />} />
+        <Route path="/inventory/slot/:ageRange/:slotId" element={<SlotDetail />} />
+        <Route path="/add-item" element={<AddItem />} />
+        <Route path="/item/:id" element={<ItemDetail />} />
+        {/* /item/:id/edit reuses the AddItem form in edit mode. AddItem
+            reads the :id path param to branch between INSERT and UPDATE. */}
+        <Route path="/item/:id/edit" element={<AddItem />} />
+        {/* Community exchange — /pass-along is the hub (list of all the
+            household's batches + "start a new batch" CTA). /pass-along/:id
+            is the per-batch detail screen. Order matters: the :id route
+            must come second so the bare /pass-along string matches the
+            list, not a batch with id "/pass-along". */}
+        <Route path="/pass-along" element={<PassAlongList />} />
+        <Route path="/pass-along/:id" element={<PassAlongBatch />} />
+        <Route path="/profile" element={<Profile />} />
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
