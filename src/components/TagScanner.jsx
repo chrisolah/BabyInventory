@@ -133,7 +133,22 @@ async function extractFnErrorCode(fnErr) {
     try {
       const cloned = ctx.clone()
       const parsed = await cloned.json()
-      if (parsed?.error) return { code: parsed.error, status: ctx.status }
+      if (parsed?.error) {
+        // Our function mirrors upstream details on non-2xx — e.g. for
+        // anthropic_http_error we attach { status, detail } so the client
+        // can surface WHY Anthropic rejected the call. Pull those through
+        // so the debug line on the tester's screen actually names the cause
+        // (invalid key, bad model slug, overloaded, etc.) instead of just
+        // "anthropic_http_error".
+        const upstreamStatus = typeof parsed.status === 'number' ? parsed.status : null
+        const detail = typeof parsed.detail === 'string' ? parsed.detail.slice(0, 300) : null
+        return {
+          code: parsed.error,
+          status: ctx.status,
+          upstreamStatus,
+          detail,
+        }
+      }
     } catch { /* not JSON — try text */ }
     try {
       const txt = await ctx.text()
@@ -191,16 +206,15 @@ export default function TagScanner({
         // eslint-disable-next-line no-console
         console.warn('TagScanner fn error:', info, fnErr)
         setError(errorMessageFor(info.code))
-        // Pull the error's name/message too — `code: unknown` alone told us
-        // nothing about *why* it was unknown. Showing the raw class + message
-        // lets a phone tester tell us whether it's FunctionsHttpError,
-        // FunctionsFetchError, or something supabase-js didn't classify.
-        const name = fnErr?.name ?? fnErr?.constructor?.name ?? 'Error'
-        const msg  = String(fnErr?.message ?? '').slice(0, 140)
-        const extra = info.detail ? ` · ${String(info.detail).slice(0, 140)}` : ''
-        setErrorDebug(
-          `code: ${info.code}${info.status ? ` · HTTP ${info.status}` : ''} · ${name}: ${msg}${extra}`,
-        )
+        // Layered detail so we can diagnose both the function layer AND the
+        // upstream (Anthropic) layer from a single screenshot. The upstream
+        // status + detail are populated by our function when it wraps a
+        // non-2xx response from the model API.
+        const parts = [`code: ${info.code}`]
+        if (info.status)         parts.push(`HTTP ${info.status}`)
+        if (info.upstreamStatus) parts.push(`upstream ${info.upstreamStatus}`)
+        if (info.detail)         parts.push(String(info.detail).slice(0, 240))
+        setErrorDebug(parts.join(' · '))
         return
       }
 
