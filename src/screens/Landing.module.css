@@ -103,170 +103,6 @@
   cursor: pointer;
 }
 
-/* ── Photo-scan differentiator ─────────────────────────────
-   Signature moment between the hero and the features grid.
-   Pulled-forward because this is the single feature no other
-   baby wardrobe app ships (BabyTogs, Acloset, LaundryLens
-   all require manual entry). The band uses a teal wash to
-   echo the in-app "Scan a tag" button so the landing feel
-   matches the first thing a new user will do post-signup. */
-.scan {
-  padding: 2rem 1.5rem 0.5rem;
-  max-width: 680px;
-  margin: 0 auto;
-  width: 100%;
-}
-.scanBand {
-  background: linear-gradient(180deg, var(--teal-light) 0%, var(--white) 100%);
-  border: 0.5px solid var(--teal);
-  border-radius: 16px;
-  padding: 2rem 1.75rem 1.75rem;
-}
-.scanEyebrow {
-  display: inline-block;
-  font-size: 12px;
-  font-weight: 500;
-  background: var(--white);
-  color: var(--teal-dark);
-  padding: 4px 14px;
-  border-radius: 999px;
-  border: 0.5px solid var(--teal);
-  margin-bottom: 1rem;
-}
-.scanHeadline {
-  font-family: var(--font-display);
-  font-size: clamp(24px, 4.5vw, 34px);
-  font-weight: 500;
-  line-height: 1.2;
-  color: var(--gray-900);
-  margin-bottom: 0.75rem;
-}
-.scanHeadline em {
-  font-style: italic;
-  color: var(--teal);
-}
-.scanBody {
-  font-size: 14px;
-  color: var(--gray-700, #4B4B4B);
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-  max-width: 520px;
-}
-
-/* Visual: stylized hangtag → arrow → extracted field chips.
-   Three-column flex on wide; the arrow rotates 90° on narrow
-   screens so the whole thing stacks vertically without the
-   chips getting crammed. */
-.scanVisual {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 1rem 0 1.5rem;
-  flex-wrap: wrap;
-}
-.scanTag {
-  position: relative;
-  width: 110px;
-  height: 80px;
-  background: var(--white);
-  border: 0.5px solid var(--gray-300, #D0D0D0);
-  border-radius: 6px 10px 10px 6px;
-  padding: 12px 14px 10px 22px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transform: rotate(-4deg);
-  flex-shrink: 0;
-}
-.scanTagHole {
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--gray-100);
-  box-shadow: inset 0 0 0 0.5px var(--gray-300, #D0D0D0);
-}
-.scanTagBrand {
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--gray-900);
-  line-height: 1;
-  margin-bottom: 6px;
-}
-.scanTagLine {
-  font-size: 8px;
-  letter-spacing: 0.06em;
-  color: var(--gray-600);
-  margin-bottom: 6px;
-}
-.scanTagSize {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--teal);
-  line-height: 1;
-}
-.scanArrow {
-  color: var(--teal);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.scanChips {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 160px;
-}
-.scanChip {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  background: var(--white);
-  border: 0.5px solid var(--teal);
-  border-radius: 8px;
-  padding: 6px 12px;
-}
-.scanChipLabel {
-  font-size: 11px;
-  color: var(--gray-600);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.scanChipValue {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--teal-dark);
-  font-family: var(--font-body);
-}
-@media (max-width: 480px) {
-  .scanArrow svg {
-    transform: rotate(90deg);
-  }
-  .scanChips {
-    width: 100%;
-  }
-}
-
-.scanCta {
-  font-size: 14px;
-  font-weight: 500;
-  font-family: var(--font-body);
-  background: var(--teal);
-  color: var(--white);
-  padding: 11px 24px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-}
-.scanCta:hover {
-  filter: brightness(1.05);
-}
-
 /* ── Features ── */
 .features {
   padding: 2.5rem 1.5rem;
@@ -496,6 +332,42 @@
   font-size: 12px;
   color: #0F6E56;
   margin-top: 2px;
+}
+
+/* ── Quiet photo-scan note ──
+   Tone dialled way down vs. the earlier mid-page band. This sits between
+   Mission and Final CTA so the mission/exchange story owns the main scroll;
+   photo-scan gets a single low-key mention. Centered, subdued gray text,
+   no band, no illustration. */
+.scanNote {
+  text-align: center;
+  max-width: 520px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 2rem 1.5rem 0.5rem;
+}
+.scanNoteEyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-600);
+  margin-bottom: 0.75rem;
+}
+.scanNoteHeadline {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+.scanNoteBody {
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.55;
+  margin: 0 auto;
+  max-width: 440px;
 }
 
 /* ── Final CTA ── */
