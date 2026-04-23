@@ -345,7 +345,10 @@ export default function AddItem() {
       // getSlotForItem on read.
       item_type: itemType,
       size_label: sizeLabel,
-      condition: mode === 'owned' ? condition : null,
+      // Coerce '' (user left Condition on "Not set") to null — the DB
+      // check constraint allows null OR one of the enum values, but not
+      // an empty string. Needed order: mode filter first, then null-coerce.
+      condition: mode === 'owned' ? (condition || null) : null,
       priority: mode === 'needed' && priority ? priority : null,
       brand: brand.trim() || null,
       season: season || null,
