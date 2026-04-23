@@ -36,6 +36,7 @@ const STATUS_LABEL = {
   owned: 'Owned',
   needed: 'On wish list',
   outgrown: 'Outgrown',
+  pass_along: 'In pass-along batch',
   donated: 'Donated',
   exchanged: 'Exchanged',
 }
@@ -78,6 +79,14 @@ export default function ItemDetail() {
   const [working, setWorking] = useState(false)
   const [actionError, setActionError] = useState(null)
 
+  // Pass-along batch metadata. When the item is currently packed in a
+  // batch (inventory_status='pass_along' + pass_along_batch_id set), we
+  // fetch the batch's reference_code so the UI can show the user which
+  // batch the item is in and let them jump to it. Separate fetch rather
+  // than a join because the batches table has its own RLS policy and
+  // PostgREST would need an explicit relationship setup for an embed.
+  const [batchInfo, setBatchInfo] = useState(null) // { id, reference_code } | null
+
   // ── Load the item ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!user || !id) return
@@ -99,6 +108,23 @@ export default function ItemDetail() {
         return
       }
       setItem(data || null)
+
+      // If the item is packed in a batch, grab the reference_code so the
+      // UI can show it + link to the batch. If the batch has been deleted
+      // since (FK set-null leaves pass_along_batch_id null anyway), this
+      // just returns no row and we silently skip the chip.
+      if (data?.pass_along_batch_id) {
+        const { data: bRow } = await supabase
+          .schema(currentSchema)
+          .from('pass_along_batches')
+          .select('id, reference_code')
+          .eq('id', data.pass_along_batch_id)
+          .maybeSingle()
+        if (!cancelled) setBatchInfo(bRow || null)
+      } else {
+        setBatchInfo(null)
+      }
+
       setLoading(false)
     }
 
@@ -117,6 +143,16 @@ export default function ItemDetail() {
   // the button rather than gate it with a disabled state — less visual
   // noise, and "outgrown" is a niche action in the first place.
   const canMarkOutgrown = item?.inventory_status === 'owned'
+
+  // "Send this on" is available for items you still have (owned) or have
+  // already outgrown but haven't disposed of. It's hidden for wish-list
+  // rows (you don't own them), pass_along rows (already in a batch — we
+  // show the batch chip instead), and donated/exchanged rows (the item is
+  // already gone).
+  const canSendOn =
+    item?.inventory_status === 'owned' ||
+    item?.inventory_status === 'outgrown'
+  const inBatch = !!item?.pass_along_batch_id
 
   // ── Actions ────────────────────────────────────────────────────────────
   async function handleDelete() {
@@ -145,6 +181,92 @@ export default function ItemDetail() {
     // that could be the Edit screen or an old slot detail whose data is now
     // stale. Going to /inventory is the predictable landing spot.
     navigate('/inventory')
+  }
+
+  // ── "Send this on" — add to a draft batch ─────────────────────────────
+  // Flow: find the household's most recent draft batch; create one if there
+  // isn't one; link the item (pass_along_batch_id + inventory_status =
+  // 'pass_along'); navigate to the batch detail screen so the user sees
+  // their item appear in context and can keep packing or ship.
+  //
+  // We deliberately don't make the user pick a batch in this flow — the
+  // most common case is "I'm adding the first outgrown onesie, where does
+  // it go," and surfacing the picker creates friction before there's any.
+  // Power users who want a second draft going can start one from the list.
+  async function handleSendOn() {
+    if (!item || !user || working) return
+    if (!canSendOn) return
+    setWorking(true)
+    setActionError(null)
+
+    // 1. Find the most recent open draft for this household. RLS scopes the
+    //    query automatically — no need to filter on household_id here
+    //    because the batch row's RLS uses is_household_member. We still
+    //    need the household_id for the INSERT branch below, so we derive
+    //    it from the item (clothing_items.household_id always matches).
+    const { data: drafts, error: findErr } = await supabase
+      .schema(currentSchema)
+      .from('pass_along_batches')
+      .select('id')
+      .eq('status', 'draft')
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    if (findErr) {
+      setWorking(false)
+      setActionError(findErr.message)
+      return
+    }
+
+    let batchId = drafts?.[0]?.id
+    let createdNew = false
+
+    if (!batchId) {
+      const { data: newBatch, error: insErr } = await supabase
+        .schema(currentSchema)
+        .from('pass_along_batches')
+        .insert({
+          household_id: item.household_id,
+          created_by: user.id,
+          destination_type: 'littleloop',
+        })
+        .select('id')
+        .maybeSingle()
+      if (insErr || !newBatch) {
+        setWorking(false)
+        setActionError(insErr?.message || 'Couldn’t start a new batch.')
+        return
+      }
+      batchId = newBatch.id
+      createdNew = true
+      track.passAlongBatchCreated({ id: batchId, from: 'item_detail' })
+    }
+
+    // 2. Link the item into the batch. inventory_status flip keeps the
+    //    item out of Owned/Outgrown views while it's packed.
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('clothing_items')
+      .update({
+        pass_along_batch_id: batchId,
+        inventory_status: 'pass_along',
+      })
+      .eq('id', item.id)
+
+    setWorking(false)
+    if (updErr) {
+      setActionError(updErr.message)
+      return
+    }
+
+    track.passAlongItemAdded({
+      from: 'item_detail',
+      batch_id: batchId,
+      created_new_batch: createdNew,
+      category: item.category,
+      size_label: item.size_label,
+    })
+    navigate(`/pass-along/${batchId}`)
   }
 
   async function handleMarkOutgrown() {
@@ -330,8 +452,36 @@ export default function ItemDetail() {
               </div>
             )}
 
-            {/* Action stack — edit first (most common), outgrow second (only
-                when applicable), delete last in destructive styling. */}
+            {/* "In pass-along batch" callout — shown when the item is
+                already packed. Renders as a quiet info card with a link
+                to the batch rather than an action button; the user's
+                decision has been made, we just surface where the item went. */}
+            {inBatch && (
+              <section className={styles.section}>
+                <div className={styles.sectionTitle}>Pass-along</div>
+                <button
+                  type="button"
+                  className={styles.batchLink}
+                  onClick={() =>
+                    navigate(`/pass-along/${item.pass_along_batch_id}`)
+                  }
+                >
+                  <div>
+                    <div className={styles.batchLinkTop}>
+                      In pass-along batch
+                    </div>
+                    <div className={styles.batchLinkRef}>
+                      {batchInfo?.reference_code || 'Open batch'}
+                    </div>
+                  </div>
+                  <span className={styles.batchLinkChevron} aria-hidden="true">›</span>
+                </button>
+              </section>
+            )}
+
+            {/* Action stack — edit first (most common), then the pass-along
+                + outgrow affordances (only when applicable), delete last
+                in destructive styling. */}
             <section className={styles.actions}>
               <button
                 type="button"
@@ -340,6 +490,17 @@ export default function ItemDetail() {
               >
                 Edit item
               </button>
+
+              {canSendOn && !inBatch && (
+                <button
+                  type="button"
+                  className={styles.secondaryBtn}
+                  onClick={handleSendOn}
+                  disabled={working}
+                >
+                  {working ? 'Working…' : 'Send this on'}
+                </button>
+              )}
 
               {canMarkOutgrown && (
                 <button

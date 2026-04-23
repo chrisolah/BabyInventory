@@ -6,22 +6,40 @@ import { track } from '../lib/analytics'
 import LogoutButton from '../components/LogoutButton'
 import styles from './Onboarding.module.css'
 
-// Onboarding is a single-screen state machine with four UI steps plus a done
+// Onboarding is a single-screen state machine with five UI steps plus a done
 // screen. We intentionally don't nest routes — the flow is strictly linear
 // and internal state is simpler to reason about than URL-driven navigation.
 //
-// Resume is driven by beta.user_activity_summary.onboarding_step:
-//   0 → not started     → step "household"
-//   1 → household created → step "baby" (household pre-loaded)
-//   2 → baby added      → step "sizemode" (household + baby pre-loaded)
-//   3 → size mode set   → step "invite"   (household + baby pre-loaded)
-//   4 → complete        → redirect to /home
+// Resume is driven by beta.user_activity_summary.onboarding_step (widened
+// from 0..4 to 0..5 in migration 011):
+//   0 → not started       → step "household"
+//   1 → household created   → step "baby"      (household pre-loaded)
+//   2 → baby added        → step "sizemode"  (household + babies pre-loaded)
+//   3 → size mode set     → step "receiving" (receiving opt-in)
+//   4 → receiving saved   → step "invite"
+//   5 → complete          → redirect to /home
+//
+// The receiving step is opt-in: toggle defaults to off, skipping advances
+// the flow with opted-in=false. We still bump onboarding_step when they
+// advance so resume lands them on the next screen rather than making them
+// revisit the toggle.
 //
 // A row in user_activity_summary exists for every user (auto-created on signup
 // via trigger, backfilled for existing users). We bump onboarding_step after
 // each successful transition so resume is reliable across sessions/devices.
-const STEPS = ['household', 'baby', 'sizemode', 'invite']
+const STEPS = ['household', 'baby', 'sizemode', 'receiving', 'invite']
 const STEP_TO_INDEX = Object.fromEntries(STEPS.map((s, i) => [s, i]))
+const ONBOARDING_COMPLETE = STEPS.length  // = 5
+
+// Size + gender enums reused from Profile's ReceivingSection. Kept local so
+// Onboarding can't drift if Profile ever adds a size (constraint in the DB
+// is the source of truth; this is just the order we render chips in).
+const RECEIVING_SIZES = ['0-3M','3-6M','6-9M','9-12M','12-18M','18-24M']
+const RECEIVING_GENDERS = [
+  { id: 'boy',     label: 'Boy'     },
+  { id: 'girl',    label: 'Girl'    },
+  { id: 'neutral', label: 'Neutral' },
+]
 
 // Step 2 lets the user add one or more babies before advancing — twins and
 // triplets are common enough that forcing a second pass through onboarding
@@ -87,7 +105,18 @@ export default function Onboarding() {
   // Step 3 — size mode
   const [sizeMode, setSizeMode] = useState('by_age')
 
-  // Step 4 — invite
+  // Step 4 — receiving opt-in. Mirrors Profile.ReceivingSection's fields,
+  // written to beta.households on submit. Defaults to off; sub-prefs
+  // (sizes, genders, notes, paused-until) only appear when toggled on.
+  // We don't expose "pause until" here — it's a maintenance affordance, not
+  // an onboarding decision, and showing it before there's any baseline
+  // opt-in pattern would be confusing.
+  const [acceptHandMeDowns, setAcceptHandMeDowns] = useState(false)
+  const [receivingSizes,    setReceivingSizes]    = useState([])
+  const [receivingGenders,  setReceivingGenders]  = useState([])
+  const [receivingNotes,    setReceivingNotes]    = useState('')
+
+  // Step 5 — invite
   const [inviteEmail, setInviteEmail] = useState('')
 
   const [loading, setLoading] = useState(false)
@@ -120,17 +149,25 @@ export default function Onboarding() {
       // advance past step 0.
       const onboardingStep = summary?.onboarding_step ?? 0
 
-      if (onboardingStep >= 4) {
+      if (onboardingStep >= ONBOARDING_COMPLETE) {
         navigate('/home', { replace: true })
         return
       }
 
-      // Hydrate household/baby for any step after the first.
+      // Hydrate household/baby for any step after the first. Pull the
+      // receiving-opt-in columns too so step 4 can resume with whatever
+      // the user already saved (either mid-onboarding or later via Profile
+      // and then re-entering the flow on a new device).
       if (onboardingStep >= 1) {
         const { data: memberships, error: memErr } = await supabase
           .schema(currentSchema)
           .from('household_members')
-          .select('household_id, households(id, name)')
+          .select(
+            'household_id, households(' +
+              'id, name, accepts_hand_me_downs, accepts_sizes, ' +
+              'accepts_genders, receiving_notes' +
+            ')',
+          )
           .eq('user_id', user.id)
           .order('joined_at', { ascending: false })
           .limit(1)
@@ -146,6 +183,13 @@ export default function Onboarding() {
         if (existing) {
           setHousehold(existing)
           setHouseholdName(existing.name ?? '')
+          // Seed the receiving step from whatever's already on the row.
+          // For a fresh signup these are all falsy/empty; for a resume
+          // after the Profile screen edits they reflect current state.
+          setAcceptHandMeDowns(!!existing.accepts_hand_me_downs)
+          setReceivingSizes(existing.accepts_sizes || [])
+          setReceivingGenders(existing.accepts_genders || [])
+          setReceivingNotes(existing.receiving_notes || '')
 
           if (onboardingStep >= 2) {
             // Fetch ALL babies, not just one — step 3 applies size_mode to
@@ -340,10 +384,70 @@ export default function Onboarding() {
 
     track.sizeModeSelected(mode)
     await bumpOnboardingStep(3)
+    setStep('receiving')
+  }
+
+  // ── Step 4 — receiving opt-in ────────────────────────────────────────
+  // Writes the receiving preferences to the household row. Default state
+  // (toggle off, empty arrays, no notes) is a valid save — that's an
+  // explicit "not opted in" signal, not a skip that leaves NULL garbage
+  // on the row. Empty size/gender arrays collapse to NULL so the matching
+  // query only needs one branch for "any size/gender."
+  async function submitReceiving() {
+    if (!household) return
+    setLoading(true)
+    setError(null)
+
+    const sizesToWrite   = receivingSizes.length   ? receivingSizes   : null
+    const gendersToWrite = receivingGenders.length ? receivingGenders : null
+    const notesToWrite   = receivingNotes.trim() || null
+
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('households')
+      .update({
+        accepts_hand_me_downs: acceptHandMeDowns,
+        accepts_sizes:          sizesToWrite,
+        accepts_genders:        gendersToWrite,
+        receiving_notes:        notesToWrite,
+      })
+      .eq('id', household.id)
+
+    setLoading(false)
+
+    if (updErr) {
+      setError(updErr.message)
+      return
+    }
+
+    // Single event so the funnel can measure receiving-step opt-in rate
+    // directly. Shape mirrors the Profile-side events so dashboards can
+    // union the two surfaces.
+    track.receivingOptInToggled({
+      opted_in: acceptHandMeDowns,
+      source:   'onboarding',
+      sizes:    (sizesToWrite || []).length,
+      genders:  (gendersToWrite || []).length,
+      has_notes: !!notesToWrite,
+    })
+
+    await bumpOnboardingStep(4)
     setStep('invite')
   }
 
-  // ── Step 4 — invite (UI only for now) ────────────────────────────────
+  function toggleReceivingSize(size) {
+    setReceivingSizes(curr =>
+      curr.includes(size) ? curr.filter(s => s !== size) : [...curr, size]
+    )
+  }
+
+  function toggleReceivingGender(gender) {
+    setReceivingGenders(curr =>
+      curr.includes(gender) ? curr.filter(g => g !== gender) : [...curr, gender]
+    )
+  }
+
+  // ── Step 5 — invite (UI only for now) ────────────────────────────────
   function sendInvite() {
     // Real invite plumbing (pending_invites table + email sending) is a
     // follow-up. For now, we just log the event so the funnel data is
@@ -360,7 +464,7 @@ export default function Onboarding() {
   function finishOnboarding() {
     track.onboardingCompleted()
     // Fire-and-forget — the 'done' screen doesn't need to wait on the bump.
-    bumpOnboardingStep(4)
+    bumpOnboardingStep(ONBOARDING_COMPLETE)
     setStatus('done')
   }
 
@@ -628,6 +732,118 @@ export default function Onboarding() {
               </button>
             </div>
             {error && <div className={styles.error}>{error}</div>}
+          </>
+        )}
+
+        {step === 'receiving' && (
+          <>
+            <h1 className={styles.title}>Open to hand-me-downs?</h1>
+            <p className={styles.sub}>
+              When another Littleloop family has outgrown clothes to pass along,
+              Littleloop can route a box your way. You&rsquo;ll always get a
+              message before anything ships, and you can turn this off anytime
+              from your profile.
+            </p>
+
+            <div className={styles.receivingToggleCard}>
+              <div className={styles.receivingToggleBody}>
+                <div className={styles.receivingToggleTitle}>
+                  Open to receiving hand-me-downs
+                </div>
+                <div className={styles.receivingToggleSub}>
+                  {acceptHandMeDowns
+                    ? 'We\u2019ll match you when a box fits your household.'
+                    : 'Toggle on to start receiving matches.'}
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={acceptHandMeDowns}
+                aria-label={
+                  `Open to receiving hand-me-downs — ${acceptHandMeDowns ? 'on' : 'off'}`
+                }
+                className={
+                  `${styles.switch} ${acceptHandMeDowns ? styles.switchOn : ''}`
+                }
+                onClick={() => setAcceptHandMeDowns(v => !v)}
+              >
+                <span className={styles.switchKnob} aria-hidden="true" />
+              </button>
+            </div>
+
+            {acceptHandMeDowns && (
+              <div className={styles.receivingDetails}>
+                <div className={styles.sectionLabel}>
+                  Sizes you&rsquo;d welcome{' '}
+                  <span className={styles.sectionLabelNote}>
+                    (leave blank for any)
+                  </span>
+                </div>
+                <div className={styles.chipGrid}>
+                  {RECEIVING_SIZES.map(size => (
+                    <button
+                      key={size}
+                      type="button"
+                      className={
+                        `${styles.chip} ${receivingSizes.includes(size) ? styles.chipSel : ''}`
+                      }
+                      onClick={() => toggleReceivingSize(size)}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+
+                <div className={styles.sectionLabel}>
+                  Clothing style{' '}
+                  <span className={styles.sectionLabelNote}>
+                    (leave blank for any)
+                  </span>
+                </div>
+                <div className={styles.chipGrid}>
+                  {RECEIVING_GENDERS.map(g => (
+                    <button
+                      key={g.id}
+                      type="button"
+                      className={
+                        `${styles.chip} ${receivingGenders.includes(g.id) ? styles.chipSel : ''}`
+                      }
+                      onClick={() => toggleReceivingGender(g.id)}
+                    >
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>
+                    Anything we should know?{' '}
+                    <span className={styles.sectionLabelNote}>(optional)</span>
+                  </label>
+                  <textarea
+                    className={styles.input}
+                    rows={3}
+                    value={receivingNotes}
+                    onChange={e => setReceivingNotes(e.target.value)}
+                    maxLength={500}
+                    placeholder="e.g. Baby #2 due in August, so sizes 6-12M would be extra helpful."
+                  />
+                </div>
+              </div>
+            )}
+
+            {error && <div className={styles.error}>{error}</div>}
+            <button
+              type="button"
+              className={styles.primaryBtn}
+              onClick={submitReceiving}
+              disabled={loading}
+            >
+              {loading
+                ? 'Saving…'
+                : acceptHandMeDowns ? 'Continue' : 'Not right now'}
+            </button>
           </>
         )}
 

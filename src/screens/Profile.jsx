@@ -142,7 +142,16 @@ function HouseholdTab() {
     const { data: memberships, error: memErr } = await supabase
       .schema(currentSchema)
       .from('household_members')
-      .select('role, joined_at, household_id, households(id, name)')
+      .select(
+        'role, joined_at, household_id, households(' +
+          'id, name, ' +
+          // Receiving opt-in columns (migration 010). Pulled here so the
+          // receiving section doesn't need its own round trip — we already
+          // have the household id in hand.
+          'accepts_hand_me_downs, accepts_sizes, accepts_genders, ' +
+          'receiving_paused_until, receiving_notes' +
+        ')',
+      )
       .eq('user_id', user.id)
       .order('joined_at', { ascending: false })
       .limit(1)
@@ -399,6 +408,17 @@ function HouseholdTab() {
         </p>
       </section>
 
+      {/* ── Receiving hand-me-downs ────────────────────────────────── */}
+      {/* Household-level opt-in for the "Another Littleloop family"
+          destination on the sender-side pass-along hub. Flag lives on
+          the households row (migration 010). Language is intentionally
+          neutral — never "families in need"; this is a product-voice
+          rule documented in the business plan addendum. */}
+      <ReceivingSection
+        household={household}
+        onUpdated={(patch) => setHousehold(h => ({ ...h, ...patch }))}
+      />
+
       {showInvite && (
         <InviteMemberModal
           from="profile_household"
@@ -455,6 +475,308 @@ function formatDate(isoDate) {
 function capitalize(s) {
   if (!s) return ''
   return s[0].toUpperCase() + s.slice(1)
+}
+
+// ── Receiving hand-me-downs section ────────────────────────────────────
+// Household-level opt-in for the "Another Littleloop family" destination
+// on the pass-along hub. Backed by migration 010 columns on households:
+// accepts_hand_me_downs, accepts_sizes[], accepts_genders[],
+// receiving_paused_until, receiving_notes.
+//
+// Voice rule (not a style preference): never "families in need," never
+// "charity." Label is "Open to receiving hand-me-downs." A household that
+// opts in may be environmentally-motivated, thrift-minded, community-
+// minded, or in real financial need — the product treats all of those
+// the same, and asks the receiver to self-identify as none of them.
+//
+// Save pattern:
+//   • Main toggle saves immediately (optimistic, revert on error).
+//   • Size/gender chips save immediately on click (same pattern).
+//   • Pause-until date and notes save on blur (textarea + date fields
+//     behave poorly with per-keystroke writes).
+//
+// When toggling OFF we preserve the sub-preferences — if the user flips
+// back on they get their prior sizes/genders/notes back. The matching
+// query checks accepts_hand_me_downs first, so stale prefs don't leak.
+
+const ALL_SIZES   = ['0-3M','3-6M','6-9M','9-12M','12-18M','18-24M']
+const ALL_GENDERS = [
+  { id: 'boy',     label: 'Boy'     },
+  { id: 'girl',    label: 'Girl'    },
+  { id: 'neutral', label: 'Neutral' },
+]
+
+function ReceivingSection({ household, onUpdated }) {
+  // HouseholdTab only renders us after `household` resolves (loading +
+  // error branches return early), so we assume it's populated. An early
+  // `if (!household) return null` here would sit *before* the hook
+  // declarations below and change the hook count across renders, which
+  // React rightly yells about.
+  const accepts    = !!household.accepts_hand_me_downs
+  const sizes      = household.accepts_sizes   || []
+  const genders    = household.accepts_genders || []
+  const pausedUntil = household.receiving_paused_until || ''
+  const notes       = household.receiving_notes || ''
+
+  // Local drafts for fields that save on blur. Kept in sync with props
+  // when the household id changes (e.g. after a re-fetch from outside).
+  const [pauseDraft, setPauseDraft] = useState(pausedUntil)
+  const [notesDraft, setNotesDraft] = useState(notes)
+  const [saving,     setSaving]     = useState(null)  // which field is in-flight
+  const [error,      setError]      = useState(null)
+
+  useEffect(() => {
+    setPauseDraft(household.receiving_paused_until || '')
+    setNotesDraft(household.receiving_notes || '')
+    // Intentionally keyed on household.id — drafts should reset when we
+    // swap to a different household (future multi-household flows), not
+    // every time the parent happens to re-render with the same row.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [household.id])
+
+  // Generic write-one-field helper. Pass { field, value, label, track? }.
+  // Optimistically reflects in parent state via onUpdated; reverts on error.
+  async function writeField(field, value, trackProps) {
+    if (saving) return
+    setSaving(field)
+    setError(null)
+
+    const prev = household[field]
+    onUpdated({ [field]: value })  // optimistic
+
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('households')
+      .update({ [field]: value })
+      .eq('id', household.id)
+
+    setSaving(null)
+    if (updErr) {
+      onUpdated({ [field]: prev })  // revert
+      setError(updErr.message)
+      return false
+    }
+    if (trackProps) {
+      track.receivingPreferencesUpdated(trackProps)
+    }
+    return true
+  }
+
+  // ── Handlers ──────────────────────────────────────────────────────────
+  async function toggleAccepts() {
+    const next = !accepts
+    const prev = accepts
+    setSaving('accepts')
+    setError(null)
+    onUpdated({ accepts_hand_me_downs: next })
+
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('households')
+      .update({ accepts_hand_me_downs: next })
+      .eq('id', household.id)
+
+    setSaving(null)
+    if (updErr) {
+      onUpdated({ accepts_hand_me_downs: prev })
+      setError(updErr.message)
+      return
+    }
+    track.receivingOptInToggled({ opted_in: next })
+  }
+
+  function toggleSize(size) {
+    const next = sizes.includes(size)
+      ? sizes.filter(s => s !== size)
+      : [...sizes, size]
+    // Empty array collapses to null so the DB matching query only needs
+    // to handle "null = any size" rather than "null OR empty array = any."
+    const value = next.length === 0 ? null : next
+    writeField('accepts_sizes', value, { field: 'sizes' })
+  }
+
+  function toggleGender(gender) {
+    const next = genders.includes(gender)
+      ? genders.filter(g => g !== gender)
+      : [...genders, gender]
+    const value = next.length === 0 ? null : next
+    writeField('accepts_genders', value, { field: 'genders' })
+  }
+
+  async function commitPause() {
+    const trimmed = pauseDraft || null
+    if ((trimmed || '') === (pausedUntil || '')) return  // no-op
+    const ok = await writeField(
+      'receiving_paused_until', trimmed, { field: 'paused_until' },
+    )
+    if (!ok) setPauseDraft(pausedUntil)
+  }
+
+  async function commitNotes() {
+    const trimmed = notesDraft.trim() || null
+    if ((trimmed || '') === (notes || '')) return  // no-op
+    const ok = await writeField(
+      'receiving_notes', trimmed, { field: 'notes', has_notes: !!trimmed },
+    )
+    if (!ok) setNotesDraft(notes)
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────
+  return (
+    <section className={styles.section}>
+      <div className={styles.sectionTitle}>Receiving hand-me-downs</div>
+
+      {error && <div className={styles.fieldError}>{error}</div>}
+
+      <div className={styles.prefRow}>
+        <div className={styles.prefRowBody}>
+          <div className={styles.prefRowTitle}>
+            Open to receiving hand-me-downs
+          </div>
+          <div className={styles.prefRowSub}>
+            {accepts
+              ? 'A Littleloop family\u2019s outgrown box may be routed to '
+                + 'you. We\u2019ll always message you before shipping '
+                + 'anything.'
+              : 'Turn on to let Littleloop route another family\u2019s '
+                + 'outgrown clothes your way when there\u2019s a match.'}
+          </div>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={accepts}
+          aria-label={`Open to receiving hand-me-downs — ${accepts ? 'on' : 'off'}`}
+          className={
+            `${styles.switch} ${accepts ? styles.switchOn : ''} ` +
+            (saving === 'accepts' ? styles.switchBusy : '')
+          }
+          onClick={toggleAccepts}
+          disabled={saving === 'accepts'}
+        >
+          <span className={styles.switchKnob} aria-hidden="true" />
+        </button>
+      </div>
+
+      {/* Detail preferences — only meaningful when opted in. We render
+          them inline (not in a modal) so the controls feel like part of
+          the same decision, not a hidden second step. */}
+      {accepts && (
+        <div className={styles.receivingDetails}>
+          {/* Sizes */}
+          <div className={styles.receivingField}>
+            <div className={styles.receivingFieldLabel}>
+              Sizes you&rsquo;d welcome
+            </div>
+            <div className={styles.receivingFieldHint}>
+              Leave all unselected to accept any size.
+            </div>
+            <div className={styles.chipGroup} role="group" aria-label="Sizes">
+              {ALL_SIZES.map(size => {
+                const on = sizes.includes(size)
+                return (
+                  <button
+                    key={size}
+                    type="button"
+                    className={`${styles.chip} ${on ? styles.chipOn : ''}`}
+                    aria-pressed={on}
+                    onClick={() => toggleSize(size)}
+                    disabled={saving === 'accepts_sizes'}
+                  >
+                    {size}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Genders */}
+          <div className={styles.receivingField}>
+            <div className={styles.receivingFieldLabel}>
+              Clothing style
+            </div>
+            <div className={styles.receivingFieldHint}>
+              Leave all unselected to accept anything.
+            </div>
+            <div className={styles.chipGroup} role="group" aria-label="Clothing style">
+              {ALL_GENDERS.map(g => {
+                const on = genders.includes(g.id)
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    className={`${styles.chip} ${on ? styles.chipOn : ''}`}
+                    aria-pressed={on}
+                    onClick={() => toggleGender(g.id)}
+                    disabled={saving === 'accepts_genders'}
+                  >
+                    {g.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Pause until */}
+          <div className={styles.receivingField}>
+            <div className={styles.receivingFieldLabel}>
+              Pause receiving until
+            </div>
+            <div className={styles.receivingFieldHint}>
+              Going out of town, no storage space right now? Pick a date
+              and we&rsquo;ll skip your household until then.
+            </div>
+            <div className={styles.receivingRow}>
+              <input
+                type="date"
+                className={styles.receivingDate}
+                value={pauseDraft}
+                onChange={e => setPauseDraft(e.target.value)}
+                onBlur={commitPause}
+                disabled={saving === 'receiving_paused_until'}
+              />
+              {pauseDraft && (
+                <button
+                  type="button"
+                  className={styles.editLink}
+                  onClick={() => {
+                    setPauseDraft('')
+                    writeField('receiving_paused_until', null,
+                               { field: 'paused_until' })
+                  }}
+                  disabled={saving === 'receiving_paused_until'}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className={styles.receivingField}>
+            <div className={styles.receivingFieldLabel}>
+              Notes for Littleloop
+            </div>
+            <div className={styles.receivingFieldHint}>
+              Anything we should know when matching boxes to your
+              household — sibling on the way, a preference, an allergy.
+              Only Littleloop sees this.
+            </div>
+            <textarea
+              className={styles.receivingTextarea}
+              rows={3}
+              value={notesDraft}
+              onChange={e => setNotesDraft(e.target.value)}
+              onBlur={commitNotes}
+              disabled={saving === 'receiving_notes'}
+              maxLength={500}
+              placeholder="e.g. Baby #2 due in August, so sizes 6-12M would be extra helpful."
+            />
+          </div>
+        </div>
+      )}
+    </section>
+  )
 }
 
 // ── Account tab ────────────────────────────────────────────────────────

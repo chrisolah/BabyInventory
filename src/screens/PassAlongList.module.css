@@ -1,0 +1,286 @@
+/* PassAlongList — community exchange hub for senders. Top-level screen
+   (no hard back-destination) with the same header geometry as the
+   detail screens so the family feels consistent. */
+
+.page {
+  min-height: 100vh;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--white);
+  border-bottom: 0.5px solid var(--gray-200);
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.backBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--gray-900);
+  background: transparent;
+}
+.backBtn:hover { background: var(--gray-100); }
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--gray-900);
+  line-height: 1.1;
+  position: relative;
+  z-index: 1;
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--gray-400);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-top: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+.body {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.loading {
+  text-align: center;
+  color: var(--gray-400);
+  padding: 32px 16px;
+  font-size: 14px;
+}
+
+.errorBanner {
+  background: #FDF2F2;
+  color: #A32D2D;
+  border: 0.5px solid #F09595;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ── Intro block ──────────────────────────────────────────── */
+/* Short orient-yourself copy at the top of the hub. Soft cream bg so it
+   reads as framing, not an actionable card. Slightly smaller than the
+   section-title typography elsewhere — it's chrome, not content. */
+.intro {
+  padding: 14px 16px;
+  background: var(--cream, #FBF8F4);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+}
+
+.introTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+
+.introBody {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+/* ── Primary CTA ──────────────────────────────────────────── */
+.primaryBtn {
+  padding: 13px;
+  width: 100%;
+  background: var(--teal);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.primaryBtn:hover:not(:disabled) { opacity: 0.92; }
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+.emptyCard {
+  padding: 16px;
+  background: var(--gray-100);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.55;
+  text-align: center;
+}
+
+/* ── Bucket groups ────────────────────────────────────────── */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 4px;
+}
+
+.groupLabel {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+
+.groupCount {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--gray-400);
+  letter-spacing: 0.02em;
+}
+
+.cardList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Batch card ───────────────────────────────────────────── */
+/* Full-width clickable row. Ref code up top (the handle the user tracks
+   via email / packing slip), meta line below (destination · item count ·
+   date), status pill on the right, chevron at the edge so the row reads
+   as navigable without a separate "Open" button. */
+.card {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: var(--font-body);
+}
+
+.card:hover {
+  border-color: var(--gray-400);
+  background: var(--cream, #FBF8F4);
+}
+
+.cardBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardRef {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gray-600);
+  flex-wrap: wrap;
+}
+
+.cardDot {
+  color: var(--gray-400);
+}
+
+.cardChevron {
+  color: var(--gray-400);
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Status pill (mirrors detail screen) ──────────────────── */
+.pill {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pillDraft {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+.pillActive {
+  background: var(--amber-light);
+  color: #7E5510;
+}
+.pillFulfilled {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+}
+.pillCanceled {
+  background: var(--gray-100);
+  color: var(--gray-400);
+}

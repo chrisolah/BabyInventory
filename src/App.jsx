@@ -14,6 +14,8 @@ import Inventory from './screens/Inventory'
 import SlotDetail from './screens/SlotDetail'
 import AddItem from './screens/AddItem'
 import ItemDetail from './screens/ItemDetail'
+import PassAlongBatch from './screens/PassAlongBatch'
+import PassAlongList from './screens/PassAlongList'
 import Profile from './screens/Profile'
 import IvyDecoration from './components/IvyDecoration'
 
@@ -119,6 +121,13 @@ function AppRoutes() {
       {/* /item/:id/edit reuses the AddItem form in edit mode. AddItem
           reads the :id path param to branch between INSERT and UPDATE. */}
       <Route path="/item/:id/edit" element={<ProtectedRoute><AddItem /></ProtectedRoute>} />
+      {/* Community exchange — /pass-along is the hub (list of all the
+          household's batches + "start a new batch" CTA). /pass-along/:id
+          is the per-batch detail screen. Order matters: the :id route
+          must come second so the bare /pass-along string matches the
+          list, not a batch with id "/pass-along". */}
+      <Route path="/pass-along" element={<ProtectedRoute><PassAlongList /></ProtectedRoute>} />
+      <Route path="/pass-along/:id" element={<ProtectedRoute><PassAlongBatch /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

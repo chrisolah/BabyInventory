@@ -5,9 +5,26 @@ import IvyDecoration from '../components/IvyDecoration'
 import IvyBanner from '../components/IvyBanner'
 import styles from './Landing.module.css'
 
+// Landing page — aligned with V1.9 addendum (2026-04-23).
+//
+// Framing shift vs. the pre-V1.9 copy:
+//   • The exchange is no longer pitched as a peer-to-peer, zip-code-matched
+//     marketplace. It's pitched as a four-destination pass-along hub with
+//     Littleloop as the concierge in the middle — the user never has to
+//     coordinate with another parent directly.
+//   • Receiver opt-in gets its own section, with non-stigmatizing framing
+//     ("Open to receiving hand-me-downs" / "Another Littleloop family").
+//     See feedback_pass_along_framing.md — we never say "families in need."
+//   • How-it-works is reshaped so the "send it on" step references the four
+//     destinations, not a nearby-family match.
+//
+// Preserved from the previous landing: Ivy decoration components, the free-
+// for-all-families eyebrow, the features 3-up, and the quiet photo-scan
+// mention above the final CTA.
+
 export default function Landing() {
   const navigate = useNavigate()
-  const supplyRef = useRef(null)
+  const hubRef = useRef(null)
 
   useEffect(() => {
     track.pageViewed({ page: 'landing', referrer: document.referrer })
@@ -18,9 +35,12 @@ export default function Landing() {
     navigate('/signup')
   }
 
-  function handlePassOn() {
-    track.ctaClicked('pass_on_clothes')
-    supplyRef.current?.scrollIntoView({ behavior: 'smooth' })
+  function handleSeeHub() {
+    // Secondary hero CTA — scrolls to the pass-along hub section instead of
+    // bouncing the user straight to signup. Curious parents browse; committed
+    // ones click Get started.
+    track.ctaClicked('see_pass_along_hub')
+    hubRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   function handleJoinCommunity() {
@@ -51,16 +71,16 @@ export default function Landing() {
       <section className={styles.hero}>
         <div className={styles.eyebrow}>Free for all families</div>
         <h1 className={styles.headline}>Baby clothes,<br /><em>organized</em> and shared.</h1>
-        <p className={styles.sub}>Track every onesie, plan every size, and pass along what your little one has outgrown — to a family who needs it most.</p>
+        <p className={styles.sub}>Track every onesie, plan every size, and send outgrown clothes on to Littleloop, another family, a specific person, or a charity — all from the same app.</p>
         <div className={styles.heroBtns}>
           <button className={styles.heroCta} onClick={handleGetStarted}>Get started free</button>
-          <button className={styles.heroSecondaryCta} onClick={handlePassOn}>Have clothes to pass on?</button>
+          <button className={styles.heroSecondaryCta} onClick={handleSeeHub}>See how pass-along works</button>
         </div>
       </section>
 
       <section className={styles.features}>
         <h2 className={styles.sectionTitle}>Everything in one place</h2>
-        <p className={styles.sectionSub}>Whether you're expecting or already knee-deep in laundry.</p>
+        <p className={styles.sectionSub}>Whether you&rsquo;re expecting or already knee-deep in laundry.</p>
         <div className={styles.featureGrid}>
           <div className={styles.featureCard}>
             <div className={styles.featureIcon} style={{ background: 'var(--purple-light)' }}>
@@ -88,65 +108,114 @@ export default function Landing() {
 
       <section className={styles.how}>
         <h2 className={styles.sectionTitle} style={{ marginBottom: '6px' }}>Simple from day one</h2>
-        <p className={styles.sectionSub} style={{ marginBottom: '1.5rem' }}>For parents building and managing a wardrobe.</p>
+        <p className={styles.sectionSub} style={{ marginBottom: '1.5rem' }}>For parents building, managing, and passing along a wardrobe.</p>
         {[
-          { n: 1, title: 'Add your baby and your clothes', body: "Set up in minutes. Snap a tag to auto‑fill the details, or log items by hand if you prefer." },
-          { n: 2, title: 'Stay on top of every size', body: "We track what's coming up and surface gaps before you need them." },
-          { n: 3, title: 'Find what you need nearby', body: 'When you have a gap, browse the exchange. Families nearby are passing on exactly what you need.' },
+          { n: 1, title: 'Add your baby and your clothes', body: 'Set up in minutes. Snap a tag to auto-fill the details, or log items by hand if you prefer.' },
+          { n: 2, title: 'Stay on top of every size', body: 'We track what\u2019s coming up and surface gaps before you need them.' },
+          { n: 3, title: 'Send outgrown clothes on', body: 'Pick one of four destinations. We handle routing, matching, and (when needed) the label.' },
         ].map(({ n, title, body }) => (
           <div className={styles.howStep} key={n}>
             <div className={styles.howNum}>{n}</div>
-            <div><div className={styles.howTitle}>{title}</div><div className={styles.howBody}>{body}</div></div>
+            <div>
+              <div className={styles.howTitle}>{title}</div>
+              <div className={styles.howBody}>{body}</div>
+            </div>
           </div>
         ))}
       </section>
 
-      <section className={styles.supply} ref={supplyRef}>
-        <div className={styles.supplyBand}>
-          <div className={styles.supplyEyebrow}>Have outgrown clothes?</div>
-          <h2 className={styles.supplyHeadline}>Your 0–3M pile has a<br />family nearby waiting for it.</h2>
-          <p className={styles.supplyBody}>Babies grow fast. The clothes sitting in your closet are exactly what another family needs right now. Passing them on takes one tap — no selling, no shipping, no charity drop-off.</p>
-          <div className={styles.supplySteps}>
-            {[
-              { n: 1, strong: 'List what you have.', rest: ' A few taps — size, category, condition. Done.' },
-              { n: 2, strong: 'A family nearby claims it.', rest: ' We match by zip code. They reach out to arrange pickup.' },
-              { n: 3, strong: 'It goes to someone who needs it.', rest: ' Free. Direct. Personal.' },
-            ].map(({ n, strong, rest }) => (
-              <div className={styles.supplyStep} key={n}>
-                <div className={styles.supplyStepNum}>{n}</div>
-                <div className={styles.supplyStepText}><strong>{strong}</strong>{rest}</div>
+      {/* ── Pass-along hub — the V1.9 centerpiece ───────────────────────────
+          Four destinations, one flow, Littleloop as the concierge in the
+          middle. This replaces the old zip-code-matching "family nearby
+          claims it" section. Per the addendum: senders and receivers never
+          have to coordinate with each other — they only coordinate with us. */}
+      <section className={styles.hub} ref={hubRef}>
+        <div className={styles.hubBand}>
+          <div className={styles.hubEyebrow}>When baby outgrows them</div>
+          <h2 className={styles.hubHeadline}>Four places your outgrown<br />clothes can go.</h2>
+          <p className={styles.hubBody}>Pick a destination and we&rsquo;ll take it from there. No selling, no drop-off logistics, no swapping addresses with strangers. Littleloop is the middleman so you never have to be.</p>
+          <div className={styles.hubGrid}>
+            <div className={styles.hubCard}>
+              <div className={styles.hubCardIcon} style={{ background: 'var(--teal-light)', color: 'var(--teal-dark)' }}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 6l6-3 6 3v6l-6 3-6-3V6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M3 6l6 3 6-3M9 9v6" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
               </div>
-            ))}
+              <div className={styles.hubCardTitle}>Littleloop</div>
+              <div className={styles.hubCardBody}>Send your box to us. We inspect, match it to a family, or donate on your behalf.</div>
+            </div>
+            <div className={styles.hubCard}>
+              <div className={styles.hubCardIcon} style={{ background: 'var(--amber-light)', color: 'var(--amber-dark)' }}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M2 15c0-2.5 1.8-4 4-4s4 1.5 4 4M8 15c0-2.5 1.8-4 4-4s4 1.5 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <div className={styles.hubCardTitle}>Another Littleloop family</div>
+              <div className={styles.hubCardBody}>Happy to help another parent? We&rsquo;ll route it to a family who&rsquo;s opted in to receiving. Addresses stay private on both ends.</div>
+            </div>
+            <div className={styles.hubCard}>
+              <div className={styles.hubCardIcon} style={{ background: 'var(--purple-light)', color: 'var(--purple-dark)' }}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M3 16c0-3 2.7-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <div className={styles.hubCardTitle}>A specific person</div>
+              <div className={styles.hubCardBody}>Sister-in-law, best friend, coworker with a new baby. Give us a name and address — we&rsquo;ll generate the label and track the handoff.</div>
+            </div>
+            <div className={styles.hubCard}>
+              <div className={styles.hubCardIcon} style={{ background: 'var(--gray-100)', color: 'var(--gray-600)' }}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3l2 4 4 .5-3 3 .8 4.2L9 12.8 5.2 14.7 6 10.5 3 7.5 7 7l2-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
+              </div>
+              <div className={styles.hubCardTitle}>A charity</div>
+              <div className={styles.hubCardBody}>Local Goodwill, shelter, or nonprofit you already trust. Same label flow — we just ship where you tell us.</div>
+            </div>
           </div>
-          <button className={styles.supplyCta} onClick={handleGetStarted}>Pass on your outgrown clothes</button>
+          <button className={styles.hubCta} onClick={handleGetStarted}>Start a pass-along batch</button>
+        </div>
+      </section>
+
+      {/* ── Receiver opt-in — neutral framing, no "in need" language ────────
+          Per feedback_pass_along_framing: "Open to receiving hand-me-downs"
+          is the canonical label. Never "families in need" anywhere. */}
+      <section className={styles.optIn}>
+        <div className={styles.optInEyebrow}>Open to receiving?</div>
+        <h2 className={styles.optInHeadline}>Flip a switch in your profile.<br />Get a box when one&rsquo;s headed your way.</h2>
+        <p className={styles.optInBody}>Any Littleloop household can opt in to receiving hand-me-downs. Pick sizes, pick genders, pause whenever. No applications, no listings to browse — we match you to a sender when the fit is right, and mail it.</p>
+        <div className={styles.optInRow}>
+          <div className={styles.optInBullet}>
+            <div className={styles.optInBulletNum}>01</div>
+            <div className={styles.optInBulletText}><strong>Opt in once.</strong> A toggle in your profile. Set preferences, pause anytime.</div>
+          </div>
+          <div className={styles.optInBullet}>
+            <div className={styles.optInBulletNum}>02</div>
+            <div className={styles.optInBulletText}><strong>We do the matching.</strong> When a sender picks &ldquo;Another Littleloop family,&rdquo; we route the box to one of you.</div>
+          </div>
+          <div className={styles.optInBullet}>
+            <div className={styles.optInBulletNum}>03</div>
+            <div className={styles.optInBulletText}><strong>It shows up.</strong> You get clothes your little one can actually use — no forms, no receipts, no follow-ups.</div>
+          </div>
         </div>
       </section>
 
       <section className={styles.mission}>
         <div className={styles.missionBand}>
-          <div className={styles.missionHeadline}>Every baby deserves a full wardrobe.</div>
-          <p className={styles.missionBody}>Babies outgrow clothes in weeks. Thousands of families nearby need exactly what's sitting in your closet. Littleloop connects them — free, local, and direct.</p>
-          <button className={styles.missionCta} onClick={handleJoinCommunity}>Join the community</button>
+          <div className={styles.missionHeadline}>Every baby deserves a full wardrobe. Every parent deserves an easier week.</div>
+          <p className={styles.missionBody}>Babies outgrow clothes in weeks. Littleloop is the place where what you&rsquo;re done with finds its next baby — through a trusted middleman, with as little friction for you as possible.</p>
+          <button className={styles.missionCta} onClick={handleJoinCommunity}>Join Littleloop</button>
           <div className={styles.statRow}>
-            <div><div className={styles.statNum}>0–24mo</div><div className={styles.statLabel}>Sizes covered</div></div>
+            <div><div className={styles.statNum}>Four</div><div className={styles.statLabel}>Destinations per batch</div></div>
             <div><div className={styles.statNum}>Free</div><div className={styles.statLabel}>Always, for all families</div></div>
-            <div><div className={styles.statNum}>Local</div><div className={styles.statLabel}>Matched by zip code</div></div>
+            <div><div className={styles.statNum}>Opt-in</div><div className={styles.statLabel}>Receive when you&rsquo;re ready</div></div>
           </div>
         </div>
       </section>
 
       {/* Quiet mention of the photo-scan add-item. Lives below Mission and
-          above the final CTA so the mission/exchange story stays front and
-          center in the scroll. No illustration, no band — one small note. */}
+          above the final CTA so the pass-along story stays front and center
+          in the scroll. No illustration, no band — one small note. */}
       <section className={styles.scanNote}>
         <div className={styles.scanNoteEyebrow}>One more thing</div>
         <div className={styles.scanNoteHeadline}>Snap the tag, skip the typing.</div>
-        <p className={styles.scanNoteBody}>Point your phone at a clothing tag and we'll pre-fill the brand, size, and category for you.</p>
+        <p className={styles.scanNoteBody}>Point your phone at a clothing tag and we&rsquo;ll pre-fill the brand, size, and category for you.</p>
       </section>
 
       <section className={styles.finalCta}>
         <div className={styles.finalHeadline}>Ready to get started?</div>
-        <p className={styles.finalSub}>Organize your wardrobe, find what you need, or pass on what you don't. Free for every family. Always.</p>
+        <p className={styles.finalSub}>Organize your wardrobe, plan for what&rsquo;s next, and send outgrown clothes somewhere they&rsquo;ll be loved. Free for every family. Always.</p>
         <button className={styles.finalCtaBtn} onClick={handleCreateAccount}>Create your account</button>
       </section>
     </div>
