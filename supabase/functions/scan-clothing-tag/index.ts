@@ -88,6 +88,13 @@ Return ONLY a single JSON object with these keys:
 - category: one of ${CATEGORIES.map(c => `"${c}"`).join(', ')}, inferred from the garment visible in the image. Use null if you can't tell.
 - item_type: one of ${SLOT_IDS.map(s => `"${s}"`).join(', ')}, the most specific slot that fits. Must be consistent with the chosen category. Use null if unsure.
 
+Descriptor hints for baby clothing terminology (these words are used colloquially in infant apparel, not literally):
+- "ONESIE" or "BODYSUIT" → category "tops_and_bodysuits", item_type "bodysuits". A onesie in baby clothing is a snap-crotch short-sleeve top, not a full-body one-piece.
+- "COVERALL" or "ROMPER" → category "one_pieces", item_type "one_pieces". A baby coverall is a romper-style one-piece garment, not adult workwear or rain-gear.
+- "SLEEPER" or "PAJAMAS" → category "sleepwear", item_type "pajamas".
+- "BOOTIES" → category "footwear", item_type "shoes".
+- "SOCKS" → category "footwear", item_type "socks". Socks belong in footwear in this taxonomy, not accessories — accessories is reserved for hats, mittens, bibs, and burp cloths.
+
 Do not include any prose, markdown, or code fences. Return the JSON object and nothing else. Prefer null over a low-confidence guess.`
 
 type Fields = {

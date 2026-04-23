@@ -1,0 +1,19 @@
+# Supabase CLI config. Only the bits we actually use are set here; everything
+# else falls back to the CLI defaults. Full reference:
+# https://supabase.com/docs/guides/cli/config
+
+# ── Edge function overrides ─────────────────────────────────────────────────
+# scan-clothing-tag does its own JWT validation inside the function (it calls
+# userClient.auth.getUser() to resolve the caller before bumping the rate
+# limit). We disable gateway-level JWT verification here to work around a
+# Supabase platform bug where the edge-function gateway rejects valid ES256
+# tokens issued by the new asymmetric signing keys while the Auth API accepts
+# them. See:
+#   https://github.com/supabase/supabase/issues/42244
+#   https://github.com/supabase/supabase/issues/42810
+#
+# Safe because the function still enforces auth itself — an anonymous request
+# gets a 401 with `{"error":"invalid_jwt"}` before any Anthropic call runs.
+# Remove this override once Supabase ships a fix for the gateway.
+[functions.scan-clothing-tag]
+verify_jwt = false
