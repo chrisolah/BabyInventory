@@ -95,3 +95,313 @@
   opacity: 0.85;
   word-break: break-all;
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   Camera modal (Phase 2 step 1)
+
+   Full-screen live capture. Key layout decisions:
+   - Video fills the viewport (object-fit: cover) so the guide sits over a
+     continuous preview, not a letterboxed one. The cost is that edges of
+     the frame are cropped relative to what the model receives — we pay
+     that cost because guided framing is the whole point of this step.
+   - The "scrim" is four panels forming a picture frame around a centered
+     transparent cutout. We deliberately avoid SVG masks or CSS mask-image
+     because support on older mobile Safari is spotty and the four-div
+     approach renders identically everywhere.
+   - Guide aspect is 3:4 portrait — baby clothing hang tags are almost
+     always taller than wide. Corner brackets (not a full dashed box) so
+     the user's eye doesn't try to align the tag to a visually-complete
+     rectangle; they just need to put it "inside."
+   ───────────────────────────────────────────────────────────────────── */
+
+.cameraModal {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 1000;
+  overflow: hidden;
+  /* System safe-area on iOS so the top bar doesn't collide with the notch. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
+  animation: cameraFadeIn 0.18s ease-out;
+}
+
+@keyframes cameraFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.cameraVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+/* Picture-frame scrim + centered guide rect.
+   Numbers: GUIDE_W=72vw, GUIDE_H=53vh (≈ 3:4 portrait capped to viewport).
+   The four panels compute to the space OUTSIDE that cutout.
+   We wrap these in calc() so the guide stays centered regardless of
+   orientation. On very landscape viewports the guide also shrinks via the
+   vw/vh pair hitting their ceiling on the short axis. */
+.cameraScrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cameraScrimPanel {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.48);
+}
+
+.cameraScrimTop {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: calc(50% - 26vh);
+}
+.cameraScrimBottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(50% - 26vh);
+}
+.cameraScrimLeft {
+  top: calc(50% - 26vh);
+  bottom: calc(50% - 26vh);
+  left: 0;
+  width: calc(50% - 36vw);
+}
+.cameraScrimRight {
+  top: calc(50% - 26vh);
+  bottom: calc(50% - 26vh);
+  right: 0;
+  width: calc(50% - 36vw);
+}
+
+.cameraGuide {
+  position: absolute;
+  top: calc(50% - 26vh);
+  left: calc(50% - 36vw);
+  width: 72vw;
+  height: 52vh;
+  /* Soft inner glow so the guide has presence without borrowing attention
+     from the tag itself. */
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
+  border-radius: 12px;
+}
+
+/* Corner brackets — short strokes forming an L in each corner of the
+   guide. Using four small divs per corner is simpler and more reliable
+   across mobile browsers than an SVG with stroked paths. */
+.cameraGuideCorner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: rgba(255, 255, 255, 0.95);
+  border-style: solid;
+  border-width: 0;
+}
+.cameraGuideCornerTL { top: -2px; left: -2px; border-top-width: 3px; border-left-width: 3px; border-top-left-radius: 10px; }
+.cameraGuideCornerTR { top: -2px; right: -2px; border-top-width: 3px; border-right-width: 3px; border-top-right-radius: 10px; }
+.cameraGuideCornerBL { bottom: -2px; left: -2px; border-bottom-width: 3px; border-left-width: 3px; border-bottom-left-radius: 10px; }
+.cameraGuideCornerBR { bottom: -2px; right: -2px; border-bottom-width: 3px; border-right-width: 3px; border-bottom-right-radius: 10px; }
+
+/* ─── Top bar ────────────────────────────────────────────────── */
+.cameraTopBar {
+  position: absolute;
+  top: env(safe-area-inset-top);
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  color: #fff;
+  /* Soft gradient so the text/icon remains legible even against a bright
+     sky or lamp in the upper portion of the video frame. */
+  background: linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0));
+}
+
+.cameraTopTitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.cameraCloseBtn {
+  all: unset;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  cursor: pointer;
+}
+.cameraCloseBtn:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* ─── Hint line below the guide ──────────────────────────────── */
+.cameraHint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% + 26vh + 18px);
+  text-align: center;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+/* ─── Bottom bar with shutter + fallback ─────────────────────── */
+.cameraBottomBar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: env(safe-area-inset-bottom);
+  padding: 18px 20px 28px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0));
+}
+
+.cameraFallbackLink {
+  all: unset;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  padding: 8px 2px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 0.5px;
+  opacity: 0.92;
+}
+.cameraFallbackLink:hover { opacity: 1; }
+
+.cameraShutter {
+  all: unset;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  justify-self: center;
+  transition: transform 0.08s, background 0.15s;
+}
+.cameraShutter:active:not(:disabled) {
+  transform: scale(0.94);
+  background: rgba(255, 255, 255, 0.35);
+}
+.cameraShutter:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cameraShutterInner {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.cameraBottomSpacer {
+  /* Keeps the shutter centered by balancing the fallback link on the left. */
+  display: block;
+}
+
+/* ─── Stream-error fallback card ─────────────────────────────── */
+.cameraErrorBox {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--white);
+  border-radius: 14px;
+  padding: 20px 22px;
+  max-width: 340px;
+  width: calc(100% - 40px);
+  box-sizing: border-box;
+  font-family: var(--font-body);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  text-align: left;
+}
+
+.cameraErrorTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 6px;
+}
+
+.cameraErrorBody {
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.cameraErrorActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.cameraFallbackBtn {
+  padding: 11px;
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.cameraFallbackBtn:hover { opacity: 0.92; }
+
+.cameraCancelBtn {
+  padding: 11px;
+  background: var(--white);
+  color: var(--gray-900);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.cameraCancelBtn:hover { background: var(--gray-100); }
+
+/* Orientation-aware tweaks — on landscape phones the 3:4 guide math starts
+   producing a very wide box; shrink slightly so the scrim panels don't
+   disappear and the shutter has room. */
+@media (orientation: landscape) {
+  .cameraGuide        { top: calc(50% - 36vh); left: calc(50% - 25vw); width: 50vw; height: 72vh; }
+  .cameraScrimTop     { height: calc(50% - 36vh); }
+  .cameraScrimBottom  { height: calc(50% - 36vh); }
+  .cameraScrimLeft    { top: calc(50% - 36vh); bottom: calc(50% - 36vh); width: calc(50% - 25vw); }
+  .cameraScrimRight   { top: calc(50% - 36vh); bottom: calc(50% - 36vh); width: calc(50% - 25vw); }
+  .cameraHint         { top: calc(50% + 36vh + 14px); }
+}
