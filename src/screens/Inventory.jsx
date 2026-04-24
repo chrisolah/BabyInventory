@@ -1,6 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useHousehold, matchesBabyFilter } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
@@ -61,8 +60,11 @@ const CATEGORY_ORDER = [
 export default function Inventory() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  // Household + babies + selection come from context now so the chip
-  // switcher can drive what Inventory renders without a re-fetch.
+  // Household + babies + selection + items all come from context now. Items
+  // used to be a local useState + per-mount fetch here, but that caused a
+  // flicker on every navigation into /inventory (loading spinner → list).
+  // The hoist into HouseholdContext keeps the list alive across navigation
+  // and refreshes in place via reloadItems() after writes elsewhere.
   const {
     household,
     babies,
@@ -70,11 +72,12 @@ export default function Inventory() {
     currentBaby,
     loading: householdLoading,
     error: householdError,
+    items,
+    itemsLoading,
+    itemsError,
   } = useHousehold()
 
   const [tab, setTab] = useState('owned') // 'owned' | 'wishlist'
-  const [itemsLoading, setItemsLoading] = useState(true)
-  const [items, setItems] = useState([])
   const [error, setError] = useState(null)
 
   // The currently selected age range on the Wish list tab. Initialized from
@@ -115,46 +118,15 @@ export default function Inventory() {
     })
   }
 
-  // ── Load items once household is known ──────────────────────────────────
-  // Household + babies come from context; items are Inventory-specific so
-  // they still live here. We fetch everything for the household and filter
-  // by baby client-side — switching chips doesn't need a round trip.
-  useEffect(() => {
-    if (!user || !household) return
-    let cancelled = false
-
-    async function loadItems() {
-      setItemsLoading(true)
-      setError(null)
-
-      const { data: itemsData, error: itemsErr } = await supabase
-        .schema(currentSchema)
-        .from('clothing_items')
-        .select('*')
-        .eq('household_id', household.id)
-        .order('created_at', { ascending: false })
-
-      if (cancelled) return
-      if (itemsErr) {
-        setError(itemsErr.message)
-        setItemsLoading(false)
-        return
-      }
-
-      setItems(itemsData || [])
-      setItemsLoading(false)
-    }
-
-    loadItems()
-    return () => { cancelled = true }
-  }, [user, household])
-
-  // Surface household-load errors too — they're rare but should not be
+  // Surface household- or items-load errors — they're rare but should not be
   // silently swallowed (no household = pre-onboarding; caller gets redirected
   // by Home's gate anyway, so this only triggers on a genuine query failure).
+  // Items themselves come from HouseholdContext now; see its items-loader
+  // effect for the fetch + reloadItems() contract.
   useEffect(() => {
     if (householdError) setError(householdError)
-  }, [householdError])
+    else if (itemsError) setError(itemsError)
+  }, [householdError, itemsError])
 
   // Anchor used for age-range inference + outgrow banner. When a specific
   // baby is selected we follow that baby; "All" falls back to the first

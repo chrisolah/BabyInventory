@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useHousehold } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import { SLOT_BY_ID, CATEGORY_LABELS } from '../lib/wardrobe'
 import ProfileMenu from '../components/ProfileMenu'
@@ -66,6 +67,7 @@ const PRIORITY_LABEL = {
 export default function ItemDetail() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { reloadItems } = useHousehold()
   const { id } = useParams()
 
   const [loading, setLoading] = useState(true)
@@ -177,6 +179,9 @@ export default function ItemDetail() {
       size_label: item.size_label,
       inventory_status: item.inventory_status,
     })
+    // Kick the shared items list so Inventory/Home reflect the deletion
+    // without waiting for the next mount-driven fetch.
+    reloadItems()
     // navigate(-1) would try to return to wherever the user came from, but
     // that could be the Edit screen or an old slot detail whose data is now
     // stale. Going to /inventory is the predictable landing spot.
@@ -266,6 +271,9 @@ export default function ItemDetail() {
       category: item.category,
       size_label: item.size_label,
     })
+    // Status flipped to pass_along — refresh the shared list so Inventory
+    // stops showing this row as Owned when the user backs out.
+    reloadItems()
     navigate(`/pass-along/${batchId}`)
   }
 
@@ -290,6 +298,9 @@ export default function ItemDetail() {
       category: item.category,
       size_label: item.size_label,
     })
+    // Flip owned → outgrown in the shared list so Inventory's Owned view
+    // drops this row on the way back.
+    reloadItems()
     navigate('/inventory')
   }
 

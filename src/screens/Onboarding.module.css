@@ -22,6 +22,38 @@
   padding: 2rem 1.5rem;
 }
 
+/* ── Back button (steps 2+) ──────────────────────────────
+   Small, subdued affordance above the progress pips. Sits left-aligned so
+   it reads as "step backward" rather than competing with the primary
+   Continue button at the bottom. We don't show it on step 1 because there's
+   no previous onboarding step to return to. */
+.backBtn {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
+  cursor: pointer;
+  padding: 6px 10px;
+  margin: -6px 0 12px -10px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.backBtn:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.backBtn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
 /* ── Progress pips ───────────────────────────────────────── */
 .progress {
   display: flex;

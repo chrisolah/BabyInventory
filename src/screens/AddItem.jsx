@@ -83,6 +83,7 @@ export default function AddItem() {
     currentBaby,
     loading: householdLoading,
     error: householdError,
+    reloadItems,
   } = useHousehold()
 
   // Edit vs create is decided by whether the route captured an :id. The
@@ -381,6 +382,9 @@ export default function AddItem() {
       }
 
       track.itemEdited({ mode, category, size_label: sizeLabel })
+      // Refresh the items list in HouseholdContext so Inventory shows the
+      // edited row next time it renders, without a per-mount refetch.
+      reloadItems()
       // Back to the detail page so the user sees the saved result (and
       // can dismiss/edit again without another navigation hop).
       navigate(`/item/${existingItem.id}`)
@@ -416,6 +420,9 @@ export default function AddItem() {
     }
 
     track.itemSaved({ mode, category, size_label: sizeLabel })
+    // Refresh the items list in HouseholdContext so Inventory shows the new
+    // row immediately without a per-mount refetch.
+    reloadItems()
     navigate('/inventory')
   }
 

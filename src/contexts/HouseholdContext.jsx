@@ -76,6 +76,22 @@ export function HouseholdProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // ── Items (clothing_items) ──────────────────────────────────────────────
+  // Hoisted into the provider so navigating between Inventory and Home no
+  // longer triggers a per-mount refetch flicker (previously Inventory.jsx
+  // owned this and re-queried on every mount). Writes live where they
+  // already do (AddItem, ItemDetail, PassAlongBatch); each write site calls
+  // reloadItems() after a successful mutation to pull the fresh list back.
+  //
+  // itemsLoading is true only on the very first fetch for a given
+  // household — subsequent refreshes keep the previous list visible while
+  // the new data arrives, which is what kills the flicker. Error surfaces
+  // separately from household error so consumers can distinguish the two.
+  const [items, setItems] = useState([])
+  const [itemsLoading, setItemsLoading] = useState(false)
+  const [itemsError, setItemsError] = useState(null)
+  const [itemsLoadedFor, setItemsLoadedFor] = useState(null) // household.id we last fetched for
+
   // ── Load household + babies ─────────────────────────────────────────────
   // Runs whenever the auth'd user changes. We intentionally do NOT re-run
   // on route change — the context's whole value prop is that it survives
@@ -162,6 +178,63 @@ export function HouseholdProvider({ children }) {
     load()
   }, [load])
 
+  // ── Items loader ───────────────────────────────────────────────────────
+  // Fetches the full clothing_items set for the current household. Keyed off
+  // household.id so it runs once when the household first lands and again
+  // whenever a write site triggers reloadItems() (which increments
+  // refreshCounter to force a re-run).
+  const [refreshCounter, setRefreshCounter] = useState(0)
+
+  useEffect(() => {
+    if (!user || !household?.id) {
+      setItems([])
+      setItemsLoading(false)
+      setItemsError(null)
+      setItemsLoadedFor(null)
+      return
+    }
+    let cancelled = false
+
+    async function loadItems() {
+      // Only show the gated loading spinner on the *first* fetch for this
+      // household. Subsequent refreshes (reloadItems after a write, or
+      // household staying the same with refreshCounter bumping) keep the
+      // stale list visible so there's no flash.
+      const isFirstFetch = itemsLoadedFor !== household.id
+      if (isFirstFetch) setItemsLoading(true)
+      setItemsError(null)
+
+      const { data, error: itemsErr } = await supabase
+        .schema(currentSchema)
+        .from('clothing_items')
+        .select('*')
+        .eq('household_id', household.id)
+        .order('created_at', { ascending: false })
+
+      if (cancelled) return
+      if (itemsErr) {
+        setItemsError(itemsErr.message)
+        if (isFirstFetch) setItemsLoading(false)
+        return
+      }
+      setItems(data || [])
+      setItemsLoadedFor(household.id)
+      if (isFirstFetch) setItemsLoading(false)
+    }
+
+    loadItems()
+    return () => { cancelled = true }
+    // itemsLoadedFor is intentionally omitted from deps — it's set inside
+    // the effect, and re-running on its change would cause a loop. The
+    // first-fetch check reads it via closure, which is fine because we
+    // care about the value at effect-start.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, household?.id, refreshCounter])
+
+  const reloadItems = useCallback(() => {
+    setRefreshCounter(c => c + 1)
+  }, [])
+
   // Public setter — also writes to localStorage so a reload restores the
   // selection. Swallows invalid ids (any uuid not in the current list)
   // rather than silently accepting them.
@@ -197,8 +270,17 @@ export function HouseholdProvider({ children }) {
       loading,
       error,
       refresh: load,
+      // Items (hoisted — see the items-loader effect above for rationale)
+      items,
+      itemsLoading,
+      itemsError,
+      reloadItems,
     }),
-    [household, babies, selectedBabyId, setSelectedBabyId, currentBaby, loading, error, load],
+    [
+      household, babies, selectedBabyId, setSelectedBabyId, currentBaby,
+      loading, error, load,
+      items, itemsLoading, itemsError, reloadItems,
+    ],
   )
 
   return (
