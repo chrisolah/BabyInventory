@@ -800,8 +800,24 @@ function ReceivingSection({ household, onUpdated }) {
 // they own, clothing_items, etc. During the beta we'd rather confirm
 // intent manually than ship an untested hard-delete pipeline.
 function AccountTab() {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
+
+  // Sign-out lives on Profile now that ProfileMenu is intentionally absent
+  // here (you're already *on* Profile — the avatar dropdown would be
+  // confusingly redundant). Plain flat button, not a danger action; we keep
+  // it separate from "Leave household" / "Delete account" both visually and
+  // semantically because signing out is the everyday action.
+  const [signingOut, setSigningOut] = useState(false)
+  async function handleSignOut() {
+    if (signingOut) return
+    setSigningOut(true)
+    await signOut()
+    // Same treatment as ProfileMenu: navigate explicitly to / rather than
+    // rely on PublicRoute's eventual redirect, to avoid a momentary flash
+    // of a protected page while auth state propagates.
+    navigate('/', { replace: true })
+  }
 
   const currentName = user?.user_metadata?.name || ''
   const currentEmail = user?.email || ''
@@ -1153,6 +1169,35 @@ function AccountTab() {
               Change
             </button>
           </div>
+        </div>
+      </section>
+
+      {/* ── Sign out ───────────────────────────────────────────────
+          Everyday action: signs this device out and bounces to the
+          public landing. Separate from "Leaving Littleloop" because
+          that section is destructive — losing your household or account
+          is a completely different decision from closing the app. We
+          reuse the quietRow layout from Leaving Littleloop (label on
+          the left, action on the right) since the shape is the same,
+          but this section keeps the default .section styling so it
+          doesn't pick up the muted "danger zone" treatment. */}
+      <section className={styles.section}>
+        <div className={styles.quietRow}>
+          <div className={styles.quietRowBody}>
+            <div className={styles.quietRowTitle}>Sign out</div>
+            <div className={styles.quietRowSub}>
+              Sign out of Littleloop on this device. Your data stays in
+              your household.
+            </div>
+          </div>
+          <button
+            type="button"
+            className={styles.quietBtn}
+            onClick={handleSignOut}
+            disabled={signingOut}
+          >
+            {signingOut ? 'Signing out…' : 'Sign out'}
+          </button>
         </div>
       </section>
 

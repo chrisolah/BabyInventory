@@ -145,10 +145,19 @@ export default function PassAlongBatch() {
   const [pendingAction, setPendingAction] = useState(null)
     // 'delete' | 'ship' | 'requestLabel' | null
 
-  // Label-request address is collected inline in the modal. Pre-fill with
-  // the recipient fields if the user's already typed an address somewhere,
-  // otherwise leave blank.
-  const [labelAddress, setLabelAddress] = useState('')
+  // Label-request address is collected as a structured form inside the
+  // modal. On submit we assemble these into a single string and write to
+  // label_request_address (the column stays TEXT — carriers + USPS shipping
+  // labels all want a flat block at the end of the day, and keeping it as
+  // a string spares us a second migration. The pieces are also persisted
+  // raw in concierge_tasks.payload so Chris can pull them apart if he
+  // needs to automate label printing later).
+  const [labelName, setLabelName] = useState('')
+  const [labelStreet, setLabelStreet] = useState('')
+  const [labelUnit, setLabelUnit] = useState('')
+  const [labelCity, setLabelCity] = useState('')
+  const [labelState, setLabelState] = useState('')
+  const [labelZip, setLabelZip] = useState('')
 
   // Inventory picker state. Before this, the empty-state copy told users to
   // leave the screen and add items from Inventory or ItemDetail, which was a
@@ -159,6 +168,13 @@ export default function PassAlongBatch() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerSelected, setPickerSelected] = useState(() => new Set())
   const [pickerError, setPickerError] = useState(null)
+  // In-picker baby filter. 'all' shows every eligible item across the
+  // household; '<uuid>' narrows to one baby's items plus shared rows;
+  // 'shared' narrows to only the null-baby_id rows (hand-me-downs / gifts
+  // not yet assigned). Starts at 'all' every time the picker opens so
+  // multi-baby households see their full pool by default — a batch isn't
+  // baby-scoped and forcing a per-baby view would hide eligible items.
+  const [pickerBabyFilter, setPickerBabyFilter] = useState('all')
 
   // ── Load ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -374,20 +390,43 @@ export default function PassAlongBatch() {
   }
 
   // ── Picker: eligible wardrobe items ────────────────────────────────────
-  // Only rows that are currently in the household's "Owned" pool and aren't
-  // packed in some other batch. We also respect the household's active baby
-  // filter so the picker matches the mental context the user came from —
-  // if they've been looking at Roo's inventory, they get Roo's + shared
-  // items here, not everything in the house.
-  const pickerItems = useMemo(() => {
+  // Every household row that's currently Owned and isn't already in some
+  // other batch. We deliberately ignore the household-level selectedBabyId
+  // here — a pass-along batch isn't scoped to a baby, and in a multi-baby
+  // household the sender is often packing outgrown stuff from more than
+  // one baby into the same box. The in-picker baby filter (chips above
+  // the list) lets the user narrow within the modal when they want to,
+  // without hiding anything by default.
+  const eligibleItems = useMemo(() => {
     if (!householdItems) return []
     return householdItems.filter(
       it =>
         it.inventory_status === 'owned' &&
-        it.pass_along_batch_id == null &&
-        matchesBabyFilter(it, selectedBabyId),
+        it.pass_along_batch_id == null,
     )
-  }, [householdItems, selectedBabyId])
+  }, [householdItems])
+
+  const pickerItems = useMemo(() => {
+    if (pickerBabyFilter === 'all') return eligibleItems
+    if (pickerBabyFilter === 'shared') {
+      return eligibleItems.filter(it => it.baby_id == null)
+    }
+    // Specific baby: that baby's items + shared (null baby_id) rows,
+    // matching the shared-item semantic used everywhere else in the app.
+    return eligibleItems.filter(it => matchesBabyFilter(it, pickerBabyFilter))
+  }, [eligibleItems, pickerBabyFilter])
+
+  // Derived counts keyed by baby id — used to label the filter chips so
+  // users can see at a glance which baby has outgrown pile worth packing.
+  const pickerCountsByBaby = useMemo(() => {
+    const counts = { all: eligibleItems.length, shared: 0 }
+    for (const b of babies) counts[b.id] = 0
+    for (const it of eligibleItems) {
+      if (it.baby_id == null) counts.shared += 1
+      else if (counts[it.baby_id] != null) counts[it.baby_id] += 1
+    }
+    return counts
+  }, [eligibleItems, babies])
 
   function togglePickerItem(itemId) {
     setPickerSelected(prev => {
@@ -401,6 +440,7 @@ export default function PassAlongBatch() {
   function openPicker() {
     setPickerSelected(new Set())
     setPickerError(null)
+    setPickerBabyFilter('all')
     setPickerOpen(true)
   }
 
@@ -409,6 +449,7 @@ export default function PassAlongBatch() {
     setPickerOpen(false)
     setPickerSelected(new Set())
     setPickerError(null)
+    setPickerBabyFilter('all')
   }
 
   // ── Picker: attach selected items ──────────────────────────────────────
@@ -537,22 +578,47 @@ export default function PassAlongBatch() {
   // timeline will show the request — Chris can still discover it by
   // scanning pass_along_batches.label_requested_at. We surface the primary
   // failure but swallow the secondary.
+  // Required fields for a shippable label. Unit is optional — plenty of
+  // houses don't have one and forcing a non-empty value would feel hostile.
+  const labelFieldsValid =
+    labelName.trim() &&
+    labelStreet.trim() &&
+    labelCity.trim() &&
+    labelState.trim() &&
+    labelZip.trim()
+
+  // Pack the form into a single multi-line block the concierge can paste
+  // straight onto a label. Keeps a predictable shape (name / street / unit /
+  // city, ST ZIP) so Chris can also parse it back out if he ever automates.
+  function assembleLabelAddress() {
+    const name = labelName.trim()
+    const street = labelStreet.trim()
+    const unit = labelUnit.trim()
+    const city = labelCity.trim()
+    const state = labelState.trim()
+    const zip = labelZip.trim()
+    const streetLine = unit ? `${street}, ${unit}` : street
+    const cityStateZip = `${city}, ${state} ${zip}`.trim()
+    return [name, streetLine, cityStateZip].filter(Boolean).join('\n')
+  }
+
   async function handleRequestLabel() {
     if (!batch || !canRequestLabel || working) return
-    const trimmed = labelAddress.trim()
-    if (!trimmed) {
-      setActionError('Add a return address so we know where to ship the label to.')
+    if (!labelFieldsValid) {
+      setActionError('Fill in name, street, city, state, and ZIP so we can send the label to the right place.')
       return
     }
     setWorking(true)
     setActionError(null)
+
+    const assembled = assembleLabelAddress()
 
     const { data, error: uErr } = await supabase
       .schema(currentSchema)
       .from('pass_along_batches')
       .update({
         label_requested_at: new Date().toISOString(),
-        label_request_address: trimmed,
+        label_request_address: assembled,
       })
       .eq('id', batch.id)
       .select('*')
@@ -564,8 +630,10 @@ export default function PassAlongBatch() {
       return
     }
 
-    // Best-effort concierge inbox row. Payload captures everything Chris
-    // needs to print a label without clicking through to the batch page.
+    // Best-effort concierge inbox row. Payload captures the flat block and
+    // also the structured pieces so Chris can pull name/street/etc. back out
+    // without regex-parsing a string — handy if we ever wire up an API that
+    // expects structured input (EasyPost, Shippo, USPS Web Tools, etc.).
     try {
       await supabase
         .schema(currentSchema)
@@ -577,7 +645,15 @@ export default function PassAlongBatch() {
           related_batch_id: batch.id,
           payload: {
             reference_code: batch.reference_code,
-            return_address: trimmed,
+            return_address: assembled,
+            return_address_parts: {
+              name:   labelName.trim(),
+              street: labelStreet.trim(),
+              unit:   labelUnit.trim() || null,
+              city:   labelCity.trim(),
+              state:  labelState.trim(),
+              zip:    labelZip.trim(),
+            },
             item_count: items.length,
             requested_at: new Date().toISOString(),
           },
@@ -1035,7 +1111,16 @@ export default function PassAlongBatch() {
                     type="button"
                     className={styles.secondaryBtn}
                     onClick={() => {
-                      setLabelAddress(batch.label_request_address || '')
+                      // Fresh form each time — the pre-fill isn't valuable
+                      // here because label_request_address is a rendered
+                      // string, not structured pieces. Splitting it back out
+                      // would be guesswork; easier to just ask once.
+                      setLabelName('')
+                      setLabelStreet('')
+                      setLabelUnit('')
+                      setLabelCity('')
+                      setLabelState('')
+                      setLabelZip('')
                       setPendingAction('requestLabel')
                     }}
                     disabled={working}
@@ -1081,16 +1166,69 @@ export default function PassAlongBatch() {
               Add items from inventory
             </div>
             <div className={styles.modalBody}>
-              {babies.length > 1 && selectedBabyId && selectedBabyId !== 'all' ? (
-                <>Showing items for the baby you have selected, plus any shared items.</>
-              ) : (
-                <>Pick anything from your wardrobe you’d like to include in this batch.</>
-              )}
+              Pick anything from your wardrobe you’d like to include in
+              this batch.
             </div>
+
+            {/* Baby filter — only renders for multi-baby households. 'All'
+                is the default so the sender sees everything they could
+                pack; the per-baby chips are for when they want to focus
+                on one pile (e.g., "just Roo's outgrowns"). 'Shared' covers
+                the null-baby_id rows for unassigned hand-me-downs. */}
+            {babies.length > 1 && (
+              <div className={styles.pickerChipRow}>
+                <button
+                  type="button"
+                  className={
+                    `${styles.pickerChip} ${pickerBabyFilter === 'all' ? styles.pickerChipSel : ''}`
+                  }
+                  onClick={() => setPickerBabyFilter('all')}
+                  disabled={working}
+                >
+                  All
+                  <span className={styles.pickerChipCount}>
+                    {pickerCountsByBaby.all}
+                  </span>
+                </button>
+                {babies.map(b => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    className={
+                      `${styles.pickerChip} ${pickerBabyFilter === b.id ? styles.pickerChipSel : ''}`
+                    }
+                    onClick={() => setPickerBabyFilter(b.id)}
+                    disabled={working}
+                  >
+                    {b.name || 'Baby'}
+                    <span className={styles.pickerChipCount}>
+                      {pickerCountsByBaby[b.id] || 0}
+                    </span>
+                  </button>
+                ))}
+                {pickerCountsByBaby.shared > 0 && (
+                  <button
+                    type="button"
+                    className={
+                      `${styles.pickerChip} ${pickerBabyFilter === 'shared' ? styles.pickerChipSel : ''}`
+                    }
+                    onClick={() => setPickerBabyFilter('shared')}
+                    disabled={working}
+                  >
+                    Shared
+                    <span className={styles.pickerChipCount}>
+                      {pickerCountsByBaby.shared}
+                    </span>
+                  </button>
+                )}
+              </div>
+            )}
 
             {pickerItems.length === 0 ? (
               <div className={styles.pickerEmpty}>
-                You don’t have any unpacked owned items to add right now.
+                {eligibleItems.length === 0
+                  ? 'You don’t have any unpacked owned items to add right now.'
+                  : 'No items match this filter. Try a different baby or switch back to All.'}
               </div>
             ) : (
               <ul className={styles.pickerList}>
@@ -1184,14 +1322,86 @@ export default function PassAlongBatch() {
             <div className={styles.modalBody}>{confirmBody()}</div>
 
             {pendingAction === 'requestLabel' && (
-              <textarea
-                className={styles.modalInput}
-                rows={3}
-                value={labelAddress}
-                onChange={e => setLabelAddress(e.target.value)}
-                placeholder="Return address (street, city, state, ZIP)"
-                disabled={working}
-              />
+              <div className={styles.labelForm}>
+                <label className={styles.labelFormField}>
+                  <span className={styles.labelFormLabel}>Name on label</span>
+                  <input
+                    className={styles.modalInput}
+                    type="text"
+                    value={labelName}
+                    onChange={e => setLabelName(e.target.value)}
+                    placeholder="e.g. Jane Smith"
+                    autoComplete="name"
+                    disabled={working}
+                  />
+                </label>
+                <label className={styles.labelFormField}>
+                  <span className={styles.labelFormLabel}>Street address</span>
+                  <input
+                    className={styles.modalInput}
+                    type="text"
+                    value={labelStreet}
+                    onChange={e => setLabelStreet(e.target.value)}
+                    placeholder="123 Main St"
+                    autoComplete="address-line1"
+                    disabled={working}
+                  />
+                </label>
+                <label className={styles.labelFormField}>
+                  <span className={styles.labelFormLabel}>
+                    Apt / Unit <span className={styles.optional}>(optional)</span>
+                  </span>
+                  <input
+                    className={styles.modalInput}
+                    type="text"
+                    value={labelUnit}
+                    onChange={e => setLabelUnit(e.target.value)}
+                    placeholder="Apt 4B"
+                    autoComplete="address-line2"
+                    disabled={working}
+                  />
+                </label>
+                <div className={styles.labelFormRow}>
+                  <label className={`${styles.labelFormField} ${styles.labelFormCity}`}>
+                    <span className={styles.labelFormLabel}>City</span>
+                    <input
+                      className={styles.modalInput}
+                      type="text"
+                      value={labelCity}
+                      onChange={e => setLabelCity(e.target.value)}
+                      placeholder="Detroit"
+                      autoComplete="address-level2"
+                      disabled={working}
+                    />
+                  </label>
+                  <label className={`${styles.labelFormField} ${styles.labelFormState}`}>
+                    <span className={styles.labelFormLabel}>State</span>
+                    <input
+                      className={styles.modalInput}
+                      type="text"
+                      value={labelState}
+                      onChange={e => setLabelState(e.target.value.toUpperCase().slice(0, 2))}
+                      placeholder="MI"
+                      maxLength={2}
+                      autoComplete="address-level1"
+                      disabled={working}
+                    />
+                  </label>
+                  <label className={`${styles.labelFormField} ${styles.labelFormZip}`}>
+                    <span className={styles.labelFormLabel}>ZIP</span>
+                    <input
+                      className={styles.modalInput}
+                      type="text"
+                      inputMode="numeric"
+                      value={labelZip}
+                      onChange={e => setLabelZip(e.target.value.replace(/[^0-9-]/g, '').slice(0, 10))}
+                      placeholder="48201"
+                      autoComplete="postal-code"
+                      disabled={working}
+                    />
+                  </label>
+                </div>
+              </div>
             )}
 
             <div className={styles.modalActions}>
