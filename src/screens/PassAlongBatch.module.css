@@ -752,6 +752,62 @@
   border-color: var(--teal);
 }
 
+/* ── Label-request address form ──────────────────────────────
+   Stacked fields with city/state/zip on a single row. The state field is
+   narrow (2 chars max) and ZIP is narrow (5 digits typical, 10 with +4);
+   city gets the flex:1 remainder so the row reads naturally on mobile. */
+.labelForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.labelFormField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  font-family: var(--font-body);
+}
+
+.labelFormField .modalInput {
+  margin-bottom: 0;
+}
+
+.labelFormLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-600);
+}
+
+.labelFormLabel .optional {
+  font-weight: 400;
+  color: var(--gray-400);
+  margin-left: 4px;
+}
+
+.labelFormRow {
+  display: grid;
+  grid-template-columns: 1fr 72px 100px;
+  gap: 8px;
+}
+
+.labelFormCity { min-width: 0; }
+.labelFormState { min-width: 0; }
+.labelFormZip { min-width: 0; }
+
+@media (max-width: 420px) {
+  /* On very narrow screens the 3-column row can crunch the city field.
+     Two rows looks better: city on its own line, state + zip side by side. */
+  .labelFormRow {
+    grid-template-columns: 1fr 1fr;
+  }
+  .labelFormCity {
+    grid-column: 1 / -1;
+  }
+}
+
 .modalActions {
   display: grid;
   grid-template-columns: 1fr 1fr;
