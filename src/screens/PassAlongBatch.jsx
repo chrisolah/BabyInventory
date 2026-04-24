@@ -598,8 +598,8 @@ export default function PassAlongBatch() {
         <button
           type="button"
           className={styles.backBtn}
-          onClick={() => navigate('/inventory')}
-          aria-label="Back to inventory"
+          onClick={() => navigate('/pass-along')}
+          aria-label="Back to pass-along list"
         >
           ←
         </button>
