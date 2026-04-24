@@ -352,6 +352,69 @@
 }
 .cameraFallbackLink:hover { opacity: 1; }
 
+/* Review-N-items CTA. Replaces the fallback link in the bottom bar's
+   left slot when the batch has items. Small pill so it doesn't eat
+   shutter real estate. Teal-on-white for weight — this is the primary
+   exit action from a populated batch. */
+.cameraReviewBtn {
+  all: unset;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--teal);
+  background: #fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  justify-self: start;
+}
+.cameraReviewBtn:active {
+  transform: scale(0.97);
+}
+
+/* Thumbnail strip — sits just above the bottom bar with a horizontal-
+   scrolling list of already-scanned items. Bright enough to read on
+   the darker camera feed; small enough to leave the tag-shaped guide
+   fully visible for the next capture. */
+.cameraThumbStrip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom) + 110px);
+  display: flex;
+  gap: 6px;
+  padding: 6px 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* Fade the ends so off-screen thumbnails feel like they continue
+     rather than getting abruptly clipped. */
+  mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
+.cameraThumbStrip::-webkit-scrollbar { display: none; }
+
+.cameraThumb {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  background: var(--gray-800);
+}
+
+.cameraThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .cameraShutter {
   all: unset;
   width: 72px;

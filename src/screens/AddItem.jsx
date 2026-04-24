@@ -517,7 +517,26 @@ export default function AddItem() {
             error states; we just get the fields back via onResult. */}
         {!isEditMode && (
           <div className={styles.scanRow}>
-            <TagScanner variant="inline" onResult={onScanResult} disabled={saving} />
+            <TagScanner
+              variant="inline"
+              onResult={onScanResult}
+              onBatchSaved={(count) => {
+                // Batch flow skipped the AddItem form entirely; each
+                // scanned item became its own row in clothing_items via
+                // BatchReview's sequential insert. Refresh the context
+                // so Inventory shows them immediately, then land on the
+                // Inventory screen with a toast. Identical navigation
+                // contract to the single-save path (setSavedCount→
+                // navigate to Inventory), but the toast copy calls out
+                // the count so the user can verify "7 added" matched
+                // what they expected.
+                reloadItems()
+                navigate('/inventory', {
+                  state: { toast: `Added ${count} item${count === 1 ? '' : 's'}` },
+                })
+              }}
+              disabled={saving}
+            />
             {scanFilledCount > 0 && (
               <div className={styles.scanHint}>
                 Autofilled {scanFilledCount} field{scanFilledCount === 1 ? '' : 's'} from your photo. Review below and save.
