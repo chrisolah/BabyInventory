@@ -185,6 +185,92 @@ function canUseLiveCamera() {
 //   onFallback()     — called when the user taps "Upload a photo instead"
 //                      link. Parent should close the modal and kick the
 //                      native file picker.
+// ── Capture feedback (Phase 2 step 3) ─────────────────────────────────────
+// Haptic + audio cues fired at the exact moment of capture. Both are
+// best-effort: unsupported platforms (iOS for vibrate, or an audio context
+// that never unlocked) silently no-op. The goal is to make the capture
+// feel *committed* — like a real camera shutter — so the user knows the
+// tag was read without having to wait for the upload round-trip.
+
+// Module-scoped so it survives across modal opens. Creating AudioContexts
+// is expensive and some browsers enforce a low limit; reusing one avoids
+// both costs. Populated lazily the first time primeAudio runs inside a
+// user-gesture handler (see onTopButton), which is what iOS Safari
+// requires before it'll unlock audio output.
+let sharedAudioCtx = null
+
+function primeAudio() {
+  try {
+    if (!sharedAudioCtx) {
+      const Ctor = window.AudioContext || window.webkitAudioContext
+      if (!Ctor) return
+      sharedAudioCtx = new Ctor()
+    }
+    // Safari starts contexts in 'suspended' state even after creation;
+    // resume() inside a user gesture is what actually unlocks output.
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => { /* iOS silent mode — no-op */ })
+    }
+  } catch {
+    // Audio simply unavailable. Every feedback call below guards against
+    // a null context so we'll just go silent.
+  }
+}
+
+// Synthesize a short "click" (noise burst through a bandpass filter with a
+// fast attack/decay envelope). Keeps the bundle free of any audio assets
+// and gives us per-call tweakability. Total duration ~60ms.
+function playShutterSound() {
+  try {
+    const ctx = sharedAudioCtx
+    if (!ctx || ctx.state !== 'running') return
+
+    const now = ctx.currentTime
+    const dur = 0.06
+
+    // White-noise buffer — random samples in [-1, 1). Cheap to build at
+    // this length (≈2600 samples at 44.1kHz).
+    const len = Math.max(1, Math.round(ctx.sampleRate * dur))
+    const buffer = ctx.createBuffer(1, len, ctx.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1)
+
+    const src = ctx.createBufferSource()
+    src.buffer = buffer
+
+    // Bandpass centered in the upper-mid so it reads as a mechanical
+    // "tick" rather than a thud or hiss.
+    const filter = ctx.createBiquadFilter()
+    filter.type = 'bandpass'
+    filter.frequency.setValueAtTime(2100, now)
+    filter.Q.setValueAtTime(1.6, now)
+
+    // Gain envelope: 4ms attack, exponential decay across the rest.
+    const gain = ctx.createGain()
+    gain.gain.setValueAtTime(0, now)
+    gain.gain.linearRampToValueAtTime(0.28, now + 0.004)
+    gain.gain.exponentialRampToValueAtTime(0.0008, now + dur)
+
+    src.connect(filter)
+    filter.connect(gain)
+    gain.connect(ctx.destination)
+    src.start(now)
+    src.stop(now + dur + 0.01)
+  } catch {
+    // Audio graph failed mid-assembly — nothing we can do. Skip.
+  }
+}
+
+// Short vibration pulse. Android honors this; iOS Safari doesn't implement
+// vibrate at all, so the check returns undefined and we exit cleanly.
+function vibrateShutter() {
+  try {
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate(25)
+    }
+  } catch { /* some wrappers throw if device is in DND mode */ }
+}
+
 // ── Auto-capture heuristics (Phase 2 step 2) ──────────────────────────────
 // These constants are tuned for downsampled 160×120 luminance-difference
 // scores from the full video frame. Scores scale roughly with edge energy
@@ -243,6 +329,10 @@ function CameraModal({ onCapture, onClose, onFallback }) {
   // aiming, 'locking' = scores are climbing into range, 'locked' = held
   // long enough, about to fire.
   const [lockState, setLockState] = useState('waiting')
+  // Shutter flash overlay. Flips true for ~280ms when the shutter fires so
+  // the user gets a visual "gotcha" even if audio is muted on the device
+  // (iOS silent switch) and vibrate isn't supported.
+  const [flash, setFlash] = useState(false)
 
   // Request the stream once on mount. Constraints prefer the rear camera
   // and a high-ish resolution because tag OCR quality degrades fast below
@@ -323,6 +413,19 @@ function CameraModal({ onCapture, onClose, onFallback }) {
     const video = videoRef.current
     if (!video || !ready || capturing) return
     setCapturing(true)
+    // Fire all three feedback channels *before* the canvas/toBlob work so
+    // the cue feels instantaneous. Each is best-effort — audio fails on
+    // locked contexts, vibrate fails on iOS, flash always works. The user
+    // hears/feels/sees "gotcha" in the same instant their finger lifts (or
+    // the auto-lock timer fires), not 40ms later when the encode finishes.
+    setFlash(true)
+    playShutterSound()
+    vibrateShutter()
+    // Clear the flash after its fade — handled purely in CSS, but we need
+    // to un-mount the element so the next shutter can re-trigger the
+    // animation. 280ms covers the fade plus a small buffer.
+    setTimeout(() => setFlash(false), 280)
+
     try {
       const w = video.videoWidth
       const h = video.videoHeight
@@ -563,6 +666,11 @@ function CameraModal({ onCapture, onClose, onFallback }) {
         </button>
         <span className={styles.cameraBottomSpacer} aria-hidden="true" />
       </div>
+
+      {/* Shutter flash — pure CSS fade-out. Rendered conditionally so each
+          new shutter press re-triggers the animation cleanly (remount =
+          fresh animation; otherwise you'd have to hackily toggle a class). */}
+      {flash && <div className={styles.cameraFlash} aria-hidden="true" />}
     </div>
   )
 }
@@ -633,6 +741,11 @@ export default function TagScanner({
   }, [sendForScan])
 
   function onTopButton() {
+    // Prime audio inside this user gesture so Safari/iOS will actually
+    // play the shutter click on capture. Doing this later (from the
+    // auto-capture timer, for instance) would hit a suspended context
+    // and the sound would silently fail.
+    primeAudio()
     // Prefer the live camera; file picker is the fallback route.
     if (canUseLiveCamera()) {
       setCameraOpen(true)
