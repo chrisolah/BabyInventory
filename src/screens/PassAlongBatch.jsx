@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useHousehold, matchesBabyFilter } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import { SLOT_BY_ID, CATEGORY_LABELS } from '../lib/wardrobe'
 import ProfileMenu from '../components/ProfileMenu'
@@ -116,6 +117,12 @@ function currentStageKey(batch) {
 export default function PassAlongBatch() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const {
+    items: householdItems,
+    reloadItems,
+    selectedBabyId,
+    babies,
+  } = useHousehold()
   const { id } = useParams()
 
   const [loading, setLoading] = useState(true)
@@ -142,6 +149,16 @@ export default function PassAlongBatch() {
   // the recipient fields if the user's already typed an address somewhere,
   // otherwise leave blank.
   const [labelAddress, setLabelAddress] = useState('')
+
+  // Inventory picker state. Before this, the empty-state copy told users to
+  // leave the screen and add items from Inventory or ItemDetail, which was a
+  // dead-end flow — you'd open a batch you just created and be stuck.
+  // The picker shows every currently-owned household item that isn't already
+  // in a batch; the user multi-selects and we do one bulk UPDATE to attach
+  // them to this batch.
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pickerSelected, setPickerSelected] = useState(() => new Set())
+  const [pickerError, setPickerError] = useState(null)
 
   // ── Load ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -345,11 +362,116 @@ export default function PassAlongBatch() {
       setActionError(uErr.message)
       return
     }
+    // Push the wardrobe status flip to every other screen that's reading
+    // the shared items list — Inventory's Owned view should show the item
+    // again on back-nav without waiting for a mount refetch.
+    reloadItems()
     track.passAlongBatchItemRemoved({
       id: batch.id,
       destination: batch.destination_type,
       remaining: snapshot.length - 1,
     })
+  }
+
+  // ── Picker: eligible wardrobe items ────────────────────────────────────
+  // Only rows that are currently in the household's "Owned" pool and aren't
+  // packed in some other batch. We also respect the household's active baby
+  // filter so the picker matches the mental context the user came from —
+  // if they've been looking at Roo's inventory, they get Roo's + shared
+  // items here, not everything in the house.
+  const pickerItems = useMemo(() => {
+    if (!householdItems) return []
+    return householdItems.filter(
+      it =>
+        it.inventory_status === 'owned' &&
+        it.pass_along_batch_id == null &&
+        matchesBabyFilter(it, selectedBabyId),
+    )
+  }, [householdItems, selectedBabyId])
+
+  function togglePickerItem(itemId) {
+    setPickerSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(itemId)) next.delete(itemId)
+      else next.add(itemId)
+      return next
+    })
+  }
+
+  function openPicker() {
+    setPickerSelected(new Set())
+    setPickerError(null)
+    setPickerOpen(true)
+  }
+
+  function closePicker() {
+    if (working) return
+    setPickerOpen(false)
+    setPickerSelected(new Set())
+    setPickerError(null)
+  }
+
+  // ── Picker: attach selected items ──────────────────────────────────────
+  // One UPDATE with an IN (…) over the selected ids — a single round trip
+  // no matter how many items the user checked. We then re-fetch the batch
+  // items (to pull the full selected rows with all the fields the list
+  // renderer expects) and kick the shared reloadItems() so Inventory's
+  // Owned view reflects the move.
+  async function addItemsFromInventory() {
+    if (!batch || !isDraft || working) return
+    const ids = Array.from(pickerSelected)
+    if (ids.length === 0) {
+      setPickerError('Pick at least one item to add.')
+      return
+    }
+    setWorking(true)
+    setPickerError(null)
+    setActionError(null)
+
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('clothing_items')
+      .update({
+        pass_along_batch_id: batch.id,
+        inventory_status: 'pass_along',
+      })
+      .in('id', ids)
+
+    if (updErr) {
+      setWorking(false)
+      setPickerError(updErr.message)
+      return
+    }
+
+    // Re-pull this batch's items — the simplest way to get the updated rows
+    // with every field ItemRow wants to render, without duplicating field
+    // lists between the initial load and this code path.
+    const { data: refreshedItems, error: fetchErr } = await supabase
+      .schema(currentSchema)
+      .from('clothing_items')
+      .select('id, name, item_type, category, size_label, quantity, brand, inventory_status')
+      .eq('pass_along_batch_id', batch.id)
+      .order('created_at', { ascending: true })
+
+    setWorking(false)
+
+    if (fetchErr) {
+      // The UPDATE already landed; surface the fetch failure but don't roll
+      // back. User can reload to see the fresh list.
+      setPickerError(fetchErr.message)
+      return
+    }
+
+    setItems(refreshedItems || [])
+    reloadItems()
+    track.passAlongItemAdded({
+      from: 'batch_picker',
+      batch_id: batch.id,
+      created_new_batch: false,
+      count: ids.length,
+    })
+    setPickerOpen(false)
+    setPickerSelected(new Set())
   }
 
   // ── Primary action: mark as shipped ────────────────────────────────────
@@ -512,6 +634,9 @@ export default function PassAlongBatch() {
       destination: batch.destination_type,
       item_count: items.length,
     })
+    // Items we just bounced back to 'owned' need to show up in the wardrobe
+    // again — Inventory reads from the shared list, so trigger a refresh.
+    reloadItems()
     navigate('/pass-along')
   }
 
@@ -749,7 +874,12 @@ export default function PassAlongBatch() {
             )}
 
             {/* Items — compact rows, one per clothing_items entry. In draft
-                state, each row has an × to remove it from the batch. */}
+                state, each row has an × to remove it from the batch. When
+                the batch is a draft we also surface an "Add from inventory"
+                CTA so the user can build the batch without leaving the page
+                (previously they had to navigate to Inventory and use the
+                "Send this on" action per-item, which broke when they landed
+                on an empty draft). */}
             <section className={styles.section}>
               <div className={styles.sectionTitle}>
                 Items in the box
@@ -759,8 +889,10 @@ export default function PassAlongBatch() {
               </div>
               {items.length === 0 ? (
                 <div className={styles.emptyItems}>
-                  No items in this batch yet. Add them from an item’s
-                  detail page or from Inventory.
+                  No items in this batch yet.{' '}
+                  {isDraft
+                    ? 'Pick from your wardrobe below to start packing.'
+                    : 'This batch went out empty.'}
                 </div>
               ) : (
                 <ul className={styles.itemList}>
@@ -774,6 +906,16 @@ export default function PassAlongBatch() {
                     />
                   ))}
                 </ul>
+              )}
+              {isDraft && (
+                <button
+                  type="button"
+                  className={styles.addItemsBtn}
+                  onClick={openPicker}
+                  disabled={working}
+                >
+                  + Add items from inventory
+                </button>
               )}
             </section>
 
@@ -917,6 +1059,109 @@ export default function PassAlongBatch() {
           </>
         )}
       </main>
+
+      {/* Inventory picker — multi-select from the household's Owned pool.
+          Separate from the confirm modal because the body is a scrollable
+          list, not a short paragraph, and the footer button copy
+          ("Add N items") depends on the selection count. */}
+      {pickerOpen && (
+        <div
+          className={styles.modalBackdrop}
+          onClick={closePicker}
+          role="presentation"
+        >
+          <div
+            className={`${styles.modal} ${styles.modalPicker}`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="batch-picker-title"
+            onClick={e => e.stopPropagation()}
+          >
+            <div id="batch-picker-title" className={styles.modalTitle}>
+              Add items from inventory
+            </div>
+            <div className={styles.modalBody}>
+              {babies.length > 1 && selectedBabyId && selectedBabyId !== 'all' ? (
+                <>Showing items for the baby you have selected, plus any shared items.</>
+              ) : (
+                <>Pick anything from your wardrobe you’d like to include in this batch.</>
+              )}
+            </div>
+
+            {pickerItems.length === 0 ? (
+              <div className={styles.pickerEmpty}>
+                You don’t have any unpacked owned items to add right now.
+              </div>
+            ) : (
+              <ul className={styles.pickerList}>
+                {pickerItems.map(it => {
+                  const slot = it.item_type ? SLOT_BY_ID[it.item_type] : null
+                  const typeLabel =
+                    slot?.label ||
+                    CATEGORY_LABELS[it.category] ||
+                    humanizeItemType(it.item_type || it.category)
+                  const displayName = it.name || typeLabel
+                  const secondary = [it.size_label, it.brand].filter(Boolean).join(' · ')
+                  const checked = pickerSelected.has(it.id)
+                  return (
+                    <li key={it.id}>
+                      <label
+                        className={
+                          `${styles.pickerRow} ${checked ? styles.pickerRowSel : ''}`
+                        }
+                      >
+                        <input
+                          type="checkbox"
+                          className={styles.pickerCheckbox}
+                          checked={checked}
+                          onChange={() => togglePickerItem(it.id)}
+                          disabled={working}
+                        />
+                        <span className={styles.pickerRowText}>
+                          <span className={styles.pickerRowName}>{displayName}</span>
+                          {secondary && (
+                            <span className={styles.pickerRowMeta}>{secondary}</span>
+                          )}
+                        </span>
+                        {it.quantity > 1 && (
+                          <span className={styles.pickerRowQty}>×{it.quantity}</span>
+                        )}
+                      </label>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+
+            {pickerError && (
+              <div className={styles.pickerError}>{pickerError}</div>
+            )}
+
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalCancel}
+                onClick={closePicker}
+                disabled={working}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.modalPrimary}
+                onClick={addItemsFromInventory}
+                disabled={working || pickerSelected.size === 0}
+              >
+                {working
+                  ? 'Adding…'
+                  : pickerSelected.size === 0
+                    ? 'Add items'
+                    : `Add ${pickerSelected.size} item${pickerSelected.size === 1 ? '' : 's'}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirm modal — reused for ship / delete / request-label.
           Request-label adds an address input inside the modal body. */}

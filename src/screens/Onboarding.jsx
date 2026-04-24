@@ -468,6 +468,24 @@ export default function Onboarding() {
     setStatus('done')
   }
 
+  // ── Back navigation ──────────────────────────────────────────────────
+  // Re-entrant: a user who lands on step 3 (size mode) and realizes they
+  // typo'd a baby name needs a way back without losing the whole flow.
+  //
+  // We intentionally do NOT decrement user_activity_summary.onboarding_step —
+  // that column is the "highest reached" semantic used for resume across
+  // devices, and walking it backwards would make a later session resume at
+  // an earlier screen than the user actually got to. Backing up is a local
+  // UI affordance; the persisted progress stays at its high-water mark.
+  //
+  // Step 1 (household) is intentionally without a back button — there's
+  // nowhere meaningful to go back to (the user arrived here by signing in)
+  // and the Logout button in the top-right is the real "get me out" affordance.
+  function goBack() {
+    const idx = STEP_TO_INDEX[step]
+    if (idx > 0) setStep(STEPS[idx - 1])
+  }
+
   // ── Render ───────────────────────────────────────────────────────────
   if (status === 'loading') {
     return (
@@ -515,6 +533,16 @@ export default function Onboarding() {
     <div className={styles.page}>
       <div className={styles.logoutCorner}><LogoutButton /></div>
       <div className={styles.wrap}>
+        {stepIndex > 0 && (
+          <button
+            type="button"
+            className={styles.backBtn}
+            onClick={goBack}
+            aria-label="Back to previous step"
+          >
+            ← Back
+          </button>
+        )}
         <div className={styles.progress}>
           {pips.map((done, i) => (
             <div
