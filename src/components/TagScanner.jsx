@@ -784,13 +784,16 @@ export default function TagScanner({
         setErrorDebug(parts.join(' \u00B7 '))
         return
       }
-      const fields = data?.fields
+      const fields     = data?.fields
+      const confidence = data?.confidence ?? null
       if (!fields) {
         setError(errorMessageFor('unknown'))
         setErrorDebug('code: empty_response')
         return
       }
-      onResult?.(fields)
+      // Second argument lets the parent flag low-confidence fields for
+      // review. Older callers that only take `fields` stay compatible.
+      onResult?.(fields, confidence)
     } catch (err) {
       // eslint-disable-next-line no-console
       console.warn('TagScanner failed:', err)
