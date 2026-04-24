@@ -271,45 +271,106 @@ function vibrateShutter() {
   } catch { /* some wrappers throw if device is in DND mode */ }
 }
 
-// ── Auto-capture heuristics (Phase 2 step 2) ──────────────────────────────
-// These constants are tuned for downsampled 160×120 luminance-difference
-// scores from the full video frame. Scores scale roughly with edge energy
-// per pixel: a blurry aimed-at-nothing shot typically scores ~20–35, a
-// well-framed sharp tag 60+. Keep thresholds conservative — false positives
-// (firing before the user is ready) are worse than false negatives (user
-// falls back to tapping the shutter). Tuneable via testing.
-const AUTO_SAMPLE_SIZE     = 160   // px on the long edge of the downsampled frame
+// ── Auto-capture heuristics (Phase 2 step 2, revised 2026-04-24) ──────────
+// Revision history:
+//   v1 (2026-04-24): full-frame edge-energy sharpness score. Never fired
+//       reliably in real-world testing — baby clothing tags aren't retail
+//       hang tags. They're care labels / seam strips / printed-on-garment
+//       labels, typically 5% of the frame and drowned by surrounding
+//       fabric pattern when scoring across the whole image.
+//   v2 (this):     sample only the guide region; score text-likeness
+//       instead of raw sharpness. Text has a distinctive signature — rows
+//       of high-frequency dark/light transitions (letter strokes +
+//       whitespace) — that solid fabric and geometric patterns don't
+//       share.
+//
+// The sample rect matches the guide's CSS geometry: center horizontal band,
+// roughly 60% of width × 28% of height. Sampling only this region means a
+// small tag inside the guide contributes the bulk of the signal, rather
+// than being averaged out against noisy fabric.
+const AUTO_SAMPLE_WIDTH    = 240   // 2:1 to match the new band-shaped guide
 const AUTO_SAMPLE_HEIGHT   = 120
-const AUTO_SAMPLE_MS       = 220   // how often we compute the sharpness score
-const AUTO_HISTORY_LEN     = 5     // ~1.1s rolling window
-const AUTO_SHARPNESS_MIN   = 38    // min score across the window
-const AUTO_STABILITY_RATIO = 0.22  // max (score-spread / mean) across the window
-const AUTO_WARMUP_MS       = 900   // ignore samples for the first 900ms so the
-                                   // user has a moment to aim
-const AUTO_LOCK_HOLD_MS    = 300   // visual "locked" hold before firing shutter
+const AUTO_SAMPLE_MS       = 240   // ~4Hz — plenty for this signal
+const AUTO_HISTORY_LEN     = 4     // ~1s rolling window
+const AUTO_TEXT_MIN        = 18    // min text-likeness score across the window
+const AUTO_STABILITY_RATIO = 0.35  // forgiving; text scores are noisier than
+                                   // sharpness scores and perfect stability
+                                   // on a handheld shot is unrealistic
+const AUTO_WARMUP_MS       = 700
+const AUTO_LOCK_HOLD_MS    = 260
 
-// Edge-energy proxy: mean absolute luminance difference between each sampled
-// pixel and its right/down neighbors. Cheaper than a Laplacian convolution
-// and good enough for "is this frame in focus?" — tag OCR cares about text
-// legibility, which correlates strongly with high-frequency edge density.
-function computeSharpnessScore(imageData) {
+// Fraction of the video frame that maps to the guide region. Kept slightly
+// wider than the CSS band so small framing errors (tag slightly outside the
+// visible guide) still contribute to the score — punishing users for
+// imperfect aim is exactly what made v1 feel broken.
+const AUTO_SRC_X_FRAC      = 0.15  // left edge at 15%
+const AUTO_SRC_Y_FRAC      = 0.32  // top edge at 32%
+const AUTO_SRC_W_FRAC      = 0.70  // 70% wide
+const AUTO_SRC_H_FRAC      = 0.36  // 36% tall
+
+// Text-likeness score. High when the sampled region contains rows of
+// dense dark/light transitions (letter strokes on a lighter background,
+// or vice versa). Low on solid fabric, plain skin, and most repeating
+// patterns.
+//
+// Pipeline:
+//   1. Convert RGB → luminance (cheap Y' ~= 0.3R + 0.6G + 0.1B).
+//   2. Compute the mean luminance as an adaptive threshold baseline, then
+//      subtract a margin so we're counting pixels that are *meaningfully*
+//      darker than the surround (not just "below average").
+//   3. Compute global dark-pixel ratio. Reject regions that are almost
+//      entirely light (solid white fabric, sky) or almost entirely dark
+//      (heavy fabric, shadow) — neither shape is text-bearing.
+//   4. Per-row, count luminance-threshold crossings. Text rows cross
+//      many times (one or two per letter stroke); uniform rows and most
+//      fabric textures cross rarely or with very uniform density.
+//   5. Return the fraction of rows with ≥ MIN_ROW_CROSSINGS crossings,
+//      scaled to 0–100. Empirically: 0 on solid surfaces, 5–12 on
+//      textured fabric, 20–60 on actual text regions.
+function computeTextLikeness(imageData) {
   const { data, width, height } = imageData
-  let sum = 0
-  let count = 0
-  // Step 2 pixels to halve the work while keeping local gradients correct.
-  for (let y = 0; y < height - 1; y += 2) {
-    for (let x = 0; x < width - 1; x += 2) {
-      const i      = (y * width + x) * 4
-      const iRight = i + 4
-      const iDown  = i + width * 4
-      const l0 = data[i]      + data[i + 1]      + data[i + 2]
-      const lR = data[iRight] + data[iRight + 1] + data[iRight + 2]
-      const lD = data[iDown]  + data[iDown + 1]  + data[iDown + 2]
-      sum   += Math.abs(l0 - lR) + Math.abs(l0 - lD)
-      count += 2
-    }
+  const px = width * height
+
+  // Luminance pass + running mean.
+  const lum = new Float32Array(px)
+  let sumLum = 0
+  for (let i = 0; i < px; i++) {
+    const p = i * 4
+    const l = 0.299 * data[p] + 0.587 * data[p + 1] + 0.114 * data[p + 2]
+    lum[i] = l
+    sumLum += l
   }
-  return count > 0 ? sum / count : 0
+  const meanLum = sumLum / px
+  // 20-count margin below mean. Tuned empirically: smaller values treat
+  // every mid-gray pixel as "dark" (noisy on textured fabric); larger
+  // values miss faded low-contrast care labels.
+  const darkThreshold = meanLum - 20
+
+  // Sanity gate — dark ratio. Text regions have roughly 5–55% dark pixels
+  // depending on font weight and background. Outside this range it's
+  // almost certainly not a label.
+  let darkCount = 0
+  for (let i = 0; i < px; i++) if (lum[i] < darkThreshold) darkCount++
+  const darkRatio = darkCount / px
+  if (darkRatio < 0.04 || darkRatio > 0.60) return 0
+
+  // Per-row transition count. A row crossing the threshold N times implies
+  // ~N/2 disjoint dark segments, which is what character strokes look like
+  // when scanned horizontally.
+  const MIN_ROW_CROSSINGS = 5  // minimum to count a row as "text-bearing"
+  let textRows = 0
+  for (let y = 0; y < height; y++) {
+    const off = y * width
+    let prev = lum[off] < darkThreshold
+    let crossings = 0
+    for (let x = 1; x < width; x++) {
+      const curr = lum[off + x] < darkThreshold
+      if (curr !== prev) crossings++
+      prev = curr
+    }
+    if (crossings >= MIN_ROW_CROSSINGS) textRows++
+  }
+  return (textRows / height) * 100
 }
 
 function CameraModal({ onCapture, onClose, onFallback }) {
@@ -467,7 +528,7 @@ function CameraModal({ onCapture, onClose, onFallback }) {
     // allocator churn in the JS heap on slower phones.
     if (!sampleCanvasRef.current) {
       const c = document.createElement('canvas')
-      c.width = AUTO_SAMPLE_SIZE
+      c.width = AUTO_SAMPLE_WIDTH
       c.height = AUTO_SAMPLE_HEIGHT
       sampleCanvasRef.current = c
     }
@@ -485,9 +546,21 @@ function CameraModal({ onCapture, onClose, onFallback }) {
       if (Date.now() - modalOpenedAtRef.current < AUTO_WARMUP_MS) return
 
       try {
-        sctx.drawImage(video, 0, 0, AUTO_SAMPLE_SIZE, AUTO_SAMPLE_HEIGHT)
-        const imageData = sctx.getImageData(0, 0, AUTO_SAMPLE_SIZE, AUTO_SAMPLE_HEIGHT)
-        const score = computeSharpnessScore(imageData)
+        // Crop to the guide region rather than sampling the whole frame.
+        // The sub-rect in native video coordinates corresponds roughly to
+        // the centered band the user is aiming into; we use fractional
+        // coefficients so this works across video resolutions without
+        // hard-coding pixel math. Slight padding around the visible guide
+        // (AUTO_SRC_*_FRAC values) makes the heuristic forgiving of
+        // imperfect aim — users don't need to frame the tag pixel-perfect
+        // to get credit.
+        const sx = Math.floor(video.videoWidth  * AUTO_SRC_X_FRAC)
+        const sy = Math.floor(video.videoHeight * AUTO_SRC_Y_FRAC)
+        const sw = Math.floor(video.videoWidth  * AUTO_SRC_W_FRAC)
+        const sh = Math.floor(video.videoHeight * AUTO_SRC_H_FRAC)
+        sctx.drawImage(video, sx, sy, sw, sh, 0, 0, AUTO_SAMPLE_WIDTH, AUTO_SAMPLE_HEIGHT)
+        const imageData = sctx.getImageData(0, 0, AUTO_SAMPLE_WIDTH, AUTO_SAMPLE_HEIGHT)
+        const score = computeTextLikeness(imageData)
 
         const hist = scoreHistoryRef.current
         hist.push(score)
@@ -505,7 +578,7 @@ function CameraModal({ onCapture, onClose, onFallback }) {
           sum += v
         }
         const mean = sum / hist.length
-        const allSharp = min >= AUTO_SHARPNESS_MIN
+        const allSharp = min >= AUTO_TEXT_MIN
         const stable = mean > 0 && ((max - min) / mean) <= AUTO_STABILITY_RATIO
 
         if (allSharp && stable) {
