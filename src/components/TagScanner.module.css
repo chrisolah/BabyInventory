@@ -447,6 +447,26 @@
 }
 .cameraCancelBtn:hover { background: var(--gray-100); }
 
+/* Shutter flash — a brief full-bleed white overlay that fades out over
+   ~240ms. The visual analogue to the audio click + haptic pulse: even on
+   an iPhone with the silent switch on and no vibration, the user sees
+   that the shutter fired. Sits above everything else in the modal via
+   z-index so the video/guide briefly "disappears" behind it. */
+.cameraFlash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  z-index: 50;
+  pointer-events: none;
+  animation: cameraFlashFade 0.24s ease-out forwards;
+}
+
+@keyframes cameraFlashFade {
+  0%   { opacity: 0.85; }
+  40%  { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+
 /* Orientation-aware tweaks — on landscape phones the 3:4 guide math starts
    producing a very wide box; shrink slightly so the scrim panels don't
    disappear and the shutter has room. */
