@@ -210,6 +210,15 @@
 .cameraGuideCornerBL { bottom: -2px; left: -2px; border-bottom-width: 3px; border-left-width: 3px; border-bottom-left-radius: 10px; }
 .cameraGuideCornerBR { bottom: -2px; right: -2px; border-bottom-width: 3px; border-right-width: 3px; border-bottom-right-radius: 10px; }
 
+/* Locked state — brackets shift to teal when auto-capture has armed and
+   is about to fire. Subtle glow reinforces the "about to snap" feel
+   without being alarming. */
+.cameraGuideCornerLocked {
+  border-color: var(--teal);
+  box-shadow: 0 0 12px rgba(42, 165, 130, 0.6);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
 /* ─── Top bar ────────────────────────────────────────────────── */
 .cameraTopBar {
   position: absolute;
@@ -233,6 +242,12 @@
   letter-spacing: 0.02em;
 }
 
+.cameraTopRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .cameraCloseBtn {
   all: unset;
   width: 36px;
@@ -247,6 +262,44 @@
 }
 .cameraCloseBtn:hover {
   background: rgba(0, 0, 0, 0.65);
+}
+
+/* Auto-capture toggle pill. Tucked in the top-right next to the close
+   button. Reads "Auto on" / "Auto off" so the state is unambiguous; the
+   dot turns teal when armed, gray when the user has disabled the
+   heuristic. Meant to feel like a chip, not a primary control — the user
+   should only notice it if auto is misbehaving. */
+.cameraAutoToggle {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.cameraAutoToggle:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.cameraAutoDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  flex-shrink: 0;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.cameraAutoToggleOn .cameraAutoDot {
+  background: var(--teal);
+  box-shadow: 0 0 6px rgba(42, 165, 130, 0.7);
 }
 
 /* ─── Hint line below the guide ──────────────────────────────── */

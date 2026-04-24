@@ -185,12 +185,64 @@ function canUseLiveCamera() {
 //   onFallback()     — called when the user taps "Upload a photo instead"
 //                      link. Parent should close the modal and kick the
 //                      native file picker.
+// ── Auto-capture heuristics (Phase 2 step 2) ──────────────────────────────
+// These constants are tuned for downsampled 160×120 luminance-difference
+// scores from the full video frame. Scores scale roughly with edge energy
+// per pixel: a blurry aimed-at-nothing shot typically scores ~20–35, a
+// well-framed sharp tag 60+. Keep thresholds conservative — false positives
+// (firing before the user is ready) are worse than false negatives (user
+// falls back to tapping the shutter). Tuneable via testing.
+const AUTO_SAMPLE_SIZE     = 160   // px on the long edge of the downsampled frame
+const AUTO_SAMPLE_HEIGHT   = 120
+const AUTO_SAMPLE_MS       = 220   // how often we compute the sharpness score
+const AUTO_HISTORY_LEN     = 5     // ~1.1s rolling window
+const AUTO_SHARPNESS_MIN   = 38    // min score across the window
+const AUTO_STABILITY_RATIO = 0.22  // max (score-spread / mean) across the window
+const AUTO_WARMUP_MS       = 900   // ignore samples for the first 900ms so the
+                                   // user has a moment to aim
+const AUTO_LOCK_HOLD_MS    = 300   // visual "locked" hold before firing shutter
+
+// Edge-energy proxy: mean absolute luminance difference between each sampled
+// pixel and its right/down neighbors. Cheaper than a Laplacian convolution
+// and good enough for "is this frame in focus?" — tag OCR cares about text
+// legibility, which correlates strongly with high-frequency edge density.
+function computeSharpnessScore(imageData) {
+  const { data, width, height } = imageData
+  let sum = 0
+  let count = 0
+  // Step 2 pixels to halve the work while keeping local gradients correct.
+  for (let y = 0; y < height - 1; y += 2) {
+    for (let x = 0; x < width - 1; x += 2) {
+      const i      = (y * width + x) * 4
+      const iRight = i + 4
+      const iDown  = i + width * 4
+      const l0 = data[i]      + data[i + 1]      + data[i + 2]
+      const lR = data[iRight] + data[iRight + 1] + data[iRight + 2]
+      const lD = data[iDown]  + data[iDown + 1]  + data[iDown + 2]
+      sum   += Math.abs(l0 - lR) + Math.abs(l0 - lD)
+      count += 2
+    }
+  }
+  return count > 0 ? sum / count : 0
+}
+
 function CameraModal({ onCapture, onClose, onFallback }) {
   const videoRef = useRef(null)
   const streamRef = useRef(null)
+  const sampleCanvasRef = useRef(null)
+  const scoreHistoryRef = useRef([])
+  const modalOpenedAtRef = useRef(0)
   const [ready, setReady] = useState(false)
   const [streamError, setStreamError] = useState(null)
   const [capturing, setCapturing] = useState(false)
+  // Auto-capture flag. Default on; the user can disable via the top-bar
+  // pill if they're struggling with the lock heuristic (odd lighting, busy
+  // garment pattern misread as "sharp").
+  const [autoEnabled, setAutoEnabled] = useState(true)
+  // Lock state drives the guide-corner color + hint copy. 'waiting' =
+  // aiming, 'locking' = scores are climbing into range, 'locked' = held
+  // long enough, about to fire.
+  const [lockState, setLockState] = useState('waiting')
 
   // Request the stream once on mount. Constraints prefer the rear camera
   // and a high-ish resolution because tag OCR quality degrades fast below
@@ -258,17 +310,20 @@ function CameraModal({ onCapture, onClose, onFallback }) {
 
   function handleLoaded() {
     setReady(true)
+    // Start the auto-capture clock here instead of on mount — we don't want
+    // the warmup countdown to overlap with the "starting camera…" phase
+    // where the video element is still black.
+    modalOpenedAtRef.current = Date.now()
   }
 
-  async function handleShutter() {
+  // useCallback so the auto-capture effect below can depend on it stably —
+  // otherwise we'd tear down and rebuild the sampling interval on every
+  // render, which resets the history window and makes locks fire late.
+  const handleShutter = useCallback(async () => {
     const video = videoRef.current
     if (!video || !ready || capturing) return
     setCapturing(true)
     try {
-      // Grab the native-resolution frame. compressToBase64 downsamples to
-      // 1024px long-edge before upload, so we don't need to prematurely
-      // shrink here — keep the full frame in case we later want to crop to
-      // the guide rect (Phase 2.2+).
       const w = video.videoWidth
       const h = video.videoHeight
       if (!w || !h) throw new Error('video_not_ready')
@@ -289,7 +344,102 @@ function CameraModal({ onCapture, onClose, onFallback }) {
     }
     // Intentionally don't reset capturing on success — the parent will
     // unmount the modal and that releases state with it.
-  }
+  }, [ready, capturing, onCapture])
+
+  // Auto-capture sampling loop. Runs while the stream is ready, auto mode
+  // is enabled, and we haven't already triggered a capture. Every
+  // AUTO_SAMPLE_MS we redraw the full video frame into a tiny offscreen
+  // canvas, compute a sharpness score, and check whether the rolling window
+  // has been consistently sharp AND stable. Consistently = all samples ≥
+  // min threshold; stable = the spread of the window is small relative to
+  // its mean (user isn't panning/shaking).
+  useEffect(() => {
+    if (!ready || !autoEnabled || capturing || streamError) {
+      scoreHistoryRef.current = []
+      setLockState('waiting')
+      return
+    }
+
+    // Lazily init the offscreen canvas. Reusing across samples avoids
+    // allocator churn in the JS heap on slower phones.
+    if (!sampleCanvasRef.current) {
+      const c = document.createElement('canvas')
+      c.width = AUTO_SAMPLE_SIZE
+      c.height = AUTO_SAMPLE_HEIGHT
+      sampleCanvasRef.current = c
+    }
+    const sc = sampleCanvasRef.current
+    const sctx = sc.getContext('2d', { willReadFrequently: true })
+
+    let lockTimer = null
+    let disposed = false
+
+    function takeSample() {
+      if (disposed) return
+      const video = videoRef.current
+      if (!video || !video.videoWidth) return
+      // Warmup grace period so the user isn't ambushed by an insta-fire.
+      if (Date.now() - modalOpenedAtRef.current < AUTO_WARMUP_MS) return
+
+      try {
+        sctx.drawImage(video, 0, 0, AUTO_SAMPLE_SIZE, AUTO_SAMPLE_HEIGHT)
+        const imageData = sctx.getImageData(0, 0, AUTO_SAMPLE_SIZE, AUTO_SAMPLE_HEIGHT)
+        const score = computeSharpnessScore(imageData)
+
+        const hist = scoreHistoryRef.current
+        hist.push(score)
+        if (hist.length > AUTO_HISTORY_LEN) hist.shift()
+
+        if (hist.length < AUTO_HISTORY_LEN) {
+          setLockState('waiting')
+          return
+        }
+
+        let min = Infinity, max = -Infinity, sum = 0
+        for (const v of hist) {
+          if (v < min) min = v
+          if (v > max) max = v
+          sum += v
+        }
+        const mean = sum / hist.length
+        const allSharp = min >= AUTO_SHARPNESS_MIN
+        const stable = mean > 0 && ((max - min) / mean) <= AUTO_STABILITY_RATIO
+
+        if (allSharp && stable) {
+          // Don't double-arm: if a lock timer is already running, leave it
+          // alone. Resetting it every tick would cause us to never fire.
+          if (!lockTimer) {
+            setLockState('locked')
+            lockTimer = setTimeout(() => {
+              lockTimer = null
+              if (!disposed) handleShutter()
+            }, AUTO_LOCK_HOLD_MS)
+          }
+        } else {
+          // If we previously armed a lock but the user has since moved,
+          // cancel the pending fire and drop back to 'locking' / 'waiting'.
+          if (lockTimer) {
+            clearTimeout(lockTimer)
+            lockTimer = null
+          }
+          setLockState(allSharp ? 'locking' : 'waiting')
+        }
+      } catch {
+        // video.readyState quirks on some Androids throw 'InvalidStateError'
+        // from getImageData right after orientation change. Swallow and
+        // try the next tick — the stream usually settles within 300ms.
+      }
+    }
+
+    const intervalHandle = setInterval(takeSample, AUTO_SAMPLE_MS)
+
+    return () => {
+      disposed = true
+      clearInterval(intervalHandle)
+      if (lockTimer) clearTimeout(lockTimer)
+      scoreHistoryRef.current = []
+    }
+  }, [ready, autoEnabled, capturing, streamError, handleShutter])
 
   // Stream error state: bail out gracefully and offer the file picker.
   // We don't try to recover in place because most errors (permission denied,
@@ -331,44 +481,66 @@ function CameraModal({ onCapture, onClose, onFallback }) {
       />
 
       {/* Guide overlay. Four scrim panels form a "picture frame" around a
-          center cutout where the tag should sit. Dashed rect sits inside
-          the cutout as the visible guide. Using 4 divs (not SVG mask) so
-          we can animate borders and keep the markup testable. */}
+          center cutout where the tag should sit. Corner brackets (not a
+          full dashed box) so the user's eye doesn't fight trying to align
+          to a complete rectangle. The cornerLocked modifier turns the
+          brackets teal as a visual confirmation when auto-capture arms. */}
       <div className={styles.cameraScrim} aria-hidden="true">
         <div className={`${styles.cameraScrimPanel} ${styles.cameraScrimTop}`} />
         <div className={`${styles.cameraScrimPanel} ${styles.cameraScrimBottom}`} />
         <div className={`${styles.cameraScrimPanel} ${styles.cameraScrimLeft}`} />
         <div className={`${styles.cameraScrimPanel} ${styles.cameraScrimRight}`} />
         <div className={styles.cameraGuide}>
-          <div className={styles.cameraGuideCorner + ' ' + styles.cameraGuideCornerTL} />
-          <div className={styles.cameraGuideCorner + ' ' + styles.cameraGuideCornerTR} />
-          <div className={styles.cameraGuideCorner + ' ' + styles.cameraGuideCornerBL} />
-          <div className={styles.cameraGuideCorner + ' ' + styles.cameraGuideCornerBR} />
+          <div className={`${styles.cameraGuideCorner} ${styles.cameraGuideCornerTL} ${lockState === 'locked' ? styles.cameraGuideCornerLocked : ''}`} />
+          <div className={`${styles.cameraGuideCorner} ${styles.cameraGuideCornerTR} ${lockState === 'locked' ? styles.cameraGuideCornerLocked : ''}`} />
+          <div className={`${styles.cameraGuideCorner} ${styles.cameraGuideCornerBL} ${lockState === 'locked' ? styles.cameraGuideCornerLocked : ''}`} />
+          <div className={`${styles.cameraGuideCorner} ${styles.cameraGuideCornerBR} ${lockState === 'locked' ? styles.cameraGuideCornerLocked : ''}`} />
         </div>
       </div>
 
-      {/* Top bar — close (X) on the right. Title on the left explains what
-          we're asking the user to do; framing instruction sits below the
-          guide. */}
+      {/* Top bar — title left, auto-capture toggle + close on the right.
+          Toggle is a small pill that reads "Auto · On" / "Auto · Off" so
+          state is obvious without a legend. */}
       <div className={styles.cameraTopBar}>
         <div className={styles.cameraTopTitle}>Scan a tag</div>
-        <button
-          type="button"
-          className={styles.cameraCloseBtn}
-          onClick={onClose}
-          aria-label="Close camera"
-        >
-          <svg viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
-            <path d="M5 5 l10 10 M15 5 L5 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
-        </button>
+        <div className={styles.cameraTopRight}>
+          <button
+            type="button"
+            className={`${styles.cameraAutoToggle} ${autoEnabled ? styles.cameraAutoToggleOn : ''}`}
+            onClick={() => setAutoEnabled(v => !v)}
+            aria-pressed={autoEnabled}
+            aria-label={`Auto-capture ${autoEnabled ? 'on' : 'off'}`}
+          >
+            <span className={styles.cameraAutoDot} aria-hidden="true" />
+            Auto {autoEnabled ? 'on' : 'off'}
+          </button>
+          <button
+            type="button"
+            className={styles.cameraCloseBtn}
+            onClick={onClose}
+            aria-label="Close camera"
+          >
+            <svg viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
+              <path d="M5 5 l10 10 M15 5 L5 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Framing coach line. Sits just below the guide rect so the eye
           naturally moves from "what am I aiming at?" (the dashed box) to
-          "how do I aim it?" (this text). */}
+          "how do I aim it?" (this text). Copy changes with auto lock
+          state so the user gets real-time feedback. */}
       <div className={styles.cameraHint} aria-live="polite">
-        {ready ? 'Fit the tag inside the box' : 'Starting camera\u2026'}
+        {!ready
+          ? 'Starting camera\u2026'
+          : !autoEnabled
+            ? 'Fit the tag inside the box, then tap to capture'
+            : lockState === 'locked'
+              ? 'Got it\u2026'
+              : lockState === 'locking'
+                ? 'Hold steady\u2026'
+                : 'Fit the tag inside the box'}
       </div>
 
       {/* Bottom bar — shutter in the middle, fallback link on the left. */}
