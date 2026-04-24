@@ -133,7 +133,7 @@ export default function Landing() {
         <div className={styles.hubBand}>
           <div className={styles.hubEyebrow}>When baby outgrows them</div>
           <h2 className={styles.hubHeadline}>Four places your outgrown<br />clothes can go.</h2>
-          <p className={styles.hubBody}>Pick a destination and we&rsquo;ll take it from there. No selling, no drop-off logistics, no swapping addresses with strangers. Littleloop is the middleman so you never have to be.</p>
+          <p className={styles.hubBody}>Pick a destination and we&rsquo;ll take it from there. No selling, no drop-off logistics, no swapping addresses with strangers. Littleloop is the trusted pair of hands in the middle so you never have to be.</p>
           <div className={styles.hubGrid}>
             <div className={styles.hubCard}>
               <div className={styles.hubCardIcon} style={{ background: 'var(--teal-light)', color: 'var(--teal-dark)' }}>
@@ -194,7 +194,7 @@ export default function Landing() {
       <section className={styles.mission}>
         <div className={styles.missionBand}>
           <div className={styles.missionHeadline}>Every baby deserves a full wardrobe. Every parent deserves an easier week.</div>
-          <p className={styles.missionBody}>Babies outgrow clothes in weeks. Littleloop is the place where what you&rsquo;re done with finds its next baby — through a trusted middleman, with as little friction for you as possible.</p>
+          <p className={styles.missionBody}>Babies outgrow clothes in weeks. Littleloop is the place where what you&rsquo;re done with finds its next baby — through our hands, with as little friction for you as possible.</p>
           <button className={styles.missionCta} onClick={handleJoinCommunity}>Join Littleloop</button>
           <div className={styles.statRow}>
             <div><div className={styles.statNum}>Four</div><div className={styles.statLabel}>Destinations per batch</div></div>
