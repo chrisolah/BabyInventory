@@ -141,11 +141,16 @@
 }
 
 /* Picture-frame scrim + centered guide rect.
-   Numbers: GUIDE_W=72vw, GUIDE_H=53vh (≈ 3:4 portrait capped to viewport).
-   The four panels compute to the space OUTSIDE that cutout.
-   We wrap these in calc() so the guide stays centered regardless of
-   orientation. On very landscape viewports the guide also shrinks via the
-   vw/vh pair hitting their ceiling on the short axis. */
+
+   Geometry (revised 2026-04-24): horizontal band at 78vw × 28vh (≈ 5.5:2).
+   Baby clothing tags aren't retail hang tags — they're care labels, seam
+   strips, and printed-on-garment labels, almost always oriented as a
+   narrow horizontal row of text. The previous 3:4 portrait shape fought
+   that. A band also leaves room above for the viewfinder framing and
+   below for the hint + controls without cramping.
+
+   The four scrim panels compute to the space OUTSIDE the cutout. Half-
+   width = 39vw, half-height = 14vh — used verbatim in calc() below. */
 .cameraScrim {
   position: absolute;
   inset: 0;
@@ -161,33 +166,33 @@
   left: 0;
   right: 0;
   top: 0;
-  height: calc(50% - 26vh);
+  height: calc(50% - 14vh);
 }
 .cameraScrimBottom {
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(50% - 26vh);
+  height: calc(50% - 14vh);
 }
 .cameraScrimLeft {
-  top: calc(50% - 26vh);
-  bottom: calc(50% - 26vh);
+  top: calc(50% - 14vh);
+  bottom: calc(50% - 14vh);
   left: 0;
-  width: calc(50% - 36vw);
+  width: calc(50% - 39vw);
 }
 .cameraScrimRight {
-  top: calc(50% - 26vh);
-  bottom: calc(50% - 26vh);
+  top: calc(50% - 14vh);
+  bottom: calc(50% - 14vh);
   right: 0;
-  width: calc(50% - 36vw);
+  width: calc(50% - 39vw);
 }
 
 .cameraGuide {
   position: absolute;
-  top: calc(50% - 26vh);
-  left: calc(50% - 36vw);
-  width: 72vw;
-  height: 52vh;
+  top: calc(50% - 14vh);
+  left: calc(50% - 39vw);
+  width: 78vw;
+  height: 28vh;
   /* Soft inner glow so the guide has presence without borrowing attention
      from the tag itself. */
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
@@ -307,7 +312,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(50% + 26vh + 18px);
+  top: calc(50% + 14vh + 14px);
   text-align: center;
   color: #fff;
   font-family: var(--font-body);
@@ -471,10 +476,10 @@
    producing a very wide box; shrink slightly so the scrim panels don't
    disappear and the shutter has room. */
 @media (orientation: landscape) {
-  .cameraGuide        { top: calc(50% - 36vh); left: calc(50% - 25vw); width: 50vw; height: 72vh; }
-  .cameraScrimTop     { height: calc(50% - 36vh); }
-  .cameraScrimBottom  { height: calc(50% - 36vh); }
-  .cameraScrimLeft    { top: calc(50% - 36vh); bottom: calc(50% - 36vh); width: calc(50% - 25vw); }
-  .cameraScrimRight   { top: calc(50% - 36vh); bottom: calc(50% - 36vh); width: calc(50% - 25vw); }
-  .cameraHint         { top: calc(50% + 36vh + 14px); }
+  .cameraGuide        { top: calc(50% - 15vh); left: calc(50% - 30vw); width: 60vw; height: 30vh; }
+  .cameraScrimTop     { height: calc(50% - 15vh); }
+  .cameraScrimBottom  { height: calc(50% - 15vh); }
+  .cameraScrimLeft    { top: calc(50% - 15vh); bottom: calc(50% - 15vh); width: calc(50% - 30vw); }
+  .cameraScrimRight   { top: calc(50% - 15vh); bottom: calc(50% - 15vh); width: calc(50% - 30vw); }
+  .cameraHint         { top: calc(50% + 15vh + 14px); }
 }
