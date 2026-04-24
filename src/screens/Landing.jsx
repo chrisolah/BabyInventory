@@ -71,7 +71,7 @@ export default function Landing() {
       <section className={styles.hero}>
         <div className={styles.eyebrow}>Free for all families</div>
         <h1 className={styles.headline}>Baby clothes,<br /><em>organized</em> and shared.</h1>
-        <p className={styles.sub}>Track every onesie, plan every size, and send outgrown clothes on to Littleloop, another family, a specific person, or a charity — all from the same app.</p>
+        <p className={styles.sub}>Track every onesie, plan every size, and send outgrown clothes on to Littleloop, another family, a friend or family member, or a charity — all from the same app.</p>
         <div className={styles.heroBtns}>
           <button className={styles.heroCta} onClick={handleGetStarted}>Get started free</button>
           <button className={styles.heroSecondaryCta} onClick={handleSeeHub}>See how pass-along works</button>
@@ -110,7 +110,7 @@ export default function Landing() {
         <h2 className={styles.sectionTitle} style={{ marginBottom: '6px' }}>Simple from day one</h2>
         <p className={styles.sectionSub} style={{ marginBottom: '1.5rem' }}>For parents building, managing, and passing along a wardrobe.</p>
         {[
-          { n: 1, title: 'Add your baby and your clothes', body: 'Set up in minutes. Snap a tag to auto-fill the details, or log items by hand if you prefer.' },
+          { n: 1, title: 'Add your baby and your clothes', body: 'Set up in minutes. Snap a photo to auto-fill the details, or log items by hand if you prefer.' },
           { n: 2, title: 'Stay on top of every size', body: 'We track what\u2019s coming up and surface gaps before you need them.' },
           { n: 3, title: 'Send outgrown clothes on', body: 'Pick one of four destinations. We handle routing, matching, and (when needed) the label.' },
         ].map(({ n, title, body }) => (
@@ -153,7 +153,7 @@ export default function Landing() {
               <div className={styles.hubCardIcon} style={{ background: 'var(--purple-light)', color: 'var(--purple-dark)' }}>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M3 16c0-3 2.7-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </div>
-              <div className={styles.hubCardTitle}>A specific person</div>
+              <div className={styles.hubCardTitle}>A friend or family member</div>
               <div className={styles.hubCardBody}>Sister-in-law, best friend, coworker with a new baby. Give us a name and address — we&rsquo;ll generate the label and track the handoff.</div>
             </div>
             <div className={styles.hubCard}>
@@ -209,7 +209,7 @@ export default function Landing() {
           in the scroll. No illustration, no band — one small note. */}
       <section className={styles.scanNote}>
         <div className={styles.scanNoteEyebrow}>One more thing</div>
-        <div className={styles.scanNoteHeadline}>Snap the tag, skip the typing.</div>
+        <div className={styles.scanNoteHeadline}>Snap a photo, skip the typing.</div>
         <p className={styles.scanNoteBody}>Point your phone at a clothing tag and we&rsquo;ll pre-fill the brand, size, and category for you.</p>
       </section>
 

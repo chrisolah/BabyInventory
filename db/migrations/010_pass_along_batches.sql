@@ -4,7 +4,7 @@
 -- Seeds the community exchange. Parents bundle outgrown items into a "batch"
 -- (one physical box) and ship it to one of four destinations:
 --   • Littleloop HQ (concierge — Chris receives, matches, or donates)
---   • A specific person (freeform name + address; e.g. a sister, a friend)
+--   • A friend or family member (freeform name + address; e.g. a sister, a friend)
 --   • A charity (freeform name + address; e.g. a local Goodwill)
 --   • Another Littleloop family that opted in to receiving hand-me-downs
 --
