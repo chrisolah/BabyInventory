@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import BatchReview from './BatchReview'
 import styles from './TagScanner.module.css'
 
 // TagScanner — Phase 2 step 1 (2026-04-24): live camera preview + tag-shaped
@@ -373,7 +374,29 @@ function computeTextLikeness(imageData) {
   return (textRows / height) * 100
 }
 
-function CameraModal({ onCapture, onClose, onFallback }) {
+// CameraModal props:
+//   onCapture(blob)        — fired every time the shutter fires (auto or manual)
+//   onClose()              — user tapped the X or pressed Escape
+//   onFallback()           — user tapped "Upload instead" / the stream errored
+//   batchMode              — boolean: when true, camera stays open after each
+//                            capture and accumulates into a batch via the
+//                            thumbnail strip; onCapture still fires per shot.
+//   onBatchToggle(next)    — user tapped the "Multi" pill. Parent owns state
+//                            (arm/disarm is a parent-level concern).
+//   batchItems             — array of already-scanned batch items to render
+//                            in the thumbnail strip; each item must expose
+//                            { id, thumbnailDataUrl }. Pass [] when unused.
+//   onReview()             — user tapped the "Review N items" button. Parent
+//                            closes the camera and opens the review surface.
+function CameraModal({
+  onCapture,
+  onClose,
+  onFallback,
+  batchMode = false,
+  onBatchToggle,
+  batchItems = [],
+  onReview,
+}) {
   const videoRef = useRef(null)
   const streamRef = useRef(null)
   const sampleCanvasRef = useRef(null)
@@ -500,15 +523,28 @@ function CameraModal({ onCapture, onClose, onFallback }) {
         canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toblob_failed'))), 'image/jpeg', 0.92)
       })
       onCapture?.(blob)
+      // In batch mode the parent keeps the modal mounted and just appends
+      // the scan to the batch — so we have to release `capturing` here or
+      // the shutter stays locked forever. In single mode the parent
+      // unmounts the modal and this setter races that teardown harmlessly.
+      if (batchMode) {
+        setCapturing(false)
+        // Reset the lock heuristic state so auto-capture is immediately
+        // ready for the next tag instead of carrying stale "locked"
+        // history from the item we just saved.
+        scoreHistoryRef.current = []
+        setLockState('waiting')
+        // Push the warmup clock forward a hair so the next auto-fire
+        // isn't triggered by the same frame that just fired.
+        modalOpenedAtRef.current = Date.now()
+      }
     } catch (err) {
       // eslint-disable-next-line no-console
       console.warn('CameraModal shutter failed', err)
       setStreamError('capture_failed')
       setCapturing(false)
     }
-    // Intentionally don't reset capturing on success — the parent will
-    // unmount the modal and that releases state with it.
-  }, [ready, capturing, onCapture])
+  }, [ready, capturing, onCapture, batchMode])
 
   // Auto-capture sampling loop. Runs while the stream is ready, auto mode
   // is enabled, and we haven't already triggered a capture. Every
@@ -674,11 +710,18 @@ function CameraModal({ onCapture, onClose, onFallback }) {
         </div>
       </div>
 
-      {/* Top bar — title left, auto-capture toggle + close on the right.
-          Toggle is a small pill that reads "Auto · On" / "Auto · Off" so
-          state is obvious without a legend. */}
+      {/* Top bar — title left, auto/multi toggles + close on the right.
+          Auto pill reads "Auto · On/Off" so state is obvious without a
+          legend. Multi pill is shown when batchMode is available; once the
+          batch has ≥1 item it's replaced by a "Review N items" button
+          that becomes the primary exit from the camera (more prominent
+          than the Close X, which would throw the batch away). */}
       <div className={styles.cameraTopBar}>
-        <div className={styles.cameraTopTitle}>Scan a tag</div>
+        <div className={styles.cameraTopTitle}>
+          {batchMode && batchItems.length > 0
+            ? `${batchItems.length} scanned`
+            : 'Scan a tag'}
+        </div>
         <div className={styles.cameraTopRight}>
           <button
             type="button"
@@ -690,6 +733,18 @@ function CameraModal({ onCapture, onClose, onFallback }) {
             <span className={styles.cameraAutoDot} aria-hidden="true" />
             Auto {autoEnabled ? 'on' : 'off'}
           </button>
+          {onBatchToggle && batchItems.length === 0 && (
+            <button
+              type="button"
+              className={`${styles.cameraAutoToggle} ${batchMode ? styles.cameraAutoToggleOn : ''}`}
+              onClick={() => onBatchToggle(!batchMode)}
+              aria-pressed={batchMode}
+              aria-label={`Scan multiple items ${batchMode ? 'on' : 'off'}`}
+            >
+              <span className={styles.cameraAutoDot} aria-hidden="true" />
+              Multi {batchMode ? 'on' : 'off'}
+            </button>
+          )}
           <button
             type="button"
             className={styles.cameraCloseBtn}
@@ -719,15 +774,43 @@ function CameraModal({ onCapture, onClose, onFallback }) {
                 : 'Fit the tag inside the box'}
       </div>
 
-      {/* Bottom bar — shutter in the middle, fallback link on the left. */}
+      {/* Batch thumbnail strip — sits just above the bottom bar when we
+          have any scanned items. Horizontal-scroll list of tiny crops so
+          the user has a running sense of what they've captured without
+          leaving the camera. Keeps the shutter real estate intact. */}
+      {batchMode && batchItems.length > 0 && (
+        <div className={styles.cameraThumbStrip} aria-label={`${batchItems.length} scanned so far`}>
+          {batchItems.map((item) => (
+            <div key={item.id} className={styles.cameraThumb}>
+              <img src={item.thumbnailDataUrl} alt="" className={styles.cameraThumbImg} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Bottom bar — shutter in the middle. The left slot is context-
+          dependent: fallback link when we're in single mode or the batch
+          is empty; a prominent "Review N" button once the batch has
+          items. The right slot is a spacer so the shutter stays
+          optically centered. */}
       <div className={styles.cameraBottomBar}>
-        <button
-          type="button"
-          className={styles.cameraFallbackLink}
-          onClick={onFallback}
-        >
-          Upload instead
-        </button>
+        {batchMode && batchItems.length > 0 ? (
+          <button
+            type="button"
+            className={styles.cameraReviewBtn}
+            onClick={onReview}
+          >
+            Review {batchItems.length}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={styles.cameraFallbackLink}
+            onClick={onFallback}
+          >
+            Upload instead
+          </button>
+        )}
         <button
           type="button"
           className={styles.cameraShutter}
@@ -750,6 +833,7 @@ function CameraModal({ onCapture, onClose, onFallback }) {
 
 export default function TagScanner({
   onResult,
+  onBatchSaved,
   variant = 'inline',
   label,
   disabled = false,
@@ -759,10 +843,22 @@ export default function TagScanner({
   const [error, setError] = useState(null)
   const [errorDebug, setErrorDebug] = useState(null)
   const [cameraOpen, setCameraOpen] = useState(false)
+  // Batch mode state. Armed by the in-camera "Multi" toggle; entering the
+  // camera always starts with batchMode=false to keep the single-scan
+  // path frictionless. batchItems accumulates { id, thumbnailDataUrl,
+  // fields, confidence } — the thumbnail is a data URL derived from the
+  // same compressed JPEG we already send up to the Edge Function, so we
+  // pay zero extra bytes over the wire. reviewOpen is the boolean that
+  // swaps the camera for the <BatchReview> overlay.
+  const [batchMode, setBatchMode] = useState(false)
+  const [batchItems, setBatchItems] = useState([])
+  const [reviewOpen, setReviewOpen] = useState(false)
 
   // Shared upload + extract path. Both the camera shutter and the file
   // picker funnel through here so error handling stays in one place.
-  const sendForScan = useCallback(async (blobOrFile) => {
+  // `isBatchCapture` lets the caller say "this came from an in-camera
+  // batch capture — append to the batch instead of calling onResult".
+  const sendForScan = useCallback(async (blobOrFile, isBatchCapture = false) => {
     setScanning(true)
     setError(null)
     setErrorDebug(null)
@@ -791,6 +887,25 @@ export default function TagScanner({
         setErrorDebug('code: empty_response')
         return
       }
+      if (isBatchCapture) {
+        // Append to the batch — thumbnail reuses the already-compressed
+        // JPEG data URL so we don't re-encode. ID is just a monotonic-ish
+        // random token; the batch is client-only until save, so collision
+        // risk is nil but we want stable list keys in React either way.
+        const id = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+        setBatchItems((prev) => [
+          ...prev,
+          {
+            id,
+            thumbnailDataUrl: `data:${mime};base64,${base64}`,
+            fields,
+            confidence,
+          },
+        ])
+        return
+      }
       // Second argument lets the parent flag low-confidence fields for
       // review. Older callers that only take `fields` stay compatible.
       onResult?.(fields, confidence)
@@ -812,9 +927,65 @@ export default function TagScanner({
   }, [sendForScan])
 
   const onCameraCapture = useCallback(async (blob) => {
+    // In batch mode the modal stays open; we just append to the batch.
+    // In single mode we close first so the user sees the AddItem fields
+    // populate while the scan round-trips.
+    if (batchMode) {
+      await sendForScan(blob, true)
+      return
+    }
     setCameraOpen(false)
-    await sendForScan(blob)
-  }, [sendForScan])
+    await sendForScan(blob, false)
+  }, [sendForScan, batchMode])
+
+  // "Multi" pill in the top bar toggles batch arming. We don't allow
+  // flipping it off once the batch has items — the exit path from a
+  // non-empty batch is always through Review (to save or discard
+  // explicitly). Close X on a non-empty batch prompts a confirm.
+  const onBatchToggle = useCallback((next) => {
+    setBatchMode(next)
+    if (!next) setBatchItems([])
+  }, [])
+
+  const onReview = useCallback(() => {
+    setCameraOpen(false)
+    setReviewOpen(true)
+  }, [])
+
+  const onReviewBack = useCallback(() => {
+    // "Scan more" from review → re-open the camera with batch preserved.
+    setReviewOpen(false)
+    setCameraOpen(true)
+  }, [])
+
+  const onReviewDiscard = useCallback(() => {
+    setReviewOpen(false)
+    setBatchItems([])
+    setBatchMode(false)
+  }, [])
+
+  const onBatchComplete = useCallback((savedCount) => {
+    setReviewOpen(false)
+    setBatchItems([])
+    setBatchMode(false)
+    onBatchSaved?.(savedCount)
+  }, [onBatchSaved])
+
+  const onCameraClose = useCallback(() => {
+    // Closing the camera with a batch in flight keeps the batch and
+    // shunts the user straight to Review — same semantics as tapping
+    // the Review button. Parent's confirm-discard lives on the review
+    // screen, where we have enough real estate for the prompt.
+    if (batchMode && batchItems.length > 0) {
+      setCameraOpen(false)
+      setReviewOpen(true)
+      return
+    }
+    setCameraOpen(false)
+    // Leaving the camera with no batch resets the arm so the next open
+    // starts fresh in single mode.
+    setBatchMode(false)
+  }, [batchMode, batchItems.length])
 
   function onTopButton() {
     // Prime audio inside this user gesture so Safari/iOS will actually
@@ -885,8 +1056,22 @@ export default function TagScanner({
       {cameraOpen && (
         <CameraModal
           onCapture={onCameraCapture}
-          onClose={() => setCameraOpen(false)}
+          onClose={onCameraClose}
           onFallback={onFallbackFromModal}
+          batchMode={batchMode}
+          onBatchToggle={onBatchToggle}
+          batchItems={batchItems}
+          onReview={onReview}
+        />
+      )}
+
+      {reviewOpen && (
+        <BatchReview
+          items={batchItems}
+          setItems={setBatchItems}
+          onScanMore={onReviewBack}
+          onDiscardAll={onReviewDiscard}
+          onComplete={onBatchComplete}
         />
       )}
     </div>

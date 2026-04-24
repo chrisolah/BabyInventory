@@ -1,0 +1,357 @@
+/* BatchReview — full-screen overlay shown when the parent taps Review N
+   from inside the camera. Sits above the app chrome; body scroll is
+   disabled by the overlay fixed positioning. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--gray-50);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Respect iOS safe areas so header + footer don't sit under the
+     notch / home indicator. */
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--white);
+  border-bottom: 0.5px solid var(--gray-200);
+  flex-shrink: 0;
+}
+
+.backBtn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--gray-700);
+  cursor: pointer;
+  padding: 0;
+}
+
+.backBtn:hover {
+  background: var(--gray-100);
+}
+
+.title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.scanMoreLink {
+  background: transparent;
+  border: none;
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.scanMoreLink:disabled {
+  color: var(--gray-400);
+  cursor: not-allowed;
+}
+
+/* ── List ───────────────────────────────────────────────────────────── */
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 12px 12px 16px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-left-width: 3px;
+  border-left-color: var(--gray-200);
+  border-radius: 12px;
+  padding: 10px 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  position: relative;
+}
+
+.rowInvalid {
+  border-left-color: #B4691A;
+  background: #FFFCF5;
+}
+
+.rowError {
+  border-left-color: #C0392B;
+  background: #FDF3F2;
+}
+
+.rowThumbWrap {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--gray-100);
+  border: 0.5px solid var(--gray-200);
+}
+
+.rowThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.rowFields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rowGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.rowLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.rowLabelText {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-600);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  line-height: 1.2;
+}
+
+.rowInput {
+  width: 100%;
+  padding: 7px 8px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--gray-900);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.rowInput:focus {
+  border-color: var(--teal);
+  background: var(--white);
+}
+
+.rowInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Low-confidence inherits the amber outline cue from Phase 2.4 so the
+   same visual language carries across single + batch. */
+.fieldVerify {
+  border-color: #E6B87A;
+  background: #FFFCF5;
+}
+
+.verifyBadge {
+  display: inline-block;
+  padding: 0 5px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #B4691A;
+  background: #FFF6E5;
+  border: 0.5px solid #E6B87A;
+  border-radius: 999px;
+  line-height: 1.5;
+}
+
+.missingHint {
+  font-size: 11.5px;
+  color: #B4691A;
+  margin-top: 2px;
+}
+
+.rowErrorHint {
+  font-size: 11.5px;
+  color: #C0392B;
+  margin-top: 4px;
+}
+
+.trashBtn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--gray-500);
+  cursor: pointer;
+  padding: 0;
+}
+
+.trashBtn:hover {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.trashBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+
+.footer {
+  padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0));
+  background: var(--white);
+  border-top: 0.5px solid var(--gray-200);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.invalidHint {
+  font-size: 12px;
+  color: #B4691A;
+  text-align: center;
+}
+
+.progress {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-700);
+  text-align: center;
+  padding: 10px 0;
+}
+
+.saveError {
+  margin: 10px 14px 0;
+  padding: 10px 12px;
+  background: #FDF3F2;
+  border: 0.5px solid #E4B0A8;
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: #B0332A;
+}
+
+.primaryBtn {
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--white);
+  background: var(--teal);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.primaryBtn:disabled {
+  background: var(--gray-300);
+  cursor: not-allowed;
+}
+
+.secondaryBtn {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  background: var(--white);
+  border: 0.5px solid var(--gray-300);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.dangerBtn {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  background: #C0392B;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+/* ── Empty / Confirm-discard ────────────────────────────────────────── */
+
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 24px;
+  color: var(--gray-600);
+  font-size: 14px;
+}
+
+.empty .primaryBtn {
+  max-width: 280px;
+}
+
+.confirmBox {
+  margin: auto;
+  max-width: 360px;
+  padding: 24px 20px 20px;
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+.confirmTitle {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0 0 8px;
+}
+
+.confirmBody {
+  font-size: 13.5px;
+  color: var(--gray-600);
+  line-height: 1.45;
+  margin: 0 0 18px;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
