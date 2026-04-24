@@ -55,7 +55,7 @@ const DESTINATION_OPTIONS = [
   },
   {
     id: 'person',
-    label: 'A specific person',
+    label: 'A friend or family member',
     sub: 'Direct to a sibling, friend, or neighbor you already have in mind.',
   },
   {

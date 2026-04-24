@@ -24,7 +24,7 @@ import styles from './PassAlongList.module.css'
 const DESTINATION_LABEL = {
   littleloop: 'Littleloop',
   family: 'Another Littleloop family',
-  person: 'A specific person',
+  person: 'A friend or family member',
   charity: 'A charity',
 }
 
@@ -227,8 +227,8 @@ export default function PassAlongList() {
               <div className={styles.introTitle}>Send clothes on to their next home</div>
               <div className={styles.introBody}>
                 Bundle outgrown items into a batch and ship the box to
-                Littleloop, a charity, a specific person, or another
-                Littleloop family.
+                Littleloop, a charity, a friend or family member, or
+                another Littleloop family.
               </div>
             </section>
 
