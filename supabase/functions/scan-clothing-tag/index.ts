@@ -19,9 +19,16 @@
 //       "category":   <CATEGORY enum> | null,
 //       "item_type":  <SLOT_ID enum>   | null
 //     },
+//     "confidence": {
+//       "brand":      "high" | "medium" | "low" | null,
+//       "size_label": "high" | "medium" | "low" | null,
+//       "category":   "high" | "medium" | "low" | null,
+//       "item_type":  "high" | "medium" | "low" | null
+//     },
 //     "raw": <the model's raw JSON, for debugging — may be dropped later>,
 //     "quota": { "used": number, "limit": number }
 //   }
+//   (confidence for a given field is null iff its field value is null.)
 //
 // Failure codes:
 //   401 missing/invalid JWT
@@ -95,6 +102,15 @@ Descriptor hints for baby clothing terminology (these words are used colloquiall
 - "BOOTIES" → category "footwear", item_type "shoes".
 - "SOCKS" → category "footwear", item_type "socks". Socks belong in footwear in this taxonomy, not accessories — accessories is reserved for hats, mittens, bibs, and burp cloths.
 
+Alongside the four field keys, return a fifth key "confidence" — an object with a confidence level per field, used by the client to flag which values the parent should double-check before saving:
+- "high" — clearly printed on the tag and unambiguous (e.g. brand logo visible; size explicitly written as "0-3M").
+- "medium" — readable but required interpretation (e.g. "3M" mapped to "0-3M"; category inferred from the garment visible behind the tag rather than the tag itself).
+- "low" — a best guess from limited information (partial text, blurry tag, inferring item_type from an unclear silhouette).
+- If a field value is null, its confidence must also be null.
+
+Example shape (values illustrative):
+{"brand":"Carter's","size_label":"0-3M","category":"tops_and_bodysuits","item_type":"bodysuits","confidence":{"brand":"high","size_label":"medium","category":"high","item_type":"high"}}
+
 Do not include any prose, markdown, or code fences. Return the JSON object and nothing else. Prefer null over a low-confidence guess.`
 
 type Fields = {
@@ -103,6 +119,17 @@ type Fields = {
   category: string | null
   item_type: string | null
 }
+
+type Confidence = 'high' | 'medium' | 'low' | null
+
+type ConfidenceMap = {
+  brand:      Confidence
+  size_label: Confidence
+  category:   Confidence
+  item_type:  Confidence
+}
+
+const CONFIDENCE_LEVELS = new Set(['high', 'medium', 'low'])
 
 function json(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
@@ -117,6 +144,25 @@ function coerceFields(raw: any): Fields {
   const category   = typeof raw?.category   === 'string' && (CATEGORIES as readonly string[]).includes(raw.category) ? raw.category : null
   const item_type  = typeof raw?.item_type  === 'string' && (SLOT_IDS as readonly string[]).includes(raw.item_type) ? raw.item_type : null
   return { brand, size_label, category, item_type }
+}
+
+// Whitelist confidence values and force the "null value ⇒ null confidence"
+// invariant regardless of what the model returned. If the model omits a
+// confidence for a present field we default to "medium" (safer than
+// optimistically calling it "high" and never flagging for review).
+function coerceConfidence(rawConfidence: any, fields: Fields): ConfidenceMap {
+  function pick(fieldValue: unknown, raw: unknown): Confidence {
+    if (fieldValue === null || fieldValue === undefined || fieldValue === '') return null
+    if (typeof raw === 'string' && CONFIDENCE_LEVELS.has(raw)) return raw as Confidence
+    return 'medium'
+  }
+  const src = rawConfidence && typeof rawConfidence === 'object' ? rawConfidence : {}
+  return {
+    brand:      pick(fields.brand,      src.brand),
+    size_label: pick(fields.size_label, src.size_label),
+    category:   pick(fields.category,   src.category),
+    item_type:  pick(fields.item_type,  src.item_type),
+  }
 }
 
 // Extract the first {...} block from model text. Haiku usually returns bare
@@ -249,10 +295,12 @@ Deno.serve(async (req) => {
     return json(502, { error: 'anthropic_bad_json', raw: text.slice(0, 500) })
   }
 
-  const fields = coerceFields(parsed)
+  const fields     = coerceFields(parsed)
+  const confidence = coerceConfidence(parsed?.confidence, fields)
 
   return json(200, {
     fields,
+    confidence,
     raw: parsed,
     quota: { used, limit: DAILY_LIMIT },
   })

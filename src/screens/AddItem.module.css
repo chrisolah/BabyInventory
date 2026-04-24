@@ -181,6 +181,37 @@
   color: var(--gray-400);
 }
 
+/* Shown next to a label when the scanner flagged that field as low
+   confidence and the parent hasn't yet touched it. Matched on the input
+   itself by .inputVerify for the amber outline so the cue is visible
+   without reading micro-copy. Warm amber (#B4691A) reads as "pay
+   attention" without the alarm of red — low-confidence scans are not
+   errors, they just need a human eyeball. */
+.verifyBadge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #B4691A;
+  background: #FFF6E5;
+  border: 0.5px solid #E6B87A;
+  border-radius: 999px;
+  vertical-align: 1px;
+}
+
+.inputVerify {
+  border-color: #E6B87A;
+  background: #FFFCF5;
+}
+
+.inputVerify:focus {
+  border-color: var(--teal);
+  background: var(--white);
+}
+
 .input {
   width: 100%;
   padding: 11px 13px;

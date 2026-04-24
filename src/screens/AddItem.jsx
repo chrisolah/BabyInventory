@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -164,6 +164,21 @@ export default function AddItem() {
   // filled in N fields — confirm below and save" banner so the user knows
   // why the form looks different. Reset on mount; not persisted.
   const [scanFilledCount, setScanFilledCount] = useState(0)
+  // Set of field names (one of 'category' | 'item_type' | 'size_label' |
+  // 'brand') that the scanner returned with LOW confidence and the user
+  // has not yet touched. Each becomes a small "verify" badge next to the
+  // label. First change to a flagged field clears its flag — interacting
+  // with the input is implicit confirmation that the parent saw the
+  // value. Save also clears the whole set. Not persisted.
+  const [lowConfFields, setLowConfFields] = useState(() => new Set())
+  const clearLowConfFlag = useCallback((fieldName) => {
+    setLowConfFields((prev) => {
+      if (!prev.has(fieldName)) return prev
+      const next = new Set(prev)
+      next.delete(fieldName)
+      return next
+    })
+  }, [])
 
   // Fire add_item_started once per create session. Edit sessions belong to
   // a different funnel, so we gate it on !isEditMode. Waits on the context
@@ -255,21 +270,27 @@ export default function AddItem() {
   // drop-off points in the funnel. Keep cheap: one event per terminal choice.
   function onCategoryChange(v) {
     setCategory(v)
+    clearLowConfFlag('category')
     // Reset the type if it doesn't belong to the newly chosen category.
     // Otherwise a stale selection can sneak past canSubmit (value is set,
     // but not in the visible dropdown).
     const currentSlot = itemType ? SLOT_BY_ID[itemType] : null
-    if (!currentSlot || currentSlot.category !== v) setItemType('')
+    if (!currentSlot || currentSlot.category !== v) {
+      setItemType('')
+      clearLowConfFlag('item_type') // reset wipes the inherited flag too
+    }
     if (v) track.itemCategorySelected(v)
   }
 
   function onTypeChange(v) {
     setItemType(v)
+    clearLowConfFlag('item_type')
     if (v) track.itemCategorySelected(v) // reuse: tracks refinement, not category
   }
 
   function onSizeChange(v) {
     setSizeLabel(v)
+    clearLowConfFlag('size_label')
     if (v) track.itemSizeSelected(v)
   }
 
@@ -297,19 +318,27 @@ export default function AddItem() {
   // can progressively refine earlier ones. Individual fields may be null
   // (low confidence or unreadable) — we skip those rather than blanking
   // out whatever the user already typed. Never auto-saves.
-  function onScanResult(fields) {
+  //
+  // Second argument `confidence` is per-field "high"|"medium"|"low"|null.
+  // Only "low" values get flagged for user review. Medium is quiet —
+  // visually crying wolf on every scan erodes trust in the warning.
+  function onScanResult(fields, confidence) {
     if (!fields) return
     let filled = 0
+    const nextLowConf = new Set()
+    const flagIfLow = (name, level) => { if (level === 'low') nextLowConf.add(name) }
 
     if (fields.category && CATEGORIES.some(c => c.value === fields.category)) {
       setCategory(fields.category)
       filled += 1
+      flagIfLow('category', confidence?.category)
       // If the incoming item_type is valid AND matches the scanned category,
       // accept it too; otherwise let the user pick from the now-filtered list.
       const slot = fields.item_type ? SLOT_BY_ID[fields.item_type] : null
       if (slot && slot.category === fields.category) {
         setItemType(slot.id)
         filled += 1
+        flagIfLow('item_type', confidence?.item_type)
       } else {
         setItemType('')
       }
@@ -318,14 +347,17 @@ export default function AddItem() {
     if (fields.size_label && SIZES.includes(fields.size_label)) {
       setSizeLabel(fields.size_label)
       filled += 1
+      flagIfLow('size_label', confidence?.size_label)
     }
 
     if (fields.brand && typeof fields.brand === 'string') {
       setBrand(fields.brand.trim().slice(0, 80))
       filled += 1
+      flagIfLow('brand', confidence?.brand)
     }
 
     setScanFilledCount(filled)
+    setLowConfFields(nextLowConf)
     track.tagScanCompleted({ filled, mode })
   }
 
@@ -514,10 +546,15 @@ export default function AddItem() {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="ai-category">Category</label>
+            <label className={styles.label} htmlFor="ai-category">
+              Category
+              {lowConfFields.has('category') && (
+                <span className={styles.verifyBadge}>Verify</span>
+              )}
+            </label>
             <select
               id="ai-category"
-              className={styles.input}
+              className={`${styles.input} ${lowConfFields.has('category') ? styles.inputVerify : ''}`}
               value={category}
               onChange={e => onCategoryChange(e.target.value)}
               required
@@ -530,10 +567,15 @@ export default function AddItem() {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="ai-type">Type</label>
+            <label className={styles.label} htmlFor="ai-type">
+              Type
+              {lowConfFields.has('item_type') && (
+                <span className={styles.verifyBadge}>Verify</span>
+              )}
+            </label>
             <select
               id="ai-type"
-              className={styles.input}
+              className={`${styles.input} ${lowConfFields.has('item_type') ? styles.inputVerify : ''}`}
               value={itemType}
               onChange={e => onTypeChange(e.target.value)}
               required
@@ -549,10 +591,15 @@ export default function AddItem() {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="ai-size">Size</label>
+            <label className={styles.label} htmlFor="ai-size">
+              Size
+              {lowConfFields.has('size_label') && (
+                <span className={styles.verifyBadge}>Verify</span>
+              )}
+            </label>
             <select
               id="ai-size"
-              className={styles.input}
+              className={`${styles.input} ${lowConfFields.has('size_label') ? styles.inputVerify : ''}`}
               value={sizeLabel}
               onChange={e => onSizeChange(e.target.value)}
               required
@@ -621,14 +668,17 @@ export default function AddItem() {
             <div className={styles.formGroup}>
               <label className={styles.label} htmlFor="ai-brand">
                 Brand <span className={styles.optional}>(optional)</span>
+                {lowConfFields.has('brand') && (
+                  <span className={styles.verifyBadge}>Verify</span>
+                )}
               </label>
               <input
                 id="ai-brand"
-                className={styles.input}
+                className={`${styles.input} ${lowConfFields.has('brand') ? styles.inputVerify : ''}`}
                 type="text"
                 placeholder="Carter's, H&M, …"
                 value={brand}
-                onChange={e => setBrand(e.target.value)}
+                onChange={e => { setBrand(e.target.value); clearLowConfFlag('brand') }}
               />
             </div>
           </div>
