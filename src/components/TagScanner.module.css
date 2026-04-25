@@ -323,7 +323,7 @@
   pointer-events: none;
 }
 
-/* "Next item" button — the primary way to advance in batch mode after
+/* "Scan next" button — the primary way to advance in batch mode after
    a capture. Renders only while the clear-frame gate is armed
    (lockState === 'needsClear'). Sized to be unmissable: large pill
    with a gentle pulse so the eye finds it. The thumbnail strip in the
@@ -331,7 +331,14 @@
    button intentionally does NOT carry a redundant checkmark — its job
    is purely to advance, not to acknowledge. Sits below the framing
    hint, well clear of the system "camera in use" toast at the top
-   of the viewport. */
+   of the viewport.
+
+   Color: action-blue (#2563EB) rather than teal. Teal in this app
+   reads as "success / done" (it's our primary save color), which is
+   the wrong cue here — this button advances to the next capture, it
+   doesn't celebrate completion. Blue is the universal "take this
+   action / clickable" signal and stays distinct from teal (success),
+   amber (verify-warning), and red (destructive). */
 .cameraNextBtn {
   position: absolute;
   left: 50%;
@@ -340,7 +347,7 @@
   min-width: 200px;
   max-width: calc(100% - 40px);
   padding: 16px 32px;
-  background: var(--teal);
+  background: #2563EB;
   color: #fff;
   border: none;
   border-radius: 999px;
@@ -360,7 +367,7 @@
     cameraNextBtnPulse 1.8s ease-in-out 0.4s infinite;
   transition: background 0.12s ease, transform 0.08s ease, box-shadow 0.18s ease;
 }
-.cameraNextBtn:hover  { background: var(--teal-dark); }
+.cameraNextBtn:hover  { background: #1D4ED8; }
 .cameraNextBtn:active {
   transform: translateX(-50%) scale(0.97);
   animation: cameraNextBtnIn 0.22s ease-out; /* drop pulse on press */
