@@ -64,8 +64,14 @@ export default function Home() {
         return
       }
 
+      // ONBOARDING_COMPLETE is 6 since migration 014 (was 5 with receiving,
+      // 4 originally). Anything below complete means the user still has a
+      // step to handle — receiving, invite, or scan — and belongs on the
+      // /onboarding flow, not here. Hard-coded to keep this gate self-
+      // contained, but keep this in sync with Onboarding.jsx if the flow
+      // grows another step.
       const step = data?.onboarding_step ?? 0
-      if (step < 4) {
+      if (step < 6) {
         navigate('/onboarding', { replace: true })
         return
       }
@@ -124,9 +130,8 @@ export default function Home() {
     if (fields.item_type)  params.set('from_slot', fields.item_type)
     if (fields.size_label) params.set('size',      fields.size_label)
     if (fields.brand)      params.set('brand',     fields.brand.slice(0, 80))
-    const filled = ['category','item_type','size_label','brand']
-      .reduce((n, k) => n + (fields[k] ? 1 : 0), 0)
-    track.tagScanCompleted({ filled, from: 'home' })
+    // tagScanCompleted is fired by TagScanner itself (with the richer
+    // duration/confidence/quota payload). Don't double-fire here.
     navigate(`/add-item?${params.toString()}`)
   }
 
