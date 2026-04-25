@@ -86,12 +86,20 @@ export const track = {
     logEvent('onboarding_completed', 'onboarding', {}, { id: 'onboarding', step: 6 }),
   firstItemAdded: (props) =>
     logEvent('first_item_added', 'onboarding', props, { id: 'onboarding', step: 7 }),
+  // Onboarding scan step (added 2026-04-25). The scan CTA is itself optional,
+  // so we track engagement vs skip separately from the underlying tag-scan
+  // events. `onboarding_scan_completed` fires for both single-scan and batch
+  // paths — `mode` carries which one.
+  onboardingScanSkipped: () =>
+    logEvent('onboarding_scan_skipped', 'onboarding', {}),
+  onboardingScanCompleted: (props) =>
+    logEvent('onboarding_scan_completed', 'onboarding', props),
 
   addItemStarted: (props) =>
     logEvent('add_item_started', 'inventory', props, { id: 'add_item', step: 1 }),
-  // Photo-scan add-item (Phase 1). `from` is 'home' | 'add_item'. `filled`
-  // is the whitelisted field count returned by the model. `error` is the
-  // Edge Function error code when the scan fails. Kept outside the
+  // Photo-scan add-item (Phase 1). `from` is 'home' | 'add_item' | 'onboarding'.
+  // `filled` is the whitelisted field count returned by the model. `error` is
+  // the Edge Function error code when the scan fails. Kept outside the
   // add_item funnel so scan-initiated adds and manual adds show up as
   // distinct paths in the funnel view.
   tagScanStarted: (props) =>

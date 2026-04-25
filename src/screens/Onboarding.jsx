@@ -2,34 +2,44 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useHousehold } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import LogoutButton from '../components/LogoutButton'
+import TagScanner from '../components/TagScanner'
 import styles from './Onboarding.module.css'
 
-// Onboarding is a single-screen state machine with five UI steps plus a done
+// Onboarding is a single-screen state machine with six UI steps plus a done
 // screen. We intentionally don't nest routes — the flow is strictly linear
 // and internal state is simpler to reason about than URL-driven navigation.
 //
 // Resume is driven by beta.user_activity_summary.onboarding_step (widened
-// from 0..4 to 0..5 in migration 011):
+// to 0..6 in migration 014):
 //   0 → not started       → step "household"
-//   1 → household created   → step "baby"      (household pre-loaded)
+//   1 → household created → step "baby"      (household pre-loaded)
 //   2 → baby added        → step "sizemode"  (household + babies pre-loaded)
 //   3 → size mode set     → step "receiving" (receiving opt-in)
 //   4 → receiving saved   → step "invite"
-//   5 → complete          → redirect to /home
+//   5 → invite handled    → step "scan"     (try the photo-scan feature)
+//   6 → complete          → redirect to /home
 //
 // The receiving step is opt-in: toggle defaults to off, skipping advances
 // the flow with opted-in=false. We still bump onboarding_step when they
 // advance so resume lands them on the next screen rather than making them
 // revisit the toggle.
 //
+// The scan step is also opt-in. Its purpose is exposure — getting a new
+// parent to actually try the photo-scan feature at the moment they have
+// the freshest "okay, what does this thing do?" energy. We don't gate the
+// flow on it: skipping is a first-class action, and engaging routes them
+// straight into the natural downstream surface (AddItem confirm for a
+// single scan, Inventory for a batch save).
+//
 // A row in user_activity_summary exists for every user (auto-created on signup
 // via trigger, backfilled for existing users). We bump onboarding_step after
 // each successful transition so resume is reliable across sessions/devices.
-const STEPS = ['household', 'baby', 'sizemode', 'receiving', 'invite']
+const STEPS = ['household', 'baby', 'sizemode', 'receiving', 'invite', 'scan']
 const STEP_TO_INDEX = Object.fromEntries(STEPS.map((s, i) => [s, i]))
-const ONBOARDING_COMPLETE = STEPS.length  // = 5
+const ONBOARDING_COMPLETE = STEPS.length  // = 6
 
 // Size + gender enums reused from Profile's ReceivingSection. Kept local so
 // Onboarding can't drift if Profile ever adds a size (constraint in the DB
@@ -87,6 +97,14 @@ function inviteWardrobeCopy(babies) {
 export default function Onboarding() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  // HouseholdContext loads off the auth user, so it cached household=null
+  // before the user created theirs in step 1. We call `refresh` when the
+  // scan step mounts to re-fetch household+babies — BatchReview disables
+  // its Save button until a household is present, so without this the
+  // batch path on the new scan step would silently no-op.
+  // reloadItems is fired after a batch scan save so /inventory renders
+  // the freshly-seeded rows on first paint instead of after a re-fetch tick.
+  const { reloadItems, refresh: refreshHousehold } = useHousehold()
 
   const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'done'
   const [step, setStep] = useState('household')
@@ -226,6 +244,13 @@ export default function Onboarding() {
     resume()
     return () => { cancelled = true }
   }, [user, navigate])
+
+  // Pre-warm HouseholdContext once we hit the scan step so the BatchReview
+  // overlay finds a household when the user opts into the batch path.
+  // Safe to run on the resume path too — refresh is just a re-fetch.
+  useEffect(() => {
+    if (step === 'scan') refreshHousehold()
+  }, [step, refreshHousehold])
 
   // Writes the user's highest-reached step. Best-effort — a failure here
   // shouldn't block the UX, it just means resume is less accurate next time.
@@ -448,17 +473,22 @@ export default function Onboarding() {
   }
 
   // ── Step 5 — invite (UI only for now) ────────────────────────────────
-  function sendInvite() {
+  // Both paths (send + skip) advance into the scan step rather than
+  // completing onboarding directly. We bump onboarding_step to 5 so a
+  // resume after closing the tab on this page lands on scan, not invite.
+  async function sendInvite() {
     // Real invite plumbing (pending_invites table + email sending) is a
     // follow-up. For now, we just log the event so the funnel data is
     // honest about intent.
     track.inviteSent(false)
-    finishOnboarding()
+    await bumpOnboardingStep(STEP_TO_INDEX.scan)
+    setStep('scan')
   }
 
-  function skipInvite() {
+  async function skipInvite() {
     track.inviteSent(true)
-    finishOnboarding()
+    await bumpOnboardingStep(STEP_TO_INDEX.scan)
+    setStep('scan')
   }
 
   function finishOnboarding() {
@@ -466,6 +496,55 @@ export default function Onboarding() {
     // Fire-and-forget — the 'done' screen doesn't need to wait on the bump.
     bumpOnboardingStep(ONBOARDING_COMPLETE)
     setStatus('done')
+  }
+
+  // ── Step 6 — try the photo-scan ──────────────────────────────────────
+  // Three exits: skip, single scan, batch save.
+  //
+  // For both engaged paths (single + batch) we mark onboarding complete
+  // BEFORE navigating away, because the user is leaving the /onboarding
+  // route — if we left it for the next mount of /onboarding to bump, a
+  // browser back-button would dump them back here in a half-resumed state.
+  // The skip path stays on /onboarding and renders the done screen, which
+  // gives the same ceremonial close the flow had before this step existed.
+  async function skipScan() {
+    track.onboardingScanSkipped()
+    finishOnboarding()
+  }
+
+  // Single-scan path — mirror Home.onHomeScanResult so /add-item is the
+  // single confirm surface for prefilled-from-scan items, regardless of
+  // where the scan was initiated.
+  async function onOnboardingScanResult(fields) {
+    if (!fields) return
+    const params = new URLSearchParams({ mode: 'owned' })
+    if (fields.category)   params.set('category',  fields.category)
+    if (fields.item_type)  params.set('from_slot', fields.item_type)
+    if (fields.size_label) params.set('size',      fields.size_label)
+    if (fields.brand)      params.set('brand',     fields.brand.slice(0, 80))
+    const filled = ['category','item_type','size_label','brand']
+      .reduce((n, k) => n + (fields[k] ? 1 : 0), 0)
+    // tagScanCompleted itself is fired by TagScanner (with duration +
+    // confidence + quota). The onboarding-specific event below is the
+    // funnel signal we own here.
+    track.onboardingScanCompleted({ mode: 'single', filled })
+    track.onboardingCompleted()
+    await bumpOnboardingStep(ONBOARDING_COMPLETE)
+    navigate(`/add-item?${params.toString()}`, { replace: true })
+  }
+
+  // Batch save path — TagScanner's BatchReview already saved the rows.
+  // We finish onboarding then drop on /inventory so the freshly-seeded
+  // wardrobe is the first thing they see, with a count toast for receipt.
+  async function onOnboardingBatchSaved(count) {
+    track.onboardingScanCompleted({ mode: 'batch', count })
+    track.onboardingCompleted()
+    await bumpOnboardingStep(ONBOARDING_COMPLETE)
+    reloadItems()
+    navigate('/inventory', {
+      replace: true,
+      state: { toast: `Added ${count} item${count === 1 ? '' : 's'}` },
+    })
   }
 
   // ── Back navigation ──────────────────────────────────────────────────
@@ -909,6 +988,37 @@ export default function Onboarding() {
             <p className={styles.helperNote}>
               Invites are coming soon. For now, we'll note who you'd like to bring in
               and reach out when the feature launches.
+            </p>
+          </>
+        )}
+
+        {step === 'scan' && (
+          <>
+            <h1 className={styles.title}>Try the photo-scan</h1>
+            <p className={styles.sub}>
+              Snap a clothing tag and Rooloop fills in brand, size, and type.
+              Got a stack of clothes already? Tap <strong>Scan many</strong>{' '}
+              in the camera to add them in one go.
+            </p>
+
+            {/* TagScanner brings its own primary-button styling and
+                CameraModal — we just hand it the from prop so analytics
+                can slice onboarding scans against home/add_item, plus
+                onboarding-specific exit handlers. */}
+            <TagScanner
+              variant="primary"
+              from="onboarding"
+              onResult={onOnboardingScanResult}
+              onBatchSaved={onOnboardingBatchSaved}
+            />
+
+            <div className={styles.skipLink}>
+              <button type="button" className={styles.skipBtn} onClick={skipScan}>
+                Skip for now
+              </button>
+            </div>
+            <p className={styles.helperNote}>
+              You can always scan tags later from the home screen.
             </p>
           </>
         )}

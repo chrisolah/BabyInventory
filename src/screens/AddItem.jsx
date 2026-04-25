@@ -358,7 +358,8 @@ export default function AddItem() {
 
     setScanFilledCount(filled)
     setLowConfFields(nextLowConf)
-    track.tagScanCompleted({ filled, mode })
+    // tagScanCompleted is fired by TagScanner itself (with the richer
+    // duration/confidence/quota payload). Don't double-fire here.
   }
 
   async function submit(e) {
