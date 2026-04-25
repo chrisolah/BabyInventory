@@ -886,6 +886,74 @@ function CameraModal({
   )
 }
 
+// Pre-camera mode picker. Bottom-sheet with two large tap targets (single
+// vs. batch) plus a Cancel. The whole point of putting this BEFORE the
+// camera is that the system "camera in use" toast that mobile Chrome
+// shows after permission grant covers the in-camera Multi pill — by the
+// time the user can swipe it away, auto-capture has often already fired.
+// Routing through this sheet means batchMode is already the right value
+// when CameraModal mounts.
+function ModePicker({ onPick, onCancel }) {
+  // Escape to dismiss for desktop testing — same pattern as CameraModal.
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onCancel() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onCancel])
+
+  return (
+    <div
+      className={styles.modePickerScrim}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Choose scan mode"
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}
+    >
+      <div className={styles.modePickerSheet}>
+        <div className={styles.modePickerTitle}>What are you scanning?</div>
+        <div className={styles.modePickerSub}>
+          Pick one. You can switch from inside the camera too.
+        </div>
+        <button
+          type="button"
+          className={styles.modePickerCard}
+          onClick={() => onPick(false)}
+        >
+          <div className={`${styles.modePickerCardIcon} ${styles.modePickerIconSingle}`} aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+              <rect x="3.5" y="6" width="17" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+              <circle cx="12" cy="12" r="3.2" stroke="currentColor" strokeWidth="1.5"/>
+            </svg>
+          </div>
+          <div className={styles.modePickerCardText}>
+            <div className={styles.modePickerCardTitle}>Just one item</div>
+            <div className={styles.modePickerCardBody}>Snap one tag. We close the camera and prefill the form.</div>
+          </div>
+        </button>
+        <button
+          type="button"
+          className={styles.modePickerCard}
+          onClick={() => onPick(true)}
+        >
+          <div className={`${styles.modePickerCardIcon} ${styles.modePickerIconBatch}`} aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+              <rect x="3" y="9" width="14" height="11" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+              <rect x="7" y="4" width="14" height="11" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+            </svg>
+          </div>
+          <div className={styles.modePickerCardText}>
+            <div className={styles.modePickerCardTitle}>A whole stack</div>
+            <div className={styles.modePickerCardBody}>Camera stays open between tags. Review them all at the end.</div>
+          </div>
+        </button>
+        <button type="button" className={styles.modePickerCancel} onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function TagScanner({
   onResult,
   onBatchSaved,
@@ -898,13 +966,20 @@ export default function TagScanner({
   const [error, setError] = useState(null)
   const [errorDebug, setErrorDebug] = useState(null)
   const [cameraOpen, setCameraOpen] = useState(false)
-  // Batch mode state. Armed by the in-camera "Multi" toggle; entering the
-  // camera always starts with batchMode=false to keep the single-scan
-  // path frictionless. batchItems accumulates { id, thumbnailDataUrl,
-  // fields, confidence } — the thumbnail is a data URL derived from the
-  // same compressed JPEG we already send up to the Edge Function, so we
-  // pay zero extra bytes over the wire. reviewOpen is the boolean that
-  // swaps the camera for the <BatchReview> overlay.
+  // Pre-camera mode picker. When the user taps the "Scan a tag" button we
+  // show this sheet first, asking single vs. batch. Mode is set BEFORE the
+  // camera opens, which sidesteps the mobile-Chrome "[site] is using your
+  // camera" toast that covers the in-camera Multi pill long enough for
+  // auto-capture to fire on a single item the user actually wanted to
+  // batch. Skipped when we're falling back to the file picker.
+  const [modePickerOpen, setModePickerOpen] = useState(false)
+  // Batch mode state. Set by the pre-camera mode picker (or, after the
+  // camera is open, by the in-camera "Multi" toggle for switching modes
+  // mid-session). batchItems accumulates { id, thumbnailDataUrl, fields,
+  // confidence } — the thumbnail is a data URL derived from the same
+  // compressed JPEG we already send up to the Edge Function, so we pay
+  // zero extra bytes over the wire. reviewOpen is the boolean that swaps
+  // the camera for the <BatchReview> overlay.
   const [batchMode, setBatchMode] = useState(false)
   const [batchItems, setBatchItems] = useState([])
   const [reviewOpen, setReviewOpen] = useState(false)
@@ -1048,13 +1123,32 @@ export default function TagScanner({
     // auto-capture timer, for instance) would hit a suspended context
     // and the sound would silently fail.
     primeAudio()
-    // Prefer the live camera; file picker is the fallback route.
+    // Prefer the live camera; file picker is the fallback route. With the
+    // live camera we route through the mode picker first so the user has
+    // already chosen single vs. batch before any system "camera in use"
+    // toast can race the in-camera toggle. The file picker is single-only
+    // by nature, so there's nothing to ask there.
     if (canUseLiveCamera()) {
-      setCameraOpen(true)
+      setModePickerOpen(true)
     } else {
       inputRef.current?.click()
     }
   }
+
+  // Mode picker resolves to either single-shot or batch, then opens the
+  // camera with batchMode already set. We always wipe any leftover batch
+  // items first because the picker is the canonical "starting a new scan
+  // session" moment — no surprise carry-over from a previous open.
+  const onPickMode = useCallback((wantsBatch) => {
+    setModePickerOpen(false)
+    setBatchItems([])
+    setBatchMode(wantsBatch)
+    setCameraOpen(true)
+  }, [])
+
+  const onCancelModePicker = useCallback(() => {
+    setModePickerOpen(false)
+  }, [])
 
   function onFallbackFromModal() {
     setCameraOpen(false)
@@ -1106,6 +1200,10 @@ export default function TagScanner({
           {error}
           {errorDebug && <div className={styles.errorDebug}>{errorDebug}</div>}
         </div>
+      )}
+
+      {modePickerOpen && (
+        <ModePicker onPick={onPickMode} onCancel={onCancelModePicker} />
       )}
 
       {cameraOpen && (

@@ -546,3 +546,134 @@
   .cameraScrimRight   { top: calc(50% - 15vh); bottom: calc(50% - 15vh); width: calc(50% - 30vw); }
   .cameraHint         { top: calc(50% + 15vh + 14px); }
 }
+
+/* ── Pre-camera mode picker ──
+   Bottom-sheet that appears when the user taps "Scan a tag." Two big
+   tap targets (Just one item / A whole stack) plus a Cancel. Sits
+   above everything else so a stray cameraOpen state can't bleed
+   through visually. The whole reason this sheet exists: the system
+   "[site] is using your camera" toast on mobile Chrome covers the
+   in-camera Multi pill long enough for auto-capture to fire. Picking
+   the mode here means batchMode is already correct when the camera
+   mounts — the toast becomes irrelevant. */
+.modePickerScrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: modePickerFadeIn 0.18s ease-out;
+}
+@keyframes modePickerFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.modePickerSheet {
+  width: 100%;
+  max-width: 420px;
+  background: var(--white);
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  padding: 22px 18px calc(18px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  animation: modePickerSlideUp 0.22s ease-out;
+}
+@keyframes modePickerSlideUp {
+  from { transform: translateY(24px); opacity: 0.5; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+@media (min-width: 600px) {
+  /* On wider viewports (desktop/tablet), centre the sheet rather than
+     pinning it to the bottom — bottom-pinned looks awkward on a tall
+     desktop window. */
+  .modePickerScrim { align-items: center; }
+  .modePickerSheet {
+    border-radius: 18px;
+    padding: 22px 22px;
+  }
+}
+.modePickerTitle {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+.modePickerSub {
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.modePickerCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s ease, transform 0.08s ease;
+}
+.modePickerCard:hover  { background: var(--gray-100); }
+.modePickerCard:active { transform: scale(0.99); }
+.modePickerCard:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+.modePickerCardIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.modePickerIconSingle {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+}
+.modePickerIconBatch {
+  background: var(--purple-light);
+  color: var(--purple-dark);
+}
+.modePickerCardText {
+  flex: 1;
+  min-width: 0;
+}
+.modePickerCardTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 2px;
+}
+.modePickerCardBody {
+  font-size: 12.5px;
+  color: var(--gray-600);
+  line-height: 1.45;
+}
+.modePickerCancel {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  background: transparent;
+  color: var(--gray-600);
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+.modePickerCancel:hover { background: var(--gray-100); }
