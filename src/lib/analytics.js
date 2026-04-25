@@ -78,8 +78,11 @@ export const track = {
     logEvent('baby_added', 'onboarding', props, { id: 'onboarding', step: 3 }),
   babiesAddedOnboarding: (props) =>
     logEvent('babies_added_onboarding', 'onboarding', props),
-  sizeModeSelected: (mode) =>
-    logEvent('size_mode_selected', 'onboarding', { mode }, { id: 'onboarding', step: 4 }),
+  // Note: size_mode_selected event was removed 2026-04-25 along with the
+  // sizemode picker (Onboarding + Profile). The funnel-step numbering on
+  // the remaining events is preserved as historical labels — they no
+  // longer line up with the current 5-step onboarding state machine, but
+  // changing them would muddy event-stream continuity.
   inviteSent: (skipped) =>
     logEvent('invite_sent', 'onboarding', { skipped }, { id: 'onboarding', step: 5 }),
   onboardingCompleted: () =>
