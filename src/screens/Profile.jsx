@@ -635,10 +635,10 @@ function ReceivingSection({ household, onUpdated }) {
           </div>
           <div className={styles.prefRowSub}>
             {accepts
-              ? 'A Rooloop family\u2019s outgrown box may be routed to '
+              ? 'A Sprigloop family\u2019s outgrown box may be routed to '
                 + 'you. We\u2019ll always message you before shipping '
                 + 'anything.'
-              : 'Turn on to let Rooloop route another family\u2019s '
+              : 'Turn on to let Sprigloop route another family\u2019s '
                 + 'outgrown clothes your way when there\u2019s a match.'}
           </div>
         </div>
@@ -755,12 +755,12 @@ function ReceivingSection({ household, onUpdated }) {
           {/* Notes */}
           <div className={styles.receivingField}>
             <div className={styles.receivingFieldLabel}>
-              Notes for Rooloop
+              Notes for Sprigloop
             </div>
             <div className={styles.receivingFieldHint}>
               Anything we should know when matching boxes to your
               household — sibling on the way, a preference, an allergy.
-              Only Rooloop sees this.
+              Only Sprigloop sees this.
             </div>
             <textarea
               className={styles.receivingTextarea}
@@ -1033,9 +1033,9 @@ function AccountTab() {
   function handleDeleteAccount() {
     // Route through support. Compose a mailto with the user's identifying
     // info pre-filled so we can verify the request without a back-and-forth.
-    const subject = encodeURIComponent('Delete my Rooloop account')
+    const subject = encodeURIComponent('Delete my Sprigloop account')
     const body = encodeURIComponent(
-      `Hi Rooloop team,\n\n` +
+      `Hi Sprigloop team,\n\n` +
       `Please delete my account.\n\n` +
       `Email on file: ${currentEmail}\n` +
       `User ID: ${user?.id ?? '(unknown)'}\n\n` +
@@ -1186,7 +1186,7 @@ function AccountTab() {
           <div className={styles.quietRowBody}>
             <div className={styles.quietRowTitle}>Sign out</div>
             <div className={styles.quietRowSub}>
-              Sign out of Rooloop on this device. Your data stays in
+              Sign out of Sprigloop on this device. Your data stays in
               your household.
             </div>
           </div>
@@ -1201,9 +1201,9 @@ function AccountTab() {
         </div>
       </section>
 
-      {/* ── Leaving Rooloop ────────────────────────────────────────── */}
+      {/* ── Leaving Sprigloop ────────────────────────────────────────── */}
       <section className={`${styles.section} ${styles.sectionQuiet}`}>
-        <div className={styles.sectionTitleQuiet}>Leaving Rooloop</div>
+        <div className={styles.sectionTitleQuiet}>Leaving Sprigloop</div>
 
         <div className={styles.quietRow}>
           <div className={styles.quietRowBody}>

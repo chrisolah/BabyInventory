@@ -46,13 +46,13 @@ import styles from './PassAlongBatch.module.css'
 const DESTINATION_OPTIONS = [
   {
     id: 'littleloop',
-    label: 'Rooloop',
+    label: 'Sprigloop',
     sub: 'Ship to us — we inspect, match, or donate on your behalf.',
   },
   {
     id: 'family',
-    label: 'Another Rooloop family',
-    sub: 'Ships to Rooloop first — we forward to a matched family who\u2019s opted in to receiving.',
+    label: 'Another Sprigloop family',
+    sub: 'Ships to Sprigloop first — we forward to a matched family who\u2019s opted in to receiving.',
   },
   {
     id: 'person',
@@ -69,7 +69,7 @@ const DESTINATION_OPTIONS = [
 const STATUS_LABEL = {
   draft: 'Draft',
   shipped: 'Shipped',
-  received: 'Received at Rooloop',
+  received: 'Received at Sprigloop',
   fulfilled: 'Fulfilled',
   canceled: 'Canceled',
 }
@@ -96,7 +96,7 @@ function timelineFor(destination) {
   // through HQ physically.
   return [
     { key: 'draft', label: 'Draft' },
-    { key: 'shipped', label: 'Shipped to Rooloop' },
+    { key: 'shipped', label: 'Shipped to Sprigloop' },
     { key: 'received', label: 'Received' },
     { key: 'fulfilled', label: destination === 'family' ? 'Forwarded to family' : 'Fulfilled' },
   ]
@@ -734,7 +734,7 @@ export default function PassAlongBatch() {
       if (destination === 'person' || destination === 'charity') {
         return 'Once you confirm, the batch is marked shipped and closed out. You\u2019ll still be able to see it in your history.'
       }
-      return 'Mark this batch as sent. Rooloop will update you once we\u2019ve received it.'
+      return 'Mark this batch as sent. Sprigloop will update you once we\u2019ve received it.'
     }
     if (pendingAction === 'requestLabel') {
       return 'We\u2019ll email you a prepaid shipping label. Add the return address the carrier should pick up from.'
@@ -883,9 +883,9 @@ export default function PassAlongBatch() {
                   don\u2019t choose a specific household. */}
               {destination === 'family' && (
                 <div className={styles.familyExplainer}>
-                  <strong>How this works:</strong> The box ships to Rooloop
+                  <strong>How this works:</strong> The box ships to Sprigloop
                   first. We check the contents, match them to another
-                  Rooloop family that’s opted in to receiving, and
+                  Sprigloop family that’s opted in to receiving, and
                   forward it on. You stay anonymous.
                   {recipientHousehold && (
                     <div className={styles.familyMatchedLine}>
@@ -1034,7 +1034,7 @@ export default function PassAlongBatch() {
                   </li>
                   {(destination === 'littleloop' || destination === 'family') && (
                     <li>
-                      Ship to Rooloop. You’ll get the shipping address
+                      Ship to Sprigloop. You’ll get the shipping address
                       with your prepaid label — request one below, or use your
                       own carrier and we’ll share the address by email.
                     </li>
@@ -1055,7 +1055,7 @@ export default function PassAlongBatch() {
                 inspection. */}
             <section className={styles.section}>
               <div className={styles.sectionTitle}>
-                Notes <span className={styles.optional}>(for yourself or Rooloop)</span>
+                Notes <span className={styles.optional}>(for yourself or Sprigloop)</span>
               </div>
               <textarea
                 className={styles.textarea}
