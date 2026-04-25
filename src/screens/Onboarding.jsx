@@ -8,19 +8,18 @@ import LogoutButton from '../components/LogoutButton'
 import TagScanner from '../components/TagScanner'
 import styles from './Onboarding.module.css'
 
-// Onboarding is a single-screen state machine with six UI steps plus a done
+// Onboarding is a single-screen state machine with five UI steps plus a done
 // screen. We intentionally don't nest routes — the flow is strictly linear
 // and internal state is simpler to reason about than URL-driven navigation.
 //
-// Resume is driven by beta.user_activity_summary.onboarding_step (widened
-// to 0..6 in migration 014):
+// Resume is driven by beta.user_activity_summary.onboarding_step (remapped
+// in migration 015 after the sizemode step was cut):
 //   0 → not started       → step "household"
 //   1 → household created → step "baby"      (household pre-loaded)
-//   2 → baby added        → step "sizemode"  (household + babies pre-loaded)
-//   3 → size mode set     → step "receiving" (receiving opt-in)
-//   4 → receiving saved   → step "invite"
-//   5 → invite handled    → step "scan"     (try the photo-scan feature)
-//   6 → complete          → redirect to /home
+//   2 → baby added        → step "receiving" (household + babies pre-loaded)
+//   3 → receiving saved   → step "invite"
+//   4 → invite handled    → step "scan"     (try the photo-scan feature)
+//   5 → complete          → redirect to /home
 //
 // The receiving step is opt-in: toggle defaults to off, skipping advances
 // the flow with opted-in=false. We still bump onboarding_step when they
@@ -34,12 +33,18 @@ import styles from './Onboarding.module.css'
 // straight into the natural downstream surface (AddItem confirm for a
 // single scan, Inventory for a batch save).
 //
+// The sizemode step ("by age / by weight / both") used to live between
+// baby and receiving. Mom interviews 2026-04-25 said nearly everyone
+// thinks size by age band, so we cut the prompt — babies default to
+// 'by_age' at the DB level (migration 001), and Profile still exposes
+// the dial for the long tail.
+//
 // A row in user_activity_summary exists for every user (auto-created on signup
 // via trigger, backfilled for existing users). We bump onboarding_step after
 // each successful transition so resume is reliable across sessions/devices.
-const STEPS = ['household', 'baby', 'sizemode', 'receiving', 'invite', 'scan']
+const STEPS = ['household', 'baby', 'receiving', 'invite', 'scan']
 const STEP_TO_INDEX = Object.fromEntries(STEPS.map((s, i) => [s, i]))
-const ONBOARDING_COMPLETE = STEPS.length  // = 6
+const ONBOARDING_COMPLETE = STEPS.length  // = 5
 
 // Size + gender enums reused from Profile's ReceivingSection. Kept local so
 // Onboarding can't drift if Profile ever adds a size (constraint in the DB
@@ -120,10 +125,7 @@ export default function Onboarding() {
   // "+ Add another". First form is always expanded on entry.
   const [babyForms, setBabyForms] = useState([makeBabyForm(true)])
 
-  // Step 3 — size mode
-  const [sizeMode, setSizeMode] = useState('by_age')
-
-  // Step 4 — receiving opt-in. Mirrors Profile.ReceivingSection's fields,
+  // Step 3 — receiving opt-in. Mirrors Profile.ReceivingSection's fields,
   // written to beta.households on submit. Defaults to off; sub-prefs
   // (sizes, genders, notes, paused-until) only appear when toggled on.
   // We don't expose "pause until" here — it's a maintenance affordance, not
@@ -134,7 +136,7 @@ export default function Onboarding() {
   const [receivingGenders,  setReceivingGenders]  = useState([])
   const [receivingNotes,    setReceivingNotes]    = useState('')
 
-  // Step 5 — invite
+  // Step 4 — invite
   const [inviteEmail, setInviteEmail] = useState('')
 
   const [loading, setLoading] = useState(false)
@@ -210,9 +212,9 @@ export default function Onboarding() {
           setReceivingNotes(existing.receiving_notes || '')
 
           if (onboardingStep >= 2) {
-            // Fetch ALL babies, not just one — step 3 applies size_mode to
-            // every baby in the household, and the done screen wants their
-            // names. Ordered so twins resume in a stable order.
+            // Fetch ALL babies, not just one — the done screen wants their
+            // names and downstream code keys off household-wide membership.
+            // Ordered so twins resume in a stable order.
             const { data: rows, error: babyErr } = await supabase
               .schema(currentSchema)
               .from('babies')
@@ -225,7 +227,6 @@ export default function Onboarding() {
               setError(babyErr.message)
             } else if (rows && rows.length > 0) {
               setBabies(rows)
-              setSizeMode(rows[0].size_mode ?? 'by_age')
             }
           }
         }
@@ -322,7 +323,10 @@ export default function Onboarding() {
       household_id: household.id,
       name: f.name,
       gender: f.gender,
-      // size_mode stays at its DB default here; step 3 sets it for everyone.
+      // size_mode is left at its DB default ('by_age' per migration 001).
+      // Mom interviews said nearly everyone uses age bands, so the
+      // onboarding prompt was dropped — Profile remains the place to
+      // switch to by_weight or both for the long tail.
       ...(f.birthMode === 'born'
         ? { date_of_birth: f.birthDate }
         : { due_date: f.birthDate }),
@@ -354,7 +358,7 @@ export default function Onboarding() {
       track.babiesAddedOnboarding({ count: trimmed.length })
     }
     await bumpOnboardingStep(2)
-    setStep('sizemode')
+    setStep('receiving')
   }
 
   // ── Step 2 — baby form helpers ────────────────────────────────────────
@@ -383,36 +387,7 @@ export default function Onboarding() {
     )
   }
 
-  // ── Step 3 — pick size mode ──────────────────────────────────────────
-  // Applies to every baby in the household. Tracking style tends to be a
-  // household-level preference (what the parent's brain is used to), so we
-  // don't ask per-baby. The Profile surface lets them diverge later if they
-  // ever want to.
-  async function selectSizeMode(mode) {
-    setSizeMode(mode)
-    setLoading(true)
-    setError(null)
-
-    const ids = babies.map(b => b.id)
-    const { error: updateErr } = await supabase
-      .schema(currentSchema)
-      .from('babies')
-      .update({ size_mode: mode })
-      .in('id', ids)
-
-    setLoading(false)
-
-    if (updateErr) {
-      setError(updateErr.message)
-      return
-    }
-
-    track.sizeModeSelected(mode)
-    await bumpOnboardingStep(3)
-    setStep('receiving')
-  }
-
-  // ── Step 4 — receiving opt-in ────────────────────────────────────────
+  // ── Step 3 — receiving opt-in ────────────────────────────────────────
   // Writes the receiving preferences to the household row. Default state
   // (toggle off, empty arrays, no notes) is a valid save — that's an
   // explicit "not opted in" signal, not a skip that leaves NULL garbage
@@ -456,7 +431,7 @@ export default function Onboarding() {
       has_notes: !!notesToWrite,
     })
 
-    await bumpOnboardingStep(4)
+    await bumpOnboardingStep(3)
     setStep('invite')
   }
 
@@ -472,7 +447,7 @@ export default function Onboarding() {
     )
   }
 
-  // ── Step 5 — invite (UI only for now) ────────────────────────────────
+  // ── Step 4 — invite (UI only for now) ────────────────────────────────
   // Both paths (send + skip) advance into the scan step rather than
   // completing onboarding directly. We bump onboarding_step to 5 so a
   // resume after closing the tab on this page lands on scan, not invite.
@@ -498,7 +473,7 @@ export default function Onboarding() {
     setStatus('done')
   }
 
-  // ── Step 6 — try the photo-scan ──────────────────────────────────────
+  // ── Step 5 — try the photo-scan ──────────────────────────────────────
   // Three exits: skip, single scan, batch save.
   //
   // For both engaged paths (single + batch) we mark onboarding complete
@@ -800,45 +775,6 @@ export default function Onboarding() {
                 {loading ? 'Saving…' : 'Continue'}
               </button>
             </form>
-          </>
-        )}
-
-        {step === 'sizemode' && (
-          <>
-            <h1 className={styles.title}>How do you think about sizes?</h1>
-            <p className={styles.sub}>
-              Choose what feels most natural — you can always change this later.
-            </p>
-            <div className={styles.cardStack}>
-              <button
-                type="button"
-                className={`${styles.card} ${sizeMode === 'by_age' ? styles.cardSel : ''}`}
-                onClick={() => selectSizeMode('by_age')}
-                disabled={loading}
-              >
-                <div className={styles.cardTitle}>By age</div>
-                <div className={styles.cardSub}>0–3M, 3–6M, 6–9M… Most familiar for new parents.</div>
-              </button>
-              <button
-                type="button"
-                className={`${styles.card} ${sizeMode === 'by_weight' ? styles.cardSel : ''}`}
-                onClick={() => selectSizeMode('by_weight')}
-                disabled={loading}
-              >
-                <div className={styles.cardTitle}>By weight / height</div>
-                <div className={styles.cardSub}>More precise — great if your baby is running big or small.</div>
-              </button>
-              <button
-                type="button"
-                className={`${styles.card} ${sizeMode === 'both' ? styles.cardSel : ''}`}
-                onClick={() => selectSizeMode('both')}
-                disabled={loading}
-              >
-                <div className={styles.cardTitle}>Both</div>
-                <div className={styles.cardSub}>Show age labels and weight ranges together.</div>
-              </button>
-            </div>
-            {error && <div className={styles.error}>{error}</div>}
           </>
         )}
 
