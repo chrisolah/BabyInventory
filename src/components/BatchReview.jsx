@@ -67,7 +67,7 @@ export default function BatchReview({
   // without tearing down the review surface (which onComplete does).
   onPartialSave,
 }) {
-  const { household, currentBaby } = useHousehold()
+  const { household, currentBaby, reloadItems } = useHousehold()
 
   const [saving, setSaving]         = useState(false)
   const [savedCount, setSavedCount] = useState(0)
@@ -194,6 +194,9 @@ export default function BatchReview({
         // unconfirmed rows that weren't part of this run).
         const savedSet = new Set(savedIds)
         setItems((prev) => prev.filter((x) => !savedSet.has(x.id)))
+        // Even on partial failure, refresh the cached items list so the
+        // ones we DID save show up in Inventory immediately.
+        if (savedIds.length > 0) reloadItems?.()
         return
       }
       savedIds.push(it.id)
@@ -210,22 +213,33 @@ export default function BatchReview({
     }
 
     setSaving(false)
+
     // Remove the rows we just saved. Anything unconfirmed survives.
+    // Compute remaining off the current `items` snapshot so we can
+    // branch on emptiness *outside* the setItems updater — calling
+    // other setState/callbacks from inside an updater is fragile under
+    // React 18 strict mode (updaters can run twice in dev).
     const savedSet = new Set(savedIds)
-    setItems((prev) => {
-      const remaining = prev.filter((x) => !savedSet.has(x.id))
-      // If the entire batch is now drained, fall through to the parent's
-      // onComplete handler (which closes the review and fires the
-      // grandparent toast). Otherwise stay on review and let the parent
-      // know via onPartialSave so the toast still fires for the chunk
-      // we did save.
-      if (remaining.length === 0) {
-        onComplete?.(savedIds.length)
-      } else {
-        onPartialSave?.(savedIds.length)
-      }
-      return remaining
-    })
+    const remaining = items.filter((x) => !savedSet.has(x.id))
+    setItems(remaining)
+
+    // Refresh the HouseholdContext items cache so Inventory shows the
+    // newly-saved rows immediately. Without this, the rows are in the
+    // database but invisible to the UI until the next full reload —
+    // which looks identical to "save didn't work". Mirrors what AddItem
+    // does after a successful single-item insert.
+    reloadItems?.()
+
+    // If the entire batch is now drained, hand off to the parent's
+    // onComplete handler (which closes the review and fires the
+    // grandparent toast). Otherwise stay on review and let the parent
+    // know via onPartialSave so the toast still fires for the chunk
+    // we did save.
+    if (remaining.length === 0) {
+      onComplete?.(savedIds.length)
+    } else {
+      onPartialSave?.(savedIds.length)
+    }
   }
 
   // Confirm-discard dialog gets full-screen treatment because the
