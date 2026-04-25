@@ -98,7 +98,7 @@ export default function Login() {
               <path d="M5 14l7 7 11-11" stroke="#1D9E75" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <div className={styles.logo}>littleloop</div>
+          <div className={styles.logo}>sprig</div>
           <h1 className={styles.title}>Check your email</h1>
           <p className={styles.sub}>
             We sent a magic link to <strong>{email}</strong>. Click it to sign in — no password needed.
@@ -124,7 +124,7 @@ export default function Login() {
               <path d="M5 14l7 7 11-11" stroke="#1D9E75" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <div className={styles.logo}>littleloop</div>
+          <div className={styles.logo}>sprig</div>
           <h1 className={styles.title}>Password reset sent</h1>
           <p className={styles.sub}>
             We sent a reset link to <strong>{email}</strong>. Click it to choose a new password.
@@ -145,7 +145,7 @@ export default function Login() {
     <div className={styles.page}>
       <div className={styles.wrap}>
         <button className={styles.back} onClick={() => navigate('/')}>← Back</button>
-        <div className={styles.logo}>littleloop</div>
+        <div className={styles.logo}>sprig</div>
         <h1 className={styles.title}>Welcome back</h1>
         <p className={styles.sub}>Log in to your account.</p>
 
