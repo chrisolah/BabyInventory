@@ -152,7 +152,7 @@ export default function Home() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.brandWrap}>
-          <div className={styles.brand}>Sprig</div>
+          <div className={styles.brand}>Rooloop</div>
           {/* Mobile-only sprig beneath the brand. Hidden on desktop. */}
           <IvySprig />
         </div>

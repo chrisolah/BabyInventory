@@ -767,8 +767,8 @@ export default function Onboarding() {
           <>
             <h1 className={styles.title}>Open to hand-me-downs?</h1>
             <p className={styles.sub}>
-              When another Sprig family has outgrown clothes to pass along,
-              Sprig can route a box your way. You&rsquo;ll always get a
+              When another Rooloop family has outgrown clothes to pass along,
+              Rooloop can route a box your way. You&rsquo;ll always get a
               message before anything ships, and you can turn this off anytime
               from your profile.
             </p>
