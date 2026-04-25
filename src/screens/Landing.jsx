@@ -71,6 +71,11 @@ export default function Landing() {
       <section className={styles.hero}>
         <div className={styles.eyebrow}>Free for all families</div>
         <h1 className={styles.headline}>Baby clothes,<br /><em>organized</em> and shared.</h1>
+        {/* Env hook above the fold. Sits between H1 and sub so the
+            sustainability angle is visible before scroll. Names the audience
+            ("parents who'd rather...") so it doubles as a self-selection
+            line, and pairs anti-waste with pass-along in one breath. */}
+        <p className={styles.heroEnv}>Built for parents who&rsquo;d rather pass it on than throw it out.</p>
         <p className={styles.sub}>Track every onesie, plan every size, and send outgrown clothes on to Littleloop, another family, a friend or family member, or a charity — all from the same app.</p>
         <div className={styles.heroBtns}>
           <button className={styles.heroCta} onClick={handleGetStarted}>Get started free</button>
@@ -106,13 +111,70 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── Photo-scan spotlight ────────────────────────────────────────────
+          Promoted from the old quiet `.scanNote` near the bottom. Sits
+          between Features and How because by this point a reader knows
+          what the app does and is ready to feel "this is fast." Mockup is
+          pure inline SVG/CSS (phone frame, viewfinder corners, tag, three
+          floating field chips) — no image asset, no library. Names
+          "Scan many" explicitly so users see the batch affordance before
+          they even sign up. */}
+      <section className={styles.scanFeature}>
+        <div className={styles.scanFeatureWrap}>
+          <div className={styles.scanFeatureCopy}>
+            <div className={styles.scanFeatureEyebrow}>Built for the laundry pile</div>
+            <h2 className={styles.scanFeatureHeadline}>Snap a tag.<br />Skip the typing.</h2>
+            <p className={styles.scanFeatureBody}>
+              Point your phone at a clothing tag &mdash; Littleloop reads the
+              brand, size, and category in seconds. Got a stack? Tap{' '}
+              <strong>Scan many</strong> and knock out the whole basket
+              without putting it down.
+            </p>
+            <ul className={styles.scanFeatureBullets}>
+              <li>Works on most baby-clothing brands and care labels.</li>
+              <li>Edit anything before you save &mdash; we&rsquo;re a head start, not the final word.</li>
+              <li>Your photos stay on your phone. Only the extracted text is used.</li>
+            </ul>
+          </div>
+          <div className={styles.scanFeatureMock} aria-hidden="true">
+            <div className={styles.phoneFrame}>
+              <div className={styles.phoneNotch} />
+              <div className={styles.phoneScreen}>
+                <span className={`${styles.vfCorner} ${styles.vfTl}`} />
+                <span className={`${styles.vfCorner} ${styles.vfTr}`} />
+                <span className={`${styles.vfCorner} ${styles.vfBl}`} />
+                <span className={`${styles.vfCorner} ${styles.vfBr}`} />
+                <div className={styles.mockTag}>
+                  <div className={styles.mockTagBrand}>carter&rsquo;s</div>
+                  <div className={styles.mockTagSize}>6&ndash;9M</div>
+                  <div className={styles.mockTagCare}>100% cotton &middot; machine wash</div>
+                </div>
+                <div className={styles.mockHint}>Got it&hellip;</div>
+              </div>
+            </div>
+            <div className={`${styles.fieldChip} ${styles.chipBrand}`}>
+              <span className={styles.chipLabel}>Brand</span>
+              <span className={styles.chipValue}>Carter&rsquo;s</span>
+            </div>
+            <div className={`${styles.fieldChip} ${styles.chipSize}`}>
+              <span className={styles.chipLabel}>Size</span>
+              <span className={styles.chipValue}>6&ndash;9M</span>
+            </div>
+            <div className={`${styles.fieldChip} ${styles.chipCat}`}>
+              <span className={styles.chipLabel}>Category</span>
+              <span className={styles.chipValue}>One-pieces</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className={styles.how}>
         <h2 className={styles.sectionTitle} style={{ marginBottom: '6px' }}>Simple from day one</h2>
         <p className={styles.sectionSub} style={{ marginBottom: '1.5rem' }}>For parents building, managing, and passing along a wardrobe.</p>
         {[
           { n: 1, title: 'Add your baby and your clothes', body: 'Set up in minutes. Snap a photo to auto-fill the details, or log items by hand if you prefer.' },
           { n: 2, title: 'Stay on top of every size', body: 'We track what\u2019s coming up and surface gaps before you need them.' },
-          { n: 3, title: 'Send outgrown clothes on', body: 'Pick one of four destinations. We handle routing, matching, and (when needed) the label.' },
+          { n: 3, title: 'Send outgrown clothes on', body: 'Pick one of four destinations. We handle routing, matching, and (when needed) the label. None of them are "throw it away."' },
         ].map(({ n, title, body }) => (
           <div className={styles.howStep} key={n}>
             <div className={styles.howNum}>{n}</div>
@@ -133,7 +195,7 @@ export default function Landing() {
         <div className={styles.hubBand}>
           <div className={styles.hubEyebrow}>When baby outgrows them</div>
           <h2 className={styles.hubHeadline}>Four places your outgrown<br />clothes can go.</h2>
-          <p className={styles.hubBody}>Pick a destination and we&rsquo;ll take it from there. No selling, no drop-off logistics, no swapping addresses with strangers. Littleloop is the trusted pair of hands in the middle so you never have to be.</p>
+          <p className={styles.hubBody}>Pick a destination and Littleloop takes it from there. No selling, no drop-off logistics, no swapping addresses with strangers. Every batch is one less bag in the landfill &mdash; and one less new garment manufactured to take its place.</p>
           <div className={styles.hubGrid}>
             <div className={styles.hubCard}>
               <div className={styles.hubCardIcon} style={{ background: 'var(--teal-light)', color: 'var(--teal-dark)' }}>
@@ -186,7 +248,7 @@ export default function Landing() {
           </div>
           <div className={styles.optInBullet}>
             <div className={styles.optInBulletNum}>03</div>
-            <div className={styles.optInBulletText}><strong>It shows up.</strong> You get clothes your little one can actually use — no forms, no receipts, no follow-ups.</div>
+            <div className={styles.optInBulletText}><strong>It shows up.</strong> You get clothes your little one can actually use &mdash; no forms, no receipts, no follow-ups. And one less wardrobe ordered new.</div>
           </div>
         </div>
       </section>
@@ -194,7 +256,7 @@ export default function Landing() {
       <section className={styles.mission}>
         <div className={styles.missionBand}>
           <div className={styles.missionHeadline}>Every baby deserves a full wardrobe. Every parent deserves an easier week.</div>
-          <p className={styles.missionBody}>Babies outgrow clothes in weeks. Littleloop is the place where what you&rsquo;re done with finds its next baby — through our hands, with as little friction for you as possible.</p>
+          <p className={styles.missionBody}>Babies outgrow clothes in weeks &mdash; most still have years of life left. Littleloop keeps them moving: out of your house, into another baby&rsquo;s drawer, never into landfill. With as little friction for you as possible.</p>
           <button className={styles.missionCta} onClick={handleJoinCommunity}>Join Littleloop</button>
           <div className={styles.statRow}>
             <div><div className={styles.statNum}>Four</div><div className={styles.statLabel}>Destinations per batch</div></div>
@@ -204,18 +266,9 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Quiet mention of the photo-scan add-item. Lives below Mission and
-          above the final CTA so the pass-along story stays front and center
-          in the scroll. No illustration, no band — one small note. */}
-      <section className={styles.scanNote}>
-        <div className={styles.scanNoteEyebrow}>One more thing</div>
-        <div className={styles.scanNoteHeadline}>Snap a photo, skip the typing.</div>
-        <p className={styles.scanNoteBody}>Point your phone at a clothing tag and we&rsquo;ll pre-fill the brand, size, and category for you.</p>
-      </section>
-
       <section className={styles.finalCta}>
         <div className={styles.finalHeadline}>Ready to get started?</div>
-        <p className={styles.finalSub}>Organize your wardrobe, plan for what&rsquo;s next, and send outgrown clothes somewhere they&rsquo;ll be loved. Free for every family. Always.</p>
+        <p className={styles.finalSub}>Organize your wardrobe, plan for what&rsquo;s next, and send outgrown clothes somewhere they&rsquo;ll be loved next, not landfilled. Free for every family. Always.</p>
         <button className={styles.finalCtaBtn} onClick={handleCreateAccount}>Create your account</button>
       </section>
     </div>
