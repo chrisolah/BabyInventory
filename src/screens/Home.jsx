@@ -202,6 +202,7 @@ export default function Home() {
         <div className={styles.scanBlock}>
           <TagScanner
             variant="primary"
+            from="home"
             onResult={onHomeScanResult}
             onBatchSaved={onHomeBatchSaved}
           />

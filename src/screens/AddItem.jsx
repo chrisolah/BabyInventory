@@ -519,6 +519,7 @@ export default function AddItem() {
           <div className={styles.scanRow}>
             <TagScanner
               variant="inline"
+              from="add_item"
               onResult={onScanResult}
               onBatchSaved={(count) => {
                 // Batch flow skipped the AddItem form entirely; each
