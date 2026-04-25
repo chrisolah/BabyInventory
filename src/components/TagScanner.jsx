@@ -873,12 +873,7 @@ function CameraModal({
           className={styles.cameraNextBtn}
           onClick={handleNextItem}
         >
-          <span className={styles.cameraNextBtnCheck} aria-hidden="true">
-            <svg viewBox="0 0 16 16" width="16" height="16" fill="none">
-              <path d="M3 8.5 L6.5 12 L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </span>
-          <span>Next item</span>
+          Next item
         </button>
       )}
 
