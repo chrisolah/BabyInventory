@@ -635,10 +635,10 @@ function ReceivingSection({ household, onUpdated }) {
           </div>
           <div className={styles.prefRowSub}>
             {accepts
-              ? 'A Littleloop family\u2019s outgrown box may be routed to '
+              ? 'A Sprig family\u2019s outgrown box may be routed to '
                 + 'you. We\u2019ll always message you before shipping '
                 + 'anything.'
-              : 'Turn on to let Littleloop route another family\u2019s '
+              : 'Turn on to let Sprig route another family\u2019s '
                 + 'outgrown clothes your way when there\u2019s a match.'}
           </div>
         </div>
@@ -755,12 +755,12 @@ function ReceivingSection({ household, onUpdated }) {
           {/* Notes */}
           <div className={styles.receivingField}>
             <div className={styles.receivingFieldLabel}>
-              Notes for Littleloop
+              Notes for Sprig
             </div>
             <div className={styles.receivingFieldHint}>
               Anything we should know when matching boxes to your
               household — sibling on the way, a preference, an allergy.
-              Only Littleloop sees this.
+              Only Sprig sees this.
             </div>
             <textarea
               className={styles.receivingTextarea}
@@ -1033,9 +1033,9 @@ function AccountTab() {
   function handleDeleteAccount() {
     // Route through support. Compose a mailto with the user's identifying
     // info pre-filled so we can verify the request without a back-and-forth.
-    const subject = encodeURIComponent('Delete my Littleloop account')
+    const subject = encodeURIComponent('Delete my Sprig account')
     const body = encodeURIComponent(
-      `Hi Littleloop team,\n\n` +
+      `Hi Sprig team,\n\n` +
       `Please delete my account.\n\n` +
       `Email on file: ${currentEmail}\n` +
       `User ID: ${user?.id ?? '(unknown)'}\n\n` +
@@ -1186,7 +1186,7 @@ function AccountTab() {
           <div className={styles.quietRowBody}>
             <div className={styles.quietRowTitle}>Sign out</div>
             <div className={styles.quietRowSub}>
-              Sign out of Littleloop on this device. Your data stays in
+              Sign out of Sprig on this device. Your data stays in
               your household.
             </div>
           </div>
@@ -1201,9 +1201,9 @@ function AccountTab() {
         </div>
       </section>
 
-      {/* ── Leaving Littleloop ─────────────────────────────────────── */}
+      {/* ── Leaving Sprig ──────────────────────────────────────────── */}
       <section className={`${styles.section} ${styles.sectionQuiet}`}>
-        <div className={styles.sectionTitleQuiet}>Leaving Littleloop</div>
+        <div className={styles.sectionTitleQuiet}>Leaving Sprig</div>
 
         <div className={styles.quietRow}>
           <div className={styles.quietRowBody}>
