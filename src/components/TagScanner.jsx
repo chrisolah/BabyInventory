@@ -309,8 +309,21 @@ const AUTO_LOCK_HOLD_MS    = 260
 // score briefly spiking on patterned fabric, sleeves, hands, or seams as
 // items move past the lens. Mirrors how barcode scanners require the code
 // to leave the field before re-scanning.
-const AUTO_IDLE_MAX         = 6  // score must drop below this to count as idle
-const AUTO_IDLE_CONSECUTIVE = 2  // consecutive idle samples required to re-arm
+//
+// Threshold tuning: per computeTextLikeness, scores cluster as 0–5 on
+// solid surfaces, 5–12 on textured fabric, 18+ on actual text. We set
+// AUTO_IDLE_MAX = 14 so that anything BELOW the real text threshold
+// counts as idle — which is what we actually want the gate to mean
+// ("the previous tag is no longer here"), not "the camera sees a perfect
+// blank surface" (which never happens in real laundry-pile use). One
+// idle sample is enough; requiring more was over-engineering and led to
+// the gate sticking open indefinitely when the scene was just textured
+// fabric the whole time. AUTO_IDLE_TIMEOUT_MS is a safety belt: if the
+// gate hasn't cleared after this long, force it open so the user can't
+// get permanently stuck behind it.
+const AUTO_IDLE_MAX         = 14   // score must drop below this to count as idle
+const AUTO_IDLE_CONSECUTIVE = 1    // consecutive idle samples required to re-arm
+const AUTO_IDLE_TIMEOUT_MS  = 5000 // hard timeout — force-clear after this long
 
 // Fraction of the video frame that maps to the guide region. Kept slightly
 // wider than the CSS band so small framing errors (tag slightly outside the
@@ -417,9 +430,13 @@ function CameraModal({
   // Clear-frame gate. True after a batch capture fires; auto-capture is
   // suppressed until we've seen enough consecutive low-score ("idle")
   // samples to be confident the user has pulled the garment away. See the
-  // AUTO_IDLE_* constants above for the gate parameters.
+  // AUTO_IDLE_* constants above for the gate parameters. armedAt is the
+  // timestamp the gate was raised so we can force-clear after
+  // AUTO_IDLE_TIMEOUT_MS (safety belt against the gate sticking open if
+  // the score never falls below the idle threshold).
   const needsClearFrameRef = useRef(false)
   const idleStreakRef = useRef(0)
+  const gateArmedAtRef = useRef(0)
   const [ready, setReady] = useState(false)
   const [streamError, setStreamError] = useState(null)
   const [capturing, setCapturing] = useState(false)
@@ -559,6 +576,7 @@ function CameraModal({
         // garments routinely trip the text-likeness heuristic and fire.
         needsClearFrameRef.current = true
         idleStreakRef.current = 0
+        gateArmedAtRef.current = Date.now()
         setLockState('needsClear')
         // Push the warmup clock forward a hair so the next auto-fire
         // isn't triggered by the same frame that just fired.
@@ -631,6 +649,20 @@ function CameraModal({
         // the camera from firing on sleeves / seams / hands as the user
         // moves the next item into position.
         if (needsClearFrameRef.current) {
+          // Hard timeout safety belt. If the gate has been armed for
+          // longer than AUTO_IDLE_TIMEOUT_MS without ever seeing a sample
+          // below AUTO_IDLE_MAX (e.g., user is scanning over a busy
+          // patterned surface where every frame scores 8–14), force-disarm.
+          // Risking one occasional false fire is much better than silently
+          // bricking auto-capture for the rest of the session.
+          const armedFor = Date.now() - gateArmedAtRef.current
+          if (armedFor > AUTO_IDLE_TIMEOUT_MS) {
+            needsClearFrameRef.current = false
+            idleStreakRef.current = 0
+            scoreHistoryRef.current = []
+            setLockState('waiting')
+            return
+          }
           if (score < AUTO_IDLE_MAX) {
             idleStreakRef.current += 1
             if (idleStreakRef.current >= AUTO_IDLE_CONSECUTIVE) {
