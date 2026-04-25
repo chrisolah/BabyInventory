@@ -1149,6 +1149,14 @@ export default function TagScanner({
     onBatchSaved?.(savedCount)
   }, [onBatchSaved])
 
+  // Fired when a save run finishes but unconfirmed rows remain in the
+  // review. We surface the toast for the chunk we did save (so the user
+  // gets the same positive ack as a full save) without closing the
+  // review — the leftover rows stay editable for a follow-up save.
+  const onBatchPartialSave = useCallback((savedCount) => {
+    onBatchSaved?.(savedCount)
+  }, [onBatchSaved])
+
   const onCameraClose = useCallback(() => {
     // Closing the camera with a batch in flight keeps the batch and
     // shunts the user straight to Review — same semantics as tapping
@@ -1273,6 +1281,7 @@ export default function TagScanner({
           onScanMore={onReviewBack}
           onDiscardAll={onReviewDiscard}
           onComplete={onBatchComplete}
+          onPartialSave={onBatchPartialSave}
         />
       )}
     </div>
