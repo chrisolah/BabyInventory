@@ -67,6 +67,19 @@
   font-style: italic;
   color: var(--teal);
 }
+/* Hero env hook. Sits between H1 and sub. Intentionally tighter line-height
+   and a touch of italic to read as a tagline rather than a paragraph; teal
+   color ties it to the H1's accent without competing for size. */
+.heroEnv {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--teal-dark);
+  line-height: 1.4;
+  margin: -0.5rem 0 1rem;
+  max-width: 520px;
+}
 .sub {
   font-size: 16px;
   color: var(--gray-600);
@@ -153,6 +166,241 @@
   font-size: 13px;
   color: var(--gray-600);
   line-height: 1.5;
+}
+
+/* ── Photo-scan spotlight ────────────────────────────────────────────────
+   Two-column on desktop (copy left, mocked phone right); stacks on narrow
+   viewports. The mockup is built entirely from divs + CSS — phone frame,
+   notch, viewfinder corners, a stylized tag inside, and three floating
+   "extracted field" chips that appear to fan out from the tag. No image
+   asset, no library; bundle stays flat. */
+.scanFeature {
+  padding: 2.5rem 1.5rem 3rem;
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
+}
+.scanFeatureWrap {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  background: var(--teal-light);
+  border-radius: 24px;
+  padding: 2.5rem 2.5rem 2.75rem;
+}
+@media (max-width: 760px) {
+  .scanFeatureWrap {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 2rem 1.5rem 2.25rem;
+  }
+}
+.scanFeatureCopy {
+  min-width: 0;
+}
+.scanFeatureEyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--white);
+  color: var(--teal-dark);
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 1rem;
+}
+.scanFeatureHeadline {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--teal-dark);
+  line-height: 1.15;
+  margin: 0 0 0.85rem;
+  letter-spacing: -0.01em;
+}
+.scanFeatureBody {
+  font-size: 15px;
+  color: #0F6E56;
+  line-height: 1.6;
+  margin: 0 0 1.1rem;
+}
+.scanFeatureBody strong {
+  color: var(--teal-dark);
+  font-weight: 600;
+}
+.scanFeatureBullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.scanFeatureBullets li {
+  position: relative;
+  padding-left: 1.25rem;
+  font-size: 13.5px;
+  color: #0F6E56;
+  line-height: 1.5;
+}
+.scanFeatureBullets li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--teal);
+}
+
+/* ── Mock phone illustration ── */
+.scanFeatureMock {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 380px;
+}
+.phoneFrame {
+  position: relative;
+  width: 220px;
+  height: 360px;
+  background: #1a1f2c;
+  border-radius: 32px;
+  padding: 12px;
+  box-shadow: 0 20px 40px rgba(15, 110, 86, 0.18), 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+.phoneNotch {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 14px;
+  background: #1a1f2c;
+  border-radius: 0 0 12px 12px;
+  z-index: 2;
+}
+.phoneScreen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(155deg, #2a3142 0%, #1a1f2c 60%, #14202b 100%);
+  border-radius: 22px;
+  overflow: hidden;
+}
+/* Viewfinder corners — match the in-app camera guide's amber lock state to
+   reinforce that this is the moment of capture. */
+.vfCorner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #E6B87A;
+}
+.vfTl { top: 70px; left: 26px;  border-right: none;  border-bottom: none; border-top-left-radius: 4px;  }
+.vfTr { top: 70px; right: 26px; border-left: none;   border-bottom: none; border-top-right-radius: 4px; }
+.vfBl { bottom: 70px; left: 26px;  border-right: none; border-top: none; border-bottom-left-radius: 4px;  }
+.vfBr { bottom: 70px; right: 26px; border-left: none;  border-top: none; border-bottom-right-radius: 4px; }
+/* Mock tag — rotated slightly so it reads "casual snapshot" not "studio shot". */
+.mockTag {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-3deg);
+  width: 130px;
+  background: #FFF9EE;
+  border: 1px solid #E8DBB6;
+  border-radius: 6px;
+  padding: 14px 12px 12px;
+  font-family: var(--font-body);
+  text-align: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+.mockTagBrand {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 500;
+  color: #5C3A1F;
+  letter-spacing: 0.04em;
+}
+.mockTagSize {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2C2018;
+  margin-top: 4px;
+}
+.mockTagCare {
+  font-size: 8.5px;
+  color: #8B7350;
+  margin-top: 6px;
+  line-height: 1.3;
+}
+/* Bottom-of-screen "got it" status — mimics the in-app coach line. */
+.mockHint {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 500;
+  color: #FFF9EE;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 5px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+/* Floating field chips — positioned absolutely so they look like they're
+   "extracted" from the tag and floating outward. Three chips, each pinned
+   relative to the mock-phone's bounding box. On narrow viewports we tuck
+   them tighter so the whole illustration still fits. */
+.fieldChip {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 0.5px solid var(--gray-200);
+  box-shadow: 0 4px 12px rgba(15, 110, 86, 0.12);
+  font-family: var(--font-body);
+  z-index: 3;
+}
+.chipLabel {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-600);
+}
+.chipValue {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-top: 2px;
+}
+.chipBrand {
+  top: 24%;
+  right: 6%;
+}
+.chipSize {
+  top: 50%;
+  right: 0;
+}
+.chipCat {
+  top: 76%;
+  right: 8%;
+}
+@media (max-width: 760px) {
+  .scanFeatureMock {
+    min-height: 420px;
+  }
+  .chipBrand { top: 14%; right: 4%; }
+  .chipSize  { top: 48%; right: 0;  }
+  .chipCat   { top: 82%; right: 6%; }
 }
 
 /* ── How ── */
@@ -346,6 +594,14 @@
   font-weight: 500;
 }
 
+/* ── Environmental band ──
+   Single-stat pillar between Opt-in and Mission. Two-column on desktop
+   (big number on left, copy on right), stacked on narrow viewports so the
+   stat still leads the section vertically. Purple accent so it reads
+   distinct from the teal Mission band directly below — putting two teal
+   bands back-to-back would flatten the page rhythm. Source citation sits
+   below the body in smaller italic gray; it's there for credibility, not
+   decoration, so it stays understated. */
 /* ── Mission ── */
 .mission {
   margin: 0 auto;
@@ -399,42 +655,6 @@
   font-size: 12px;
   color: #0F6E56;
   margin-top: 2px;
-}
-
-/* ── Quiet photo-scan note ──
-   Tone dialled way down vs. the earlier mid-page band. This sits between
-   Mission and Final CTA so the mission/exchange story owns the main scroll;
-   photo-scan gets a single low-key mention. Centered, subdued gray text,
-   no band, no illustration. */
-.scanNote {
-  text-align: center;
-  max-width: 520px;
-  margin: 0 auto;
-  width: 100%;
-  padding: 2rem 1.5rem 0.5rem;
-}
-.scanNoteEyebrow {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--gray-600);
-  margin-bottom: 0.75rem;
-}
-.scanNoteHeadline {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--gray-900);
-  margin-bottom: 0.5rem;
-  line-height: 1.3;
-}
-.scanNoteBody {
-  font-size: 13px;
-  color: var(--gray-600);
-  line-height: 1.55;
-  margin: 0 auto;
-  max-width: 440px;
 }
 
 /* ── Final CTA ── */
