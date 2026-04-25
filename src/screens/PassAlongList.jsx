@@ -14,7 +14,7 @@ import styles from './PassAlongList.module.css'
 // Shows every batch the household has touched, grouped by lifecycle stage
 // so the most actionable rows (drafts you haven't shipped yet) sit at the
 // top. Tapping a card opens PassAlongBatch. A primary CTA starts a fresh
-// draft with the default Sprig destination and navigates into it.
+// draft with the default Rooloop destination and navigates into it.
 //
 // This screen intentionally doesn't try to render item counts as a live
 // sub-query per row — it reads a precomputed `item_count` via a two-step
@@ -22,8 +22,8 @@ import styles from './PassAlongList.module.css'
 // list stays cheap even with dozens of historical batches.
 
 const DESTINATION_LABEL = {
-  littleloop: 'Sprig',
-  family: 'Another Sprig family',
+  littleloop: 'Rooloop',
+  family: 'Another Rooloop family',
   person: 'A friend or family member',
   charity: 'A charity',
 }
@@ -31,7 +31,7 @@ const DESTINATION_LABEL = {
 const STATUS_LABEL = {
   draft: 'Draft',
   shipped: 'Shipped',
-  received: 'Received at Sprig',
+  received: 'Received at Rooloop',
   fulfilled: 'Fulfilled',
   canceled: 'Canceled',
 }
@@ -146,7 +146,7 @@ export default function PassAlongList() {
   }, [batches])
 
   // ── Create a fresh draft batch ─────────────────────────────────────────
-  // Default to Sprig destination — the most common/recommended path
+  // Default to Rooloop destination — the most common/recommended path
   // per the product framing. The user can switch on the detail screen
   // before adding items or shipping.
   async function handleCreate() {
@@ -242,8 +242,8 @@ export default function PassAlongList() {
               <div className={styles.introTitle}>Send clothes on to their next home</div>
               <div className={styles.introBody}>
                 Bundle outgrown items into a batch and ship the box to
-                Sprig, a charity, a friend or family member, or
-                another Sprig family.
+                Rooloop, a charity, a friend or family member, or
+                another Rooloop family.
               </div>
             </section>
 

@@ -96,7 +96,7 @@ export default function ResetPassword() {
     return (
       <div className={styles.page}>
         <div className={styles.wrap}>
-          <div className={styles.logo}>sprig</div>
+          <div className={styles.logo}>rooloop</div>
           <div className={styles.loadingState}>Checking your reset link…</div>
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function ResetPassword() {
     return (
       <div className={styles.page}>
         <div className={styles.wrap}>
-          <div className={styles.logo}>sprig</div>
+          <div className={styles.logo}>rooloop</div>
           <h1 className={styles.title}>Link expired</h1>
           <p className={styles.sub}>
             This password reset link is invalid or has expired. Request a new one from the log in screen.
@@ -129,7 +129,7 @@ export default function ResetPassword() {
               <path d="M5 14l7 7 11-11" stroke="#1D9E75" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <div className={styles.logo}>sprig</div>
+          <div className={styles.logo}>rooloop</div>
           <h1 className={styles.title}>Password updated</h1>
           <p className={styles.sub}>
             Your new password is set. Log in to continue.
@@ -146,7 +146,7 @@ export default function ResetPassword() {
   return (
     <div className={styles.page}>
       <div className={styles.wrap}>
-        <div className={styles.logo}>sprig</div>
+        <div className={styles.logo}>rooloop</div>
         <h1 className={styles.title}>Choose a new password</h1>
         <p className={styles.sub}>
           Pick something you'll remember. At least 8 characters.
