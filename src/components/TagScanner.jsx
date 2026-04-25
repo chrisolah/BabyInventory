@@ -302,7 +302,7 @@ const AUTO_LOCK_HOLD_MS    = 260
 
 // Clear-frame gate (batch mode only). After a batch capture fires, we refuse
 // to auto-fire again until either:
-//   (a) the user explicitly taps the on-screen "Next item" button, OR
+//   (a) the user explicitly taps the on-screen "Scan next" button, OR
 //   (b) the camera observes a non-tag-like frame (score < AUTO_IDLE_MAX),
 //       which works as a fast convenience path when the user does pull
 //       the previous garment fully out of view.
@@ -312,7 +312,7 @@ const AUTO_LOCK_HOLD_MS    = 260
 // turned out to be the worse failure mode: if the user sets the phone
 // down while sorting clothes (very common!), the gate auto-clears, the
 // camera is now pointed at a pile of fabric, score eventually stabilizes
-// high, and auto-capture cycles indefinitely. The "Next item" button IS
+// high, and auto-capture cycles indefinitely. The "Scan next" button IS
 // the escape hatch. If the user doesn't tap it, nothing fires.
 //
 // Threshold tuning: per computeTextLikeness, scores cluster as 0–5 on
@@ -427,7 +427,7 @@ function CameraModal({
   const scoreHistoryRef = useRef([])
   const modalOpenedAtRef = useRef(0)
   // Clear-frame gate. True after a batch capture fires; auto-capture is
-  // suppressed until either the user taps "Next item" or we see a
+  // suppressed until either the user taps "Scan next" or we see a
   // non-tag-like frame. See the AUTO_IDLE_* constants above and the
   // "phone-down" rationale for why there is no automatic timeout.
   const needsClearFrameRef = useRef(false)
@@ -521,7 +521,7 @@ function CameraModal({
     modalOpenedAtRef.current = Date.now()
   }
 
-  // Manual override for the clear-frame gate. The user taps "Next item"
+  // Manual override for the clear-frame gate. The user taps "Scan next"
   // when they've moved the previous garment away and are ready to scan
   // the next one — this short-circuits the auto-disarm idle-frame
   // detection (which can take a beat to clear, especially on busy
@@ -659,7 +659,7 @@ function CameraModal({
         // automatic timeout here: a stuck gate is much less bad than
         // auto-capture cycling on a phone the user has set down. If the
         // user wants to scan and the auto-disarm isn't happening, the
-        // big "Next item" button is the deliberate way out.
+        // big "Scan next" button is the deliberate way out.
         if (needsClearFrameRef.current) {
           if (score < AUTO_IDLE_MAX) {
             idleStreakRef.current += 1
@@ -859,7 +859,7 @@ function CameraModal({
                   : 'Fit the tag inside the box'}
       </div>
 
-      {/* Manual "Next item" button — the primary way to advance in batch
+      {/* Manual "Scan next" button — the primary way to advance in batch
           mode. Renders only while the clear-frame gate is armed (i.e.,
           right after a capture). Big, pulsing, hard to miss. The
           auto-disarm idle detection still runs in the background as a
@@ -873,7 +873,7 @@ function CameraModal({
           className={styles.cameraNextBtn}
           onClick={handleNextItem}
         >
-          Next item
+          Scan next
         </button>
       )}
 
