@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useHousehold } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
@@ -31,6 +32,7 @@ import styles from './Home.module.css'
 export default function Home() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { reloadItems } = useHousehold()
   const [showInvite, setShowInvite] = useState(false)
   // 'checking' until we know onboarding is complete; 'ready' once we do.
   // We never transition to an "incomplete" state because we just redirect.
@@ -128,6 +130,18 @@ export default function Home() {
     navigate(`/add-item?${params.toString()}`)
   }
 
+  // Batch save path. The single-scan path (onHomeScanResult) routes through
+  // /add-item so the user confirms the prefilled form. Batch mode skips that
+  // confirm step — BatchReview saves N rows directly into clothing_items —
+  // so we just refresh the household items cache and drop the user on
+  // /inventory with a toast that calls out the count.
+  function onHomeBatchSaved(count) {
+    reloadItems()
+    navigate('/inventory', {
+      state: { toast: `Added ${count} item${count === 1 ? '' : 's'}` },
+    })
+  }
+
   if (status === 'checking') {
     // Brief blank screen while we resolve the gate. Keeps the page from
     // flashing "Welcome" at users we're about to redirect.
@@ -186,9 +200,15 @@ export default function Home() {
             beneath it for users who prefer to go straight to manual entry
             or for cases where the camera hand-off fails. */}
         <div className={styles.scanBlock}>
-          <TagScanner variant="primary" onResult={onHomeScanResult} />
+          <TagScanner
+            variant="primary"
+            onResult={onHomeScanResult}
+            onBatchSaved={onHomeBatchSaved}
+          />
           <div className={styles.scanCaption}>
             Snap a clothing tag and we&rsquo;ll fill in brand, size, and type.
+            Got a stack to add? Tap <strong>Scan many</strong> in the camera to
+            scan several in a row.
           </div>
         </div>
 
