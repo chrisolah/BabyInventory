@@ -537,9 +537,17 @@ export default function AddItem() {
               }}
               disabled={saving}
             />
-            {scanFilledCount > 0 && (
+            {scanFilledCount > 0 ? (
               <div className={styles.scanHint}>
                 Autofilled {scanFilledCount} field{scanFilledCount === 1 ? '' : 's'} from your photo. Review below and save.
+              </div>
+            ) : (
+              // Pre-scan affordance hint. Most users land here via the
+              // Inventory header "+" rather than Home, so this is the first
+              // (and often only) chance to surface batch-scan. Swapped out
+              // for the success scanHint above once they've actually scanned.
+              <div className={styles.scanIntroHint}>
+                Adding a stack? Turn on <strong>Scan many</strong> in the camera to add several items in a row.
               </div>
             )}
           </div>
