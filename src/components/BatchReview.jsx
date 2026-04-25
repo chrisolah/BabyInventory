@@ -62,6 +62,10 @@ export default function BatchReview({
   onScanMore,
   onDiscardAll,
   onComplete,
+  // Optional: called with the chunk size when a save run finishes but
+  // unconfirmed rows remain. Lets the parent fire its "saved N" toast
+  // without tearing down the review surface (which onComplete does).
+  onPartialSave,
 }) {
   const { household, currentBaby } = useHousehold()
 
@@ -99,19 +103,45 @@ export default function BatchReview({
     setItems((prev) => prev.filter((it) => it.id !== itemId))
   }, [setItems])
 
+  // Per-row "I've reviewed this" confirmation. Stored on the item itself
+  // (not in local state) so it survives a "Scan more" round-trip — the
+  // user shouldn't have to re-confirm rows they already eyeballed just
+  // because they popped back into the camera. Default is unchecked: the
+  // affordance only earns its keep if the user makes a deliberate choice
+  // per row.
+  const toggleConfirm = useCallback((itemId) => {
+    setItems((prev) => prev.map((it) => (
+      it.id === itemId ? { ...it, confirmed: !it.confirmed } : it
+    )))
+  }, [setItems])
+
   // If the user trashes every row inline, fall through to the "nothing
   // to review" empty state. The empty-state CTA is "Scan more" because
   // bouncing back to the camera is the obvious next move.
   const isEmpty = items.length === 0
 
-  // Total rows with at least one missing required field. Drives the Save
-  // button disabled state and the "Fix N rows" label underneath.
-  const invalidCount = useMemo(
-    () => items.filter((it) => missingFieldsFor(it.fields).length > 0).length,
+  // The set of rows the user has explicitly confirmed via the per-row
+  // checkbox. Save acts on this subset only; unconfirmed rows survive
+  // the save and remain reviewable for a later pass.
+  const confirmedItems = useMemo(
+    () => items.filter((it) => it.confirmed),
     [items],
   )
 
-  const canSave = !saving && !isEmpty && invalidCount === 0 && !!household
+  // Confirmed rows that still have a missing required field. We only
+  // count among the confirmed set because nagging the user about a row
+  // they've explicitly set aside (unconfirmed) is just noise.
+  const confirmedInvalidCount = useMemo(
+    () => confirmedItems.filter((it) => missingFieldsFor(it.fields).length > 0).length,
+    [confirmedItems],
+  )
+
+  const canSave =
+    !saving &&
+    !isEmpty &&
+    confirmedItems.length > 0 &&
+    confirmedInvalidCount === 0 &&
+    !!household
 
   async function doSave() {
     if (!canSave) return
@@ -119,11 +149,17 @@ export default function BatchReview({
     setSaveError(null)
     setSavedCount(0)
 
+    // Snapshot the confirmed rows at save-start so concurrent toggles
+    // (in case the user manages to tap a checkbox mid-save before the
+    // disable kicks in) don't change which set we're iterating.
+    const toSave = confirmedItems.slice()
+    const savedIds = []
+
     // Sequential inserts. Could parallelize, but a single row per call
     // keeps the UI progress deterministic and lets us halt on first
     // error without leaving a half-finished batch.
-    for (let i = 0; i < items.length; i++) {
-      const it = items[i]
+    for (let i = 0; i < toSave.length; i++) {
+      const it = toSave[i]
       const row = {
         household_id: household.id,
         baby_id: currentBaby?.id ?? null,
@@ -151,14 +187,16 @@ export default function BatchReview({
         setItems((prev) => prev.map((x) => (
           x.id === it.id ? { ...x, insertError: insertErr.message } : x
         )))
-        setSaveError(`Saved ${i} of ${items.length}. Couldn\u2019t save one — see the row below for the reason.`)
+        setSaveError(`Saved ${i} of ${toSave.length}. Couldn\u2019t save one — see the row below for the reason.`)
         setSaving(false)
-        // Remove already-saved rows from the list so retrying only
-        // re-attempts the remaining. The Save button recomputes on
-        // the shortened list.
-        setItems((prev) => prev.slice(i))
+        // Drop the already-saved rows from the list so retrying only
+        // re-attempts the remaining (including the failed one and any
+        // unconfirmed rows that weren't part of this run).
+        const savedSet = new Set(savedIds)
+        setItems((prev) => prev.filter((x) => !savedSet.has(x.id)))
         return
       }
+      savedIds.push(it.id)
       setSavedCount(i + 1)
       // Fire the same per-item analytic the single-item path fires so
       // funnel reports don't need a separate "batch vs single" branch
@@ -172,7 +210,22 @@ export default function BatchReview({
     }
 
     setSaving(false)
-    onComplete?.(items.length)
+    // Remove the rows we just saved. Anything unconfirmed survives.
+    const savedSet = new Set(savedIds)
+    setItems((prev) => {
+      const remaining = prev.filter((x) => !savedSet.has(x.id))
+      // If the entire batch is now drained, fall through to the parent's
+      // onComplete handler (which closes the review and fires the
+      // grandparent toast). Otherwise stay on review and let the parent
+      // know via onPartialSave so the toast still fires for the chunk
+      // we did save.
+      if (remaining.length === 0) {
+        onComplete?.(savedIds.length)
+      } else {
+        onPartialSave?.(savedIds.length)
+      }
+      return remaining
+    })
   }
 
   // Confirm-discard dialog gets full-screen treatment because the
@@ -226,7 +279,9 @@ export default function BatchReview({
         <h1 id="br-title" className={styles.title}>
           {isEmpty
             ? 'Batch empty'
-            : `Review ${items.length} item${items.length === 1 ? '' : 's'}`}
+            : confirmedItems.length > 0
+              ? `${confirmedItems.length} of ${items.length} confirmed`
+              : `Review ${items.length} item${items.length === 1 ? '' : 's'}`}
         </h1>
         <button
           type="button"
@@ -257,6 +312,7 @@ export default function BatchReview({
               item={it}
               onChange={updateField}
               onRemove={removeRow}
+              onConfirm={toggleConfirm}
               disabled={saving}
             />
           ))}
@@ -271,22 +327,28 @@ export default function BatchReview({
         <footer className={styles.footer}>
           {saving ? (
             <div className={styles.progress} aria-live="polite">
-              Saving {savedCount} of {items.length}\u2026
+              Saving {savedCount} of {confirmedItems.length}\u2026
             </div>
           ) : (
             <>
-              {invalidCount > 0 && (
+              {confirmedItems.length === 0 ? (
                 <div className={styles.invalidHint}>
-                  Fix {invalidCount} row{invalidCount === 1 ? '' : 's'} with missing fields before saving.
+                  Check the box on each item you\u2019re ready to save.
                 </div>
-              )}
+              ) : confirmedInvalidCount > 0 ? (
+                <div className={styles.invalidHint}>
+                  Fix {confirmedInvalidCount} confirmed row{confirmedInvalidCount === 1 ? '' : 's'} with missing fields before saving.
+                </div>
+              ) : null}
               <button
                 type="button"
                 className={styles.primaryBtn}
                 onClick={doSave}
                 disabled={!canSave}
               >
-                Save {items.length} item{items.length === 1 ? '' : 's'}
+                {confirmedItems.length === 0
+                  ? 'Save'
+                  : `Save ${confirmedItems.length} item${confirmedItems.length === 1 ? '' : 's'}`}
               </button>
             </>
           )}
@@ -301,8 +363,8 @@ export default function BatchReview({
 // far right. Fields inherit the Phase 2.4 amber-outline + Verify pill
 // when their confidence came back "low" from the Edge Function. Editing
 // any field promotes it to "high" (see updateField above).
-function BatchRow({ item, onChange, onRemove, disabled }) {
-  const { fields, confidence = {}, thumbnailDataUrl, insertError } = item
+function BatchRow({ item, onChange, onRemove, onConfirm, disabled }) {
+  const { fields, confidence = {}, thumbnailDataUrl, insertError, confirmed } = item
   const missing = missingFieldsFor(fields)
   const isInvalid = missing.length > 0
 
@@ -316,7 +378,26 @@ function BatchRow({ item, onChange, onRemove, disabled }) {
   }
 
   return (
-    <li className={`${styles.row} ${isInvalid ? styles.rowInvalid : ''} ${insertError ? styles.rowError : ''}`}>
+    <li className={`${styles.row} ${confirmed ? styles.rowConfirmed : ''} ${isInvalid ? styles.rowInvalid : ''} ${insertError ? styles.rowError : ''}`}>
+      {/* Per-row confirm checkbox. Lives in its own column on the far
+          left so it reads as a deliberate "yes, save this one" gesture
+          rather than a visual artefact attached to the thumbnail. */}
+      <label className={styles.rowConfirmWrap} aria-label={confirmed ? 'Unconfirm this item' : 'Confirm this item'}>
+        <input
+          type="checkbox"
+          className={styles.rowConfirmInput}
+          checked={!!confirmed}
+          onChange={() => onConfirm?.(item.id)}
+          disabled={disabled}
+        />
+        <span className={styles.rowConfirmBox} aria-hidden="true">
+          {confirmed && (
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
+              <path d="M3.5 8.5 L6.5 11.5 L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </span>
+      </label>
       <div className={styles.rowThumbWrap}>
         <img src={thumbnailDataUrl} alt="" className={styles.rowThumb} />
       </div>
