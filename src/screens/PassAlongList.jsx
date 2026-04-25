@@ -58,7 +58,10 @@ export default function PassAlongList() {
   const { user } = useAuth()
   const { household, loading: householdLoading, error: householdError } = useHousehold()
 
-  const [loading, setLoading] = useState(true)
+  // Starts false so the page doesn't show a stuck spinner when the
+  // useEffect early-returns (e.g. no household yet, or no household at
+  // all). Only flips to true once we actually start a fetch.
+  const [loading, setLoading] = useState(false)
   const [batches, setBatches] = useState([])
   const [counts, setCounts] = useState({}) // batchId → item count
   const [error, setError] = useState(null)
@@ -178,6 +181,11 @@ export default function PassAlongList() {
 
   // ── Not-yet-ready states ───────────────────────────────────────────────
   const pageLoading = householdLoading || loading
+  // Distinct from "loading" — context finished but came back with no
+  // household. Surface this with copy instead of leaving the user
+  // staring at an empty page (or, before the loading-init fix, a
+  // permanent spinner).
+  const noHousehold = !householdLoading && !householdError && !household
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
@@ -217,7 +225,14 @@ export default function PassAlongList() {
 
         {pageLoading && <div className={styles.loading}>Loading…</div>}
 
-        {!pageLoading && !householdError && (
+        {noHousehold && (
+          <div className={styles.errorBanner}>
+            No household yet — finish onboarding first to start passing
+            clothes along.
+          </div>
+        )}
+
+        {!pageLoading && !householdError && !noHousehold && (
           <>
             {/* Intro blurb — useful for first-time visitors and a gentle
                 reminder for returning users of what the four destinations
