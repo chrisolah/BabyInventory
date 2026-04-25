@@ -300,6 +300,18 @@ const AUTO_STABILITY_RATIO = 0.35  // forgiving; text scores are noisier than
 const AUTO_WARMUP_MS       = 700
 const AUTO_LOCK_HOLD_MS    = 260
 
+// Clear-frame gate (batch mode only). After a batch capture fires, we refuse
+// to auto-fire again until the camera has seen the scene "idle" — i.e., the
+// text-likeness score has dropped below AUTO_IDLE_MAX for at least
+// AUTO_IDLE_CONSECUTIVE consecutive samples. This forces the user to pull
+// the just-scanned garment out of frame before the next one can trigger,
+// which fixes the "fires randomly between garments" problem caused by the
+// score briefly spiking on patterned fabric, sleeves, hands, or seams as
+// items move past the lens. Mirrors how barcode scanners require the code
+// to leave the field before re-scanning.
+const AUTO_IDLE_MAX         = 6  // score must drop below this to count as idle
+const AUTO_IDLE_CONSECUTIVE = 2  // consecutive idle samples required to re-arm
+
 // Fraction of the video frame that maps to the guide region. Kept slightly
 // wider than the CSS band so small framing errors (tag slightly outside the
 // visible guide) still contribute to the score — punishing users for
@@ -402,6 +414,12 @@ function CameraModal({
   const sampleCanvasRef = useRef(null)
   const scoreHistoryRef = useRef([])
   const modalOpenedAtRef = useRef(0)
+  // Clear-frame gate. True after a batch capture fires; auto-capture is
+  // suppressed until we've seen enough consecutive low-score ("idle")
+  // samples to be confident the user has pulled the garment away. See the
+  // AUTO_IDLE_* constants above for the gate parameters.
+  const needsClearFrameRef = useRef(false)
+  const idleStreakRef = useRef(0)
   const [ready, setReady] = useState(false)
   const [streamError, setStreamError] = useState(null)
   const [capturing, setCapturing] = useState(false)
@@ -411,7 +429,8 @@ function CameraModal({
   const [autoEnabled, setAutoEnabled] = useState(true)
   // Lock state drives the guide-corner color + hint copy. 'waiting' =
   // aiming, 'locking' = scores are climbing into range, 'locked' = held
-  // long enough, about to fire.
+  // long enough, about to fire, 'needsClear' = batch mode just captured and
+  // we're waiting for the previous garment to leave the frame before re-arming.
   const [lockState, setLockState] = useState('waiting')
   // Shutter flash overlay. Flips true for ~280ms when the shutter fires so
   // the user gets a visual "gotcha" even if audio is muted on the device
@@ -529,11 +548,18 @@ function CameraModal({
       // unmounts the modal and this setter races that teardown harmlessly.
       if (batchMode) {
         setCapturing(false)
-        // Reset the lock heuristic state so auto-capture is immediately
-        // ready for the next tag instead of carrying stale "locked"
-        // history from the item we just saved.
+        // Reset the lock heuristic state so auto-capture is ready for the
+        // next tag instead of carrying stale "locked" history from the item
+        // we just saved.
         scoreHistoryRef.current = []
-        setLockState('waiting')
+        // Arm the clear-frame gate: the next auto-fire is suppressed until
+        // we observe AUTO_IDLE_CONSECUTIVE consecutive idle samples (i.e.,
+        // the user has pulled the just-scanned garment out of the guide).
+        // Without this, fabric/seams/sleeves moving past the lens between
+        // garments routinely trip the text-likeness heuristic and fire.
+        needsClearFrameRef.current = true
+        idleStreakRef.current = 0
+        setLockState('needsClear')
         // Push the warmup clock forward a hair so the next auto-fire
         // isn't triggered by the same frame that just fired.
         modalOpenedAtRef.current = Date.now()
@@ -598,6 +624,29 @@ function CameraModal({
         const imageData = sctx.getImageData(0, 0, AUTO_SAMPLE_WIDTH, AUTO_SAMPLE_HEIGHT)
         const score = computeTextLikeness(imageData)
 
+        // Clear-frame gate. While armed (set after a batch capture), we
+        // don't feed samples into the lock-decision pipeline at all — we
+        // just count consecutive low-score samples until we're confident
+        // the previous garment is gone, then disarm. This is what stops
+        // the camera from firing on sleeves / seams / hands as the user
+        // moves the next item into position.
+        if (needsClearFrameRef.current) {
+          if (score < AUTO_IDLE_MAX) {
+            idleStreakRef.current += 1
+            if (idleStreakRef.current >= AUTO_IDLE_CONSECUTIVE) {
+              needsClearFrameRef.current = false
+              idleStreakRef.current = 0
+              scoreHistoryRef.current = []
+              setLockState('waiting')
+            }
+          } else {
+            // Any non-idle sample resets the streak — the user has to
+            // present a clean idle gap, not just one stray frame.
+            idleStreakRef.current = 0
+          }
+          return
+        }
+
         const hist = scoreHistoryRef.current
         hist.push(score)
         if (hist.length > AUTO_HISTORY_LEN) hist.shift()
@@ -650,6 +699,10 @@ function CameraModal({
       clearInterval(intervalHandle)
       if (lockTimer) clearTimeout(lockTimer)
       scoreHistoryRef.current = []
+      // Don't reset needsClearFrameRef here — the gate's whole job is to
+      // survive the brief effect rerun that happens when `capturing` flips
+      // false right after a batch shutter. Resetting it would defeat the
+      // whole gate.
     }
   }, [ready, autoEnabled, capturing, streamError, handleShutter])
 
@@ -769,9 +822,11 @@ function CameraModal({
             ? 'Fit the tag inside the box, then tap to capture'
             : lockState === 'locked'
               ? 'Got it\u2026'
-              : lockState === 'locking'
-                ? 'Hold steady\u2026'
-                : 'Fit the tag inside the box'}
+              : lockState === 'needsClear'
+                ? 'Move the last item away to scan the next'
+                : lockState === 'locking'
+                  ? 'Hold steady\u2026'
+                  : 'Fit the tag inside the box'}
       </div>
 
       {/* Batch thumbnail strip — sits just above the bottom bar when we
