@@ -67,7 +67,18 @@ export default function BatchReview({
   // without tearing down the review surface (which onComplete does).
   onPartialSave,
 }) {
-  const { household, currentBaby, reloadItems } = useHousehold()
+  const { household, currentBaby, babies, reloadItems } = useHousehold()
+
+  // The default baby_id for any row that hasn't been explicitly assigned
+  // via the per-row chip. Mirrors AddItem's "inherit the chip switcher's
+  // current selection" semantic. Centralised so doSave + BatchRow agree
+  // on what the implicit default is.
+  const defaultBabyId = currentBaby?.id ?? null
+
+  // Hide the per-row chip on single-baby households (and the empty
+  // pre-onboarding case) — there's only one possible answer, so the
+  // affordance would be noise. The save still attaches defaultBabyId.
+  const showBabyChip = (babies?.length ?? 0) > 1
 
   const [saving, setSaving]         = useState(false)
   const [savedCount, setSavedCount] = useState(0)
@@ -101,6 +112,16 @@ export default function BatchReview({
 
   const removeRow = useCallback((itemId) => {
     setItems((prev) => prev.filter((it) => it.id !== itemId))
+  }, [setItems])
+
+  // Per-row baby assignment. Stored on the item itself so it survives a
+  // "Scan more" round-trip and so doSave doesn't need to recompute from
+  // chip-state. Value is a uuid for a specific baby, or null for
+  // "Shared across babies" (matches AddItem's null-baby semantic).
+  const setBaby = useCallback((itemId, babyId) => {
+    setItems((prev) => prev.map((it) => (
+      it.id === itemId ? { ...it, baby_id: babyId } : it
+    )))
   }, [setItems])
 
   // Per-row "I've reviewed this" confirmation. Stored on the item itself
@@ -162,7 +183,10 @@ export default function BatchReview({
       const it = toSave[i]
       const row = {
         household_id: household.id,
-        baby_id: currentBaby?.id ?? null,
+        // Each row carries its own baby_id (set via the per-row chip).
+        // If the user never touched the chip the field is undefined, in
+        // which case we fall back to defaultBabyId (the active baby).
+        baby_id: it.baby_id !== undefined ? it.baby_id : defaultBabyId,
         category:         it.fields.category,
         item_type:        it.fields.item_type,
         size_label:       it.fields.size_label,
@@ -327,6 +351,10 @@ export default function BatchReview({
               onChange={updateField}
               onRemove={removeRow}
               onConfirm={toggleConfirm}
+              onBabyChange={setBaby}
+              babies={babies}
+              defaultBabyId={defaultBabyId}
+              showBabyChip={showBabyChip}
               disabled={saving}
             />
           ))}
@@ -377,7 +405,17 @@ export default function BatchReview({
 // far right. Fields inherit the Phase 2.4 amber-outline + Verify pill
 // when their confidence came back "low" from the Edge Function. Editing
 // any field promotes it to "high" (see updateField above).
-function BatchRow({ item, onChange, onRemove, onConfirm, disabled }) {
+function BatchRow({
+  item,
+  onChange,
+  onRemove,
+  onConfirm,
+  onBabyChange,
+  babies,
+  defaultBabyId,
+  showBabyChip,
+  disabled,
+}) {
   const { fields, confidence = {}, thumbnailDataUrl, insertError, confirmed } = item
   const missing = missingFieldsFor(fields)
   const isInvalid = missing.length > 0
@@ -390,6 +428,16 @@ function BatchRow({ item, onChange, onRemove, onConfirm, disabled }) {
   function verifyClass(name) {
     return confidence?.[name] === 'low' ? styles.fieldVerify : ''
   }
+
+  // The effective baby for this row: explicit assignment if set, else the
+  // household-wide default. Stored as undefined (not null) when the user
+  // hasn't touched the chip so we can distinguish "implicit default" from
+  // "explicit shared". Both render the same in the chip.
+  const effectiveBabyId = item.baby_id !== undefined ? item.baby_id : defaultBabyId
+  const effectiveBabyName =
+    effectiveBabyId == null
+      ? 'Shared'
+      : (babies?.find((b) => b.id === effectiveBabyId)?.name ?? 'Shared')
 
   return (
     <li className={`${styles.row} ${confirmed ? styles.rowConfirmed : ''} ${isInvalid ? styles.rowInvalid : ''} ${insertError ? styles.rowError : ''}`}>
@@ -419,6 +467,33 @@ function BatchRow({ item, onChange, onRemove, onConfirm, disabled }) {
         <img src={thumbnailDataUrl} alt="" className={styles.rowThumb} />
       </div>
       <div className={styles.rowFields}>
+        {/* Per-row baby assignment chip. Renders only on multi-baby
+            households (single-baby households implicitly attach to the
+            sole baby — chip would be noise). Native select underneath
+            so mobile gets a familiar bottom-sheet picker. */}
+        {showBabyChip && (
+          <label className={styles.rowBabyChip}>
+            <span className={styles.rowBabyChipLabel}>For</span>
+            <span className={styles.rowBabyChipValue}>
+              {effectiveBabyName}
+              <svg viewBox="0 0 12 12" width="10" height="10" fill="none" aria-hidden="true">
+                <path d="M3 4.5 L6 7.5 L9 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <select
+              className={styles.rowBabyChipSelect}
+              value={effectiveBabyId ?? ''}
+              onChange={(e) => onBabyChange?.(item.id, e.target.value || null)}
+              disabled={disabled}
+              aria-label="Assign this item to a baby"
+            >
+              {babies?.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+              <option value="">Shared (all babies)</option>
+            </select>
+          </label>
+        )}
         <div className={styles.rowGrid}>
           <label className={styles.rowLabel}>
             <span className={styles.rowLabelText}>
