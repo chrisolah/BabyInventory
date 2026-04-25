@@ -19,11 +19,13 @@ import styles from './BabyFormModal.module.css'
 // mark those items outgrown (existing flow) first if they really want a
 // clean slate. Rationale noted in repo memory.
 
-const SIZE_MODES = [
-  { value: 'by_age',    label: 'By age' },
-  { value: 'by_weight', label: 'By weight' },
-  { value: 'both',      label: 'Both' },
-]
+// Note: the babies.size_mode column still exists (default 'by_age' per
+// migration 001) and a lot of downstream code branches on it, but the
+// picker UI was removed on 2026-04-25 after mom interviews showed almost
+// everyone thinks of clothing size in age bands. Onboarding dropped the
+// step in migration 015; this Profile dial is being dropped for the same
+// reason. New babies fall through to the DB default; existing rows keep
+// whatever value they had — nothing is migrated.
 
 export default function BabyFormModal({ mode, household, baby, onClose, onSaved }) {
   const isEdit = mode === 'edit'
@@ -42,7 +44,6 @@ export default function BabyFormModal({ mode, household, baby, onClose, onSaved 
     baby?.date_of_birth ?? baby?.due_date ?? ''
   )
   const [gender, setGender] = useState(baby?.gender ?? null)
-  const [sizeMode, setSizeMode] = useState(baby?.size_mode ?? 'by_age')
   // Optional manual age-band override. Empty string = "Auto" (follow DOB).
   // Stored as null in the DB so downstream consumers (inferAgeRange, RLS
   // policies if we add any) don't have to special-case the empty string.
@@ -80,10 +81,13 @@ export default function BabyFormModal({ mode, household, baby, onClose, onSaved 
 
     // DB constraint: either date_of_birth OR due_date must be present.
     // The birthMode toggle picks which column gets the ISO date string.
+    // size_mode intentionally omitted: column still exists with a 'by_age'
+    // default, but the picker is gone (see comment at top of file). On edit
+    // we leave whatever value is already on the row; on create the DB
+    // default applies.
     const row = {
       name: name.trim() || null,
       gender: gender || null,
-      size_mode: sizeMode,
       date_of_birth: birthMode === 'born' ? dateStr : null,
       due_date: birthMode === 'expecting' ? dateStr : null,
       age_range_override: ageRangeOverride || null,
@@ -268,20 +272,6 @@ export default function BabyFormModal({ mode, household, baby, onClose, onSaved 
                 </button>
               ))}
             </div>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="bf-sizemode">Size tracking</label>
-            <select
-              id="bf-sizemode"
-              className={styles.input}
-              value={sizeMode}
-              onChange={e => setSizeMode(e.target.value)}
-            >
-              {SIZE_MODES.map(sm => (
-                <option key={sm.value} value={sm.value}>{sm.label}</option>
-              ))}
-            </select>
           </div>
 
           <div className={styles.formGroup}>
