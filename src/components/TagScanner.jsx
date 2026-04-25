@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { track } from '../lib/analytics'
 import BatchReview from './BatchReview'
 import styles from './TagScanner.module.css'
 
@@ -538,7 +539,11 @@ function CameraModal({
   // useCallback so the auto-capture effect below can depend on it stably —
   // otherwise we'd tear down and rebuild the sampling interval on every
   // render, which resets the history window and makes locks fire late.
-  const handleShutter = useCallback(async () => {
+  //
+  // `viaAuto` distinguishes lock-fired captures from manual shutter taps so
+  // the parent can tag the analytics event accordingly. Defaults to false so
+  // the manual onClick path stays a zero-arg handler.
+  const handleShutter = useCallback(async (viaAuto = false) => {
     const video = videoRef.current
     if (!video || !ready || capturing) return
     setCapturing(true)
@@ -567,7 +572,7 @@ function CameraModal({
       const blob = await new Promise((resolve, reject) => {
         canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toblob_failed'))), 'image/jpeg', 0.92)
       })
-      onCapture?.(blob)
+      onCapture?.(blob, { auto: viaAuto })
       // In batch mode the parent keeps the modal mounted and just appends
       // the scan to the batch — so we have to release `capturing` here or
       // the shutter stays locked forever. In single mode the parent
@@ -703,7 +708,7 @@ function CameraModal({
             setLockState('locked')
             lockTimer = setTimeout(() => {
               lockTimer = null
-              if (!disposed) handleShutter()
+              if (!disposed) handleShutter(true)
             }, AUTO_LOCK_HOLD_MS)
           }
         } else {
@@ -917,7 +922,7 @@ function CameraModal({
         <button
           type="button"
           className={styles.cameraShutter}
-          onClick={handleShutter}
+          onClick={() => handleShutter(false)}
           disabled={!ready || capturing}
           aria-label="Take photo"
         >
@@ -1008,6 +1013,12 @@ export default function TagScanner({
   variant = 'inline',
   label,
   disabled = false,
+  // Where in the app this scanner is mounted. Flows through to every
+  // analytics event so we can answer "do scans started from Home convert
+  // better than scans started from AddItem?" — and eventually 'onboarding'
+  // once we wire the cold-start entry point. Defaults to 'unknown' so a
+  // stray mount never silently breaks the funnel slice.
+  from = 'unknown',
 }) {
   const inputRef = useRef(null)
   const [scanning, setScanning] = useState(false)
@@ -1033,19 +1044,45 @@ export default function TagScanner({
   const [reviewOpen, setReviewOpen] = useState(false)
 
   // Shared upload + extract path. Both the camera shutter and the file
-  // picker funnel through here so error handling stays in one place.
-  // `isBatchCapture` lets the caller say "this came from an in-camera
-  // batch capture — append to the batch instead of calling onResult".
-  const sendForScan = useCallback(async (blobOrFile, isBatchCapture = false) => {
+  // picker funnel through here so error handling — and analytics —
+  // stay in one place.
+  //
+  // opts:
+  //   isBatchCapture — append to the in-progress batch instead of calling
+  //                    onResult. True only on camera captures while
+  //                    batchMode is armed.
+  //   source         — 'camera' | 'file'. Lets the analytics event
+  //                    distinguish the camera-modal path from the native
+  //                    file picker fallback.
+  //   auto           — true when the camera shutter fired from auto-lock,
+  //                    false on manual taps. Ignored for the file path.
+  const sendForScan = useCallback(async (blobOrFile, opts = {}) => {
+    const { isBatchCapture = false, source = 'file', auto = false } = opts
+    // Common shape stamped on every analytics event for this scan attempt
+    // so funnel queries can slice by entry point + capture path without
+    // joining tables. Mode is read off `isBatchCapture` (not `batchMode`)
+    // so the file-picker path correctly reports 'single' even if the user
+    // had armed batch mode and then bailed to upload.
+    const trackBase = {
+      from,
+      source,
+      mode: isBatchCapture ? 'batch' : 'single',
+      auto,
+    }
+    const startedAt = Date.now()
+
     setScanning(true)
     setError(null)
     setErrorDebug(null)
+    track.tagScanStarted(trackBase)
+
     try {
       const { base64, mime } = await compressToBase64(blobOrFile)
       const { data, error: fnErr } = await supabase.functions.invoke(
         'scan-clothing-tag',
         { body: { image_base64: base64, mime_type: mime } },
       )
+      const duration_ms = Date.now() - startedAt
       if (fnErr) {
         const info = await extractFnErrorCode(fnErr)
         // eslint-disable-next-line no-console
@@ -1056,15 +1093,52 @@ export default function TagScanner({
         if (info.upstreamStatus) parts.push(`upstream ${info.upstreamStatus}`)
         if (info.detail)         parts.push(String(info.detail).slice(0, 240))
         setErrorDebug(parts.join(' \u00B7 '))
+        track.tagScanFailed({
+          ...trackBase,
+          duration_ms,
+          error: info.code,
+          http_status:     info.status         ?? null,
+          upstream_status: info.upstreamStatus ?? null,
+        })
         return
       }
       const fields     = data?.fields
       const confidence = data?.confidence ?? null
+      const quota      = data?.quota ?? null
       if (!fields) {
         setError(errorMessageFor('unknown'))
         setErrorDebug('code: empty_response')
+        track.tagScanFailed({
+          ...trackBase,
+          duration_ms,
+          error: 'empty_response',
+        })
         return
       }
+      // Field-level telemetry: count of non-null fields out of 4 plus
+      // per-field presence + confidence so we can answer "is item_type
+      // the weak field?" / "what % of brand extractions are 'low'?"
+      // without needing to redeploy with new events later.
+      const filled =
+        (fields.brand      != null ? 1 : 0) +
+        (fields.size_label != null ? 1 : 0) +
+        (fields.category   != null ? 1 : 0) +
+        (fields.item_type  != null ? 1 : 0)
+      track.tagScanCompleted({
+        ...trackBase,
+        duration_ms,
+        filled,
+        has_brand:     fields.brand      != null,
+        has_size:      fields.size_label != null,
+        has_category:  fields.category   != null,
+        has_item_type: fields.item_type  != null,
+        confidence_brand:     confidence?.brand      ?? null,
+        confidence_size:      confidence?.size_label ?? null,
+        confidence_category:  confidence?.category   ?? null,
+        confidence_item_type: confidence?.item_type  ?? null,
+        quota_used:  quota?.used  ?? null,
+        quota_limit: quota?.limit ?? null,
+      })
       if (isBatchCapture) {
         // Append to the batch — thumbnail reuses the already-compressed
         // JPEG data URL so we don't re-encode. ID is just a monotonic-ish
@@ -1092,28 +1166,39 @@ export default function TagScanner({
       console.warn('TagScanner failed:', err)
       setError(errorMessageFor('unknown'))
       setErrorDebug(`code: client_exception \u00B7 ${String(err?.message ?? err).slice(0, 120)}`)
+      track.tagScanFailed({
+        ...trackBase,
+        duration_ms: Date.now() - startedAt,
+        error: 'client_exception',
+      })
     } finally {
       setScanning(false)
     }
-  }, [onResult])
+  }, [onResult, from])
 
   const onPick = useCallback(async (e) => {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    await sendForScan(file)
+    // File picker is always single-shot and never auto — those flags are
+    // only meaningful for the live-camera path. Source 'file' lets the
+    // analytics event distinguish the fallback path from the camera path.
+    await sendForScan(file, { source: 'file', auto: false, isBatchCapture: false })
   }, [sendForScan])
 
-  const onCameraCapture = useCallback(async (blob) => {
+  const onCameraCapture = useCallback(async (blob, meta = {}) => {
     // In batch mode the modal stays open; we just append to the batch.
     // In single mode we close first so the user sees the AddItem fields
-    // populate while the scan round-trips.
+    // populate while the scan round-trips. `meta.auto` comes from
+    // CameraModal — true if the shutter fired from the auto-lock timer,
+    // false if the user tapped manually.
+    const opts = { source: 'camera', auto: !!meta.auto, isBatchCapture: batchMode }
     if (batchMode) {
-      await sendForScan(blob, true)
+      await sendForScan(blob, opts)
       return
     }
     setCameraOpen(false)
-    await sendForScan(blob, false)
+    await sendForScan(blob, opts)
   }, [sendForScan, batchMode])
 
   // "Multi" pill in the top bar toggles batch arming. We don't allow
