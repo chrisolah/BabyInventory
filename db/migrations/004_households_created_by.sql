@@ -47,7 +47,7 @@ drop policy if exists households_select on beta.households;
 create policy households_select on beta.households
   for select using (
     created_by = auth.uid()
-    or beta.is_household_member(id, beta.current_user_id())
+    or beta.is_household_member(id, auth.uid())
   );
 
 -- ─── 2. Defensive updated_at / created_at on beta.babies ───────────────────
