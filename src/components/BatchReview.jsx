@@ -187,7 +187,7 @@ export default function BatchReview({
         setItems((prev) => prev.map((x) => (
           x.id === it.id ? { ...x, insertError: insertErr.message } : x
         )))
-        setSaveError(`Saved ${i} of ${toSave.length}. Couldn\u2019t save one — see the row below for the reason.`)
+        setSaveError(`Saved ${i} of ${toSave.length}. Couldn’t save one — see the row below for the reason.`)
         setSaving(false)
         // Drop the already-saved rows from the list so retrying only
         // re-attempts the remaining (including the failed one and any
@@ -240,7 +240,7 @@ export default function BatchReview({
             Discard {items.length} scanned item{items.length === 1 ? '' : 's'}?
           </h2>
           <p className={styles.confirmBody}>
-            We won\u2019t keep anything. You\u2019ll need to rescan if you change your mind.
+            We won’t keep anything. You’ll need to rescan if you change your mind.
           </p>
           <div className={styles.confirmActions}>
             <button
@@ -327,13 +327,13 @@ export default function BatchReview({
         <footer className={styles.footer}>
           {saving ? (
             <div className={styles.progress} aria-live="polite">
-              Saving {savedCount} of {confirmedItems.length}\u2026
+              Saving {savedCount} of {confirmedItems.length}…
             </div>
           ) : (
             <>
               {confirmedItems.length === 0 ? (
                 <div className={styles.invalidHint}>
-                  Check the box on each item you\u2019re ready to save.
+                  Check the box on each item you’re ready to save.
                 </div>
               ) : confirmedInvalidCount > 0 ? (
                 <div className={styles.invalidHint}>
@@ -382,7 +382,10 @@ function BatchRow({ item, onChange, onRemove, onConfirm, disabled }) {
       {/* Per-row confirm checkbox. Lives in its own column on the far
           left so it reads as a deliberate "yes, save this one" gesture
           rather than a visual artefact attached to the thumbnail. */}
-      <label className={styles.rowConfirmWrap} aria-label={confirmed ? 'Unconfirm this item' : 'Confirm this item'}>
+      <label
+        className={`${styles.rowConfirmWrap} ${disabled ? styles.rowConfirmWrapDisabled : ''}`}
+        aria-label={confirmed ? 'Unconfirm this item' : 'Confirm this item'}
+      >
         <input
           type="checkbox"
           className={styles.rowConfirmInput}
@@ -414,7 +417,7 @@ function BatchRow({ item, onChange, onRemove, onConfirm, disabled }) {
               onChange={(e) => onChange(item.id, 'category', e.target.value)}
               disabled={disabled}
             >
-              <option value="">Pick one\u2026</option>
+              <option value="">Pick one…</option>
               {CATEGORY_OPTIONS.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}
@@ -432,7 +435,7 @@ function BatchRow({ item, onChange, onRemove, onConfirm, disabled }) {
               onChange={(e) => onChange(item.id, 'item_type', e.target.value)}
               disabled={disabled || !fields.category}
             >
-              <option value="">{fields.category ? 'Pick one\u2026' : 'Pick category first'}</option>
+              <option value="">{fields.category ? 'Pick one…' : 'Pick category first'}</option>
               {typeOptions.map((s) => (
                 <option key={s.id} value={s.id}>{s.label}</option>
               ))}
@@ -450,7 +453,7 @@ function BatchRow({ item, onChange, onRemove, onConfirm, disabled }) {
               onChange={(e) => onChange(item.id, 'size_label', e.target.value)}
               disabled={disabled}
             >
-              <option value="">Pick one\u2026</option>
+              <option value="">Pick one…</option>
               {SIZE_OPTIONS.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
@@ -480,7 +483,7 @@ function BatchRow({ item, onChange, onRemove, onConfirm, disabled }) {
         )}
         {insertError && (
           <div className={styles.rowErrorHint} role="alert">
-            Couldn\u2019t save: {insertError}
+            Couldn’t save: {insertError}
           </div>
         )}
       </div>

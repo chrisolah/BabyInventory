@@ -90,7 +90,7 @@ const SLOT_IDS = [
 const SYSTEM_PROMPT = `You are extracting structured inventory fields from a photo of a baby clothing item or its tag.
 
 Return ONLY a single JSON object with these keys:
-- brand: the brand name as printed on the tag, or null if you cannot read one. Do not invent brands.
+- brand: the brand name EXACTLY as printed on the tag, transcribed letter-by-letter from what you see in the image. CRITICAL: do not "correct" or "normalize" an unfamiliar brand name to a more common one. If the tag says "Pekkle", return "Pekkle" — not "Pampers" or any other similar-looking brand you may know. If the tag says "Gerber" return "Gerber". If you cannot confidently read the brand text from the image, return null. NEVER substitute a brand from your prior knowledge of common baby brands for what is actually printed. The user's small, indie, or store-label brands matter just as much as the big-name ones, and getting them wrong is worse than returning null.
 - size_label: one of ${SIZES.map(s => `"${s}"`).join(', ')}, mapped from what the tag says (e.g. "3M" or "3 months" → "0-3M"; "6M" or "6 months" → "3-6M"; "9M" or "9 months" → "6-9M"; "12M" or "12 months" → "9-12M"; "18M" → "12-18M"; "24M" or "2T" → "18-24M"). If the tag shows a range that spans two bands, pick the lower one. Use null if no size is readable.
 - category: one of ${CATEGORIES.map(c => `"${c}"`).join(', ')}, inferred from the garment visible in the image. Use null if you can't tell.
 - item_type: one of ${SLOT_IDS.map(s => `"${s}"`).join(', ')}, the most specific slot that fits. Must be consistent with the chosen category. Use null if unsure.
@@ -105,13 +105,13 @@ Descriptor hints for baby clothing terminology (these words are used colloquiall
 Alongside the four field keys, return a fifth key "confidence" — an object with a confidence level per field, used by the client to flag which values the parent should double-check before saving:
 - "high" — clearly printed on the tag and unambiguous (e.g. brand logo visible; size explicitly written as "0-3M").
 - "medium" — readable but required interpretation (e.g. "3M" mapped to "0-3M"; category inferred from the garment visible behind the tag rather than the tag itself).
-- "low" — a best guess from limited information (partial text, blurry tag, inferring item_type from an unclear silhouette).
+- "low" — a best guess from limited information (partial text, blurry tag, inferring item_type from an unclear silhouette). If you used "low" for brand, you should probably have returned null instead — only use "low" for brand if the text is partially readable AND you transcribed the partial letters literally.
 - If a field value is null, its confidence must also be null.
 
-Example shape (values illustrative):
-{"brand":"Carter's","size_label":"0-3M","category":"tops_and_bodysuits","item_type":"bodysuits","confidence":{"brand":"high","size_label":"medium","category":"high","item_type":"high"}}
+Example shape (values are placeholders to show the format — do NOT pattern-match to "ExampleBrand" or assume real responses look like this):
+{"brand":"ExampleBrand","size_label":"0-3M","category":"tops_and_bodysuits","item_type":"bodysuits","confidence":{"brand":"high","size_label":"medium","category":"high","item_type":"high"}}
 
-Do not include any prose, markdown, or code fences. Return the JSON object and nothing else. Prefer null over a low-confidence guess.`
+Do not include any prose, markdown, or code fences. Return the JSON object and nothing else. Prefer null over a low-confidence guess. For brand specifically: prefer null over a guess at a similar-looking common brand.`
 
 type Fields = {
   brand: string | null
@@ -243,16 +243,22 @@ Deno.serve(async (req) => {
   }
 
   // ── Call Anthropic ────────────────────────────────────────────────────
+  // Temperature 0 for extraction. The default of 1.0 was causing the model
+  // to "creatively" substitute unfamiliar brand names with similar-looking
+  // common ones (a parent reported "Pekkle" coming back as "Pampers").
+  // Extraction tasks should be deterministic — we want the same JSON for
+  // the same image, every time.
   const anthropicBody = {
     model: anthropicModel,
     max_tokens: 400,
+    temperature: 0,
     system: SYSTEM_PROMPT,
     messages: [
       {
         role: 'user',
         content: [
           { type: 'image', source: { type: 'base64', media_type: mime, data: imageB64 } },
-          { type: 'text',  text: 'Extract the fields per the system instructions. Return JSON only.' },
+          { type: 'text',  text: 'Extract the fields per the system instructions. Return JSON only. For the brand, transcribe what you see on the tag literally — do not substitute a more familiar brand name.' },
         ],
       },
     ],

@@ -744,7 +744,7 @@ function CameraModal({
     return (
       <div className={styles.cameraModal} role="dialog" aria-modal="true" aria-label="Camera unavailable">
         <div className={styles.cameraErrorBox}>
-          <div className={styles.cameraErrorTitle}>Can\u2019t open the camera</div>
+          <div className={styles.cameraErrorTitle}>Can’t open the camera</div>
           <div className={styles.cameraErrorBody}>
             {streamError === 'NotAllowedError'
               ? 'Camera access was denied. You can still upload a photo from your library.'
