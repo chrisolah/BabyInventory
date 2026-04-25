@@ -325,22 +325,21 @@
 
 /* "Next item" button — the primary way to advance in batch mode after
    a capture. Renders only while the clear-frame gate is armed
-   (lockState === 'needsClear'). Sized and styled to be unmissable:
-   large pill, integrated green checkmark badge that confirms the
-   previous capture landed, gentle pulse so the eye finds it. Sits
-   below the framing hint, well clear of the system "camera in use"
-   toast at the top of the viewport. */
+   (lockState === 'needsClear'). Sized to be unmissable: large pill
+   with a gentle pulse so the eye finds it. The thumbnail strip in the
+   bottom bar already confirms the previous capture landed, so this
+   button intentionally does NOT carry a redundant checkmark — its job
+   is purely to advance, not to acknowledge. Sits below the framing
+   hint, well clear of the system "camera in use" toast at the top
+   of the viewport. */
 .cameraNextBtn {
   position: absolute;
   left: 50%;
   top: calc(50% + 14vh + 14px + 32px); /* hint baseline + spacing */
   transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 220px;
+  min-width: 200px;
   max-width: calc(100% - 40px);
-  padding: 16px 28px 16px 18px;
+  padding: 16px 32px;
   background: var(--teal);
   color: #fff;
   border: none;
@@ -349,6 +348,7 @@
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.01em;
+  text-align: center;
   cursor: pointer;
   box-shadow:
     0 6px 18px rgba(0, 0, 0, 0.45),
@@ -368,21 +368,6 @@
 .cameraNextBtn:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 3px;
-}
-
-/* Checkmark badge inside the button. White circle with the teal tick —
-   mirrors a "task complete" affordance and lands the message that the
-   previous capture was successful, not just that something is happening. */
-.cameraNextBtnCheck {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #fff;
-  color: var(--teal-dark);
-  flex-shrink: 0;
 }
 
 @keyframes cameraNextBtnIn {
