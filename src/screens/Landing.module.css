@@ -403,45 +403,6 @@
   .chipCat   { top: 82%; right: 6%; }
 }
 
-/* ── How ── */
-.how {
-  padding: 2.5rem 1.5rem;
-  max-width: 680px;
-  margin: 0 auto;
-  width: 100%;
-}
-.howStep {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
-}
-.howNum {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--purple-light);
-  color: var(--purple-dark);
-  font-size: 13px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.howTitle {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--gray-900);
-  margin-bottom: 3px;
-}
-.howBody {
-  font-size: 13px;
-  color: var(--gray-600);
-  line-height: 1.5;
-}
-
 /* ── Pass-along hub ──
    The V1.9 centerpiece. Four-destination grid that sits in place of the
    old peer-to-peer "supply" band. Visual echo of the features section

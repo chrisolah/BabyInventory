@@ -168,24 +168,6 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className={styles.how}>
-        <h2 className={styles.sectionTitle} style={{ marginBottom: '6px' }}>Simple from day one</h2>
-        <p className={styles.sectionSub} style={{ marginBottom: '1.5rem' }}>For parents building, managing, and passing along a wardrobe.</p>
-        {[
-          { n: 1, title: 'Add your baby and your clothes', body: 'Set up in minutes. Snap a photo to auto-fill the details, or log items by hand if you prefer.' },
-          { n: 2, title: 'Stay on top of every size', body: 'We track what\u2019s coming up and surface gaps before you need them.' },
-          { n: 3, title: 'Send outgrown clothes on', body: 'Pick one of four destinations. We handle routing, matching, and (when needed) the label. None of them are "throw it away."' },
-        ].map(({ n, title, body }) => (
-          <div className={styles.howStep} key={n}>
-            <div className={styles.howNum}>{n}</div>
-            <div>
-              <div className={styles.howTitle}>{title}</div>
-              <div className={styles.howBody}>{body}</div>
-            </div>
-          </div>
-        ))}
-      </section>
-
       {/* ── Pass-along hub — the V1.9 centerpiece ───────────────────────────
           Four destinations, one flow, Littleloop as the concierge in the
           middle. This replaces the old zip-code-matching "family nearby
