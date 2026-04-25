@@ -302,28 +302,18 @@ const AUTO_WARMUP_MS       = 700
 const AUTO_LOCK_HOLD_MS    = 260
 
 // Clear-frame gate (batch mode only). After a batch capture fires, we refuse
-// to auto-fire again until either:
-//   (a) the user explicitly taps the on-screen "Scan next" button, OR
-//   (b) the camera observes a non-tag-like frame (score < AUTO_IDLE_MAX),
-//       which works as a fast convenience path when the user does pull
-//       the previous garment fully out of view.
+// to auto-fire again until the user explicitly taps the on-screen "Scan next"
+// button. That's the ONLY way out of the gate.
 //
-// There is intentionally NO automatic timeout that force-clears the gate.
-// A previous version had a 5-second force-clear "safety belt" — that
-// turned out to be the worse failure mode: if the user sets the phone
-// down while sorting clothes (very common!), the gate auto-clears, the
-// camera is now pointed at a pile of fabric, score eventually stabilizes
-// high, and auto-capture cycles indefinitely. The "Scan next" button IS
-// the escape hatch. If the user doesn't tap it, nothing fires.
-//
-// Threshold tuning: per computeTextLikeness, scores cluster as 0–5 on
-// solid surfaces, 5–12 on textured fabric, 18+ on actual text. We set
-// AUTO_IDLE_MAX = 14 so that anything BELOW the real text threshold
-// counts as idle — which is what we actually want the gate to mean
-// ("the previous tag is no longer here"), not "the camera sees a perfect
-// blank surface" (which never happens in real laundry-pile use).
-const AUTO_IDLE_MAX         = 14   // score must drop below this to count as idle
-const AUTO_IDLE_CONSECUTIVE = 1    // consecutive idle samples required to re-arm
+// We previously tried two flavors of automatic re-arm — (a) "watch for an
+// idle / non-tag-like frame and re-arm when seen" and (b) "5-second force-
+// clear safety belt" — and BOTH produced rogue auto-captures in real use.
+// The idle-frame heuristic re-armed on any brief glance at a hand or
+// background between items; the timeout re-armed when the phone was set
+// down on a pile of clothes. Either failure mode looks the same to the
+// user: photos firing without consent. The explicit-tap-only design
+// trades a tiny bit of friction (one tap per item) for a complete
+// guarantee that nothing fires unless the user asked for it.
 
 // Fraction of the video frame that maps to the guide region. Kept slightly
 // wider than the CSS band so small framing errors (tag slightly outside the
@@ -428,11 +418,9 @@ function CameraModal({
   const scoreHistoryRef = useRef([])
   const modalOpenedAtRef = useRef(0)
   // Clear-frame gate. True after a batch capture fires; auto-capture is
-  // suppressed until either the user taps "Scan next" or we see a
-  // non-tag-like frame. See the AUTO_IDLE_* constants above and the
-  // "phone-down" rationale for why there is no automatic timeout.
+  // suppressed until the user explicitly taps "Scan next". See the constant
+  // block above for why automatic re-arm (idle-frame OR timeout) was removed.
   const needsClearFrameRef = useRef(false)
-  const idleStreakRef = useRef(0)
   const [ready, setReady] = useState(false)
   const [streamError, setStreamError] = useState(null)
   const [capturing, setCapturing] = useState(false)
@@ -522,16 +510,13 @@ function CameraModal({
     modalOpenedAtRef.current = Date.now()
   }
 
-  // Manual override for the clear-frame gate. The user taps "Scan next"
-  // when they've moved the previous garment away and are ready to scan
-  // the next one — this short-circuits the auto-disarm idle-frame
-  // detection (which can take a beat to clear, especially on busy
-  // backgrounds). No-op if the gate isn't currently armed; safe to wire
-  // up as the button's only handler.
+  // Clear the gate and re-arm auto-capture for the next item. This is the
+  // ONLY path out of needsClear in batch mode — the camera will sit on the
+  // 'needsClear' state forever until the user taps Scan next. No-op if the
+  // gate isn't currently armed; safe to wire up as the button's only handler.
   const handleNextItem = useCallback(() => {
     if (!needsClearFrameRef.current) return
     needsClearFrameRef.current = false
-    idleStreakRef.current = 0
     scoreHistoryRef.current = []
     setLockState('waiting')
   }, [])
@@ -583,13 +568,14 @@ function CameraModal({
         // next tag instead of carrying stale "locked" history from the item
         // we just saved.
         scoreHistoryRef.current = []
-        // Arm the clear-frame gate: the next auto-fire is suppressed until
-        // we observe AUTO_IDLE_CONSECUTIVE consecutive idle samples (i.e.,
-        // the user has pulled the just-scanned garment out of the guide).
-        // Without this, fabric/seams/sleeves moving past the lens between
-        // garments routinely trip the text-likeness heuristic and fire.
+        // Arm the clear-frame gate: subsequent auto-fires in this batch are
+        // fully suppressed until the user explicitly taps "Scan next". The
+        // first capture in a batch auto-fires (great for getting started),
+        // but every capture after that requires a deliberate tap. We tried
+        // automatic re-arm via idle-frame detection AND a force-clear timer
+        // and both produced rogue auto-captures in real use — see the
+        // constants block at the top of this file for the post-mortem.
         needsClearFrameRef.current = true
-        idleStreakRef.current = 0
         setLockState('needsClear')
         // Push the warmup clock forward a hair so the next auto-fire
         // isn't triggered by the same frame that just fired.
@@ -656,29 +642,14 @@ function CameraModal({
         const score = computeTextLikeness(imageData)
 
         // Clear-frame gate. While armed (set after a batch capture), we
-        // don't feed samples into the lock-decision pipeline at all — we
-        // just count consecutive low-score samples until we're confident
-        // the previous garment is gone, then disarm. This is what stops
-        // the camera from firing on sleeves / seams / hands as the user
-        // moves the next item into position. Crucially, there is NO
-        // automatic timeout here: a stuck gate is much less bad than
-        // auto-capture cycling on a phone the user has set down. If the
-        // user wants to scan and the auto-disarm isn't happening, the
-        // big "Scan next" button is the deliberate way out.
+        // refuse to auto-fire entirely. The ONLY way out of the gate is
+        // the user tapping the on-screen "Scan next" button, which calls
+        // handleNextItem() and clears the flag. We deliberately do not
+        // try to auto-detect when the previous garment has left the
+        // frame — that heuristic produced rogue captures every time we
+        // tried it (idle-streak detection AND a force-clear timer were
+        // both attempted and both shipped bugs). Explicit tap is safer.
         if (needsClearFrameRef.current) {
-          if (score < AUTO_IDLE_MAX) {
-            idleStreakRef.current += 1
-            if (idleStreakRef.current >= AUTO_IDLE_CONSECUTIVE) {
-              needsClearFrameRef.current = false
-              idleStreakRef.current = 0
-              scoreHistoryRef.current = []
-              setLockState('waiting')
-            }
-          } else {
-            // Any non-idle sample resets the streak — the user has to
-            // present a clean idle gap, not just one stray frame.
-            idleStreakRef.current = 0
-          }
           return
         }
 
