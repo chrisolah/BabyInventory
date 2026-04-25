@@ -232,7 +232,7 @@ export default function SlotDetail() {
                 />
               </div>
               <div className={styles.why}>
-                {recommended} is the Rooloop recommendation based on a typical 2×/week
+                {recommended} is the Sprigloop recommendation based on a typical 2×/week
                 laundry cycle.
               </div>
             </section>

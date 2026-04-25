@@ -83,7 +83,7 @@ export default function Signup() {
               <path d="M5 14l7 7 11-11" stroke="#1D9E75" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <div className={styles.logo}>rooloop</div>
+          <div className={styles.logo}>sprigloop</div>
           <h1 className={styles.title}>Check your email</h1>
           <p className={styles.sub}>
             We sent a magic link to <strong>{email}</strong>. Click it to sign in — no password needed.
@@ -104,7 +104,7 @@ export default function Signup() {
     <div className={styles.page}>
       <div className={styles.wrap}>
         <button className={styles.back} onClick={() => navigate('/')}>← Back</button>
-        <div className={styles.logo}>rooloop</div>
+        <div className={styles.logo}>sprigloop</div>
         <h1 className={styles.title}>Create your account</h1>
         <p className={styles.sub}>Free forever. No credit card needed.</p>
 

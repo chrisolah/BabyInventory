@@ -782,8 +782,8 @@ export default function Onboarding() {
           <>
             <h1 className={styles.title}>Open to hand-me-downs?</h1>
             <p className={styles.sub}>
-              When another Rooloop family has outgrown clothes to pass along,
-              Rooloop can route a box your way. You&rsquo;ll always get a
+              When another Sprigloop family has outgrown clothes to pass along,
+              Sprigloop can route a box your way. You&rsquo;ll always get a
               message before anything ships, and you can turn this off anytime
               from your profile.
             </p>
@@ -932,7 +932,7 @@ export default function Onboarding() {
           <>
             <h1 className={styles.title}>Try the photo-scan</h1>
             <p className={styles.sub}>
-              Snap a clothing tag and Rooloop fills in brand, size, and type.
+              Snap a clothing tag and Sprigloop fills in brand, size, and type.
               Got a stack of clothes already? Tap <strong>Scan many</strong>{' '}
               in the camera to add them in one go.
             </p>
