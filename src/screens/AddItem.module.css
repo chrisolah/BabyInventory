@@ -126,6 +126,23 @@
   padding: 8px 10px;
 }
 
+/* Pre-scan discovery hint. Sits in the same slot as .scanHint but renders
+   only before the user has scanned, surfacing batch-scan to people who came
+   in from the Inventory header "+" rather than the Home CTA. Whisper-quiet
+   on purpose — the inline TagScanner above it is the actual CTA. */
+.scanIntroHint {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--gray-500);
+  text-align: center;
+  padding: 2px 4px 0;
+}
+
+.scanIntroHint strong {
+  color: var(--gray-700);
+  font-weight: 600;
+}
+
 /* ── Segmented Own it / Want it ──────────────────────────── */
 .segToggle {
   display: grid;
