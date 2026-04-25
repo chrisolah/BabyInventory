@@ -739,10 +739,10 @@ function CameraModal({
               className={`${styles.cameraAutoToggle} ${batchMode ? styles.cameraAutoToggleOn : ''}`}
               onClick={() => onBatchToggle(!batchMode)}
               aria-pressed={batchMode}
-              aria-label={`Scan multiple items ${batchMode ? 'on' : 'off'}`}
+              aria-label={`Scan multiple items in a row ${batchMode ? 'on' : 'off'}`}
             >
               <span className={styles.cameraAutoDot} aria-hidden="true" />
-              Multi {batchMode ? 'on' : 'off'}
+              Scan many
             </button>
           )}
           <button
