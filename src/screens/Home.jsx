@@ -64,14 +64,14 @@ export default function Home() {
         return
       }
 
-      // ONBOARDING_COMPLETE is 6 since migration 014 (was 5 with receiving,
-      // 4 originally). Anything below complete means the user still has a
-      // step to handle — receiving, invite, or scan — and belongs on the
-      // /onboarding flow, not here. Hard-coded to keep this gate self-
-      // contained, but keep this in sync with Onboarding.jsx if the flow
-      // grows another step.
+      // ONBOARDING_COMPLETE is 5 (migration 015 remapped from 6 after the
+      // sizemode step was cut). Anything below complete means the user
+      // still has a step to handle — receiving, invite, or scan — and
+      // belongs on the /onboarding flow, not here. Hard-coded to keep
+      // this gate self-contained, but keep in sync with Onboarding.jsx
+      // if the flow grows or shrinks again.
       const step = data?.onboarding_step ?? 0
-      if (step < 6) {
+      if (step < 5) {
         navigate('/onboarding', { replace: true })
         return
       }
