@@ -301,29 +301,28 @@ const AUTO_WARMUP_MS       = 700
 const AUTO_LOCK_HOLD_MS    = 260
 
 // Clear-frame gate (batch mode only). After a batch capture fires, we refuse
-// to auto-fire again until the camera has seen the scene "idle" — i.e., the
-// text-likeness score has dropped below AUTO_IDLE_MAX for at least
-// AUTO_IDLE_CONSECUTIVE consecutive samples. This forces the user to pull
-// the just-scanned garment out of frame before the next one can trigger,
-// which fixes the "fires randomly between garments" problem caused by the
-// score briefly spiking on patterned fabric, sleeves, hands, or seams as
-// items move past the lens. Mirrors how barcode scanners require the code
-// to leave the field before re-scanning.
+// to auto-fire again until either:
+//   (a) the user explicitly taps the on-screen "Next item" button, OR
+//   (b) the camera observes a non-tag-like frame (score < AUTO_IDLE_MAX),
+//       which works as a fast convenience path when the user does pull
+//       the previous garment fully out of view.
+//
+// There is intentionally NO automatic timeout that force-clears the gate.
+// A previous version had a 5-second force-clear "safety belt" — that
+// turned out to be the worse failure mode: if the user sets the phone
+// down while sorting clothes (very common!), the gate auto-clears, the
+// camera is now pointed at a pile of fabric, score eventually stabilizes
+// high, and auto-capture cycles indefinitely. The "Next item" button IS
+// the escape hatch. If the user doesn't tap it, nothing fires.
 //
 // Threshold tuning: per computeTextLikeness, scores cluster as 0–5 on
 // solid surfaces, 5–12 on textured fabric, 18+ on actual text. We set
 // AUTO_IDLE_MAX = 14 so that anything BELOW the real text threshold
 // counts as idle — which is what we actually want the gate to mean
 // ("the previous tag is no longer here"), not "the camera sees a perfect
-// blank surface" (which never happens in real laundry-pile use). One
-// idle sample is enough; requiring more was over-engineering and led to
-// the gate sticking open indefinitely when the scene was just textured
-// fabric the whole time. AUTO_IDLE_TIMEOUT_MS is a safety belt: if the
-// gate hasn't cleared after this long, force it open so the user can't
-// get permanently stuck behind it.
+// blank surface" (which never happens in real laundry-pile use).
 const AUTO_IDLE_MAX         = 14   // score must drop below this to count as idle
 const AUTO_IDLE_CONSECUTIVE = 1    // consecutive idle samples required to re-arm
-const AUTO_IDLE_TIMEOUT_MS  = 5000 // hard timeout — force-clear after this long
 
 // Fraction of the video frame that maps to the guide region. Kept slightly
 // wider than the CSS band so small framing errors (tag slightly outside the
@@ -428,15 +427,11 @@ function CameraModal({
   const scoreHistoryRef = useRef([])
   const modalOpenedAtRef = useRef(0)
   // Clear-frame gate. True after a batch capture fires; auto-capture is
-  // suppressed until we've seen enough consecutive low-score ("idle")
-  // samples to be confident the user has pulled the garment away. See the
-  // AUTO_IDLE_* constants above for the gate parameters. armedAt is the
-  // timestamp the gate was raised so we can force-clear after
-  // AUTO_IDLE_TIMEOUT_MS (safety belt against the gate sticking open if
-  // the score never falls below the idle threshold).
+  // suppressed until either the user taps "Next item" or we see a
+  // non-tag-like frame. See the AUTO_IDLE_* constants above and the
+  // "phone-down" rationale for why there is no automatic timeout.
   const needsClearFrameRef = useRef(false)
   const idleStreakRef = useRef(0)
-  const gateArmedAtRef = useRef(0)
   const [ready, setReady] = useState(false)
   const [streamError, setStreamError] = useState(null)
   const [capturing, setCapturing] = useState(false)
@@ -526,6 +521,20 @@ function CameraModal({
     modalOpenedAtRef.current = Date.now()
   }
 
+  // Manual override for the clear-frame gate. The user taps "Next item"
+  // when they've moved the previous garment away and are ready to scan
+  // the next one — this short-circuits the auto-disarm idle-frame
+  // detection (which can take a beat to clear, especially on busy
+  // backgrounds). No-op if the gate isn't currently armed; safe to wire
+  // up as the button's only handler.
+  const handleNextItem = useCallback(() => {
+    if (!needsClearFrameRef.current) return
+    needsClearFrameRef.current = false
+    idleStreakRef.current = 0
+    scoreHistoryRef.current = []
+    setLockState('waiting')
+  }, [])
+
   // useCallback so the auto-capture effect below can depend on it stably —
   // otherwise we'd tear down and rebuild the sampling interval on every
   // render, which resets the history window and makes locks fire late.
@@ -576,7 +585,6 @@ function CameraModal({
         // garments routinely trip the text-likeness heuristic and fire.
         needsClearFrameRef.current = true
         idleStreakRef.current = 0
-        gateArmedAtRef.current = Date.now()
         setLockState('needsClear')
         // Push the warmup clock forward a hair so the next auto-fire
         // isn't triggered by the same frame that just fired.
@@ -647,22 +655,12 @@ function CameraModal({
         // just count consecutive low-score samples until we're confident
         // the previous garment is gone, then disarm. This is what stops
         // the camera from firing on sleeves / seams / hands as the user
-        // moves the next item into position.
+        // moves the next item into position. Crucially, there is NO
+        // automatic timeout here: a stuck gate is much less bad than
+        // auto-capture cycling on a phone the user has set down. If the
+        // user wants to scan and the auto-disarm isn't happening, the
+        // big "Next item" button is the deliberate way out.
         if (needsClearFrameRef.current) {
-          // Hard timeout safety belt. If the gate has been armed for
-          // longer than AUTO_IDLE_TIMEOUT_MS without ever seeing a sample
-          // below AUTO_IDLE_MAX (e.g., user is scanning over a busy
-          // patterned surface where every frame scores 8–14), force-disarm.
-          // Risking one occasional false fire is much better than silently
-          // bricking auto-capture for the rest of the session.
-          const armedFor = Date.now() - gateArmedAtRef.current
-          if (armedFor > AUTO_IDLE_TIMEOUT_MS) {
-            needsClearFrameRef.current = false
-            idleStreakRef.current = 0
-            scoreHistoryRef.current = []
-            setLockState('waiting')
-            return
-          }
           if (score < AUTO_IDLE_MAX) {
             idleStreakRef.current += 1
             if (idleStreakRef.current >= AUTO_IDLE_CONSECUTIVE) {
@@ -855,11 +853,34 @@ function CameraModal({
             : lockState === 'locked'
               ? 'Got it\u2026'
               : lockState === 'needsClear'
-                ? 'Move the last item away to scan the next'
+                ? 'Captured. Tap Next when you\u2019re ready for the next one.'
                 : lockState === 'locking'
                   ? 'Hold steady\u2026'
                   : 'Fit the tag inside the box'}
       </div>
+
+      {/* Manual "Next item" button — the primary way to advance in batch
+          mode. Renders only while the clear-frame gate is armed (i.e.,
+          right after a capture). Big, pulsing, hard to miss. The
+          auto-disarm idle detection still runs in the background as a
+          fast convenience path, but the button is the explicit, reliable
+          mechanism — especially important because a previous attempt to
+          add a 5-second auto-timeout caused the camera to keep firing
+          when users set their phone down while sorting clothes. */}
+      {ready && autoEnabled && lockState === 'needsClear' && (
+        <button
+          type="button"
+          className={styles.cameraNextBtn}
+          onClick={handleNextItem}
+        >
+          <span className={styles.cameraNextBtnCheck} aria-hidden="true">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none">
+              <path d="M3 8.5 L6.5 12 L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </span>
+          <span>Next item</span>
+        </button>
+      )}
 
       {/* Batch thumbnail strip — sits just above the bottom bar when we
           have any scanned items. Horizontal-scroll list of tiny crops so
