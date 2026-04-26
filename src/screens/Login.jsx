@@ -54,6 +54,11 @@ export default function Login() {
         options: {
           // Only sign in existing users from the login screen — new users should use /signup.
           shouldCreateUser: false,
+          // If we arrived via ?next= (invite flow), the magic link in the
+          // email must come back to that path so the recipient lands on
+          // /invite/:token after sign-in. Without this, Supabase falls back
+          // to siteUrl (/home), bypassing AcceptInvite entirely.
+          emailRedirectTo: `${window.location.origin}${nextPath}`,
         },
       })
       authError = error
