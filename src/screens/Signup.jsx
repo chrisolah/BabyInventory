@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { track, getSessionId } from '../lib/analytics'
@@ -39,12 +39,26 @@ export default function Signup() {
   const [password, setPassword] = useState('')
   const [method, setMethod] = useState('password')
   const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false)
+  // Code-entry state. Once a signup request has produced a confirmation /
+  // magic-link email, we flip to the code-entry screen. The string carries
+  // the verifyOtp `type`:
+  //   • 'signup' — email confirmation after a password signup (no session yet,
+  //                verifyOtp creates one)
+  //   • 'email'  — magic-link signup (no password set; verifyOtp signs them in)
+  const [codeStep, setCodeStep] = useState(null) // null | 'signup' | 'email'
+  const [code, setCode] = useState('')
   const [error, setError] = useState(null)
+  const codeInputRef = useRef(null)
 
   useEffect(() => {
     track.signupPageViewed()
   }, [])
+
+  useEffect(() => {
+    if (codeStep && codeInputRef.current) {
+      codeInputRef.current.focus()
+    }
+  }, [codeStep])
 
   function getMetadata() {
     return {
@@ -67,30 +81,15 @@ export default function Signup() {
     let authError = null
     let postSignupSession = null
 
-    // Where the confirmation / magic-link email link should point. If we
-    // arrived via ?next= (invite flow), the email link must come back to
-    // /invite/:token so the recipient lands on the accept screen with a
-    // fresh session — without this, Supabase falls back to siteUrl (/home)
-    // and the user runs into the onboarding gate even though they're meant
-    // to be joining an existing household.
-    //
-    // For non-invite signups we leave emailRedirectTo undefined and let
-    // Supabase apply its default (siteUrl, configured per-project).
-    //
-    // The destination URL has to be in Supabase Auth → URL Configuration →
-    // Redirect URLs. A wildcard like https://sprigloop.com/invite/* is the
-    // cleanest match — see the deploy notes.
-    const emailRedirectTo = nextPath
-      ? `${window.location.origin}${nextPath}`
-      : undefined
-
     if (method === 'magic') {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
           shouldCreateUser: true,
           data: getMetadata(),
-          emailRedirectTo,
+          // No emailRedirectTo: we're using the 6-digit code flow. The user
+          // never clicks a link, so no redirect URL matters. After they enter
+          // the code, the in-app navigation honors `nextPath` directly.
         },
       })
       authError = error
@@ -100,7 +99,6 @@ export default function Signup() {
         password: password.trim(),
         options: {
           data: getMetadata(),
-          emailRedirectTo,
         },
       })
       authError = error
@@ -117,45 +115,135 @@ export default function Signup() {
     track.signupCompleted()
 
     if (method === 'magic') {
-      setSent(true)
+      setCodeStep('email')
+      setCode('')
       return
     }
 
     // Password signup. Two outcomes depending on whether email confirmation
     // is enabled in this Supabase project:
-    //   • session present → user is immediately authenticated. Navigate to
-    //     ?next= if set (invite flow), otherwise into onboarding.
-    //   • session absent  → confirmation email is required. Showing the
-    //     "check your email" splash here keeps the user oriented; the link
-    //     in the email (governed by emailRedirectTo above) will land them
-    //     on the right destination once clicked. Without this branch the
-    //     immediate navigate() would push them into ProtectedLayout, which
-    //     would bounce them back to / because they have no session yet.
+    //   • session present → user is immediately authenticated (email
+    //     confirmation disabled). Navigate straight to onboarding / nextPath.
+    //   • session absent  → confirmation email is required. Move to the
+    //     code-entry step. verifyOtp({type:'signup'}) will create the session
+    //     once the user types the code.
     if (postSignupSession) {
       navigate(nextPath || '/onboarding')
     } else {
-      setSent(true)
+      setCodeStep('signup')
+      setCode('')
     }
   }
 
-  if (sent) {
+  async function handleVerifyCode(e) {
+    e.preventDefault()
+    const trimmed = code.trim()
+    if (!trimmed) return
+
+    setLoading(true)
+    setError(null)
+
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: trimmed,
+      type: codeStep, // 'signup' or 'email'
+    })
+
+    setLoading(false)
+
+    if (verifyError) {
+      setError(
+        verifyError.message?.toLowerCase().includes('expired') || verifyError.message?.toLowerCase().includes('invalid')
+          ? "That code didn't work. Double-check it, or tap \u201CResend\u201D to get a new one."
+          : verifyError.message
+      )
+      return
+    }
+
+    // Session is live. AuthProvider will pick it up and fire the welcome
+    // email. Send the user to nextPath (invite acceptance flow) or
+    // onboarding for fresh signups.
+    navigate(nextPath || '/onboarding')
+  }
+
+  async function handleResendCode() {
+    if (!email.trim()) return
+    setLoading(true)
+    setError(null)
+
+    // For both signup-confirmation and magic-link signup, signInWithOtp with
+    // shouldCreateUser:true safely re-issues the token. (For an existing
+    // unconfirmed user it just regenerates; for a confirmed user it would
+    // sign them in via magic instead, but that's already a successful
+    // outcome from the user's POV.)
+    const { error: resendError } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        shouldCreateUser: true,
+        data: getMetadata(),
+      },
+    })
+
+    setLoading(false)
+
+    if (resendError) {
+      setError(resendError.message)
+      return
+    }
+    setCode('')
+    if (codeInputRef.current) codeInputRef.current.focus()
+  }
+
+  if (codeStep) {
     return (
       <div className={styles.page}>
         <div className={styles.wrap}>
-          <div className={styles.successIcon}>
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <path d="M5 14l7 7 11-11" stroke="#1D9E75" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
+          <button
+            className={styles.back}
+            onClick={() => { setCodeStep(null); setCode(''); setError(null) }}
+            type="button"
+          >
+            ← Back
+          </button>
           <div className={styles.logo}>sprigloop</div>
-          <h1 className={styles.title}>Check your email</h1>
+          <h1 className={styles.title}>Enter your code</h1>
           <p className={styles.sub}>
-            We sent a magic link to <strong>{email}</strong>. Click it to sign in — no password needed.
+            We sent a 6-digit code to <strong>{email}</strong>. Type it in to finish setting up your account.
           </p>
+
+          <form onSubmit={handleVerifyCode} className={styles.form}>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>6-digit code</label>
+              <input
+                ref={codeInputRef}
+                className={styles.input}
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={6}
+                placeholder="123456"
+                value={code}
+                onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
+                required
+              />
+            </div>
+
+            {error && <div className={styles.error}>{error}</div>}
+
+            <button
+              className={styles.submitBtn}
+              type="submit"
+              disabled={loading || code.trim().length < 6}
+            >
+              {loading ? 'Checking…' : 'Continue'}
+            </button>
+          </form>
+
           <p className={styles.hint}>
             Didn't get it? Check your spam folder or{' '}
-            <button className={styles.resendBtn} onClick={() => setSent(false)}>
-              try again
+            <button className={styles.resendBtn} onClick={handleResendCode} disabled={loading}>
+              resend the code
             </button>
             .
           </p>
@@ -185,14 +273,14 @@ export default function Signup() {
             onClick={() => { setMethod('magic'); setError(null) }}
             type="button"
           >
-            Magic link
+            Email a code
           </button>
         </div>
 
         <p className={styles.methodHint}>
           {method === 'password'
             ? "Create a password you'll remember and sign in anytime."
-            : "We'll email you a link — one click and you're in. No password ever."}
+            : "We'll email you a 6-digit code. Type it in to sign up. No password ever."}
         </p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
@@ -248,7 +336,7 @@ export default function Signup() {
               ? 'Please wait…'
               : method === 'password'
               ? 'Create account'
-              : 'Send magic link'}
+              : 'Email me a code'}
           </button>
         </form>
 
