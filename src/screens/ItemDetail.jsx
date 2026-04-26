@@ -233,7 +233,7 @@ export default function ItemDetail() {
         .insert({
           household_id: item.household_id,
           created_by: user.id,
-          destination_type: 'littleloop',
+          destination_type: 'family',
         })
         .select('id')
         .maybeSingle()
