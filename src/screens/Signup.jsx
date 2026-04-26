@@ -65,6 +65,24 @@ export default function Signup() {
     setError(null)
 
     let authError = null
+    let postSignupSession = null
+
+    // Where the confirmation / magic-link email link should point. If we
+    // arrived via ?next= (invite flow), the email link must come back to
+    // /invite/:token so the recipient lands on the accept screen with a
+    // fresh session — without this, Supabase falls back to siteUrl (/home)
+    // and the user runs into the onboarding gate even though they're meant
+    // to be joining an existing household.
+    //
+    // For non-invite signups we leave emailRedirectTo undefined and let
+    // Supabase apply its default (siteUrl, configured per-project).
+    //
+    // The destination URL has to be in Supabase Auth → URL Configuration →
+    // Redirect URLs. A wildcard like https://sprigloop.com/invite/* is the
+    // cleanest match — see the deploy notes.
+    const emailRedirectTo = nextPath
+      ? `${window.location.origin}${nextPath}`
+      : undefined
 
     if (method === 'magic') {
       const { error } = await supabase.auth.signInWithOtp({
@@ -72,18 +90,21 @@ export default function Signup() {
         options: {
           shouldCreateUser: true,
           data: getMetadata(),
+          emailRedirectTo,
         },
       })
       authError = error
     } else {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
         options: {
           data: getMetadata(),
+          emailRedirectTo,
         },
       })
       authError = error
+      postSignupSession = data?.session ?? null
     }
 
     setLoading(false)
@@ -97,12 +118,23 @@ export default function Signup() {
 
     if (method === 'magic') {
       setSent(true)
-    } else {
-      // If we got here via ?next= (e.g. from /invite/:token), honour that
-      // path instead of dropping the new user into /onboarding. The invite
-      // accept flow handles joining an existing household, so the new user
-      // doesn't need to go through household setup.
+      return
+    }
+
+    // Password signup. Two outcomes depending on whether email confirmation
+    // is enabled in this Supabase project:
+    //   • session present → user is immediately authenticated. Navigate to
+    //     ?next= if set (invite flow), otherwise into onboarding.
+    //   • session absent  → confirmation email is required. Showing the
+    //     "check your email" splash here keeps the user oriented; the link
+    //     in the email (governed by emailRedirectTo above) will land them
+    //     on the right destination once clicked. Without this branch the
+    //     immediate navigate() would push them into ProtectedLayout, which
+    //     would bounce them back to / because they have no session yet.
+    if (postSignupSession) {
       navigate(nextPath || '/onboarding')
+    } else {
+      setSent(true)
     }
   }
 
