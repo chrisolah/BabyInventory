@@ -129,26 +129,73 @@ Deno.serve(async (req) => {
       return json({ error: 'rate_limited', limit: RATE_LIMIT_MAX, window_minutes: 60 }, 429)
     }
 
-    // ─── Insert the invite row ─────────────────────────────────────────────
-    const { data: invite, error: insErr } = await adminClient
-      .from('pending_invites')
-      .insert({
-        household_id,
-        invited_email,
-        invited_by: user.id,
-        role,
-      })
-      .select('id, expires_at')
-      .single()
+    // ─── Upsert the invite row ─────────────────────────────────────────────
+    // Idempotent: if there's already an active invite to this address for
+    // this household, re-use its row (and re-send the email with the same
+    // token). Without this, the inviter sees an "already_invited" error
+    // when they re-send — but from their perspective, hitting Send again
+    // should just send the email again. Common cases: the recipient lost
+    // the original email, the inviter wanted to nudge, or they hit Send
+    // twice while the page was loading.
+    //
+    // We also bump expires_at to a fresh 7 days on resend, so a recipient
+    // clicking through a re-sent email isn't stuck with whatever was left
+    // of the original window. The token (the row's id) stays the same, so
+    // the original email link is still valid until the new expiry too —
+    // no broken links.
+    let invite: { id: string; expires_at: string }
+    let resent = false
 
-    if (insErr) {
-      // 23505 = unique_violation → there's already an active invite. The
-      // partial unique index on (household_id, invited_email) where active
-      // is what catches this.
-      if ((insErr as any).code === '23505') {
-        return json({ error: 'already_invited' }, 409)
+    const { data: existing, error: existingErr } = await adminClient
+      .from('pending_invites')
+      .select('id')
+      .eq('household_id', household_id)
+      .eq('invited_email', invited_email)
+      .is('accepted_at', null)
+      .is('revoked_at', null)
+      .maybeSingle()
+
+    if (existingErr) {
+      return json({ error: 'invite_lookup_failed', detail: existingErr.message }, 500)
+    }
+
+    if (existing) {
+      const newExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      const { data: updated, error: updErr } = await adminClient
+        .from('pending_invites')
+        .update({ expires_at: newExpiry, invited_by: user.id, role })
+        .eq('id', existing.id)
+        .select('id, expires_at')
+        .single()
+
+      if (updErr || !updated) {
+        return json({ error: 'invite_update_failed', detail: updErr?.message ?? 'no row' }, 500)
       }
-      return json({ error: 'invite_create_failed', detail: insErr.message }, 500)
+      invite = updated
+      resent = true
+    } else {
+      const { data: inserted, error: insErr } = await adminClient
+        .from('pending_invites')
+        .insert({
+          household_id,
+          invited_email,
+          invited_by: user.id,
+          role,
+        })
+        .select('id, expires_at')
+        .single()
+
+      if (insErr || !inserted) {
+        // 23505 here would mean a race with a concurrent send (two parents
+        // hitting Send at the same time, both passing the existing-row
+        // check). Surface as already_invited so the UI can suggest a
+        // refresh; in practice this is vanishingly rare.
+        if ((insErr as any)?.code === '23505') {
+          return json({ error: 'already_invited' }, 409)
+        }
+        return json({ error: 'invite_create_failed', detail: insErr?.message ?? 'no row' }, 500)
+      }
+      invite = inserted
     }
 
     // ─── Gather context for the email ──────────────────────────────────────
@@ -183,8 +230,12 @@ Deno.serve(async (req) => {
     // ─── Send via Resend ───────────────────────────────────────────────────
     const resendKey = Deno.env.get('RESEND_API_KEY')
     if (!resendKey) {
-      // Roll back the invite so it doesn't sit there orphaned.
-      await adminClient.from('pending_invites').delete().eq('id', invite.id)
+      // Roll back the invite so it doesn't sit there orphaned — but only
+      // if we just created it. On a resend we'd be deleting a previously-
+      // valid invite (and breaking the original email link) for no reason.
+      if (!resent) {
+        await adminClient.from('pending_invites').delete().eq('id', invite.id)
+      }
       return json({ error: 'email_not_configured' }, 500)
     }
 
@@ -210,8 +261,13 @@ Deno.serve(async (req) => {
 
     if (!resendRes.ok) {
       const errBody = await resendRes.text()
-      // Roll back so the inviter can retry without bumping the unique index.
-      await adminClient.from('pending_invites').delete().eq('id', invite.id)
+      // Roll back the new row so the inviter can retry without bumping the
+      // unique index. On a resend we leave the original row alone — the
+      // first email's link is still valid, so deleting would actively
+      // make things worse.
+      if (!resent) {
+        await adminClient.from('pending_invites').delete().eq('id', invite.id)
+      }
       return json({
         error:  'email_send_failed',
         status: resendRes.status,
@@ -219,7 +275,7 @@ Deno.serve(async (req) => {
       }, 500)
     }
 
-    return json({ ok: true, invite_id: invite.id })
+    return json({ ok: true, invite_id: invite.id, resent })
 
   } catch (err) {
     return json({ error: 'unexpected', detail: String((err as any)?.message ?? err) }, 500)
