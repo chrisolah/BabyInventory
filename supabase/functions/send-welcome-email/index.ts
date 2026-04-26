@@ -37,9 +37,10 @@ import { createClient } from '@supabase/supabase-js'
 import { corsHeaders } from '../_shared/cors.ts'
 
 // From / Reply-To addresses. Same conventions as send-household-invite —
-// chris@ for warmth, customersupport@ for replies, mailto unsubscribe so
-// Gmail/Apple Mail surface a one-click escape hatch.
-const FROM_ADDRESS = 'Sprigloop <chris@sprigloop.com>'
+// hello@ as the brand sender (system mail bucket), customersupport@ for
+// replies that need handling, mailto unsubscribe so Gmail/Apple Mail surface
+// a one-click escape hatch.
+const FROM_ADDRESS = 'Sprigloop <hello@sprigloop.com>'
 const REPLY_TO     = 'customersupport@sprigloop.com'
 const UNSUB_MAILTO = 'mailto:customersupport@sprigloop.com?subject=Unsubscribe%20from%20Sprigloop'
 

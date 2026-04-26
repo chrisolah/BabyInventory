@@ -42,15 +42,17 @@ const RATE_LIMIT_MAX       = 10
 
 // From / Reply-To / unsubscribe addresses.
 //
-// FROM uses chris@ for warmth — recipients see "Sprigloop <chris@sprigloop.com>"
-// in their inbox. Reply-To routes any responses to customersupport@ so that
-// scales beyond Chris reading every reply.
+// FROM uses hello@ as the system/brand sender — recipients see
+// "Sprigloop <hello@sprigloop.com>" in their inbox. We split this from chris@
+// so personal founder mail and product/system mail live in separate buckets.
+// Reply-To routes any responses to customersupport@ so it scales beyond
+// Chris reading every reply.
 //
 // List-Unsubscribe is the email-client-honored header that lets Gmail / Apple
 // Mail show a one-click "unsubscribe" link in the UI even though invite emails
 // are technically transactional. Pointing at customersupport@ with a clear
 // subject line gives recipients a reliable escape hatch.
-const FROM_ADDRESS    = 'Sprigloop <chris@sprigloop.com>'
+const FROM_ADDRESS    = 'Sprigloop <hello@sprigloop.com>'
 const REPLY_TO        = 'customersupport@sprigloop.com'
 const UNSUB_MAILTO    = 'mailto:customersupport@sprigloop.com?subject=Unsubscribe%20from%20Sprigloop%20invites'
 
