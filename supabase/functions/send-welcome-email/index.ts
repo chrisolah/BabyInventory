@@ -63,12 +63,11 @@ Deno.serve(async (req) => {
     const { data: { user }, error: userErr } = await userClient.auth.getUser()
     if (userErr || !user) return json({ error: 'invalid_session' }, 401)
 
-    // ─── Idempotency check ─────────────────────────────────────────────────
-    // welcome_sent_at lives on user_metadata so we can read it from the JWT
-    // result above (no extra round-trip) and write it back via admin API.
-    // Storing on user_metadata over a dedicated column keeps the welcome
-    // mechanism self-contained — it doesn't require a migration to the
-    // beta schema and works identically in beta and prod.
+    // ─── Fast-path idempotency check ───────────────────────────────────────
+    // welcome_sent_at on user_metadata is the cheap "we've already done this
+    // user" signal — readable from the JWT response above with no DB round
+    // trip. The actual race-free dedupe happens via the welcome_log insert
+    // below (atomic at the DB level), so this is purely an optimization.
     if (user.user_metadata?.welcome_sent_at) {
       return json({ ok: true, sent: false, reason: 'already_sent' })
     }
@@ -81,11 +80,33 @@ Deno.serve(async (req) => {
       return json({ ok: true, sent: false, reason: 'no_email' })
     }
 
-    // ─── Service-role client for the metadata write ────────────────────────
+    // ─── Service-role client (used for both the lock and the metadata write) ─
     const adminClient = createClient(
       supabaseUrl,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      { db: { schema: 'beta' } },
     )
+
+    // ─── Atomic dedupe lock ────────────────────────────────────────────────
+    // Insert into beta.welcome_log; the PK on user_id makes any concurrent
+    // duplicate fail with unique-violation (Postgres SQLSTATE 23505) before
+    // either caller sends the email. The metadata check above is just a
+    // fast path — this is the durable backstop that prevents two near-
+    // simultaneous tabs (storage-event SIGNED_IN, etc.) from both sending.
+    const { error: lockErr } = await adminClient
+      .from('welcome_log')
+      .insert({ user_id: user.id })
+
+    if (lockErr) {
+      // 23505 = unique_violation. Some other invocation got here first.
+      // Treat as success-but-already-sent.
+      if ((lockErr as any).code === '23505') {
+        return json({ ok: true, sent: false, reason: 'already_sent' })
+      }
+      // Anything else (table missing, permission denied, etc.) is a real
+      // failure — surface it so we can fix it rather than silently sending.
+      return json({ error: 'lock_failed', detail: lockErr.message }, 500)
+    }
 
     // ─── Render the email ──────────────────────────────────────────────────
     // First-name only for the greeting — feels warmer than "Welcome, Chris
@@ -101,11 +122,16 @@ Deno.serve(async (req) => {
     const text       = renderWelcomeEmailText({ firstName, homeUrl, recipientEmail })
 
     // ─── Send via Resend ───────────────────────────────────────────────────
+    // If we hold the lock but the actual send fails for any reason, we
+    // release the lock so a future retry can run. Otherwise the user would
+    // be permanently locked out of ever receiving a welcome email.
+    const releaseLock = async () => {
+      await adminClient.from('welcome_log').delete().eq('user_id', user.id)
+    }
+
     const resendKey = Deno.env.get('RESEND_API_KEY')
     if (!resendKey) {
-      // Don't mark welcome_sent_at if we couldn't actually send — next call
-      // should retry. This matters in beta where the secret might be missing
-      // briefly during deploys.
+      await releaseLock()
       return json({ error: 'email_not_configured' }, 500)
     }
 
@@ -131,6 +157,7 @@ Deno.serve(async (req) => {
 
     if (!resendRes.ok) {
       const errBody = await resendRes.text()
+      await releaseLock()
       return json({
         error:  'email_send_failed',
         status: resendRes.status,
