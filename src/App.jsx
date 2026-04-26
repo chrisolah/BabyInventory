@@ -17,6 +17,7 @@ import ItemDetail from './screens/ItemDetail'
 import PassAlongBatch from './screens/PassAlongBatch'
 import PassAlongList from './screens/PassAlongList'
 import Profile from './screens/Profile'
+import AcceptInvite from './screens/AcceptInvite'
 import IvyDecoration from './components/IvyDecoration'
 
 // React Router v6 doesn't auto-scroll to the top on route change, so
@@ -120,6 +121,13 @@ function AppRoutes() {
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       {/* /reset-password is unguarded — it needs to render whether the user is signed in (recovery session) or not (expired link), and handles both cases itself. */}
       <Route path="/reset-password" element={<ResetPassword />} />
+      {/* /invite/:token is also unguarded. Unauthed visitors see the invite
+          preview and a Sign in / Sign up CTA (with ?next= to return here);
+          signed-in visitors see Accept (or a mismatched-email warning). It
+          must NOT live inside PublicRoute (would bounce signed-in recipients
+          to /home before they could accept) or ProtectedLayout (would block
+          unauthed recipients before they could see the preview). */}
+      <Route path="/invite/:token" element={<AcceptInvite />} />
       {/* All authed routes share ProtectedLayout so HouseholdProvider stays
           mounted across navigation. Adding a new authed screen? Add it as a
           child of this route, not as its own top-level <Route>. */}

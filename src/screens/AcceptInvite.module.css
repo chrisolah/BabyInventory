@@ -1,0 +1,230 @@
+.page {
+  min-height: 100vh;
+  background: var(--white);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 480px;
+  padding: 2rem 1.5rem;
+}
+
+/* Header — matches Landing's lowercase wordmark exactly. */
+.logo {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 0.5rem;
+}
+
+/* Sprig sits to the left of the headline as the brand mark — same teal palette
+   as the Landing IvyDecoration, scaled down so it doesn't overpower the
+   invite content. */
+.sprigRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 1.5rem;
+}
+
+.sprig {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+}
+
+/* Eyebrow pill — mirrors Landing's hero eyebrow so the screen reads as part
+   of the brand surface, not a generic auth flow. */
+.eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--teal-dark);
+  background: var(--teal-light);
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--gray-900);
+  margin-bottom: 10px;
+}
+
+.titleAccent {
+  font-style: italic;
+  color: var(--teal-dark);
+}
+
+.sub {
+  font-size: 14px;
+  color: var(--gray-600);
+  line-height: 1.55;
+  margin-bottom: 1.5rem;
+}
+
+/* Detail card — household name + invited address + expiry. Same neutral
+   surface treatment used elsewhere in the app for read-only summaries. */
+.card {
+  background: var(--gray-50);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 1.5rem;
+}
+
+.cardRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  padding: 6px 0;
+}
+
+.cardRow + .cardRow {
+  border-top: 0.5px dashed var(--gray-200);
+}
+
+.cardLabel {
+  color: var(--gray-600);
+}
+
+.cardValue {
+  color: var(--gray-900);
+  font-weight: 500;
+  text-align: right;
+  max-width: 60%;
+  word-break: break-word;
+}
+
+/* Primary CTA — identical button shape to login/signup so muscle memory
+   carries over. */
+.primaryBtn {
+  width: 100%;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: var(--teal);
+  color: var(--teal-light);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondaryBtn {
+  width: 100%;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: var(--white);
+  color: var(--gray-900);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.secondaryBtn:hover {
+  border-color: var(--gray-400);
+}
+
+/* Stack two CTAs without crowding. */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* Status banners — non-active invite states. Each tone uses the existing
+   palette so we don't introduce one-off colors. */
+.notice {
+  font-size: 13px;
+  line-height: 1.5;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 1.25rem;
+}
+
+.noticeWarn {
+  color: var(--amber-dark);
+  background: var(--amber-light);
+  border: 0.5px solid var(--amber);
+}
+
+.noticeError {
+  color: #A32D2D;
+  background: #FDF2F2;
+  border: 0.5px solid #F09595;
+}
+
+.noticeInfo {
+  color: var(--teal-dark);
+  background: var(--teal-light);
+  border: 0.5px solid var(--teal-mid);
+}
+
+/* Loading + error helper text. */
+.loadingState {
+  font-size: 14px;
+  color: var(--gray-600);
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.error {
+  font-size: 13px;
+  color: #A32D2D;
+  background: #FDF2F2;
+  border: 0.5px solid #F09595;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+.footerLink {
+  background: none;
+  border: none;
+  color: var(--teal);
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 0;
+}
+
+.successIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--teal-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}

@@ -1,13 +1,41 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { track, getSessionId } from '../lib/analytics'
 import styles from './Signup.module.css'
 
+// Whitelist for ?next= post-auth redirects. Only same-origin paths starting
+// with '/' (and not '//') are honoured — a malicious link must not be able
+// to bounce a freshly-signed-up user to an external site or unintended
+// internal route. Everything else falls back to /onboarding.
+function safeNext(raw) {
+  if (!raw) return null
+  if (typeof raw !== 'string') return null
+  if (!raw.startsWith('/')) return null
+  if (raw.startsWith('//')) return null
+  return raw
+}
+
 export default function Signup() {
   const navigate = useNavigate()
+  const location = useLocation()
+  // ?next=<path> + ?email=<addr> — set by AcceptInvite when sending an
+  // unauthed recipient through sign-up. The email is pre-filled (and the
+  // recipient should not change it, otherwise accept_invite() will reject
+  // them on the back end). After sign-up we bounce to `next`, skipping the
+  // usual /onboarding handoff because the invite acceptance flow handles
+  // joining the existing household — the new user doesn't need to create
+  // their own. The accept screen will then pick up the now-signed-in
+  // session and let them tap "Join".
+  const { nextPath, prefillEmail } = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    return {
+      nextPath: safeNext(params.get('next')),
+      prefillEmail: params.get('email') || '',
+    }
+  }, [location.search])
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(prefillEmail)
   const [password, setPassword] = useState('')
   const [method, setMethod] = useState('password')
   const [loading, setLoading] = useState(false)
@@ -70,7 +98,11 @@ export default function Signup() {
     if (method === 'magic') {
       setSent(true)
     } else {
-      navigate('/onboarding')
+      // If we got here via ?next= (e.g. from /invite/:token), honour that
+      // path instead of dropping the new user into /onboarding. The invite
+      // accept flow handles joining an existing household, so the new user
+      // doesn't need to go through household setup.
+      navigate(nextPath || '/onboarding')
     }
   }
 

@@ -1,11 +1,30 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { track } from '../lib/analytics'
 import styles from './Login.module.css'
 
+// Whitelist for ?next= post-auth redirects. We only honour same-origin paths
+// that begin with '/' and don't try to escape (no '//' or 'http'). Everything
+// else falls back to /home so a malicious link can't bounce a signed-in user
+// off-site or to an unintended internal route.
+function safeNext(raw) {
+  if (!raw) return '/home'
+  if (typeof raw !== 'string') return '/home'
+  if (!raw.startsWith('/')) return '/home'
+  if (raw.startsWith('//')) return '/home'
+  return raw
+}
+
 export default function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
+  // ?next=<path> — set by AcceptInvite (and any future "log in to continue"
+  // flow) so we can return the user to where they were after auth completes.
+  const nextPath = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    return safeNext(params.get('next'))
+  }, [location.search])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [method, setMethod] = useState('password')
@@ -59,8 +78,10 @@ export default function Login() {
       setMagicSent(true)
     } else {
       // AuthProvider will pick up the session; PublicRoute on "/" will bounce to /home,
-      // but navigate explicitly so the transition feels immediate.
-      navigate('/home')
+      // but navigate explicitly so the transition feels immediate. If we got
+      // here via ?next= (e.g. from /invite/:token), honour that path so the
+      // user lands back on the screen they were trying to reach.
+      navigate(nextPath)
     }
   }
 

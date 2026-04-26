@@ -147,6 +147,17 @@ export const track = {
     logEvent('household_invite_opened', 'engagement', { from }),
   householdInviteSubmitted: (props) =>
     logEvent('household_invite_submitted', 'engagement', props),
+  // Recipient-side invite events. `accept_opened` fires once per /invite/:token
+  // page view (regardless of status branch — measures CTR of the email link).
+  // `accept_completed` fires only when accept_invite() returns success.
+  // `accept_failed` carries the backend exception string so we can spot
+  // expired-link / wrong-email patterns without a full event drilldown.
+  householdInviteAcceptOpened: () =>
+    logEvent('household_invite_accept_opened', 'engagement', {}),
+  householdInviteAcceptCompleted: () =>
+    logEvent('household_invite_accept_completed', 'engagement', {}),
+  householdInviteAcceptFailed: (props) =>
+    logEvent('household_invite_accept_failed', 'engagement', props),
   householdRenamed: () =>
     logEvent('household_renamed', 'engagement', {}),
   babyEdited: (props) =>
