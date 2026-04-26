@@ -29,15 +29,14 @@ export default function Login() {
   const [password, setPassword] = useState('')
   // 'password' = email + password sign-in
   // 'magic'    = email-only, we send a 6-digit code, user enters it to sign in
-  // The forgot-password flow uses the same code-entry UI but a different verifyOtp type.
   const [method, setMethod] = useState('password')
   const [loading, setLoading] = useState(false)
-  // Two-step OTP state. While `codeStep` is null we're on the request screen;
-  // once we've successfully sent a code we flip to 'magic' (sign-in) or
-  // 'recovery' (password reset) and render the code-entry UI. The string is
-  // also passed to verifyOtp's `type` field — 'email' for sign-in,
-  // 'recovery' for password reset.
-  const [codeStep, setCodeStep] = useState(null) // null | 'magic' | 'recovery'
+  // Magic-link code-entry state. When non-null we're on the code-entry screen
+  // and `code` is what the user typed. Recovery is NOT handled here anymore —
+  // the recovery code-entry lives on /reset-password (unguarded route) so the
+  // post-verify auth-state flip can't race PublicRoute into bouncing the user
+  // to /home before navigate('/reset-password') runs.
+  const [codeStep, setCodeStep] = useState(null) // null | 'magic'
   const [code, setCode] = useState('')
   const [error, setError] = useState(null)
   const codeInputRef = useRef(null)
@@ -116,10 +115,10 @@ export default function Login() {
     setError(null)
     track.passwordResetRequested()
 
-    // Use signInWithOtp with the recovery flow handled via resetPasswordForEmail
-    // — Supabase issues a 6-digit token in the recovery email regardless of
-    // whether we set redirectTo. We omit redirectTo entirely since we're
-    // verifying via code, not link.
+    // Send the recovery email (issues a 6-digit token). The user's code-entry
+    // screen lives at /reset-password — that route is unguarded, so verifying
+    // the OTP there can't trigger PublicRoute on /login to redirect us to
+    // /home in the same auth-state-flip tick.
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email.trim()
     )
@@ -131,8 +130,8 @@ export default function Login() {
       return
     }
 
-    setCodeStep('recovery')
-    setCode('')
+    // Hand the email off in URL state so the user doesn't have to retype it.
+    navigate(`/reset-password?email=${encodeURIComponent(email.trim())}`)
   }
 
   async function handleVerifyCode(e) {
@@ -143,14 +142,11 @@ export default function Login() {
     setLoading(true)
     setError(null)
 
-    // verifyOtp's `type` field decides what kind of session we get:
-    //   • 'email' — fully signed-in session (magic-link replacement)
-    //   • 'recovery' — recovery session that allows updateUser({ password })
-    //                  but expires shortly afterward, forcing a fresh login.
+    // Magic-link sign-in only — recovery code-entry now lives on /reset-password.
     const { error: verifyError } = await supabase.auth.verifyOtp({
       email: email.trim(),
       token: trimmed,
-      type: codeStep === 'recovery' ? 'recovery' : 'email',
+      type: 'email',
     })
 
     setLoading(false)
@@ -165,13 +161,8 @@ export default function Login() {
       return
     }
 
-    if (codeStep === 'recovery') {
-      track.passwordResetRequested() // arrival at the new-password screen
-      navigate('/reset-password')
-    } else {
-      track.loginCompleted('magic')
-      navigate(nextPath)
-    }
+    track.loginCompleted('magic')
+    navigate(nextPath)
   }
 
   async function handleResendCode() {
@@ -179,13 +170,10 @@ export default function Login() {
     setLoading(true)
     setError(null)
 
-    const { error: resendError } =
-      codeStep === 'recovery'
-        ? await supabase.auth.resetPasswordForEmail(email.trim())
-        : await supabase.auth.signInWithOtp({
-            email: email.trim(),
-            options: { shouldCreateUser: false },
-          })
+    const { error: resendError } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { shouldCreateUser: false },
+    })
 
     setLoading(false)
 
@@ -197,9 +185,8 @@ export default function Login() {
     if (codeInputRef.current) codeInputRef.current.focus()
   }
 
-  // CODE ENTRY SCREEN (shared by magic-link sign-in and password recovery)
+  // CODE ENTRY SCREEN (magic-link sign-in only — recovery lives on /reset-password)
   if (codeStep) {
-    const isRecovery = codeStep === 'recovery'
     return (
       <div className={styles.page}>
         <div className={styles.wrap}>
@@ -211,7 +198,7 @@ export default function Login() {
             ← Back
           </button>
           <div className={styles.logo}>sprigloop</div>
-          <h1 className={styles.title}>{isRecovery ? 'Enter your reset code' : 'Enter your sign-in code'}</h1>
+          <h1 className={styles.title}>Enter your sign-in code</h1>
           <p className={styles.sub}>
             We sent a 6-digit code to <strong>{email}</strong>. Type it in below.
           </p>
@@ -241,7 +228,7 @@ export default function Login() {
               type="submit"
               disabled={loading || code.trim().length < 6}
             >
-              {loading ? 'Checking…' : isRecovery ? 'Continue' : 'Sign in'}
+              {loading ? 'Checking…' : 'Sign in'}
             </button>
           </form>
 

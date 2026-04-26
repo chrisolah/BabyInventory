@@ -1,44 +1,100 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { track } from '../lib/analytics'
 import styles from './ResetPassword.module.css'
 
-// New-password screen, reached after a user verifies their 6-digit recovery
-// code on the Login screen.
+// Password reset flow, end-to-end on a single unguarded route.
 //
 // Flow:
-//  1. User taps "Forgot password?" on /login → enters email → receives a
-//     6-digit code by email.
-//  2. User enters the code into the Login code-entry screen, which calls
-//     verifyOtp({ type: 'recovery' }). On success, Supabase establishes a
-//     short-lived recovery session that allows updateUser({ password }).
-//  3. Login navigates here. We expect a session to already exist.
-//  4. On submit: updateUser({ password }) → signOut() → redirect to /login.
+//  1. /login: user taps "Forgot password?" → enters email → we call
+//     resetPasswordForEmail() → navigate here with ?email=... in the URL.
+//  2. Step 'code' (this screen): user enters the 6-digit code we just emailed.
+//     verifyOtp({type:'recovery'}) creates a short-lived recovery session.
+//  3. Step 'password' (this screen): user picks a new password →
+//     updateUser({password}) → signOut → step 'done' → bounce to /login.
 //
-// If the user lands here without a session (visited directly, or recovery
-// session expired), we show an error and link back to /login.
+// Why both steps live here (and not on /login):
+//   verifyOtp({type:'recovery'}) signs the user in. If we ran it on /login,
+//   AuthProvider's setUser would propagate, PublicRoute on /login would
+//   render <Navigate to="/home" replace/>, and that <Navigate>'s effect
+//   would override our imperative navigate('/reset-password') in the same
+//   tick. /reset-password is unguarded, so doing the verify here can't race.
+//
+// Direct landings (no email in URL): user is allowed to type their email
+// manually and request a fresh code from this screen. This handles the case
+// where the email link Outlook tried to "preview" never made it back to the
+// browser tab.
 export default function ResetPassword() {
   const navigate = useNavigate()
-  const [status, setStatus] = useState('checking') // 'checking' | 'ready' | 'invalid' | 'done'
+  const location = useLocation()
+  const initialEmail = new URLSearchParams(location.search).get('email') || ''
+  const [step, setStep] = useState('code') // 'code' | 'password' | 'done'
+  const [email, setEmail] = useState(initialEmail)
+  const [code, setCode] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const codeInputRef = useRef(null)
 
   useEffect(() => {
-    // After verifyOtp({type:'recovery'}) on /login the session should already
-    // be in place. We do a single getSession check; no need to wait for
-    // PASSWORD_RECOVERY events anymore (those came from the link/hash flow).
-    let cancelled = false
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (cancelled) return
-      setStatus(session ? 'ready' : 'invalid')
-    })
-    return () => { cancelled = true }
-  }, [])
+    if (step === 'code' && codeInputRef.current) {
+      codeInputRef.current.focus()
+    }
+  }, [step])
 
-  async function handleSubmit(e) {
+  async function handleVerifyCode(e) {
+    e.preventDefault()
+    const trimmedCode = code.trim()
+    const trimmedEmail = email.trim()
+    if (!trimmedCode || !trimmedEmail) return
+
+    setLoading(true)
+    setError(null)
+
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: trimmedEmail,
+      token: trimmedCode,
+      type: 'recovery',
+    })
+
+    setLoading(false)
+
+    if (verifyError) {
+      setError(
+        verifyError.message?.toLowerCase().includes('expired') || verifyError.message?.toLowerCase().includes('invalid')
+          ? "That code didn't work. Double-check it, or tap \u201Cresend\u201D for a new one."
+          : verifyError.message
+      )
+      return
+    }
+
+    track.passwordResetRequested() // arrival at the new-password screen
+    setStep('password')
+    setCode('')
+  }
+
+  async function handleResendCode() {
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setError('Enter your email first.')
+      return
+    }
+    setLoading(true)
+    setError(null)
+
+    const { error: resendError } = await supabase.auth.resetPasswordForEmail(trimmedEmail)
+    setLoading(false)
+    if (resendError) {
+      setError(resendError.message)
+      return
+    }
+    setCode('')
+    if (codeInputRef.current) codeInputRef.current.focus()
+  }
+
+  async function handleSubmitPassword(e) {
     e.preventDefault()
     if (password.length < 8) {
       setError('Password must be at least 8 characters.')
@@ -66,38 +122,84 @@ export default function ResetPassword() {
     await supabase.auth.signOut()
 
     setLoading(false)
-    setStatus('done')
+    setStep('done')
   }
 
-  if (status === 'checking') {
+  // ─── STEP: code entry ──────────────────────────────────────────────────────
+  if (step === 'code') {
     return (
       <div className={styles.page}>
         <div className={styles.wrap}>
+          <button className={styles.back} onClick={() => navigate('/login')}>← Back to log in</button>
           <div className={styles.logo}>sprigloop</div>
-          <div className={styles.loadingState}>Loading…</div>
-        </div>
-      </div>
-    )
-  }
-
-  if (status === 'invalid') {
-    return (
-      <div className={styles.page}>
-        <div className={styles.wrap}>
-          <div className={styles.logo}>sprigloop</div>
-          <h1 className={styles.title}>Session expired</h1>
+          <h1 className={styles.title}>Enter your reset code</h1>
           <p className={styles.sub}>
-            Your password reset session has expired. Request a new code from the log in screen.
+            We sent a 6-digit code to <strong>{email || 'your email'}</strong>. Type it in below.
           </p>
-          <button className={styles.submitBtn} onClick={() => navigate('/login')}>
-            Go to log in
-          </button>
+
+          <form onSubmit={handleVerifyCode} className={styles.form}>
+            {!initialEmail && (
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Email address</label>
+                <input
+                  className={styles.input}
+                  type="email"
+                  placeholder="sarah@example.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  autoComplete="email"
+                  required
+                />
+              </div>
+            )}
+
+            <div className={styles.formGroup}>
+              <label className={styles.label}>6-digit code</label>
+              <input
+                ref={codeInputRef}
+                className={styles.input}
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={6}
+                placeholder="123456"
+                value={code}
+                onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
+                required
+              />
+            </div>
+
+            {error && <div className={styles.error}>{error}</div>}
+
+            <button
+              className={styles.submitBtn}
+              type="submit"
+              disabled={loading || !email.trim() || code.trim().length < 6}
+            >
+              {loading ? 'Checking…' : 'Continue'}
+            </button>
+          </form>
+
+          <p className={styles.sub} style={{ marginTop: 16 }}>
+            Didn't get it? Check your spam folder or{' '}
+            <button
+              type="button"
+              onClick={handleResendCode}
+              disabled={loading}
+              style={{ background: 'none', border: 'none', color: '#085041', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+            >
+              resend the code
+            </button>
+            .
+          </p>
         </div>
       </div>
     )
   }
 
-  if (status === 'done') {
+  // ─── STEP: done ────────────────────────────────────────────────────────────
+  if (step === 'done') {
     return (
       <div className={styles.page}>
         <div className={styles.wrap}>
@@ -119,7 +221,7 @@ export default function ResetPassword() {
     )
   }
 
-  // status === 'ready'
+  // ─── STEP: new password ────────────────────────────────────────────────────
   return (
     <div className={styles.page}>
       <div className={styles.wrap}>
@@ -129,7 +231,7 @@ export default function ResetPassword() {
           Pick something you'll remember. At least 8 characters.
         </p>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmitPassword} className={styles.form}>
           <div className={styles.formGroup}>
             <label className={styles.label}>New password</label>
             <input
