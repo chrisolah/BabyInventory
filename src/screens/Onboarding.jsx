@@ -90,6 +90,42 @@ function doneSubCopy(babies) {
     : 'Your wardrobe is ready. Start by adding what you have.'
 }
 
+// Pull a structured error code out of supabase-js's FunctionsHttpError. The
+// edge function returns { error: <code>, ... } JSON for non-2xx; supabase-js
+// surfaces the original Response on err.context. Mirrors the helper inside
+// InviteMemberModal — kept inline rather than imported because Onboarding's
+// invite step is a single call site and the modal helper isn't exported.
+async function extractInviteErrorCode(fnErr) {
+  const ctx = fnErr?.context
+  if (ctx && typeof ctx.clone === 'function') {
+    try {
+      const parsed = await ctx.clone().json()
+      if (parsed?.error) return parsed.error
+    } catch { /* not JSON */ }
+    if (ctx.status === 401) return 'invalid_session'
+    if (ctx.status === 403) return 'not_household_owner'
+    if (ctx.status === 409) return 'duplicate_active'
+    if (ctx.status === 429) return 'rate_limited'
+  }
+  return 'unknown'
+}
+
+// Onboarding-specific error copy. Slightly less granular than the modal's
+// since the user has less context here — and the skip path is always one
+// tap away, so over-explaining is wasted effort.
+function messageForInviteError(code) {
+  switch (code) {
+    case 'invalid_email':       return "That doesn't look like a valid email address."
+    case 'cannot_invite_self':  return "You can't invite yourself — that's the address you signed up with."
+    case 'duplicate_active':    return "There's already a pending invite to this address. Ask them to check their inbox (and spam)."
+    case 'rate_limited':        return "You've sent a lot of invites recently. Try again in a bit."
+    case 'invalid_session':     return "Your session expired. Sign out and back in, then try again."
+    case 'not_household_owner': return "Only household owners can send invites."
+    case 'email_send_failed':   return "We saved the invite but the email didn't go out. Try resending in a moment."
+    default:                    return "Something went wrong sending the invite. Try again, or skip for now."
+  }
+}
+
 function inviteWardrobeCopy(babies) {
   const named = babies.map(b => b.name).filter(Boolean)
   if (named.length === babies.length && named.length > 0) {
@@ -447,14 +483,64 @@ export default function Onboarding() {
     )
   }
 
-  // ── Step 4 — invite (UI only for now) ────────────────────────────────
+  // ── Step 4 — invite ──────────────────────────────────────────────────
   // Both paths (send + skip) advance into the scan step rather than
   // completing onboarding directly. We bump onboarding_step to 5 so a
   // resume after closing the tab on this page lands on scan, not invite.
+  //
+  // Send goes through the same `send-household-invite` edge function as
+  // InviteMemberModal — we deliberately don't lift that modal in here
+  // (its UX is a popover dialog with its own success splash) but we do
+  // want feature parity, so the call shape is identical: household_id,
+  // invited_email, role='member'. Errors get mapped to user-facing copy
+  // inline; on success we advance to the scan step. The user can resend
+  // / invite more from Profile → Household later.
   async function sendInvite() {
-    // Real invite plumbing (pending_invites table + email sending) is a
-    // follow-up. For now, we just log the event so the funnel data is
-    // honest about intent.
+    const trimmed = inviteEmail.trim()
+    if (!trimmed) return
+    if (!household?.id) {
+      // Defensive: household is set in step 1; we shouldn't be on step 4
+      // without it. Surface anyway in case of a resume edge case where
+      // the household lookup didn't repopulate.
+      setError("We couldn't find your household. Refresh the page and try again.")
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    const { data, error: fnErr } = await supabase.functions.invoke(
+      'send-household-invite',
+      {
+        body: {
+          household_id:  household.id,
+          invited_email: trimmed,
+          role: 'member',
+        },
+      },
+    )
+
+    setLoading(false)
+
+    if (fnErr) {
+      // Mirror InviteMemberModal's error mapping at a coarser granularity —
+      // onboarding doesn't surface the full taxonomy because the user has
+      // less context here. The friendliest fallback wins; users can retry
+      // from Profile if anything looks off.
+      const code = await extractInviteErrorCode(fnErr)
+      setError(messageForInviteError(code))
+      // false here matches the existing analytics meaning ("not skipped"),
+      // which we keep so funnel comparisons across the rewire don't break.
+      track.inviteSent(false)
+      return
+    }
+
+    if (!data?.ok) {
+      setError("Something went wrong sending the invite. Try again, or skip for now.")
+      track.inviteSent(false)
+      return
+    }
+
     track.inviteSent(false)
     await bumpOnboardingStep(STEP_TO_INDEX.scan)
     setStep('scan')
@@ -908,22 +994,22 @@ export default function Onboarding() {
                 autoComplete="email"
               />
             </div>
+            {error && <div className={styles.error}>{error}</div>}
             <button
               type="button"
               className={styles.primaryBtn}
               onClick={sendInvite}
-              disabled={!inviteEmail.trim()}
+              disabled={!inviteEmail.trim() || loading}
             >
-              Send invite
+              {loading ? 'Sending…' : 'Send invite'}
             </button>
             <div className={styles.skipLink}>
-              <button type="button" className={styles.skipBtn} onClick={skipInvite}>
+              <button type="button" className={styles.skipBtn} onClick={skipInvite} disabled={loading}>
                 Skip for now
               </button>
             </div>
             <p className={styles.helperNote}>
-              Invites are coming soon. For now, we'll note who you'd like to bring in
-              and reach out when the feature launches.
+              They'll get an email with a one-click link to join. The link is good for 7 days.
             </p>
           </>
         )}
