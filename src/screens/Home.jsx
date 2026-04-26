@@ -48,32 +48,59 @@ export default function Home() {
     let cancelled = false
 
     async function check() {
-      const { data, error } = await supabase
+      // Invite-joiner short-circuit. If the user is a member (role='member',
+      // i.e. joined an existing household via invite — not the creator),
+      // they don't need onboarding at all: the household exists, the babies
+      // exist, the receiving prefs are set. The per-user onboarding_step
+      // counter is irrelevant for them — it stays at 0 unless something
+      // bumps it, but they're functionally complete the moment they accept.
+      // Without this branch, brand-new invite-joiners get dumped into
+      // /onboarding the first time they hit /home (named household, add
+      // baby, etc. — all data that already exists).
+      const { data: memberRow, error: memberErr } = await supabase
         .schema(currentSchema)
-        .from('user_activity_summary')
-        .select('onboarding_step')
+        .from('household_members')
+        .select('role')
         .eq('user_id', user.id)
+        .eq('role', 'member')
+        .limit(1)
         .maybeSingle()
 
       if (cancelled) return
 
-      if (error) {
-        // eslint-disable-next-line no-console
-        console.warn('Onboarding gate: user_activity_summary query failed —', error.message)
-        setStatus('ready')
-        return
-      }
+      // memberErr is non-fatal: fall through to the step-based gate so a
+      // transient query failure doesn't strand the user. Real members will
+      // still land on /home on the next visit when the query succeeds.
+      if (!memberErr && memberRow) {
+        // Continue to the items-vs-empty-state check below.
+      } else {
+        const { data, error } = await supabase
+          .schema(currentSchema)
+          .from('user_activity_summary')
+          .select('onboarding_step')
+          .eq('user_id', user.id)
+          .maybeSingle()
 
-      // ONBOARDING_COMPLETE is 5 (migration 015 remapped from 6 after the
-      // sizemode step was cut). Anything below complete means the user
-      // still has a step to handle — receiving, invite, or scan — and
-      // belongs on the /onboarding flow, not here. Hard-coded to keep
-      // this gate self-contained, but keep in sync with Onboarding.jsx
-      // if the flow grows or shrinks again.
-      const step = data?.onboarding_step ?? 0
-      if (step < 5) {
-        navigate('/onboarding', { replace: true })
-        return
+        if (cancelled) return
+
+        if (error) {
+          // eslint-disable-next-line no-console
+          console.warn('Onboarding gate: user_activity_summary query failed —', error.message)
+          setStatus('ready')
+          return
+        }
+
+        // ONBOARDING_COMPLETE is 5 (migration 015 remapped from 6 after the
+        // sizemode step was cut). Anything below complete means the user
+        // still has a step to handle — receiving, invite, or scan — and
+        // belongs on the /onboarding flow, not here. Hard-coded to keep
+        // this gate self-contained, but keep in sync with Onboarding.jsx
+        // if the flow grows or shrinks again.
+        const step = data?.onboarding_step ?? 0
+        if (step < 5) {
+          navigate('/onboarding', { replace: true })
+          return
+        }
       }
 
       // Onboarding done — if they've already added anything, skip the empty
