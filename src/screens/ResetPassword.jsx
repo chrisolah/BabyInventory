@@ -4,18 +4,20 @@ import { supabase } from '../lib/supabase'
 import { track } from '../lib/analytics'
 import styles from './ResetPassword.module.css'
 
-// Landing page for the password-reset email link.
+// New-password screen, reached after a user verifies their 6-digit recovery
+// code on the Login screen.
 //
 // Flow:
-//  1. User clicks the link in their reset email.
-//  2. Supabase drops them here with a recovery token in the URL hash.
-//  3. @supabase/supabase-js auto-exchanges the token for a recovery session
-//     and fires onAuthStateChange with event === 'PASSWORD_RECOVERY'.
-//  4. We show the "choose a new password" form once a session exists.
-//  5. On submit: updateUser({ password }) → signOut() → redirect to /login.
+//  1. User taps "Forgot password?" on /login → enters email → receives a
+//     6-digit code by email.
+//  2. User enters the code into the Login code-entry screen, which calls
+//     verifyOtp({ type: 'recovery' }). On success, Supabase establishes a
+//     short-lived recovery session that allows updateUser({ password }).
+//  3. Login navigates here. We expect a session to already exist.
+//  4. On submit: updateUser({ password }) → signOut() → redirect to /login.
 //
-// If the user lands here without a session (link expired, or visited directly),
-// we show an error and link back to /login.
+// If the user lands here without a session (visited directly, or recovery
+// session expired), we show an error and link back to /login.
 export default function ResetPassword() {
   const navigate = useNavigate()
   const [status, setStatus] = useState('checking') // 'checking' | 'ready' | 'invalid' | 'done'
@@ -25,40 +27,15 @@ export default function ResetPassword() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    let settled = false
-
-    // If Supabase has already processed the hash by the time we mount, we'll
-    // have a session immediately.
+    // After verifyOtp({type:'recovery'}) on /login the session should already
+    // be in place. We do a single getSession check; no need to wait for
+    // PASSWORD_RECOVERY events anymore (those came from the link/hash flow).
+    let cancelled = false
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (settled) return
-      if (session) {
-        settled = true
-        setStatus('ready')
-      }
+      if (cancelled) return
+      setStatus(session ? 'ready' : 'invalid')
     })
-
-    // Otherwise wait for the PASSWORD_RECOVERY event (or any signed-in event
-    // that lands us here with a valid session).
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (settled) return
-      if (event === 'PASSWORD_RECOVERY' || session) {
-        settled = true
-        setStatus('ready')
-      }
-    })
-
-    // If nothing shows up within ~3s, assume the link was invalid/expired.
-    const timeout = setTimeout(() => {
-      if (!settled) {
-        settled = true
-        setStatus('invalid')
-      }
-    }, 3000)
-
-    return () => {
-      subscription.unsubscribe()
-      clearTimeout(timeout)
-    }
+    return () => { cancelled = true }
   }, [])
 
   async function handleSubmit(e) {
@@ -97,7 +74,7 @@ export default function ResetPassword() {
       <div className={styles.page}>
         <div className={styles.wrap}>
           <div className={styles.logo}>sprigloop</div>
-          <div className={styles.loadingState}>Checking your reset link…</div>
+          <div className={styles.loadingState}>Loading…</div>
         </div>
       </div>
     )
@@ -108,9 +85,9 @@ export default function ResetPassword() {
       <div className={styles.page}>
         <div className={styles.wrap}>
           <div className={styles.logo}>sprigloop</div>
-          <h1 className={styles.title}>Link expired</h1>
+          <h1 className={styles.title}>Session expired</h1>
           <p className={styles.sub}>
-            This password reset link is invalid or has expired. Request a new one from the log in screen.
+            Your password reset session has expired. Request a new code from the log in screen.
           </p>
           <button className={styles.submitBtn} onClick={() => navigate('/login')}>
             Go to log in
