@@ -99,11 +99,12 @@ export default function Profile() {
 }
 
 // ── Household tab ──────────────────────────────────────────────────────
-// Members list, babies CRUD, household rename. RLS gotcha: hm_select only
-// returns your own membership, so the "members" section will always be a
-// one-row list (you) until we build a SECURITY DEFINER RPC that can expose
-// other members' identities. That lands alongside real invite delivery;
-// for now the invite modal just captures intent.
+// Members list, babies CRUD, household rename. The members list is hydrated
+// via beta.list_household_members(household_id) — a SECURITY DEFINER RPC
+// that joins household_members to auth.users (name + email) gated by
+// is_household_member. Direct .from('household_members').select() returns
+// only the caller's row because the hm_select RLS policy is scoped to
+// auth.uid().
 function HouseholdTab() {
   const { user } = useAuth()
   // Pull the context's refresh handle so baby edits here also update the
@@ -117,6 +118,9 @@ function HouseholdTab() {
   const [household, setHousehold] = useState(null)
   const [myRole, setMyRole] = useState(null)       // 'owner' | 'member'
   const [babies, setBabies] = useState([])
+  // All members of the household (caller + everyone else). Hydrated by the
+  // list_household_members RPC after we know the household id.
+  const [members, setMembers] = useState([])
 
   // Inline rename state for the household name. Saved on blur or Enter.
   const [renaming, setRenaming] = useState(false)
@@ -181,6 +185,29 @@ function HouseholdTab() {
     }
 
     setBabies(babiesData || [])
+
+    // Members — hydrated via SECURITY DEFINER RPC so we get rows for every
+    // member (not just the caller). If the RPC fails (e.g. migration not
+    // applied in this env) we degrade gracefully to a self-only list so the
+    // tab still renders.
+    const { data: memberRows, error: memberRpcErr } = await supabase
+      .schema(currentSchema)
+      .rpc('list_household_members', { p_household_id: m.household_id })
+
+    if (memberRpcErr) {
+      // eslint-disable-next-line no-console
+      console.warn('list_household_members failed —', memberRpcErr.message)
+      setMembers([{
+        user_id:      user.id,
+        role:         m.role,
+        joined_at:    m.joined_at,
+        display_name: user.user_metadata?.name || user.email || 'You',
+        email:        user.email || '',
+      }])
+    } else {
+      setMembers(memberRows || [])
+    }
+
     setLoading(false)
   }, [user])
 
@@ -333,25 +360,29 @@ function HouseholdTab() {
           </button>
         </div>
 
-        <div className={styles.memberRow}>
-          <div className={styles.memberAvatar} aria-hidden="true">
-            {(myName[0] || '?').toUpperCase()}
-          </div>
-          <div className={styles.memberBody}>
-            <div className={styles.memberName}>
-              {myName} <span className={styles.memberSelfTag}>· You</span>
+        {members.map(m => {
+          const isSelf = m.user_id === user?.id
+          const name   = m.display_name || m.email || 'Member'
+          return (
+            <div key={m.user_id} className={styles.memberRow}>
+              <div className={styles.memberAvatar} aria-hidden="true">
+                {(name[0] || '?').toUpperCase()}
+              </div>
+              <div className={styles.memberBody}>
+                <div className={styles.memberName}>
+                  {name}
+                  {isSelf && (
+                    <span className={styles.memberSelfTag}> · You</span>
+                  )}
+                </div>
+                {m.email && <div className={styles.memberEmail}>{m.email}</div>}
+              </div>
+              <span className={styles.roleBadge}>
+                {m.role === 'owner' ? 'Owner' : 'Member'}
+              </span>
             </div>
-            {myEmail && <div className={styles.memberEmail}>{myEmail}</div>}
-          </div>
-          <span className={styles.roleBadge}>
-            {myRole === 'owner' ? 'Owner' : 'Member'}
-          </span>
-        </div>
-
-        <div className={styles.memberHint}>
-          Co-parents and helpers you invite will appear here once invites
-          go live.
-        </div>
+          )
+        })}
       </section>
 
       {/* ── Babies ─────────────────────────────────────────────────── */}
