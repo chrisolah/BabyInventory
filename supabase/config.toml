@@ -17,3 +17,37 @@
 # Remove this override once Supabase ships a fix for the gateway.
 [functions.scan-clothing-tag]
 verify_jwt = false
+
+# ── Auth email templates ────────────────────────────────────────────────────
+# Brand-styled HTML for the five Supabase auth emails. Pushed to remote
+# projects via `supabase config push --project-ref <ref>`. Source HTML lives
+# in supabase/templates/. Subject lines are versioned here so they ship with
+# the templates rather than getting set in the dashboard out-of-band.
+#
+# SMTP itself is configured via the dashboard for now (sender address,
+# Resend API key). If we ever want SMTP also config-driven, add a
+# [auth.email.smtp] block with `pass = "env(SUPABASE_SMTP_PASS)"`.
+#
+# After editing any template file or subject, push to both projects:
+#   supabase config push --project-ref adojihtjkfhozwbxfjae    (beta)
+#   supabase config push --project-ref udtgpgqniieedlxxglvf    (prod)
+
+[auth.email.template.confirmation]
+subject = "Confirm your Sprigloop account"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Your Sprigloop sign-in link"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.recovery]
+subject = "Reset your Sprigloop password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new email"
+content_path = "./supabase/templates/email_change.html"
+
+[auth.email.template.invite]
+subject = "You're invited to Sprigloop"
+content_path = "./supabase/templates/invite.html"
