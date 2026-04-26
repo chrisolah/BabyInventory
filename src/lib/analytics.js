@@ -201,8 +201,9 @@ export const track = {
     logEvent('receiving_preferences_updated', 'engagement', props),
 
   // Community exchange — sender side. Each event carries the destination
-  // ('littleloop' | 'family' | 'person' | 'charity') so we can compare
-  // which path parents actually choose. Item counts let us learn what a
+  // ('family' | 'person' | 'charity') so we can compare which path parents
+  // actually choose. (Legacy 'littleloop' was merged into 'family' in
+  // migration 016.) Item counts let us learn what a
   // "typical" batch size looks like — informs packaging + concierge load.
   // List-level events: "did the user even enter the hub?" is the first
   // question; "where did the batch get created from?" the second. The

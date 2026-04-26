@@ -12,10 +12,10 @@ import styles from './PassAlongBatch.module.css'
 // PassAlongBatch — the sender-side detail screen for a community exchange
 // "batch" (one physical box). Route: /pass-along/:id
 //
-// A batch has four destination types, each with a slightly different
-// lifecycle (see migration 010):
-//   • littleloop : draft → shipped → received → fulfilled     (HQ concierge)
-//   • family     : draft → shipped → received → fulfilled     (HQ forwards to matched household)
+// A batch has three destination types, each with a slightly different
+// lifecycle (see migration 010 + the merge migration that folded the
+// old 'littleloop' destination into 'family'):
+//   • family     : draft → shipped → received → fulfilled     (HQ forwards to matched household, or donates if no match)
 //   • person     : draft → shipped → fulfilled (auto)         (direct to someone)
 //   • charity    : draft → shipped → fulfilled (auto)         (direct to a charity)
 //
@@ -29,12 +29,11 @@ import styles from './PassAlongBatch.module.css'
 //      Once shipped, everything goes read-only.
 //   3. Provide the primary "I've shipped it" action. For person/charity
 //      this auto-advances status to fulfilled with an outcome ('matched'
-//      for person, 'donated' for charity) since Littleloop isn't in that
-//      path. For littleloop/family, it just flags shipped and HQ takes
-//      over from there.
-//   4. Offer "Request a prepaid label" as a secondary CTA — only for
-//      Littleloop destination. Writes label_requested_at + address on
-//      the batch; notifying Chris is task #5.
+//      for person, 'donated' for charity) since Sprigloop isn't in that
+//      path. For family, it just flags shipped and HQ takes over from there.
+//   4. Offer "Request a prepaid label" as a secondary CTA — only for the
+//      family destination (the only one that ships via HQ). Writes
+//      label_requested_at + address on the batch; notifying Chris is task #5.
 //   5. Allow deleting a draft batch (RLS enforces draft-only deletes too).
 //      Deleting a batch returns its items to 'owned' status so nothing is
 //      silently lost.
@@ -45,14 +44,9 @@ import styles from './PassAlongBatch.module.css'
 
 const DESTINATION_OPTIONS = [
   {
-    id: 'littleloop',
-    label: 'Sprigloop',
-    sub: 'Ship to us — we inspect, match, or donate on your behalf.',
-  },
-  {
     id: 'family',
-    label: 'Another Sprigloop family',
-    sub: 'Ships to Sprigloop first — we forward to a matched family who\u2019s opted in to receiving.',
+    label: 'Send to a Sprigloop family',
+    sub: 'Ships to Sprigloop first — we match it to another Sprigloop family who\u2019s opted in to receiving. If we can\u2019t find a match, we\u2019ll donate it on your behalf.',
   },
   {
     id: 'person',
@@ -92,13 +86,13 @@ function timelineFor(destination) {
       { key: 'fulfilled_donated', label: 'Donated' },
     ]
   }
-  // littleloop + family share the four-step path because both route
-  // through HQ physically.
+  // family is the only HQ-routed path: ships to Sprigloop, gets received,
+  // then forwarded to a matched household (or donated if no match).
   return [
     { key: 'draft', label: 'Draft' },
     { key: 'shipped', label: 'Shipped to Sprigloop' },
     { key: 'received', label: 'Received' },
-    { key: 'fulfilled', label: destination === 'family' ? 'Forwarded to family' : 'Fulfilled' },
+    { key: 'fulfilled', label: 'Forwarded to family' },
   ]
 }
 
@@ -134,7 +128,7 @@ export default function PassAlongBatch() {
   // Local draft of editable fields so the user's typing doesn't race with
   // the loaded row. We persist on blur / on explicit action rather than
   // per-keystroke — cheap on requests, and avoids flicker.
-  const [destination, setDestination] = useState('littleloop')
+  const [destination, setDestination] = useState('family')
   const [recipientName, setRecipientName] = useState('')
   const [recipientAddress, setRecipientAddress] = useState('')
   const [recipientNotes, setRecipientNotes] = useState('')
@@ -205,7 +199,7 @@ export default function PassAlongBatch() {
       }
 
       setBatch(batchRow)
-      setDestination(batchRow.destination_type || 'littleloop')
+      setDestination(batchRow.destination_type || 'family')
       setRecipientName(batchRow.recipient_name || '')
       setRecipientAddress(batchRow.recipient_address || '')
       setRecipientNotes(batchRow.recipient_notes || '')
@@ -270,7 +264,7 @@ export default function PassAlongBatch() {
 
   const showRecipientFields = destination === 'person' || destination === 'charity'
   const canShip = isDraft && items.length > 0
-  const canRequestLabel = destination === 'littleloop' && (isDraft || isShipped) && !batch?.label_requested_at
+  const canRequestLabel = destination === 'family' && (isDraft || isShipped) && !batch?.label_requested_at
 
   const timeline = useMemo(
     () => timelineFor(batch?.destination_type || destination),
@@ -303,7 +297,7 @@ export default function PassAlongBatch() {
     setActionError(null)
 
     const patch = { destination_type: nextDest }
-    if (nextDest === 'littleloop' || nextDest === 'family') {
+    if (nextDest === 'family') {
       patch.recipient_name = null
       patch.recipient_address = null
     }
@@ -327,7 +321,7 @@ export default function PassAlongBatch() {
     const prevDest = batch.destination_type
     setBatch(data || { ...batch, ...patch })
     setDestination(nextDest)
-    if (nextDest === 'littleloop' || nextDest === 'family') {
+    if (nextDest === 'family') {
       setRecipientName('')
       setRecipientAddress('')
     }
@@ -884,9 +878,10 @@ export default function PassAlongBatch() {
               {destination === 'family' && (
                 <div className={styles.familyExplainer}>
                   <strong>How this works:</strong> The box ships to Sprigloop
-                  first. We check the contents, match them to another
-                  Sprigloop family that’s opted in to receiving, and
-                  forward it on. You stay anonymous.
+                  first. We check the contents and forward them to another
+                  Sprigloop family that’s opted in to receiving. If we
+                  can’t find a match, we’ll donate it on your behalf.
+                  You stay anonymous.
                   {recipientHousehold && (
                     <div className={styles.familyMatchedLine}>
                       Matched to: <strong>{recipientHousehold.name}</strong>
@@ -1032,7 +1027,7 @@ export default function PassAlongBatch() {
                     inside. If the box gets separated from its label, this is
                     how we find it.
                   </li>
-                  {(destination === 'littleloop' || destination === 'family') && (
+                  {destination === 'family' && (
                     <li>
                       Ship to Sprigloop. You’ll get the shipping address
                       with your prepaid label — request one below, or use your

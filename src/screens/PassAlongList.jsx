@@ -14,16 +14,22 @@ import styles from './PassAlongList.module.css'
 // Shows every batch the household has touched, grouped by lifecycle stage
 // so the most actionable rows (drafts you haven't shipped yet) sit at the
 // top. Tapping a card opens PassAlongBatch. A primary CTA starts a fresh
-// draft with the default Sprigloop destination and navigates into it.
+// draft with the default 'family' destination (send to another Sprigloop
+// family, via HQ) and navigates into it.
 //
 // This screen intentionally doesn't try to render item counts as a live
 // sub-query per row — it reads a precomputed `item_count` via a two-step
 // fetch (one batch select, one grouped clothing_items select) so the
 // list stays cheap even with dozens of historical batches.
 
+// 'littleloop' is kept here only as a defensive fallback for any legacy
+// rows that might predate the merge migration; new batches default to
+// 'family' and the destination_check constraint no longer accepts
+// 'littleloop'. Safe to remove this entry once we're confident no rows
+// (and no cached client builds) reference the old destination.
 const DESTINATION_LABEL = {
-  littleloop: 'Sprigloop',
-  family: 'Another Sprigloop family',
+  littleloop: 'Send to a Sprigloop family',
+  family: 'Send to a Sprigloop family',
   person: 'A friend or family member',
   charity: 'A charity',
 }
@@ -160,7 +166,7 @@ export default function PassAlongList() {
       .insert({
         household_id: household.id,
         created_by: user.id,
-        destination_type: 'littleloop',
+        destination_type: 'family',
         // status defaults to 'draft', reference_code auto-generated
       })
       .select('id, reference_code')
@@ -235,15 +241,15 @@ export default function PassAlongList() {
         {!pageLoading && !householdError && !noHousehold && (
           <>
             {/* Intro blurb — useful for first-time visitors and a gentle
-                reminder for returning users of what the four destinations
+                reminder for returning users of what the three destinations
                 mean. Kept brief; the full explainer lives on the detail
                 screen + landing page. */}
             <section className={styles.intro}>
               <div className={styles.introTitle}>Send clothes on to their next home</div>
               <div className={styles.introBody}>
                 Bundle outgrown items into a batch and ship the box to
-                Sprigloop, a charity, a friend or family member, or
-                another Sprigloop family.
+                another Sprigloop family, a friend or family member, or
+                a charity.
               </div>
             </section>
 
