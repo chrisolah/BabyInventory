@@ -5,6 +5,24 @@ import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
 import styles from './AcceptInvite.module.css'
 
+// Format a household name for prose copy: "Olah" → "the Olah Household".
+// Idempotent on the "the" article and "Household" suffix so user-typed
+// names like "Smith Household" or "The Smiths" don't get doubled. Mirrors
+// the helper in supabase/functions/send-household-invite — keep these in
+// sync if the rules change. Use the raw name for tabular displays
+// (the invite metadata card) and this label for sentences.
+function householdLabel(name) {
+  const trimmed = (name || '').trim()
+  if (!trimmed) return 'the household'
+  const lower = trimmed.toLowerCase()
+  const hasHousehold = /\bhousehold\b/.test(lower)
+  const hasThePrefix = lower.startsWith('the ')
+  let out = trimmed
+  if (!hasHousehold) out = `${out} Household`
+  if (!hasThePrefix) out = `the ${out}`
+  return out
+}
+
 // Landing page for the link in the household-invite email (/invite/:token).
 //
 // Flow:
@@ -273,7 +291,7 @@ export default function AcceptInvite() {
             The household owner cancelled this invite.
           </div>
           <p className={styles.sub}>
-            If you were expecting to join {invite?.household_name ? <strong>{invite.household_name}</strong> : 'a household'} on Sprigloop, ask them to send a new one.
+            If you were expecting to join {invite?.household_name ? <strong>{householdLabel(invite.household_name)}</strong> : 'a household'} on Sprigloop, ask them to send a new one.
           </p>
           <div className={styles.actions}>
             <button className={styles.secondaryBtn} onClick={() => navigate('/')}>
@@ -318,7 +336,7 @@ export default function AcceptInvite() {
           <div className={styles.logo}>sprigloop</div>
           <h1 className={styles.title}>You're in</h1>
           <p className={styles.sub}>
-            Welcome to {invite?.household_name ? <em className={styles.titleAccent}>{invite.household_name}</em> : 'the household'}. Taking you to your home now…
+            Welcome to {invite?.household_name ? <em className={styles.titleAccent}>{householdLabel(invite.household_name)}</em> : 'the household'}. Taking you to your home now…
           </p>
         </div>
       </div>
@@ -326,7 +344,12 @@ export default function AcceptInvite() {
   }
 
   // status === 'active' — the main path. UI varies by auth state.
-  const householdName = invite?.household_name || 'a household'
+  // householdRaw is the bare DB name ("Olah") — used in the metadata card
+  // where it sits next to a "Household" label and would read awkwardly
+  // doubled. householdName is the prose form ("the Olah Household") used
+  // in headlines and sentence-level copy.
+  const householdRaw = invite?.household_name || ''
+  const householdName = householdLabel(householdRaw) || 'a household'
   const inviterLabel = invite?.inviter_label || 'A Sprigloop user'
   const expires = invite?.expires_at ? new Date(invite.expires_at) : null
   const expiresLabel = expires
@@ -356,7 +379,7 @@ export default function AcceptInvite() {
         <div className={styles.card}>
           <div className={styles.cardRow}>
             <span className={styles.cardLabel}>Household</span>
-            <span className={styles.cardValue}>{householdName}</span>
+            <span className={styles.cardValue}>{householdRaw || householdName}</span>
           </div>
           <div className={styles.cardRow}>
             <span className={styles.cardLabel}>Sent to</span>

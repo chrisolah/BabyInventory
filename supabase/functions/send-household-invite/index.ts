@@ -206,7 +206,13 @@ Deno.serve(async (req) => {
       .single()
 
     const inviterName    = String(user.user_metadata?.name ?? '').trim() || (user.email ?? 'A Sprigloop family')
-    const householdName  = household?.name?.trim() || `${inviterName}'s household`
+    // Households are saved with bare names ("Olah", "Smith") because the
+    // surface UI renders them in cells/labels where a suffix would be
+    // redundant. In prose copy we want "the Olah Household" instead of
+    // "Olah". householdLabel() does that suffix-and-article addition without
+    // double-stamping names that already contain "household" or "the".
+    const rawHouseholdName = household?.name?.trim() || `${inviterName}'s household`
+    const householdName    = householdLabel(rawHouseholdName)
     const appUrl         = Deno.env.get('APP_URL') ?? 'https://sprigloop.com'
     const acceptUrl      = `${appUrl.replace(/\/+$/, '')}/invite/${invite.id}`
     const expiresAtLabel = formatDate(invite.expires_at)
@@ -307,6 +313,25 @@ function formatDate(iso: string): string {
   } catch {
     return iso
   }
+}
+
+// Format a household name for prose copy: "Olah" → "the Olah Household".
+// Idempotent — names that already start with "the" or already contain
+// "household" are left as-is on that axis (so "Smith Household" stays
+// "the Smith Household", not "the Smith Household Household"; "The Smiths"
+// stays "The Smiths Household", not "the The Smiths Household"). Use the
+// raw name for tabular displays (e.g. AcceptInvite's metadata card) and
+// this label for sentences.
+function householdLabel(name: string): string {
+  const trimmed = (name || '').trim()
+  if (!trimmed) return 'the household'
+  const lower = trimmed.toLowerCase()
+  const hasHousehold = /\bhousehold\b/.test(lower)
+  const hasThePrefix = lower.startsWith('the ')
+  let out = trimmed
+  if (!hasHousehold) out = `${out} Household`
+  if (!hasThePrefix) out = `the ${out}`
+  return out
 }
 
 function escapeHtml(s: string): string {
