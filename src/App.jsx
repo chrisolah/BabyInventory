@@ -106,10 +106,26 @@ function ProtectedLayout() {
   )
 }
 
+// PublicRoute redirects already-signed-in visitors away from /, /signup, and
+// /login. By default that destination is /home. But when a ?next= query
+// param is present (set by AcceptInvite when an unauthed visitor needs to
+// sign up before accepting), we honour it so the user lands on the intended
+// destination instead. Without this, the auth-state-flip race after signUp
+// can beat Signup.jsx's imperative navigate(nextPath), dumping the brand-
+// new invitee on /home — where the Home onboarding gate sees a step-0 user
+// and bounces them into /onboarding. Same whitelist semantics as the
+// safeNext() helpers in Login/Signup.
 function PublicRoute({ children }) {
   const { user, loading } = useAuth()
+  const location = useLocation()
   if (loading) return <div />
-  if (user) return <Navigate to="/home" replace />
+  if (user) {
+    const raw = new URLSearchParams(location.search).get('next')
+    const safe = raw && typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//')
+      ? raw
+      : '/home'
+    return <Navigate to={safe} replace />
+  }
   return children
 }
 
