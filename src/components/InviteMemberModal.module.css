@@ -138,3 +138,17 @@
   padding: 10px 12px;
   margin-bottom: 10px;
 }
+
+/* Same shape/colors as Login.module.css .error so the failure surfaces feel
+   consistent across the app. The edge function returns codes which we map
+   to user-friendly messages; if anything slips through the mapping, a generic
+   sentence falls back so the user is never staring at "membership_check_failed". */
+.error {
+  font-size: 13px;
+  color: #A32D2D;
+  background: #FDF2F2;
+  border: 0.5px solid #F09595;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
