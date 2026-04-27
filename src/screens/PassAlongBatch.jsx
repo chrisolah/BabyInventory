@@ -867,22 +867,43 @@ export default function PassAlongBatch() {
                 </div>
               )}
 
-              {/* Family-destination explainer — only when family is selected.
-                  We surface the "ships via HQ first" mechanic prominently
-                  because it\u2019s the non-obvious part of the UX: users
-                  don\u2019t choose a specific household. */}
+              {/* "How this works" explainer — shown under the destination
+                  stack for all three destinations now. The bag-flow mechanics
+                  differ per destination (HQ-routed vs. user-addressed) and
+                  this is where we spell that out so the user knows what to
+                  expect. CSS class names are historical (familyExplainer /
+                  familyMatchedLine) — they’re generic now. The
+                  matched-line below stays family-only because only family
+                  batches get a recipient_household_id set by HQ. */}
               {destination === 'family' && (
                 <div className={styles.familyExplainer}>
-                  <strong>How this works:</strong> The bag ships to Sprigloop
-                  first. We check the contents and forward them to another
-                  Sprigloop family that’s opted in to receiving. If we
-                  can’t find a match, we’ll donate it on your behalf.
-                  You stay anonymous.
+                  <strong>How this works:</strong> Request a Sprigloop bag and
+                  we’ll mail you one prelabeled to us with prepaid
+                  postage. Fill it, drop it in any USPS mailbox. We check the
+                  contents and forward them to a matched Sprigloop family
+                  that’s opted in to receiving, or donate them on your
+                  behalf if no match fits. Addresses stay private on both ends.
                   {recipientHousehold && (
                     <div className={styles.familyMatchedLine}>
                       Matched to: <strong>{recipientHousehold.name}</strong>
                     </div>
                   )}
+                </div>
+              )}
+              {destination === 'person' && (
+                <div className={styles.familyExplainer}>
+                  <strong>How this works:</strong> Request a Sprigloop bag and
+                  we’ll mail you one blank with prepaid postage. Fill it,
+                  write your friend’s address on the bag, drop it in any
+                  USPS mailbox.
+                </div>
+              )}
+              {destination === 'charity' && (
+                <div className={styles.familyExplainer}>
+                  <strong>How this works:</strong> Request a Sprigloop bag and
+                  we’ll mail you one blank with prepaid postage. Fill it,
+                  write the charity’s address on the bag, drop it in any
+                  USPS mailbox.
                 </div>
               )}
             </section>
