@@ -666,7 +666,7 @@ function ReceivingSection({ household, onUpdated }) {
           </div>
           <div className={styles.prefRowSub}>
             {accepts
-              ? 'A Sprigloop family\u2019s outgrown box may be routed to '
+              ? 'A Sprigloop family\u2019s outgrown clothes may be routed to '
                 + 'you. We\u2019ll always message you before shipping '
                 + 'anything.'
               : 'Turn on to let Sprigloop route another family\u2019s '
@@ -789,7 +789,7 @@ function ReceivingSection({ household, onUpdated }) {
               Notes for Sprigloop
             </div>
             <div className={styles.receivingFieldHint}>
-              Anything we should know when matching boxes to your
+              Anything we should know when matching batches to your
               household — sibling on the way, a preference, an allergy.
               Only Sprigloop sees this.
             </div>

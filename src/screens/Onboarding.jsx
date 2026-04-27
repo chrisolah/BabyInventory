@@ -869,7 +869,7 @@ export default function Onboarding() {
             <h1 className={styles.title}>Open to hand-me-downs?</h1>
             <p className={styles.sub}>
               When another Sprigloop family has outgrown clothes to pass along,
-              Sprigloop can route a box your way. You&rsquo;ll always get a
+              Sprigloop can route a batch your way. You&rsquo;ll always get a
               message before anything ships, and you can turn this off anytime
               from your profile.
             </p>
@@ -881,7 +881,7 @@ export default function Onboarding() {
                 </div>
                 <div className={styles.receivingToggleSub}>
                   {acceptHandMeDowns
-                    ? 'We\u2019ll match you when a box fits your household.'
+                    ? 'We\u2019ll match you when a batch fits your household.'
                     : 'Toggle on to start receiving matches.'}
                 </div>
               </div>

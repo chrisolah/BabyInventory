@@ -247,7 +247,7 @@ export default function PassAlongList() {
             <section className={styles.intro}>
               <div className={styles.introTitle}>Send clothes on to their next home</div>
               <div className={styles.introBody}>
-                Bundle outgrown items into a batch and ship the box to
+                Bundle outgrown items into a batch and ship the bag to
                 another Sprigloop family, a friend or family member, or
                 a charity.
               </div>
