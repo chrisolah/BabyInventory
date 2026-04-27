@@ -13,7 +13,7 @@ import styles from './Landing.module.css'
 //     Sprigloop as the concierge in the middle — the user never has to
 //     coordinate with another parent directly.
 //   • Receiver opt-in gets its own section, with non-stigmatizing framing
-//     ("Open to receiving hand-me-downs" / "Send to a Sprigloop family").
+//     ("Open to receiving from another Sprigloop family" / "Send to a Sprigloop family").
 //     See feedback_pass_along_framing.md — we never say "families in need."
 //   • How-it-works is reshaped so the "send it on" step references the three
 //     destinations, not a nearby-family match.
@@ -206,12 +206,13 @@ export default function Landing() {
       </section>
 
       {/* ── Receiver opt-in — neutral framing, no "in need" language ────────
-          Per feedback_pass_along_framing: "Open to receiving hand-me-downs"
-          is the canonical label. Never "families in need" anywhere. */}
+          Per feedback_pass_along_framing: "Open to receiving from another
+          Sprigloop family" is the canonical label. Never "families in need"
+          anywhere. */}
       <section className={styles.optIn}>
         <div className={styles.optInEyebrow}>Open to receiving?</div>
         <h2 className={styles.optInHeadline}>Flip a switch in your profile.<br />Get a batch when one&rsquo;s headed your way.</h2>
-        <p className={styles.optInBody}>Any Sprigloop household can opt in to receiving hand-me-downs. Pick sizes, pick genders, pause whenever. No applications, no listings to browse — we match you to a sender when the fit is right, and mail it.</p>
+        <p className={styles.optInBody}>Any Sprigloop household can opt in to receive outgrown clothes from another Sprigloop family. Pick sizes, pick genders, pause whenever. No applications, no listings to browse — we match you to a sender when the fit is right, and mail it.</p>
         <div className={styles.optInRow}>
           <div className={styles.optInBullet}>
             <div className={styles.optInBulletNum}>01</div>
