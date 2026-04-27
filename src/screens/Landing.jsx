@@ -9,13 +9,13 @@ import styles from './Landing.module.css'
 //
 // Framing shift vs. the pre-V1.9 copy:
 //   • The exchange is no longer pitched as a peer-to-peer, zip-code-matched
-//     marketplace. It's pitched as a four-destination pass-along hub with
+//     marketplace. It's pitched as a three-destination pass-along hub with
 //     Sprigloop as the concierge in the middle — the user never has to
 //     coordinate with another parent directly.
 //   • Receiver opt-in gets its own section, with non-stigmatizing framing
-//     ("Open to receiving hand-me-downs" / "Another Sprigloop family").
+//     ("Open to receiving hand-me-downs" / "Send to a Sprigloop family").
 //     See feedback_pass_along_framing.md — we never say "families in need."
-//   • How-it-works is reshaped so the "send it on" step references the four
+//   • How-it-works is reshaped so the "send it on" step references the three
 //     destinations, not a nearby-family match.
 //
 // Preserved from the previous landing: Ivy decoration components, the free-
@@ -76,7 +76,7 @@ export default function Landing() {
             ("parents who'd rather...") so it doubles as a self-selection
             line, and pairs anti-waste with pass-along in one breath. */}
         <p className={styles.heroEnv}>Built for parents who&rsquo;d rather pass it on than throw it out.</p>
-        <p className={styles.sub}>Track every onesie, plan every size, and send outgrown clothes on to Sprigloop, another family, a friend or family member, or a charity — all from the same app.</p>
+        <p className={styles.sub}>Track every onesie, plan every size, and send outgrown clothes on to another Sprigloop family, a friend or family member, or a charity. All from the same app.</p>
         <div className={styles.heroBtns}>
           <button className={styles.heroCta} onClick={handleGetStarted}>Get started free</button>
           <button className={styles.heroSecondaryCta} onClick={handleSeeHub}>See how pass-along works</button>
@@ -169,29 +169,22 @@ export default function Landing() {
       </section>
 
       {/* ── Pass-along hub — the V1.9 centerpiece ───────────────────────────
-          Four destinations, one flow, Sprigloop as the concierge in the
+          Three destinations, one flow, Sprigloop as the concierge in the
           middle. This replaces the old zip-code-matching "family nearby
           claims it" section. Per the addendum: senders and receivers never
           have to coordinate with each other — they only coordinate with us. */}
       <section className={styles.hub} ref={hubRef}>
         <div className={styles.hubBand}>
           <div className={styles.hubEyebrow}>When baby outgrows them</div>
-          <h2 className={styles.hubHeadline}>Four places your outgrown<br />clothes can go.</h2>
+          <h2 className={styles.hubHeadline}>Three places your outgrown<br />clothes can go.</h2>
           <p className={styles.hubBody}>Pick a destination and Sprigloop takes it from there. No selling, no drop-off logistics, no swapping addresses with strangers. Every batch is one less bag in the landfill &mdash; and one less new garment manufactured to take its place.</p>
           <div className={styles.hubGrid}>
-            <div className={styles.hubCard}>
-              <div className={styles.hubCardIcon} style={{ background: 'var(--teal-light)', color: 'var(--teal-dark)' }}>
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 6l6-3 6 3v6l-6 3-6-3V6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M3 6l6 3 6-3M9 9v6" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
-              </div>
-              <div className={styles.hubCardTitle}>Sprigloop</div>
-              <div className={styles.hubCardBody}>Send your box to us. We inspect, match it to a family, or donate on your behalf.</div>
-            </div>
             <div className={styles.hubCard}>
               <div className={styles.hubCardIcon} style={{ background: 'var(--amber-light)', color: 'var(--amber-dark)' }}>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M2 15c0-2.5 1.8-4 4-4s4 1.5 4 4M8 15c0-2.5 1.8-4 4-4s4 1.5 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </div>
-              <div className={styles.hubCardTitle}>Another Sprigloop family</div>
-              <div className={styles.hubCardBody}>Happy to help another parent? We&rsquo;ll route it to a family who&rsquo;s opted in to receiving. Addresses stay private on both ends.</div>
+              <div className={styles.hubCardTitle}>Send to a Sprigloop family</div>
+              <div className={styles.hubCardBody}>Ships to Sprigloop first. We route the box to a family who&rsquo;s opted in to receiving. If we can&rsquo;t find a match, we&rsquo;ll donate it on your behalf. Addresses stay private on both ends.</div>
             </div>
             <div className={styles.hubCard}>
               <div className={styles.hubCardIcon} style={{ background: 'var(--purple-light)', color: 'var(--purple-dark)' }}>
@@ -226,7 +219,7 @@ export default function Landing() {
           </div>
           <div className={styles.optInBullet}>
             <div className={styles.optInBulletNum}>02</div>
-            <div className={styles.optInBulletText}><strong>We do the matching.</strong> When a sender picks &ldquo;Another Sprigloop family,&rdquo; we route the box to one of you.</div>
+            <div className={styles.optInBulletText}><strong>We do the matching.</strong> When a sender picks &ldquo;Send to a Sprigloop family,&rdquo; we route the box to one of you.</div>
           </div>
           <div className={styles.optInBullet}>
             <div className={styles.optInBulletNum}>03</div>
@@ -241,7 +234,7 @@ export default function Landing() {
           <p className={styles.missionBody}>Babies outgrow clothes in weeks &mdash; most still have years of life left. Sprigloop keeps them moving: out of your house, into another baby&rsquo;s drawer, never into landfill. With as little friction for you as possible.</p>
           <button className={styles.missionCta} onClick={handleJoinCommunity}>Join Sprigloop</button>
           <div className={styles.statRow}>
-            <div><div className={styles.statNum}>Four</div><div className={styles.statLabel}>Destinations per batch</div></div>
+            <div><div className={styles.statNum}>Three</div><div className={styles.statLabel}>Destinations per batch</div></div>
             <div><div className={styles.statNum}>Free</div><div className={styles.statLabel}>Always, for all families</div></div>
             <div><div className={styles.statNum}>Opt-in</div><div className={styles.statLabel}>Receive when you&rsquo;re ready</div></div>
           </div>
