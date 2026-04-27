@@ -447,7 +447,11 @@
 }
 .hubGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  /* minmax min was 220px when there were four cards (laid out 2x2 inside the
+     ~616px band interior). With three cards, 220px forced a 2+1 orphan wrap;
+     lowering to 160px lets all three fit one row at the existing band width
+     while still stacking gracefully on mobile via auto-fit. */
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 10px;
   margin-bottom: 1.5rem;
 }
