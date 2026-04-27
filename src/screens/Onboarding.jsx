@@ -866,7 +866,7 @@ export default function Onboarding() {
 
         {step === 'receiving' && (
           <>
-            <h1 className={styles.title}>Open to hand-me-downs?</h1>
+            <h1 className={styles.title}>Open to receiving?</h1>
             <p className={styles.sub}>
               When another Sprigloop family has outgrown clothes to pass along,
               Sprigloop can route a batch your way. You&rsquo;ll always get a
@@ -877,7 +877,7 @@ export default function Onboarding() {
             <div className={styles.receivingToggleCard}>
               <div className={styles.receivingToggleBody}>
                 <div className={styles.receivingToggleTitle}>
-                  Open to receiving hand-me-downs
+                  Open to receiving from another Sprigloop family
                 </div>
                 <div className={styles.receivingToggleSub}>
                   {acceptHandMeDowns
@@ -890,7 +890,7 @@ export default function Onboarding() {
                 role="switch"
                 aria-checked={acceptHandMeDowns}
                 aria-label={
-                  `Open to receiving hand-me-downs — ${acceptHandMeDowns ? 'on' : 'off'}`
+                  `Open to receiving from another Sprigloop family — ${acceptHandMeDowns ? 'on' : 'off'}`
                 }
                 className={
                   `${styles.switch} ${acceptHandMeDowns ? styles.switchOn : ''}`
