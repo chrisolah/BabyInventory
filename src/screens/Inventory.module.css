@@ -495,8 +495,8 @@
   all: unset;
   box-sizing: border-box;
   font-size: 13px;
-  font-weight: 600;
-  color: var(--teal-light);
+  font-weight: 500;
+  color: var(--gray-200);
   padding: 6px 4px;
   cursor: pointer;
   flex-shrink: 0;
@@ -510,6 +510,34 @@
   outline: 2px solid var(--teal);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* Toast primary action — the actual interesting thing the user can do
+   from this moment. Sits between the toast body and Undo with a visible
+   teal pill so it reads as the recommended next step rather than just
+   another link. Slightly heavier visual weight than Undo because Undo is
+   the recovery action and Pass it on is the forward action. */
+.toastPrimary {
+  all: unset;
+  box-sizing: border-box;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+  background: var(--teal);
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.toastPrimary:hover {
+  filter: brightness(1.08);
+}
+
+.toastPrimary:focus-visible {
+  outline: 2px solid var(--teal-light);
+  outline-offset: 2px;
 }
 
 .itemBody {
