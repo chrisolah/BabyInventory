@@ -186,6 +186,117 @@ export default function Inventory() {
     reloadItems()
   }
 
+  // ── Pass it on: bridge from outgrown to a pass-along batch ─────────────
+  // Outgrown alone is a dead-end status (no view surfaces these items).
+  // The toast's primary action funnels that moment directly into the
+  // pass-along flow: find the household's most recent draft batch (or
+  // create a fresh one with the default 'family' destination, same as
+  // PassAlongList's create CTA), attach this item, navigate to the batch.
+  //
+  // Status mechanic: the item was just stamped 'outgrown' by
+  // handleMarkOutgrown. Attaching to a batch flips it to 'pass_along'
+  // (matches the picker flow in PassAlongBatch.jsx) and sets the FK.
+  // Two writes total, but both are small + atomic on the row level.
+  async function handlePassItOn() {
+    if (!outgrownToast) return
+    if (!household?.id || !user?.id) {
+      setError('Couldn’t start a batch — household not loaded.')
+      return
+    }
+    const { id, name } = outgrownToast
+
+    // Optimistically dismiss the toast so the navigation feels snappy.
+    // The pending-set entry stays — once we land on PassAlongBatch the
+    // canonical fetch there is independent of Inventory's items list,
+    // and our reloadItems() at the end will catch up Inventory.
+    setOutgrownToast(null)
+
+    // Find the most recent draft batch for the household. Reusing an
+    // existing draft matches the parent's mental model of "I'm building
+    // a pile to send" — adding more items to the same pile rather than
+    // spawning a fresh batch every time. If there isn't one, we create.
+    let batchId = null
+    let createdNewBatch = false
+
+    const { data: existingDraft, error: findErr } = await supabase
+      .schema(currentSchema)
+      .from('pass_along_batches')
+      .select('id')
+      .eq('household_id', household.id)
+      .eq('status', 'draft')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (findErr) {
+      setError(`Couldn’t find a draft batch: ${findErr.message}`)
+      return
+    }
+
+    if (existingDraft) {
+      batchId = existingDraft.id
+    } else {
+      const { data: newBatch, error: insErr } = await supabase
+        .schema(currentSchema)
+        .from('pass_along_batches')
+        .insert({
+          household_id: household.id,
+          created_by: user.id,
+          destination_type: 'family',
+          // status defaults to 'draft', reference_code auto-generated
+        })
+        .select('id')
+        .maybeSingle()
+      if (insErr || !newBatch) {
+        setError(`Couldn’t start a batch: ${insErr?.message ?? 'unknown'}`)
+        return
+      }
+      batchId = newBatch.id
+      createdNewBatch = true
+      track.passAlongBatchCreated?.({
+        id: batchId,
+        from: 'outgrown_toast',
+      })
+    }
+
+    // Attach + flip status. The clothing_items_status_check accepts
+    // 'pass_along' (migration 010), and the FK accepts the batch we
+    // just resolved. RLS lets household members update their own rows.
+    const { error: attachErr } = await supabase
+      .schema(currentSchema)
+      .from('clothing_items')
+      .update({
+        pass_along_batch_id: batchId,
+        inventory_status: 'pass_along',
+      })
+      .eq('id', id)
+
+    if (attachErr) {
+      setError(`Couldn’t add ${name} to the batch: ${attachErr.message}`)
+      return
+    }
+
+    // Take the item out of the optimistic-pending set so reloadItems'
+    // canonical refetch isn't shadowed by stale local state — though
+    // since the item is now status='pass_along' the owned-list filter
+    // would exclude it anyway, this is belt-and-braces.
+    setPendingOutgrownIds(prev => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+
+    track.passAlongItemAdded?.({
+      from: 'outgrown_toast',
+      batch_id: batchId,
+      created_new_batch: createdNewBatch,
+      count: 1,
+    })
+
+    reloadItems()
+    navigate(`/pass-along/${batchId}`)
+  }
+
   // The currently selected age range on the Wish list tab. Initialized from
   // the baby's DOB once we've loaded it; falls back to '3-6M' as a reasonable
   // middle-of-the-road default if we have no baby data.
@@ -647,8 +758,19 @@ export default function Inventory() {
       {outgrownToast && (
         <div className={styles.toast} role="status" aria-live="polite">
           <span className={styles.toastBody}>
-            Marked <strong>{outgrownToast.name}</strong> as outgrown
+            Marked <strong>{outgrownToast.name}</strong> outgrown
           </span>
+          {/* Primary action: queue this item into a draft pass-along
+              batch and jump to it. The whole point of the outgrown moment
+              is that it's the natural cue to pass things on — without
+              this button the action was a dead-end. */}
+          <button
+            type="button"
+            className={styles.toastPrimary}
+            onClick={handlePassItOn}
+          >
+            Pass it on →
+          </button>
           <button
             type="button"
             className={styles.toastUndo}
