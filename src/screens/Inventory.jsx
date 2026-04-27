@@ -148,7 +148,7 @@ export default function Inventory() {
 
   // Client-side filter for the current baby selection. Null baby_id items
   // are intentionally visible under every specific baby — they're "shared"
-  // inventory (hand-me-downs, pre-arrival gifts) and semantically available
+  // inventory (outgrown clothes from family or friends, pre-arrival gifts) and semantically available
   // to any baby in the household. Every downstream view derives from this.
   const babyFilteredItems = useMemo(
     () => items.filter(it => matchesBabyFilter(it, selectedBabyId)),
