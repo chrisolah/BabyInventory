@@ -297,6 +297,97 @@ export default function Inventory() {
     navigate(`/pass-along/${batchId}`)
   }
 
+  // ── Pass on the entire outgrown pile (banner action) ───────────────────
+  // Single-tap path for the accumulated case: parent has marked a bunch
+  // of stuff outgrown over time and wants to deal with the pile in one
+  // go. Same find-or-create draft pattern as handlePassItOn, but the
+  // attach is a bulk update of every outgrown item in the current
+  // baby-filtered view. RLS scopes to household membership, so the
+  // .in('id', [...]) filter is safe even though the IDs come from the
+  // client.
+  async function handlePassOnAllOutgrown() {
+    if (!household?.id || !user?.id) {
+      setError('Couldn’t start a batch — household not loaded.')
+      return
+    }
+    if (outgrownItems.length === 0) return
+
+    const ids = outgrownItems.map(i => i.id)
+    const count = ids.length
+
+    // Find or create a draft batch — same logic as the toast path.
+    let batchId = null
+    let createdNewBatch = false
+
+    const { data: existingDraft, error: findErr } = await supabase
+      .schema(currentSchema)
+      .from('pass_along_batches')
+      .select('id')
+      .eq('household_id', household.id)
+      .eq('status', 'draft')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (findErr) {
+      setError(`Couldn’t find a draft batch: ${findErr.message}`)
+      return
+    }
+
+    if (existingDraft) {
+      batchId = existingDraft.id
+    } else {
+      const { data: newBatch, error: insErr } = await supabase
+        .schema(currentSchema)
+        .from('pass_along_batches')
+        .insert({
+          household_id: household.id,
+          created_by: user.id,
+          destination_type: 'family',
+        })
+        .select('id')
+        .maybeSingle()
+      if (insErr || !newBatch) {
+        setError(`Couldn’t start a batch: ${insErr?.message ?? 'unknown'}`)
+        return
+      }
+      batchId = newBatch.id
+      createdNewBatch = true
+      track.passAlongBatchCreated?.({
+        id: batchId,
+        from: 'outgrown_banner',
+      })
+    }
+
+    // Bulk attach: one UPDATE with .in('id', [...]) for every outgrown
+    // row. PostgREST handles arrays of up to a few thousand IDs
+    // cleanly; we won't approach that limit at one-baby-per-household
+    // scale.
+    const { error: bulkErr } = await supabase
+      .schema(currentSchema)
+      .from('clothing_items')
+      .update({
+        pass_along_batch_id: batchId,
+        inventory_status: 'pass_along',
+      })
+      .in('id', ids)
+
+    if (bulkErr) {
+      setError(`Couldn’t add items to the batch: ${bulkErr.message}`)
+      return
+    }
+
+    track.passAlongItemAdded?.({
+      from: 'outgrown_banner',
+      batch_id: batchId,
+      created_new_batch: createdNewBatch,
+      count,
+    })
+
+    reloadItems()
+    navigate(`/pass-along/${batchId}`)
+  }
+
   // The currently selected age range on the Wish list tab. Initialized from
   // the baby's DOB once we've loaded it; falls back to '3-6M' as a reasonable
   // middle-of-the-road default if we have no baby data.
@@ -370,6 +461,18 @@ export default function Inventory() {
   const babyFilteredItems = useMemo(
     () => items.filter(it => matchesBabyFilter(it, selectedBabyId)),
     [items, selectedBabyId],
+  )
+
+  // Outgrown items pool — anything sitting in 'outgrown' status with no
+  // batch attached. These are the items the household has flagged "no
+  // longer fits" but hasn't routed anywhere yet. Filtered through the
+  // baby selector so the banner reflects what the user is currently
+  // viewing — single-baby households see everything; multi-baby
+  // households scoped to one baby see only that baby's pile, which
+  // matches their mental model when they tap "Pass them all on."
+  const outgrownItems = useMemo(
+    () => babyFilteredItems.filter(i => i.inventory_status === 'outgrown'),
+    [babyFilteredItems],
   )
 
   // ── Owned tab: items grouped by category, filtered by selected age range ─
@@ -652,6 +755,32 @@ export default function Inventory() {
         {/* ── Owned tab ─────────────────────────────────────────── */}
         {!loading && !error && tab === 'owned' && selectedAgeRange && (
           <>
+            {/* Outgrown pile banner — the "pile-up" companion to the
+                inline Outgrown action. Visible whenever there are items
+                in 'outgrown' status under the current baby filter, so
+                a parent who's been rapid-cleaning has a visible CTA to
+                turn the pile into a pass-along batch. Sits above the
+                age-range nav because it's a household-level prompt,
+                not age-band-specific. Hidden when count is 0 so it
+                doesn't take space when there's nothing to act on. */}
+            {outgrownItems.length > 0 && (
+              <button
+                type="button"
+                className={styles.outgrownBanner}
+                onClick={handlePassOnAllOutgrown}
+                aria-label={`Pass on ${outgrownItems.length} outgrown ${pluralize(outgrownItems.length, 'item')}`}
+              >
+                <span className={styles.outgrownBannerBody}>
+                  <strong>{outgrownItems.length}</strong>{' '}
+                  outgrown {pluralize(outgrownItems.length, 'item')} ready
+                  to pass on
+                </span>
+                <span className={styles.outgrownBannerCta} aria-hidden="true">
+                  Pass them on →
+                </span>
+              </button>
+            )}
+
             {/* Age-range chip navbar — mirrors the Wish list nav so users can
                 stock forward (12-18M in April when baby is 3-6M) without
                 switching tabs. The baby's current band gets a teal dot so
