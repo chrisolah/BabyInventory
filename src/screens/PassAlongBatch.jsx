@@ -65,38 +65,49 @@ const DESTINATION_OPTIONS = [
 ]
 
 const STATUS_LABEL = {
-  draft: 'Draft',
-  shipped: 'Shipped',
-  received: 'Received at Sprigloop',
-  fulfilled: 'Fulfilled',
-  canceled: 'Canceled',
+  draft:           'Draft',
+  bag_requested:   'Bag requested',
+  bag_in_transit:  'Bag on its way',
+  shipped:         'Shipped',
+  received:        'Received at Sprigloop',
+  fulfilled:       'Fulfilled',
+  canceled:        'Canceled',
 }
 
 // Per-destination timeline shape. Each stage is `{ key, label }`. The key
 // matches a status or a synthetic "fulfilled_matched" / "fulfilled_donated"
 // tag we compose below so copy can diverge at the end.
+//
+// All three destinations now share the same first-three steps: draft →
+// bag_requested → bag_in_transit. After that the family path has the
+// extra HQ-side received → fulfilled steps; person/charity collapse the
+// final user action straight into a fulfilled outcome.
 function timelineFor(destination) {
   if (destination === 'person') {
     return [
-      { key: 'draft', label: 'Draft' },
-      { key: 'shipped', label: 'Shipped to recipient' },
+      { key: 'draft',            label: 'Draft' },
+      { key: 'bag_requested',    label: 'Bag requested' },
+      { key: 'bag_in_transit',   label: 'Bag on its way to you' },
       { key: 'fulfilled_matched', label: 'Delivered' },
     ]
   }
   if (destination === 'charity') {
     return [
-      { key: 'draft', label: 'Draft' },
-      { key: 'shipped', label: 'Shipped to charity' },
+      { key: 'draft',            label: 'Draft' },
+      { key: 'bag_requested',    label: 'Bag requested' },
+      { key: 'bag_in_transit',   label: 'Bag on its way to you' },
       { key: 'fulfilled_donated', label: 'Donated' },
     ]
   }
   // family is the only HQ-routed path: ships to Sprigloop, gets received,
   // then forwarded to a matched household (or donated if no match).
   return [
-    { key: 'draft', label: 'Draft' },
-    { key: 'shipped', label: 'Shipped to Sprigloop' },
-    { key: 'received', label: 'Received' },
-    { key: 'fulfilled', label: 'Forwarded to family' },
+    { key: 'draft',          label: 'Draft' },
+    { key: 'bag_requested',  label: 'Bag requested' },
+    { key: 'bag_in_transit', label: 'Bag on its way to you' },
+    { key: 'shipped',        label: 'Shipped to Sprigloop' },
+    { key: 'received',       label: 'Received' },
+    { key: 'fulfilled',      label: 'Forwarded to family' },
   ]
 }
 
@@ -145,7 +156,7 @@ export default function PassAlongBatch() {
   const [working, setWorking] = useState(false)
   const [actionError, setActionError] = useState(null)
   const [pendingAction, setPendingAction] = useState(null)
-    // 'delete' | 'ship' | 'requestLabel' | null
+    // 'delete' | 'confirmShipped' | 'requestLabel' | null
 
   // Bag-ship-to address (where Sprigloop ships the bag TO the user).
   // Variable names are still labelName/Street/etc. for historical reasons —
@@ -261,19 +272,27 @@ export default function PassAlongBatch() {
     return () => { cancelled = true }
   }, [user, id])
 
-  const isDraft = batch?.status === 'draft'
-  const isShipped = batch?.status === 'shipped'
-  const isFulfilled = batch?.status === 'fulfilled'
-  const isReceived = batch?.status === 'received'
-  const isCanceled = batch?.status === 'canceled'
-  const locked = !isDraft  // any non-draft state is read-only for the sender
+  const isDraft         = batch?.status === 'draft'
+  const isBagRequested  = batch?.status === 'bag_requested'
+  const isBagInTransit  = batch?.status === 'bag_in_transit'
+  const isShipped       = batch?.status === 'shipped'
+  const isFulfilled     = batch?.status === 'fulfilled'
+  const isReceived      = batch?.status === 'received'
+  const isCanceled      = batch?.status === 'canceled'
+  // Items lock as soon as the user requests a bag — once we've started
+  // dispatching for a specific batch contents, switching items would
+  // mean we're shipping a bag for a batch that no longer matches.
+  const locked = !isDraft
 
-  const canShip = isDraft && items.length > 0
-  // Bag-request CTA gate. Open to all three destinations now that every
-  // batch ships via a Sprigloop-issued bag (prelabeled-HQ for family,
-  // blank-label flat-rate for person/charity). Only show in draft or
-  // shipped, and only once per batch (label_requested_at is a one-shot).
-  const canRequestLabel = (isDraft || isShipped) && !batch?.label_requested_at
+  // Request a Sprigloop bag = the primary CTA on a draft. Disabled until
+  // there's at least one item so the user knows what's blocking (the
+  // disabled-button copy below names the missing requirement explicitly,
+  // per the disabled-button-UX rule).
+  const canRequestBag    = isDraft && items.length > 0
+  // "I've dropped it in the mailbox" = primary CTA once the bag is on
+  // its way to the user. The user is the only signal we have for the
+  // mailbox event until USPS tracking integration lands.
+  const canConfirmShipped = isBagInTransit
 
   const timeline = useMemo(
     () => timelineFor(batch?.destination_type || destination),
@@ -498,11 +517,14 @@ export default function PassAlongBatch() {
     setPickerSelected(new Set())
   }
 
-  // ── Primary action: mark as shipped ────────────────────────────────────
-  // person/charity auto-advance to fulfilled because Littleloop isn't in
-  // that path — there's no "received at HQ" step.
-  async function handleShip() {
-    if (!batch || !canShip || working) return
+  // ── Primary action (post-bag-arrival): user confirms they mailed it ────
+  // Triggered from the "I've dropped it in the mailbox" button, which only
+  // appears once status === 'bag_in_transit' (i.e. Chris has dispatched
+  // the Sprigloop bag and the user has it in hand). Person/charity batches
+  // auto-advance to fulfilled here because Sprigloop isn't in the path —
+  // there's no "received at HQ" step.
+  async function handleConfirmShipped() {
+    if (!batch || !canConfirmShipped || working) return
     setWorking(true)
     setActionError(null)
 
@@ -520,7 +542,7 @@ export default function PassAlongBatch() {
     }
 
     // Persist any in-flight notes too — the user might have typed in the
-    // notes textarea right before hitting Ship without blurring out.
+    // notes textarea right before confirming without blurring out.
     patch.notes = cleanNotes
 
     const { data, error: uErr } = await supabase
@@ -590,7 +612,7 @@ export default function PassAlongBatch() {
   }
 
   async function handleRequestLabel() {
-    if (!batch || !canRequestLabel || working) return
+    if (!batch || !canRequestBag || working) return
     if (!labelFieldsValid) {
       setActionError('Fill in name, street, city, state, and ZIP so we can ship your bag to the right place.')
       return
@@ -599,12 +621,19 @@ export default function PassAlongBatch() {
     setActionError(null)
 
     const assembled = assembleLabelAddress()
+    const nowIso = new Date().toISOString()
 
+    // One atomic update on the batch: stamp the bag-request timestamps,
+    // record the ship-to address, AND advance the batch into the
+    // bag_requested status state (introduced in migration 019). The
+    // status flip is what locks items, hides Delete batch, and shows the
+    // bag-requested timeline stage.
     const { data, error: uErr } = await supabase
       .schema(currentSchema)
       .from('pass_along_batches')
       .update({
-        label_requested_at: new Date().toISOString(),
+        status:                'bag_requested',
+        label_requested_at:    nowIso,
         label_request_address: assembled,
       })
       .eq('id', batch.id)
@@ -615,6 +644,31 @@ export default function PassAlongBatch() {
       setWorking(false)
       setActionError(uErr.message)
       return
+    }
+
+    // Best-effort: persist the structured address pieces to the user's
+    // profile (auth.users.user_metadata.shipping_address) so the next bag
+    // request prefills automatically. We merge into the existing metadata
+    // bag rather than overwriting — name, prefs, welcome_sent_at all live
+    // in the same blob and we don't want to clobber siblings.
+    try {
+      const existingMeta = user?.user_metadata || {}
+      await supabase.auth.updateUser({
+        data: {
+          ...existingMeta,
+          shipping_address: {
+            name:   labelName.trim(),
+            street: labelStreet.trim(),
+            unit:   labelUnit.trim() || null,
+            city:   labelCity.trim(),
+            state:  labelState.trim(),
+            zip:    labelZip.trim(),
+          },
+        },
+      })
+    } catch {
+      // Deliberately swallowed — the bag request itself already landed.
+      // Worst case: user retypes the address next time.
     }
 
     // Best-effort concierge inbox row. Payload captures the flat block and
@@ -646,7 +700,7 @@ export default function PassAlongBatch() {
               zip:    labelZip.trim(),
             },
             item_count: items.length,
-            requested_at: new Date().toISOString(),
+            requested_at: nowIso,
           },
         })
     } catch {
@@ -710,7 +764,7 @@ export default function PassAlongBatch() {
   // ── Confirm modal glue ─────────────────────────────────────────────────
   function confirmLabel() {
     if (pendingAction === 'delete') return 'Delete batch'
-    if (pendingAction === 'ship') return 'Mark as shipped'
+    if (pendingAction === 'confirmShipped') return 'Mark as mailed'
     if (pendingAction === 'requestLabel') return 'Request bag'
     return ''
   }
@@ -721,11 +775,11 @@ export default function PassAlongBatch() {
         ? `This removes the batch and returns ${items.length} item${items.length === 1 ? '' : 's'} to your wardrobe. You can\u2019t undo the delete.`
         : 'This removes the batch. You can\u2019t undo.'
     }
-    if (pendingAction === 'ship') {
+    if (pendingAction === 'confirmShipped') {
       if (destination === 'person' || destination === 'charity') {
-        return 'Once you confirm, the batch is marked shipped and closed out. You\u2019ll still be able to see it in your history.'
+        return 'Confirm you\u2019ve dropped the bag in a USPS mailbox. The batch will close out as fulfilled \u2014 it\u2019ll stay in your history.'
       }
-      return 'Mark this batch as sent. Sprigloop will update you once we\u2019ve received it.'
+      return 'Confirm you\u2019ve dropped the bag in a USPS mailbox. We\u2019ll update you once Sprigloop receives it.'
     }
     if (pendingAction === 'requestLabel') {
       return 'We\u2019ll ship a Sprigloop bag to the address below. Once it arrives, fill it with this batch and drop it in any USPS mailbox.'
@@ -735,7 +789,7 @@ export default function PassAlongBatch() {
 
   function runPendingAction() {
     if (pendingAction === 'delete') return handleDelete()
-    if (pendingAction === 'ship') return handleShip()
+    if (pendingAction === 'confirmShipped') return handleConfirmShipped()
     if (pendingAction === 'requestLabel') return handleRequestLabel()
   }
 
@@ -778,9 +832,15 @@ export default function PassAlongBatch() {
 
   // ── Main render ────────────────────────────────────────────────────────
   const statusLabel = STATUS_LABEL[batch?.status] || batch?.status
+  // bag_requested + bag_in_transit are "active" — work is in flight, just on
+  // different sides of the user/Sprigloop seam. Same pill style as
+  // shipped/received so users see "this is moving" at a glance.
   const pillClass =
     batch?.status === 'fulfilled' ? styles.statusPillFulfilled :
-    batch?.status === 'shipped' || batch?.status === 'received' ? styles.statusPillActive :
+    (batch?.status === 'shipped' ||
+      batch?.status === 'received' ||
+      batch?.status === 'bag_requested' ||
+      batch?.status === 'bag_in_transit') ? styles.statusPillActive :
     batch?.status === 'canceled' ? styles.statusPillCanceled :
     styles.statusPillDraft
 
@@ -1042,11 +1102,20 @@ export default function PassAlongBatch() {
                 asked us to ship them a Sprigloop bag, so they know it\u2019s
                 in flight. (Column kept its label_requested_at name from
                 the previous prepaid-label flow — same shape, new meaning.) */}
-            {batch.label_requested_at && (
+            {isBagRequested && batch.label_requested_at && (
               <div className={styles.infoBanner}>
                 Sprigloop bag requested on{' '}
                 {new Date(batch.label_requested_at).toLocaleDateString()}.
                 We’ll ship it to you shortly — keep an eye on your mailbox.
+              </div>
+            )}
+            {isBagInTransit && (
+              <div className={styles.infoBanner}>
+                Your Sprigloop bag is on its way{batch.bag_dispatched_at
+                  ? ` (sent ${new Date(batch.bag_dispatched_at).toLocaleDateString()})`
+                  : ''}.
+                When it arrives, fill it with this batch and drop it in any USPS
+                mailbox — then tap “I’ve dropped it in the mailbox” below.
               </div>
             )}
 
@@ -1056,42 +1125,52 @@ export default function PassAlongBatch() {
               </div>
             )}
 
-            {/* Actions — primary/secondary/danger stack. Only rendered
-                when the batch is actionable (draft, or shipped-with-label
-                for requesting a label). Fulfilled/canceled = no actions. */}
-            {(isDraft || (isShipped && canRequestLabel)) && (
+            {/* Actions — primary/danger stack. On draft: Request a Sprigloop
+                bag is THE primary CTA (with disabled-button copy that names
+                the missing requirement, per the disabled-button-UX rule).
+                On bag_in_transit: "I've dropped it in the mailbox" is the
+                primary — the user is the only signal we have for that
+                event until USPS tracking integration lands. Other states
+                (bag_requested, shipped, received, fulfilled, canceled)
+                render no actions. */}
+            {(isDraft || isBagInTransit) && (
               <section className={styles.actions}>
                 {isDraft && (
                   <button
                     type="button"
                     className={styles.primaryBtn}
-                    onClick={() => setPendingAction('ship')}
-                    disabled={!canShip || working}
+                    onClick={() => {
+                      // Prefill from user_metadata.shipping_address \u2014 saved
+                      // on the user's last successful bag request (see
+                      // handleRequestLabel) \u2014 so repeat senders don't
+                      // retype. name falls back to the display name we
+                      // already have on user_metadata for first-time users.
+                      const meta = user?.user_metadata || {}
+                      const ship = meta.shipping_address || {}
+                      setLabelName(ship.name || meta.name || '')
+                      setLabelStreet(ship.street || '')
+                      setLabelUnit(ship.unit || '')
+                      setLabelCity(ship.city || '')
+                      setLabelState(ship.state || '')
+                      setLabelZip(ship.zip || '')
+                      setPendingAction('requestLabel')
+                    }}
+                    disabled={!canRequestBag || working}
                   >
-                    {canShip ? 'I\u2019ve shipped it' : 'Add items before shipping'}
+                    {canRequestBag
+                      ? 'Request a Sprigloop bag'
+                      : 'Add at least one item to request a bag'}
                   </button>
                 )}
 
-                {canRequestLabel && (
+                {isBagInTransit && (
                   <button
                     type="button"
-                    className={styles.secondaryBtn}
-                    onClick={() => {
-                      // Fresh form each time — the pre-fill isn't valuable
-                      // here because label_request_address is a rendered
-                      // string, not structured pieces. Splitting it back out
-                      // would be guesswork; easier to just ask once.
-                      setLabelName('')
-                      setLabelStreet('')
-                      setLabelUnit('')
-                      setLabelCity('')
-                      setLabelState('')
-                      setLabelZip('')
-                      setPendingAction('requestLabel')
-                    }}
-                    disabled={working}
+                    className={styles.primaryBtn}
+                    onClick={() => setPendingAction('confirmShipped')}
+                    disabled={!canConfirmShipped || working}
                   >
-                    Request a Sprigloop bag
+                    I’ve dropped it in the mailbox
                   </button>
                 )}
 
@@ -1462,6 +1541,12 @@ function timelineDate(batch, stepKey) {
     return batch.created_at
       ? new Date(batch.created_at).toLocaleDateString()
       : ''
+  }
+  if (stepKey === 'bag_requested' && batch.label_requested_at) {
+    return new Date(batch.label_requested_at).toLocaleDateString()
+  }
+  if (stepKey === 'bag_in_transit' && batch.bag_dispatched_at) {
+    return new Date(batch.bag_dispatched_at).toLocaleDateString()
   }
   if (stepKey === 'shipped' && batch.shipped_at) {
     return new Date(batch.shipped_at).toLocaleDateString()

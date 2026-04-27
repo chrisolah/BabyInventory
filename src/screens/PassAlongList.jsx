@@ -35,20 +35,31 @@ const DESTINATION_LABEL = {
 }
 
 const STATUS_LABEL = {
-  draft: 'Draft',
-  shipped: 'Shipped',
-  received: 'Received at Sprigloop',
-  fulfilled: 'Fulfilled',
-  canceled: 'Canceled',
+  draft:           'Draft',
+  bag_requested:   'Bag requested',
+  bag_in_transit:  'Bag on its way',
+  shipped:         'Shipped',
+  received:        'Received at Sprigloop',
+  fulfilled:       'Fulfilled',
+  canceled:        'Canceled',
 }
 
 // Map a batch row into one of three lifecycle buckets. Drafts sit at the
 // top because they're the only rows the user has unfinished business with.
-// In-flight shows what's moving through the system. Closed is the history
+// In-flight covers everything between request and final outcome — the
+// bag-flow states (bag_requested, bag_in_transit) introduced in migration
+// 019 plus the original shipped/received states. Closed is the history
 // tail — collapsed below, but visible so users can look back.
+const IN_FLIGHT_STATUSES = new Set([
+  'bag_requested',
+  'bag_in_transit',
+  'shipped',
+  'received',
+])
+
 function bucketFor(batch) {
   if (batch.status === 'draft') return 'drafts'
-  if (batch.status === 'shipped' || batch.status === 'received') return 'inFlight'
+  if (IN_FLIGHT_STATUSES.has(batch.status)) return 'inFlight'
   return 'closed' // fulfilled | canceled
 }
 
@@ -133,7 +144,7 @@ export default function PassAlongList() {
       track.passAlongListViewed({
         total: rows.length,
         drafts: rows.filter(r => r.status === 'draft').length,
-        in_flight: rows.filter(r => r.status === 'shipped' || r.status === 'received').length,
+        in_flight: rows.filter(r => IN_FLIGHT_STATUSES.has(r.status)).length,
         closed: rows.filter(r => r.status === 'fulfilled' || r.status === 'canceled').length,
       })
     }
@@ -327,7 +338,7 @@ function BatchCard({ batch, itemCount, onClick }) {
 
   const pillClass =
     batch.status === 'fulfilled' ? styles.pillFulfilled :
-    batch.status === 'shipped' || batch.status === 'received' ? styles.pillActive :
+    IN_FLIGHT_STATUSES.has(batch.status) ? styles.pillActive :
     batch.status === 'canceled' ? styles.pillCanceled :
     styles.pillDraft
 
