@@ -191,7 +191,7 @@ export default function Landing() {
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M3 16c0-3 2.7-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </div>
               <div className={styles.hubCardTitle}>A friend or family member</div>
-              <div className={styles.hubCardBody}>Sister-in-law, best friend, coworker with a new baby. Give us their name and address, and we&rsquo;ll mail you a Sprigloop bag with prepaid postage to fill and ship to them.</div>
+              <div className={styles.hubCardBody}>Sister-in-law, best friend, coworker with a new baby. We mail you a prepaid Sprigloop bag, you fill it, write their address on the bag, and drop it in any mailbox.</div>
             </div>
             <div className={styles.hubCard}>
               <div className={styles.hubCardIcon} style={{ background: 'var(--gray-100)', color: 'var(--gray-600)' }}>
