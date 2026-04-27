@@ -721,6 +721,60 @@
   font-weight: 600;
 }
 
+/* Outgrown-pile banner — companion to the inline Outgrown action.
+   Whenever there are items sitting in 'outgrown' status under the
+   current baby filter, this CTA prompts the parent to convert the pile
+   into a pass-along batch in one tap. Teal-light (rather than the
+   amber warning treatment used for size-band rollovers) because this
+   is a positive next-step prompt, not an alert. Full-width clickable
+   button so the whole row is the tap target. */
+.outgrownBanner {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  margin: 4px 0 8px;
+  background: var(--teal-light);
+  border: 0.5px solid #B6E0CC;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--teal-dark);
+  cursor: pointer;
+  transition: background-color 80ms ease;
+}
+
+.outgrownBanner:hover {
+  background: #D2EFE2;
+}
+
+.outgrownBanner:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.outgrownBannerBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.outgrownBannerBody strong {
+  color: var(--teal-dark);
+  font-weight: 600;
+}
+
+.outgrownBannerCta {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--teal-dark);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* Shared section headers — slot table, other wishes, etc. */
 .sectionHead {
   display: flex;
