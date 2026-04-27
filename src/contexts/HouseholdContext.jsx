@@ -28,9 +28,9 @@ import { useAuth } from '../hooks/useAuth'
 //
 // Semantics of selectedBabyId:
 //   'all'    — no baby filter; show everything in the household.
-//   '<uuid>' — filter to this baby OR any item with null baby_id (shared /
-//              hand-me-downs / pre-arrival items). Rationale lives next to
-//              the filter call sites.
+//   '<uuid>' — filter to this baby OR any item with null baby_id (shared
+//              items, outgrown clothes from family or friends, pre-arrival
+//              items). Rationale lives next to the filter call sites.
 //
 // With exactly one baby we force selectedBabyId to that baby's id regardless
 // of what's in localStorage — the switcher UI doesn't render in that case,
@@ -301,7 +301,7 @@ export function useHousehold() {
 // Helper for callers that need the "this baby OR shared/unassigned" filter.
 // Kept here so every screen agrees on the shared-item semantic — items with
 // null baby_id show under every specific baby because they're not yet
-// assigned (hand-me-downs from a sibling, gifts for the next one on the way,
+// assigned (outgrown clothes from a sibling, gifts for the next one on the way,
 // etc.) and are available to wear for any of them.
 export function matchesBabyFilter(item, selectedBabyId) {
   if (!selectedBabyId || selectedBabyId === 'all') return true

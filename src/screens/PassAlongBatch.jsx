@@ -172,8 +172,9 @@ export default function PassAlongBatch() {
   const [pickerError, setPickerError] = useState(null)
   // In-picker baby filter. 'all' shows every eligible item across the
   // household; '<uuid>' narrows to one baby's items plus shared rows;
-  // 'shared' narrows to only the null-baby_id rows (hand-me-downs / gifts
-  // not yet assigned). Starts at 'all' every time the picker opens so
+  // 'shared' narrows to only the null-baby_id rows (outgrown clothes from
+  // family or friends, gifts not yet assigned). Starts at 'all' every time
+  // the picker opens so
   // multi-baby households see their full pool by default — a batch isn't
   // baby-scoped and forcing a per-baby view would hide eligible items.
   const [pickerBabyFilter, setPickerBabyFilter] = useState('all')
@@ -1139,7 +1140,7 @@ export default function PassAlongBatch() {
                 is the default so the sender sees everything they could
                 pack; the per-baby chips are for when they want to focus
                 on one pile (e.g., "just Roo's outgrowns"). 'Shared' covers
-                the null-baby_id rows for unassigned hand-me-downs. */}
+                the null-baby_id rows for unassigned shared items. */}
             {babies.length > 1 && (
               <div className={styles.pickerChipRow}>
                 <button

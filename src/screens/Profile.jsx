@@ -439,8 +439,8 @@ function HouseholdTab() {
         </p>
       </section>
 
-      {/* ── Receiving hand-me-downs ────────────────────────────────── */}
-      {/* Household-level opt-in for the "Another Littleloop family"
+      {/* ── Receiving outgrown clothes ───────────────────────────────── */}
+      {/* Household-level opt-in for the "Send to a Sprigloop family"
           destination on the sender-side pass-along hub. Flag lives on
           the households row (migration 010). Language is intentionally
           neutral — never "families in need"; this is a product-voice
@@ -508,17 +508,19 @@ function capitalize(s) {
   return s[0].toUpperCase() + s.slice(1)
 }
 
-// ── Receiving hand-me-downs section ────────────────────────────────────
-// Household-level opt-in for the "Another Littleloop family" destination
+// ── Receiving outgrown clothes section ─────────────────────────────────
+// Household-level opt-in for the "Send to a Sprigloop family" destination
 // on the pass-along hub. Backed by migration 010 columns on households:
-// accepts_hand_me_downs, accepts_sizes[], accepts_genders[],
-// receiving_paused_until, receiving_notes.
+// accepts_hand_me_downs (legacy column name; data is the receiving opt-in
+// flag), accepts_sizes[], accepts_genders[], receiving_paused_until,
+// receiving_notes.
 //
 // Voice rule (not a style preference): never "families in need," never
-// "charity." Label is "Open to receiving hand-me-downs." A household that
-// opts in may be environmentally-motivated, thrift-minded, community-
-// minded, or in real financial need — the product treats all of those
-// the same, and asks the receiver to self-identify as none of them.
+// "charity." Canonical label is "Open to receiving from another Sprigloop
+// family." A household that opts in may be environmentally-motivated,
+// thrift-minded, community-minded, or in real financial need — the
+// product treats all of those the same, and asks the receiver to self-
+// identify as none of them.
 //
 // Save pattern:
 //   • Main toggle saves immediately (optimistic, revert on error).
@@ -655,14 +657,14 @@ function ReceivingSection({ household, onUpdated }) {
   // ── Render ────────────────────────────────────────────────────────────
   return (
     <section className={styles.section}>
-      <div className={styles.sectionTitle}>Receiving hand-me-downs</div>
+      <div className={styles.sectionTitle}>Receiving outgrown clothes</div>
 
       {error && <div className={styles.fieldError}>{error}</div>}
 
       <div className={styles.prefRow}>
         <div className={styles.prefRowBody}>
           <div className={styles.prefRowTitle}>
-            Open to receiving hand-me-downs
+            Open to receiving from another Sprigloop family
           </div>
           <div className={styles.prefRowSub}>
             {accepts
@@ -677,7 +679,7 @@ function ReceivingSection({ household, onUpdated }) {
           type="button"
           role="switch"
           aria-checked={accepts}
-          aria-label={`Open to receiving hand-me-downs — ${accepts ? 'on' : 'off'}`}
+          aria-label={`Open to receiving from another Sprigloop family — ${accepts ? 'on' : 'off'}`}
           className={
             `${styles.switch} ${accepts ? styles.switchOn : ''} ` +
             (saving === 'accepts' ? styles.switchBusy : '')
