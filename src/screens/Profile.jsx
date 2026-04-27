@@ -884,6 +884,24 @@ function AccountTab() {
   const [pwError, setPwError] = useState(null)
   const [pwSuccess, setPwSuccess] = useState(false)
 
+  // ── Shipping address ────────────────────────────────────────────────
+  // Where we ship pass-along bags TO the user. Same shape as the bag-request
+  // form on PassAlongBatch — saved on every successful request, editable
+  // here anytime. Source of truth: user.user_metadata.shipping_address.
+  const savedShipping = user?.user_metadata?.shipping_address || {}
+  const [editingShipping, setEditingShipping] = useState(false)
+  const [shipName, setShipName]     = useState(savedShipping.name   || '')
+  const [shipStreet, setShipStreet] = useState(savedShipping.street || '')
+  const [shipUnit, setShipUnit]     = useState(savedShipping.unit   || '')
+  const [shipCity, setShipCity]     = useState(savedShipping.city   || '')
+  const [shipState, setShipState]   = useState(savedShipping.state  || '')
+  const [shipZip, setShipZip]       = useState(savedShipping.zip    || '')
+  const [savingShipping, setSavingShipping] = useState(false)
+  const [shippingError, setShippingError]   = useState(null)
+  const hasShipping =
+    !!(savedShipping.name && savedShipping.street && savedShipping.city &&
+       savedShipping.state && savedShipping.zip)
+
   // ── Danger zone modal state ─────────────────────────────────────────
   // Separate pending flags for the two destructive actions. Each owns its
   // own loading + error so a failed leave attempt doesn't poison the
@@ -976,6 +994,62 @@ function AccountTab() {
     setConfirmPw('')
     setPwError(null)
     setPwSuccess(false)
+  }
+
+  // ── Save / cancel shipping-address edit ─────────────────────────────
+  // Required fields: name, street, city, state, zip (unit is optional —
+  // not every house has one and forcing a value would feel hostile).
+  // Merge into existing user_metadata so we don't clobber name/prefs/
+  // welcome_sent_at — Supabase's updateUser{data} is a shallow merge but
+  // we belt-and-brace the merge in JS too for clarity.
+  async function saveShippingAddress() {
+    setShippingError(null)
+    const name = shipName.trim()
+    const street = shipStreet.trim()
+    const unit = shipUnit.trim()
+    const city = shipCity.trim()
+    const stateVal = shipState.trim()
+    const zip = shipZip.trim()
+    if (!name || !street || !city || !stateVal || !zip) {
+      setShippingError('Fill in name, street, city, state, and ZIP.')
+      return
+    }
+    setSavingShipping(true)
+    const existingMeta = user?.user_metadata || {}
+    const { error: updErr } = await supabase.auth.updateUser({
+      data: {
+        ...existingMeta,
+        shipping_address: {
+          name,
+          street,
+          unit: unit || null,
+          city,
+          state: stateVal,
+          zip,
+        },
+      },
+    })
+    setSavingShipping(false)
+    if (updErr) {
+      setShippingError(updErr.message)
+      return
+    }
+    setEditingShipping(false)
+    track.profileShippingAddressUpdated?.()
+  }
+
+  function cancelShippingEdit() {
+    if (savingShipping) return
+    // Reset back to whatever's saved so a subsequent Edit click starts
+    // from the canonical state, not the in-flight buffer.
+    setShipName(savedShipping.name     || '')
+    setShipStreet(savedShipping.street || '')
+    setShipUnit(savedShipping.unit     || '')
+    setShipCity(savedShipping.city     || '')
+    setShipState(savedShipping.state   || '')
+    setShipZip(savedShipping.zip       || '')
+    setShippingError(null)
+    setEditingShipping(false)
   }
 
   // ── Leave household ─────────────────────────────────────────────────
@@ -1203,6 +1277,169 @@ function AccountTab() {
             </button>
           </div>
         </div>
+      </section>
+
+      {/* ── Shipping address ─────────────────────────────────────────
+          Where Sprigloop ships pass-along bags TO the user. Saved
+          automatically on every successful bag request; this section
+          exposes a manual edit path so the user can update it without
+          starting a batch (e.g. they moved). Source of truth lives on
+          user_metadata.shipping_address — same pattern as name/prefs.
+
+          Display mode shows the assembled address (or "Not set" with an
+          "Add" affordance). Edit mode reveals the stacked form inline.
+          We don't use a modal here because the form is short enough to
+          live in the page flow without crowding. */}
+      <section className={styles.section}>
+        <div className={styles.sectionTitle}>Shipping address</div>
+        <div className={styles.sectionSub}>
+          Where we ship pass-along bags to you. We save this automatically when
+          you request a bag — edit here if anything changes.
+        </div>
+
+        {!editingShipping ? (
+          <div className={styles.fieldRow}>
+            <div className={styles.fieldDisplay}>
+              <div className={styles.fieldValue}>
+                {hasShipping ? (
+                  <>
+                    {savedShipping.name}
+                    <br />
+                    {savedShipping.street}
+                    {savedShipping.unit ? `, ${savedShipping.unit}` : ''}
+                    <br />
+                    {savedShipping.city}, {savedShipping.state} {savedShipping.zip}
+                  </>
+                ) : (
+                  'Not set'
+                )}
+              </div>
+              <button
+                type="button"
+                className={styles.editLink}
+                onClick={() => {
+                  // Re-seed from the canonical saved values so the form
+                  // always opens reflecting truth (in case state has
+                  // drifted since mount — e.g. another tab saved).
+                  setShipName(savedShipping.name     || '')
+                  setShipStreet(savedShipping.street || '')
+                  setShipUnit(savedShipping.unit     || '')
+                  setShipCity(savedShipping.city     || '')
+                  setShipState(savedShipping.state   || '')
+                  setShipZip(savedShipping.zip       || '')
+                  setShippingError(null)
+                  setEditingShipping(true)
+                }}
+              >
+                {hasShipping ? 'Edit' : 'Add'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.shippingForm}>
+            <div className={styles.fieldRow}>
+              <div className={styles.fieldLabel}>Name</div>
+              <input
+                className={styles.fieldInput}
+                type="text"
+                value={shipName}
+                onChange={e => setShipName(e.target.value)}
+                placeholder="e.g. Jane Smith"
+                autoComplete="name"
+                disabled={savingShipping}
+              />
+            </div>
+            <div className={styles.fieldRow}>
+              <div className={styles.fieldLabel}>Street</div>
+              <input
+                className={styles.fieldInput}
+                type="text"
+                value={shipStreet}
+                onChange={e => setShipStreet(e.target.value)}
+                placeholder="123 Main St"
+                autoComplete="address-line1"
+                disabled={savingShipping}
+              />
+            </div>
+            <div className={styles.fieldRow}>
+              <div className={styles.fieldLabel}>Apt / Unit</div>
+              <input
+                className={styles.fieldInput}
+                type="text"
+                value={shipUnit}
+                onChange={e => setShipUnit(e.target.value)}
+                placeholder="Apt 4B (optional)"
+                autoComplete="address-line2"
+                disabled={savingShipping}
+              />
+            </div>
+            <div className={styles.fieldRow}>
+              <div className={styles.fieldLabel}>City</div>
+              <input
+                className={styles.fieldInput}
+                type="text"
+                value={shipCity}
+                onChange={e => setShipCity(e.target.value)}
+                placeholder="Detroit"
+                autoComplete="address-level2"
+                disabled={savingShipping}
+              />
+            </div>
+            <div className={styles.fieldRow}>
+              <div className={styles.fieldLabel}>State</div>
+              <input
+                className={styles.fieldInput}
+                type="text"
+                value={shipState}
+                onChange={e =>
+                  setShipState(e.target.value.toUpperCase().slice(0, 2))
+                }
+                placeholder="MI"
+                maxLength={2}
+                autoComplete="address-level1"
+                disabled={savingShipping}
+              />
+            </div>
+            <div className={styles.fieldRow}>
+              <div className={styles.fieldLabel}>ZIP</div>
+              <input
+                className={styles.fieldInput}
+                type="text"
+                inputMode="numeric"
+                value={shipZip}
+                onChange={e =>
+                  setShipZip(e.target.value.replace(/[^0-9-]/g, '').slice(0, 10))
+                }
+                placeholder="48201"
+                autoComplete="postal-code"
+                disabled={savingShipping}
+              />
+            </div>
+
+            {shippingError && (
+              <div className={styles.fieldError}>{shippingError}</div>
+            )}
+
+            <div className={styles.shippingFormActions}>
+              <button
+                type="button"
+                className={styles.editLink}
+                onClick={cancelShippingEdit}
+                disabled={savingShipping}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.fieldSave}
+                onClick={saveShippingAddress}
+                disabled={savingShipping}
+              >
+                {savingShipping ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ── Sign out ───────────────────────────────────────────────

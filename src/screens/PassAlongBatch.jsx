@@ -156,7 +156,7 @@ export default function PassAlongBatch() {
   const [working, setWorking] = useState(false)
   const [actionError, setActionError] = useState(null)
   const [pendingAction, setPendingAction] = useState(null)
-    // 'delete' | 'confirmShipped' | 'requestLabel' | null
+    // 'delete' | 'confirmShipped' | 'requestLabel' | 'cancelRequest' | null
 
   // Bag-ship-to address (where Sprigloop ships the bag TO the user).
   // Variable names are still labelName/Street/etc. for historical reasons —
@@ -716,6 +716,46 @@ export default function PassAlongBatch() {
     })
   }
 
+  // ── Cancel bag request (revert bag_requested → draft) ──────────────────
+  // Only allowed while Chris hasn't dispatched yet (status === 'bag_requested'
+  // AND the concierge_task is still open). The cancel_bag_request RPC does
+  // the dual-write atomically and silently no-ops if the task has already
+  // been resolved (race with Chris hitting resolve in Studio). We refetch
+  // the batch on success so the UI lands in the right state regardless.
+  async function handleCancelRequest() {
+    if (!batch || !isBagRequested || working) return
+    setWorking(true)
+    setActionError(null)
+
+    const { error: rpcErr } = await supabase
+      .schema(currentSchema)
+      .rpc('cancel_bag_request', { p_batch_id: batch.id })
+
+    if (rpcErr) {
+      setWorking(false)
+      setActionError(rpcErr.message)
+      return
+    }
+
+    // Refetch the canonical row — the RPC's WHERE-clause guards mean the
+    // batch may or may not have actually reverted, depending on whether
+    // Chris resolved the task in the same window.
+    const { data: refreshed } = await supabase
+      .schema(currentSchema)
+      .from('pass_along_batches')
+      .select('*')
+      .eq('id', batch.id)
+      .maybeSingle()
+
+    setWorking(false)
+    setBatch(refreshed || batch)
+    setPendingAction(null)
+    track.passAlongBatchCancelRequested?.({
+      id: batch.id,
+      destination: batch.destination_type,
+    })
+  }
+
   // ── Delete draft ───────────────────────────────────────────────────────
   // Before deleting the batch, unlink any items and bounce their status
   // back to 'owned' so nothing is orphaned or lost from the wardrobe.
@@ -766,6 +806,7 @@ export default function PassAlongBatch() {
     if (pendingAction === 'delete') return 'Delete batch'
     if (pendingAction === 'confirmShipped') return 'Mark as mailed'
     if (pendingAction === 'requestLabel') return 'Request bag'
+    if (pendingAction === 'cancelRequest') return 'Cancel bag request'
     return ''
   }
 
@@ -784,6 +825,9 @@ export default function PassAlongBatch() {
     if (pendingAction === 'requestLabel') {
       return 'We\u2019ll ship a Sprigloop bag to the address below. Once it arrives, fill it with this batch and drop it in any USPS mailbox.'
     }
+    if (pendingAction === 'cancelRequest') {
+      return 'This sends the batch back to draft so you can edit it. Items stay attached. If we\u2019ve already shipped your bag, cancel won\u2019t take effect \u2014 you\u2019ll see the bag-on-its-way state when this finishes.'
+    }
     return ''
   }
 
@@ -791,6 +835,7 @@ export default function PassAlongBatch() {
     if (pendingAction === 'delete') return handleDelete()
     if (pendingAction === 'confirmShipped') return handleConfirmShipped()
     if (pendingAction === 'requestLabel') return handleRequestLabel()
+    if (pendingAction === 'cancelRequest') return handleCancelRequest()
   }
 
   // ── Not found / load error ─────────────────────────────────────────────
@@ -1133,7 +1178,7 @@ export default function PassAlongBatch() {
                 event until USPS tracking integration lands. Other states
                 (bag_requested, shipped, received, fulfilled, canceled)
                 render no actions. */}
-            {(isDraft || isBagInTransit) && (
+            {(isDraft || isBagRequested || isBagInTransit) && (
               <section className={styles.actions}>
                 {isDraft && (
                   <button
@@ -1171,6 +1216,17 @@ export default function PassAlongBatch() {
                     disabled={!canConfirmShipped || working}
                   >
                     I’ve dropped it in the mailbox
+                  </button>
+                )}
+
+                {isBagRequested && (
+                  <button
+                    type="button"
+                    className={styles.dangerBtn}
+                    onClick={() => setPendingAction('cancelRequest')}
+                    disabled={working}
+                  >
+                    Cancel bag request
                   </button>
                 )}
 
