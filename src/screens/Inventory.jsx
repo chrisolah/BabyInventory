@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useHousehold, matchesBabyFilter } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
@@ -75,10 +76,115 @@ export default function Inventory() {
     items,
     itemsLoading,
     itemsError,
+    reloadItems,
   } = useHousehold()
 
   const [tab, setTab] = useState('owned') // 'owned' | 'wishlist'
   const [error, setError] = useState(null)
+
+  // ── Inline outgrown action ──────────────────────────────────────────────
+  // Optimistic flip from owned → outgrown without opening ItemDetail. The
+  // pending set hides items from the rendered list as soon as the user
+  // taps, before the DB roundtrip lands. The toast gives a 5s undo window
+  // because outgrown items currently aren't viewable from any list (mistap
+  // recovery is otherwise effectively impossible without a direct URL).
+  //
+  // Multi-tap behavior: each new flip replaces the toast (last-tap-wins).
+  // Earlier flips are already committed to the DB and remain in the
+  // optimistic-pending set until the next reloadItems lands the canonical
+  // state. If a parent rapid-fires multiple Outgrown buttons, only the
+  // most recent has an undo affordance — flag if this becomes a real
+  // pattern (it shouldn't; outgrown is a thoughtful per-item decision).
+  const [pendingOutgrownIds, setPendingOutgrownIds] = useState(() => new Set())
+  const [outgrownToast, setOutgrownToast] = useState(null)
+    // { id, name } | null
+
+  // Auto-dismiss the toast after 5s. Each new toast value replaces the
+  // previous one; effect cleanup clears the in-flight timer so we don't
+  // double-fire dismissals.
+  useEffect(() => {
+    if (!outgrownToast) return
+    const t = setTimeout(() => setOutgrownToast(null), 5000)
+    return () => clearTimeout(t)
+  }, [outgrownToast])
+
+  // Once a fresh items list lands from the server, the optimistic pending
+  // set is obsolete — the canonical list already excludes outgrown items
+  // via the inventory_status filter. Clearing here prevents the set from
+  // accumulating stale ids across many flips during a session.
+  useEffect(() => {
+    if (pendingOutgrownIds.size > 0) setPendingOutgrownIds(new Set())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items])
+
+  async function handleMarkOutgrown(item) {
+    if (!item || pendingOutgrownIds.has(item.id)) return
+
+    // Optimistic: hide instantly so the row doesn't sit there while the
+    // network call resolves. Toast becomes the user's only handle to
+    // undo, which is the correct UX hierarchy (instant feedback > slow
+    // confirmation).
+    setPendingOutgrownIds(prev => {
+      const next = new Set(prev)
+      next.add(item.id)
+      return next
+    })
+    setOutgrownToast({
+      id: item.id,
+      name: item.name || humanizeItemType(item.item_type),
+    })
+
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('clothing_items')
+      .update({ inventory_status: 'outgrown' })
+      .eq('id', item.id)
+
+    if (updErr) {
+      // Roll back the optimistic state so the item snaps back into the
+      // list and the error is visible. The toast disappears on the next
+      // setOutgrownToast(null) so dismissing here keeps the surface tidy.
+      setPendingOutgrownIds(prev => {
+        const next = new Set(prev)
+        next.delete(item.id)
+        return next
+      })
+      setOutgrownToast(null)
+      setError(`Couldn’t mark ${item.name || 'item'} outgrown: ${updErr.message}`)
+      return
+    }
+
+    track.itemMarkedOutgrown?.({ id: item.id, from: 'inventory_inline' })
+    reloadItems()
+  }
+
+  async function handleUndoOutgrown() {
+    if (!outgrownToast) return
+    const { id, name } = outgrownToast
+
+    // Local state first: take the item out of pending so reloadItems'
+    // refetch lands a canonical owned row that won't get filtered out.
+    setPendingOutgrownIds(prev => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+    setOutgrownToast(null)
+
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('clothing_items')
+      .update({ inventory_status: 'owned' })
+      .eq('id', id)
+
+    if (updErr) {
+      setError(`Couldn’t undo outgrown for ${name}: ${updErr.message}`)
+      return
+    }
+
+    track.itemMarkedOutgrownUndone?.({ id })
+    reloadItems()
+  }
 
   // The currently selected age range on the Wish list tab. Initialized from
   // the baby's DOB once we've loaded it; falls back to '3-6M' as a reasonable
@@ -163,6 +269,7 @@ export default function Inventory() {
   const ownedGrouped = useMemo(() => {
     const filtered = babyFilteredItems.filter(i =>
       i.inventory_status === 'owned' &&
+      !pendingOutgrownIds.has(i.id) &&
       (!selectedAgeRange || i.size_label === selectedAgeRange)
     )
     const groups = Object.fromEntries(CATEGORY_ORDER.map(c => [c, []]))
@@ -172,7 +279,7 @@ export default function Inventory() {
     return CATEGORY_ORDER
       .filter(c => groups[c].length > 0)
       .map(c => ({ category: c, items: groups[c] }))
-  }, [babyFilteredItems, selectedAgeRange])
+  }, [babyFilteredItems, selectedAgeRange, pendingOutgrownIds])
 
   // ── Owned tab: auto-collapse only when content overflows the viewport ────
   // The rule: Owned-tab groups should stay EXPANDED by default on small
@@ -474,6 +581,8 @@ export default function Inventory() {
                           item={it}
                           tab="owned"
                           onClick={() => navigate(`/item/${it.id}`)}
+                          onOutgrown={handleMarkOutgrown}
+                          outgrowing={pendingOutgrownIds.has(it.id)}
                         />
                       ))}
                     </div>
@@ -528,6 +637,27 @@ export default function Inventory() {
           />
         )}
       </main>
+
+      {/* Outgrown-flip undo toast — fixed-positioned at the bottom of the
+          viewport, auto-dismisses after 5s (handled by the effect on
+          outgrownToast). The Undo button reverts the optimistic flip and
+          fires a DB write to restore inventory_status='owned'. We render
+          this at the page level rather than inside the list so it stays
+          put while the list scrolls underneath. */}
+      {outgrownToast && (
+        <div className={styles.toast} role="status" aria-live="polite">
+          <span className={styles.toastBody}>
+            Marked <strong>{outgrownToast.name}</strong> as outgrown
+          </span>
+          <button
+            type="button"
+            className={styles.toastUndo}
+            onClick={handleUndoOutgrown}
+          >
+            Undo
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -870,14 +1000,28 @@ function OwnedEmptyState({ ageRange, totalOwnedCount, onAdd }) {
 // Rendered as a <button> so tapping anywhere on the row opens the item
 // detail page. `all: unset` on .itemRow in the stylesheet strips the
 // default button chrome; we redeclare only the visual bits we want.
-function ItemRow({ item, tab, onClick }) {
-  const badge = tab === 'owned'
-    ? (STATUS_LABEL[item.inventory_status] ?? item.inventory_status)
-    : (PRIORITY_LABEL[item.priority] ?? 'Needed')
-
+function ItemRow({ item, tab, onClick, onOutgrown, outgrowing }) {
   const displayName = item.name || humanizeItemType(item.item_type)
-  const metaParts = [item.size_label, item.brand, item.quantity > 1 ? `×${item.quantity}` : null]
-    .filter(Boolean)
+
+  // Owned tab: size lives in the chip (left), quantity + Outgrown action
+  // live in the right cluster, brand carries the meta line solo. Wishlist
+  // tab keeps the original badge (Must have / Nice to have / Needed) — the
+  // priority signal there is meaningful, unlike "Owned" on the Owned tab
+  // which was redundant with the tab itself.
+  const isOwnedTab = tab === 'owned'
+  const sizeLabel = item.size_label || '—'
+  const sizeIsEmpty = !item.size_label
+  const metaText = isOwnedTab
+    ? (item.brand || '')
+    : [item.size_label, item.brand, item.quantity > 1 ? `×${item.quantity}` : null]
+        .filter(Boolean)
+        .join(' · ')
+
+  // Wishlist-only badge (priority). On Owned, the right-side cluster
+  // replaces this entirely with quantity + the inline outgrown action.
+  const wishBadge = !isOwnedTab
+    ? (PRIORITY_LABEL[item.priority] ?? 'Needed')
+    : null
 
   return (
     <button
@@ -886,12 +1030,44 @@ function ItemRow({ item, tab, onClick }) {
       onClick={onClick}
       aria-label={`Open ${displayName}`}
     >
-      <div className={styles.itemThumb} aria-hidden="true" />
+      <div
+        className={`${styles.itemThumb} ${sizeIsEmpty ? styles.itemThumbEmpty : ''}`}
+        aria-hidden="true"
+      >
+        {sizeLabel}
+      </div>
       <div className={styles.itemBody}>
         <div className={styles.itemName}>{displayName}</div>
-        <div className={styles.itemMeta}>{metaParts.join(' · ')}</div>
+        {metaText && <div className={styles.itemMeta}>{metaText}</div>}
       </div>
-      <span className={styles.itemBadge}>{badge}</span>
+
+      {isOwnedTab ? (
+        <div className={styles.itemRight}>
+          {item.quantity > 1 && (
+            <span className={styles.itemQty}>×{item.quantity}</span>
+          )}
+          {/* Inline action — flip status owned → outgrown without opening
+              the detail screen. The button's onClick stops propagation so
+              tapping the action doesn't also fire the row's onClick (which
+              would navigate to the detail screen mid-flip). */}
+          {onOutgrown && (
+            <button
+              type="button"
+              className={styles.itemOutgrownBtn}
+              onClick={e => {
+                e.stopPropagation()
+                onOutgrown(item)
+              }}
+              disabled={outgrowing}
+              aria-label={`Mark ${displayName} as outgrown`}
+            >
+              Outgrown
+            </button>
+          )}
+        </div>
+      ) : (
+        <span className={styles.itemBadge}>{wishBadge}</span>
+      )}
     </button>
   )
 }
