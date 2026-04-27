@@ -76,7 +76,7 @@ export default function Landing() {
             ("parents who'd rather...") so it doubles as a self-selection
             line, and pairs anti-waste with pass-along in one breath. */}
         <p className={styles.heroEnv}>Built for parents who&rsquo;d rather pass it on than throw it out.</p>
-        <p className={styles.sub}>Track every onesie, plan every size, and send outgrown clothes on to another Sprigloop family, a friend or family member, or a charity. All from the same app.</p>
+        <p className={styles.sub}>Sprigloop is a wardrobe app for baby clothes, with a built-in way to pass them on to another family once they&rsquo;re outgrown.</p>
         <div className={styles.heroBtns}>
           <button className={styles.heroCta} onClick={handleGetStarted}>Get started free</button>
           <button className={styles.heroSecondaryCta} onClick={handleSeeHub}>See how pass-along works</button>
