@@ -365,12 +365,151 @@
   outline-offset: -2px;
 }
 
+/* Size chip — formerly an empty placeholder thumbnail. Now the at-a-glance
+   size label that lets parents scan a list and instantly answer "what
+   fits?" Same 40x40 footprint as before so the row geometry is unchanged.
+   font-size sized to fit "12-18M" (the widest size_label) at 11px with
+   tabular-nums so digits don't shift width. */
 .itemThumb {
   width: 40px;
   height: 40px;
   border-radius: 8px;
   background: var(--teal-light);
+  color: var(--teal-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
   flex-shrink: 0;
+  text-align: center;
+  padding: 0 2px;
+}
+
+/* Empty-size variant: when an item has no size_label, the chip degrades
+   to a quiet dash placeholder rather than a jarring blank tile. */
+.itemThumbEmpty {
+  color: var(--gray-400);
+  font-weight: 500;
+}
+
+/* Right cluster: stacks quantity pill (when qty > 1) above the inline
+   action button on the Owned tab. Vertical stack lets each piece sit
+   tight against the right edge without crowding the body content. */
+.itemRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Quantity pill — only rendered when item.quantity > 1. Reuses the badge
+   visual treatment (teal-light pill) so it reads as the same kind of
+   metadata element that lived here before. */
+.itemQty {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Inline outgrown action — small text button that flips inventory_status
+   to 'outgrown' optimistically. Quiet styling so it doesn't compete with
+   the row's primary tap target (open detail) but visible enough that a
+   parent scanning a list can decide-and-flip in one tap. Wider tap area
+   than visual padding via the negative margin-trick in JSX would be
+   ideal; for now we lean on the 6px vertical padding (well above the
+   30px min recommended target on mobile when combined with row padding).
+*/
+.itemOutgrownBtn {
+  all: unset;
+  box-sizing: border-box;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 0.5px solid var(--gray-200);
+  background: var(--white);
+  color: var(--gray-600);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 80ms ease, color 80ms ease, border-color 80ms ease;
+}
+
+.itemOutgrownBtn:hover {
+  background: var(--gray-50);
+  color: var(--gray-900);
+  border-color: var(--gray-300);
+}
+
+.itemOutgrownBtn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+
+.itemOutgrownBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Toast — bottom-anchored confirmation with an Undo affordance. Lives in
+   the page-level fixed-position layer so it floats above the scrolling
+   list. Auto-dismisses after 5s (handled in JSX). The Undo button reverts
+   the optimistic flip and restores the item to the Owned list.
+   Mobile-first: pinned to the bottom with safe-area inset so it clears
+   the home indicator on iOS. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px 10px 18px;
+  background: var(--gray-900);
+  color: var(--white);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  z-index: 60;
+  max-width: calc(100vw - 32px);
+}
+
+.toastBody {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toastUndo {
+  all: unset;
+  box-sizing: border-box;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--teal-light);
+  padding: 6px 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toastUndo:hover {
+  color: var(--white);
+}
+
+.toastUndo:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .itemBody {
