@@ -50,17 +50,17 @@ const DESTINATION_OPTIONS = [
   {
     id: 'family',
     label: 'Send to a Sprigloop family',
-    sub: 'Ships to Sprigloop first — we match it to another Sprigloop family who\u2019s opted in to receiving. If we can\u2019t find a match, we\u2019ll donate it on your behalf.',
+    sub: 'Ships to us in a prepaid Sprigloop bag. We forward to a matched family, or donate if no match. Addresses stay private on both ends.',
   },
   {
     id: 'person',
     label: 'A friend or family member',
-    sub: 'Direct to a sibling, friend, or neighbor you already have in mind.',
+    sub: 'Ships in a prepaid Sprigloop bag, addressed by you to a sibling, friend, or neighbor with a new baby.',
   },
   {
     id: 'charity',
     label: 'A charity',
-    sub: 'Direct to a local Goodwill, shelter, or other nonprofit.',
+    sub: 'Ships in a prepaid Sprigloop bag, addressed by you to a local Goodwill, shelter, or nonprofit you trust.',
   },
 ]
 
@@ -133,10 +133,14 @@ export default function PassAlongBatch() {
   // the loaded row. We persist on blur / on explicit action rather than
   // per-keystroke — cheap on requests, and avoids flicker.
   const [destination, setDestination] = useState('family')
-  const [recipientName, setRecipientName] = useState('')
-  const [recipientAddress, setRecipientAddress] = useState('')
-  const [recipientNotes, setRecipientNotes] = useState('')
   const [batchNotes, setBatchNotes] = useState('')
+  // recipient_name / recipient_address / recipient_notes were collected
+  // pre-bag-flow when Sprigloop generated shipping labels for person/
+  // charity destinations. Now that every batch ships via a Sprigloop-
+  // issued bag (user writes the recipient address on the bag itself),
+  // the fields are operationally unnecessary and we no longer collect
+  // them. Columns remain in the DB for backward-compat with old rows;
+  // the recipient_required check constraint was dropped in migration 018.
 
   const [working, setWorking] = useState(false)
   const [actionError, setActionError] = useState(null)
@@ -204,9 +208,6 @@ export default function PassAlongBatch() {
 
       setBatch(batchRow)
       setDestination(batchRow.destination_type || 'family')
-      setRecipientName(batchRow.recipient_name || '')
-      setRecipientAddress(batchRow.recipient_address || '')
-      setRecipientNotes(batchRow.recipient_notes || '')
       setBatchNotes(batchRow.notes || '')
 
       // Fetch items in this batch. Ordered by created_at so the list
@@ -266,7 +267,6 @@ export default function PassAlongBatch() {
   const isCanceled = batch?.status === 'canceled'
   const locked = !isDraft  // any non-draft state is read-only for the sender
 
-  const showRecipientFields = destination === 'person' || destination === 'charity'
   const canShip = isDraft && items.length > 0
   // Bag-request CTA gate. Open to all three destinations now that every
   // batch ships via a Sprigloop-issued bag (prelabeled-HQ for family,
@@ -283,35 +283,19 @@ export default function PassAlongBatch() {
 
   // ── Helpers ────────────────────────────────────────────────────────────
 
-  // Trim + empty-to-null so the DB check constraint on person/charity
-  // (non-empty recipient_name/address) stays happy even if the user
-  // pasted whitespace.
-  const cleanName = recipientName.trim() || null
-  const cleanAddress = recipientAddress.trim() || null
-  const cleanRecipientNotes = recipientNotes.trim() || null
+  // Trim + empty-to-null for the only freeform field we still collect.
   const cleanNotes = batchNotes.trim() || null
 
-  const recipientFieldsValid =
-    !showRecipientFields || (cleanName && cleanAddress)
-
   // ── Save destination change ────────────────────────────────────────────
-  // Switching destination clears fields that no longer apply so the DB
-  // check constraints accept the UPDATE. UI also hides the inputs, but the
-  // clean-up has to be explicit here because local state can still hold
-  // stale values from a previous selection.
+  // Bag-flow simplification: we no longer collect recipient_name/address
+  // in-app (user writes those on the bag itself), so destination changes
+  // only need to flip destination_type — no recipient cleanup.
   async function changeDestination(nextDest) {
     if (!batch || locked || working || nextDest === destination) return
     setWorking(true)
     setActionError(null)
 
     const patch = { destination_type: nextDest }
-    if (nextDest === 'family') {
-      patch.recipient_name = null
-      patch.recipient_address = null
-    }
-    // We keep recipient_notes across destinations — those notes could
-    // matter regardless of who receives (e.g. "include the Carhartt
-    // onesie, that one's still clean").
 
     const { data, error: uErr } = await supabase
       .schema(currentSchema)
@@ -329,10 +313,6 @@ export default function PassAlongBatch() {
     const prevDest = batch.destination_type
     setBatch(data || { ...batch, ...patch })
     setDestination(nextDest)
-    if (nextDest === 'family') {
-      setRecipientName('')
-      setRecipientAddress('')
-    }
     track.passAlongBatchDestinationChanged({
       id: batch.id,
       from: prevDest,
@@ -538,9 +518,8 @@ export default function PassAlongBatch() {
       patch.outcome = 'donated'
     }
 
-    // Persist the in-flight freeform fields too — the user might have
-    // typed recipient notes right before hitting Ship without blurring out.
-    patch.recipient_notes = cleanRecipientNotes
+    // Persist any in-flight notes too — the user might have typed in the
+    // notes textarea right before hitting Ship without blurring out.
     patch.notes = cleanNotes
 
     const { data, error: uErr } = await supabase
@@ -908,59 +887,6 @@ export default function PassAlongBatch() {
               )}
             </section>
 
-            {/* Recipient fields — only person/charity collect a name +
-                address on the sender side. We render these even when
-                locked (read-only) so the sender can see what they wrote. */}
-            {showRecipientFields && (
-              <section className={styles.section}>
-                <div className={styles.sectionTitle}>Recipient</div>
-                <div className={styles.fieldStack}>
-                  <label className={styles.fieldLabel}>
-                    Name
-                    <input
-                      className={styles.input}
-                      type="text"
-                      value={recipientName}
-                      onChange={e => setRecipientName(e.target.value)}
-                      onBlur={() =>
-                        saveField('recipient_name', cleanName, batch.recipient_name)
-                      }
-                      disabled={locked || working}
-                      placeholder={destination === 'charity' ? 'e.g. Detroit Rescue Mission' : 'e.g. Aunt Mara'}
-                    />
-                  </label>
-                  <label className={styles.fieldLabel}>
-                    Shipping address
-                    <textarea
-                      className={styles.textarea}
-                      rows={3}
-                      value={recipientAddress}
-                      onChange={e => setRecipientAddress(e.target.value)}
-                      onBlur={() =>
-                        saveField('recipient_address', cleanAddress, batch.recipient_address)
-                      }
-                      disabled={locked || working}
-                      placeholder="Street, city, state, ZIP"
-                    />
-                  </label>
-                  <label className={styles.fieldLabel}>
-                    Notes for them <span className={styles.optional}>(optional)</span>
-                    <textarea
-                      className={styles.textarea}
-                      rows={2}
-                      value={recipientNotes}
-                      onChange={e => setRecipientNotes(e.target.value)}
-                      onBlur={() =>
-                        saveField('recipient_notes', cleanRecipientNotes, batch.recipient_notes)
-                      }
-                      disabled={locked || working}
-                      placeholder={destination === 'charity' ? 'Drop-off hours, receiving dept, etc.' : 'A short note to include in the bag'}
-                    />
-                  </label>
-                </div>
-              </section>
-            )}
-
             {/* Items — compact rows, one per clothing_items entry. In draft
                 state, each row has an × to remove it from the batch. When
                 the batch is a draft we also surface an "Add from inventory"
@@ -1054,17 +980,17 @@ export default function PassAlongBatch() {
                   {destination === 'person' && (
                     <li>
                       Fill your Sprigloop bag, write your friend’s
-                      address (above) on the bag, and drop it in any USPS
-                      mailbox. Postage is prepaid. Don’t have a bag yet?
-                      Request one below.
+                      address on the bag, and drop it in any USPS mailbox.
+                      Postage is prepaid. Don’t have a bag yet? Request
+                      one below.
                     </li>
                   )}
                   {destination === 'charity' && (
                     <li>
-                      Fill your Sprigloop bag, write the charity’s
-                      address (above) on the bag, and drop it in any USPS
-                      mailbox. Postage is prepaid. Don’t have a bag yet?
-                      Request one below.
+                      Fill your Sprigloop bag, write the charity’s address
+                      on the bag, and drop it in any USPS mailbox.
+                      Postage is prepaid. Don’t have a bag yet? Request
+                      one below.
                     </li>
                   )}
                   <li>Skip anything stained, ripped, or missing parts — saves everyone a return trip.</li>
@@ -1117,13 +1043,7 @@ export default function PassAlongBatch() {
                   <button
                     type="button"
                     className={styles.primaryBtn}
-                    onClick={() => {
-                      if (!recipientFieldsValid) {
-                        setActionError('Add the recipient\u2019s name and shipping address before marking the batch as shipped.')
-                        return
-                      }
-                      setPendingAction('ship')
-                    }}
+                    onClick={() => setPendingAction('ship')}
                     disabled={!canShip || working}
                   >
                     {canShip ? 'I\u2019ve shipped it' : 'Add items before shipping'}
