@@ -10,7 +10,7 @@ import IvySprig from '../components/IvySprig'
 import styles from './PassAlongBatch.module.css'
 
 // PassAlongBatch — the sender-side detail screen for a community exchange
-// "batch" (one physical box). Route: /pass-along/:id
+// "batch" (one physical bag — Sprigloop-issued, prepaid). Route: /pass-along/:id
 //
 // A batch has three destination types, each with a slightly different
 // lifecycle (see migration 010 + the merge migration that folded the
@@ -22,7 +22,7 @@ import styles from './PassAlongBatch.module.css'
 // Responsibilities:
 //   1. Show everything the sender needs in one scrollable view: ref code,
 //      destination choice, recipient info (when relevant), items packed,
-//      packing instructions, a timeline of where the box is in its life,
+//      packing instructions, a timeline of where the bag is in its life,
 //      and any notes.
 //   2. Let the sender edit the batch while it's a draft — change
 //      destination, fill in recipient details, remove items, write notes.
@@ -31,9 +31,13 @@ import styles from './PassAlongBatch.module.css'
 //      this auto-advances status to fulfilled with an outcome ('matched'
 //      for person, 'donated' for charity) since Sprigloop isn't in that
 //      path. For family, it just flags shipped and HQ takes over from there.
-//   4. Offer "Request a prepaid label" as a secondary CTA — only for the
-//      family destination (the only one that ships via HQ). Writes
-//      label_requested_at + address on the batch; notifying Chris is task #5.
+//   4. Offer "Request a Sprigloop bag" as a secondary CTA — for ALL three
+//      destinations now that every batch ships via a Sprigloop-issued bag
+//      (prelabeled-to-HQ for family; blank-label flat-rate for person /
+//      charity). Writes label_requested_at + label_request_address on the
+//      batch — same column shape, new semantic: "when the user asked for
+//      the bag" + "where to ship the bag TO the user." A bag-dispatch
+//      concierge_tasks row gets dropped for Chris's queue.
 //   5. Allow deleting a draft batch (RLS enforces draft-only deletes too).
 //      Deleting a batch returns its items to 'owned' status so nothing is
 //      silently lost.
@@ -139,13 +143,13 @@ export default function PassAlongBatch() {
   const [pendingAction, setPendingAction] = useState(null)
     // 'delete' | 'ship' | 'requestLabel' | null
 
-  // Label-request address is collected as a structured form inside the
-  // modal. On submit we assemble these into a single string and write to
-  // label_request_address (the column stays TEXT — carriers + USPS shipping
-  // labels all want a flat block at the end of the day, and keeping it as
-  // a string spares us a second migration. The pieces are also persisted
-  // raw in concierge_tasks.payload so Chris can pull them apart if he
-  // needs to automate label printing later).
+  // Bag-ship-to address (where Sprigloop ships the bag TO the user).
+  // Variable names are still labelName/Street/etc. for historical reasons —
+  // these were originally for the prepaid-label flow before we pivoted to
+  // shipping users physical Sprigloop bags. Same DB columns
+  // (label_requested_at, label_request_address) and same data shape; new
+  // meaning. Renaming the variables would be a sprawling diff with no
+  // user-facing benefit, so we leave them and document here.
   const [labelName, setLabelName] = useState('')
   const [labelStreet, setLabelStreet] = useState('')
   const [labelUnit, setLabelUnit] = useState('')
@@ -224,7 +228,7 @@ export default function PassAlongBatch() {
 
       // If this batch has been matched to a receiving household (family
       // destination only), fetch the household name so we can show the
-      // sender where their box ended up. RLS on households will only
+      // sender where their bag ended up. RLS on households will only
       // return it if Chris's service role has granted visibility — for
       // now this falls back silently if the row isn't readable.
       if (batchRow.recipient_household_id) {
@@ -264,7 +268,11 @@ export default function PassAlongBatch() {
 
   const showRecipientFields = destination === 'person' || destination === 'charity'
   const canShip = isDraft && items.length > 0
-  const canRequestLabel = destination === 'family' && (isDraft || isShipped) && !batch?.label_requested_at
+  // Bag-request CTA gate. Open to all three destinations now that every
+  // batch ships via a Sprigloop-issued bag (prelabeled-HQ for family,
+  // blank-label flat-rate for person/charity). Only show in draft or
+  // shipped, and only once per batch (label_requested_at is a one-shot).
+  const canRequestLabel = (isDraft || isShipped) && !batch?.label_requested_at
 
   const timeline = useMemo(
     () => timelineFor(batch?.destination_type || destination),
@@ -388,7 +396,7 @@ export default function PassAlongBatch() {
   // other batch. We deliberately ignore the household-level selectedBabyId
   // here — a pass-along batch isn't scoped to a baby, and in a multi-baby
   // household the sender is often packing outgrown stuff from more than
-  // one baby into the same box. The in-picker baby filter (chips above
+  // one baby into the same bag. The in-picker baby filter (chips above
   // the list) lets the user narrow within the modal when they want to,
   // without hiding anything by default.
   const eligibleItems = useMemo(() => {
@@ -558,21 +566,25 @@ export default function PassAlongBatch() {
     })
   }
 
-  // ── Secondary action: request a prepaid label (Littleloop only) ────────
-  // Two-step persistence:
+  // ── Secondary action: request a Sprigloop bag ──────────────────────────
+  // Open to all three destinations. Two-step persistence:
   //   1. Stamp label_requested_at + label_request_address on the batch so the
-  //      user-facing timeline reflects the ask.
-  //   2. Drop a row into beta.concierge_tasks — Chris's admin inbox — so the
-  //      request shows up in the open-work queue without any extra infra.
-  //      Email/push notification is intentionally deferred to a followup
-  //      task; the SQL queue is the first cut.
+  //      user-facing timeline reflects the ask. (Columns kept their old
+  //      "label" names from the previous prepaid-label flow — same shape,
+  //      new meaning. label_request_address now holds the user's
+  //      shipping address: where Sprigloop ships the BAG to the user.)
+  //   2. Drop a row into beta.concierge_tasks — Chris's admin inbox — with
+  //      task_type='bag_request' so the bag dispatch shows up in the
+  //      open-work queue without any extra infra. Chris reads the batch's
+  //      destination_type to decide which bag SKU to grab from the closet
+  //      (prelabeled-HQ vs. blank-label flat-rate).
   //
   // The concierge insert is best-effort. If it fails (schema cache, RLS,
   // transient network), the batch update has already landed and the user's
   // timeline will show the request — Chris can still discover it by
   // scanning pass_along_batches.label_requested_at. We surface the primary
   // failure but swallow the secondary.
-  // Required fields for a shippable label. Unit is optional — plenty of
+  // Required fields for shipping the bag. Unit is optional — plenty of
   // houses don't have one and forcing a non-empty value would feel hostile.
   const labelFieldsValid =
     labelName.trim() &&
@@ -582,8 +594,9 @@ export default function PassAlongBatch() {
     labelZip.trim()
 
   // Pack the form into a single multi-line block the concierge can paste
-  // straight onto a label. Keeps a predictable shape (name / street / unit /
-  // city, ST ZIP) so Chris can also parse it back out if he ever automates.
+  // onto a shipping label or directly into a bag-dispatch carrier flow.
+  // Predictable shape (name / street / unit / city, ST ZIP) so Chris can
+  // also parse it back out if he ever automates.
   function assembleLabelAddress() {
     const name = labelName.trim()
     const street = labelStreet.trim()
@@ -599,7 +612,7 @@ export default function PassAlongBatch() {
   async function handleRequestLabel() {
     if (!batch || !canRequestLabel || working) return
     if (!labelFieldsValid) {
-      setActionError('Fill in name, street, city, state, and ZIP so we can send the label to the right place.')
+      setActionError('Fill in name, street, city, state, and ZIP so we can ship your bag to the right place.')
       return
     }
     setWorking(true)
@@ -628,19 +641,23 @@ export default function PassAlongBatch() {
     // also the structured pieces so Chris can pull name/street/etc. back out
     // without regex-parsing a string — handy if we ever wire up an API that
     // expects structured input (EasyPost, Shippo, USPS Web Tools, etc.).
+    // ship_to_address is the user's shipping address (where Sprigloop ships
+    // the bag to). batch.destination_type tells Chris which bag SKU to use:
+    // prelabeled-HQ for 'family', blank-label flat-rate for 'person'/'charity'.
     try {
       await supabase
         .schema(currentSchema)
         .from('concierge_tasks')
         .insert({
-          task_type: 'label_request',
+          task_type: 'bag_request',
           household_id: batch.household_id,
           created_by: user?.id ?? null,
           related_batch_id: batch.id,
           payload: {
             reference_code: batch.reference_code,
-            return_address: assembled,
-            return_address_parts: {
+            destination_type: batch.destination_type,
+            ship_to_address: assembled,
+            ship_to_address_parts: {
               name:   labelName.trim(),
               street: labelStreet.trim(),
               unit:   labelUnit.trim() || null,
@@ -714,7 +731,7 @@ export default function PassAlongBatch() {
   function confirmLabel() {
     if (pendingAction === 'delete') return 'Delete batch'
     if (pendingAction === 'ship') return 'Mark as shipped'
-    if (pendingAction === 'requestLabel') return 'Request label'
+    if (pendingAction === 'requestLabel') return 'Request bag'
     return ''
   }
 
@@ -731,7 +748,7 @@ export default function PassAlongBatch() {
       return 'Mark this batch as sent. Sprigloop will update you once we\u2019ve received it.'
     }
     if (pendingAction === 'requestLabel') {
-      return 'We\u2019ll email you a prepaid shipping label. Add the return address the carrier should pick up from.'
+      return 'We\u2019ll ship a Sprigloop bag to the address below. Once it arrives, fill it with this batch and drop it in any USPS mailbox.'
     }
     return ''
   }
@@ -877,7 +894,7 @@ export default function PassAlongBatch() {
                   don\u2019t choose a specific household. */}
               {destination === 'family' && (
                 <div className={styles.familyExplainer}>
-                  <strong>How this works:</strong> The box ships to Sprigloop
+                  <strong>How this works:</strong> The bag ships to Sprigloop
                   first. We check the contents and forward them to another
                   Sprigloop family that’s opted in to receiving. If we
                   can’t find a match, we’ll donate it on your behalf.
@@ -937,7 +954,7 @@ export default function PassAlongBatch() {
                         saveField('recipient_notes', cleanRecipientNotes, batch.recipient_notes)
                       }
                       disabled={locked || working}
-                      placeholder={destination === 'charity' ? 'Drop-off hours, receiving dept, etc.' : 'A short note to include in the box'}
+                      placeholder={destination === 'charity' ? 'Drop-off hours, receiving dept, etc.' : 'A short note to include in the bag'}
                     />
                   </label>
                 </div>
@@ -953,7 +970,7 @@ export default function PassAlongBatch() {
                 on an empty draft). */}
             <section className={styles.section}>
               <div className={styles.sectionTitle}>
-                Items in the box
+                Items in the bag
                 <span className={styles.sectionTitleCount}>
                   {items.length} packed
                 </span>
@@ -1020,25 +1037,35 @@ export default function PassAlongBatch() {
               <div className={styles.sectionTitle}>Packing instructions</div>
               <div className={styles.instructionsBox}>
                 <ul className={styles.instructionsList}>
-                  <li>Fold or roll clothes tightly — fewer air pockets, smaller box.</li>
+                  <li>Fold or roll clothes tightly — more fits in your bag.</li>
                   <li>
                     Write your reference code{' '}
                     <strong>{batch.reference_code}</strong> on a slip tucked
-                    inside. If the box gets separated from its label, this is
+                    inside. If the bag gets separated from its label, this is
                     how we find it.
                   </li>
                   {destination === 'family' && (
                     <li>
-                      Ship to Sprigloop. You’ll get the shipping address
-                      with your prepaid label — request one below, or use your
-                      own carrier and we’ll share the address by email.
+                      Fill your Sprigloop bag and drop it in any USPS
+                      mailbox — the address to Sprigloop is preprinted.
+                      Don’t have a bag yet? Request one below.
                     </li>
                   )}
                   {destination === 'person' && (
-                    <li>Ship directly to the recipient above — any carrier works.</li>
+                    <li>
+                      Fill your Sprigloop bag, write your friend’s
+                      address (above) on the bag, and drop it in any USPS
+                      mailbox. Postage is prepaid. Don’t have a bag yet?
+                      Request one below.
+                    </li>
                   )}
                   {destination === 'charity' && (
-                    <li>Drop off at the charity above, or ship it to them.</li>
+                    <li>
+                      Fill your Sprigloop bag, write the charity’s
+                      address (above) on the bag, and drop it in any USPS
+                      mailbox. Postage is prepaid. Don’t have a bag yet?
+                      Request one below.
+                    </li>
                   )}
                   <li>Skip anything stained, ripped, or missing parts — saves everyone a return trip.</li>
                 </ul>
@@ -1059,17 +1086,19 @@ export default function PassAlongBatch() {
                 onChange={e => setBatchNotes(e.target.value)}
                 onBlur={() => saveField('notes', cleanNotes, batch.notes)}
                 disabled={locked || working}
-                placeholder="Anything we should know about the box"
+                placeholder="Anything we should know about the bag"
               />
             </section>
 
-            {/* Label-requested confirmation — shown once the user has
-                already requested a label, so they know it\u2019s in flight. */}
+            {/* Bag-requested confirmation — shown once the user has
+                asked us to ship them a Sprigloop bag, so they know it\u2019s
+                in flight. (Column kept its label_requested_at name from
+                the previous prepaid-label flow — same shape, new meaning.) */}
             {batch.label_requested_at && (
               <div className={styles.infoBanner}>
-                Prepaid label requested on{' '}
+                Sprigloop bag requested on{' '}
                 {new Date(batch.label_requested_at).toLocaleDateString()}.
-                We’ll email it to you shortly.
+                We’ll ship it to you shortly — keep an eye on your mailbox.
               </div>
             )}
 
@@ -1120,7 +1149,7 @@ export default function PassAlongBatch() {
                     }}
                     disabled={working}
                   >
-                    Request a prepaid label
+                    Request a Sprigloop bag
                   </button>
                 )}
 
@@ -1319,7 +1348,7 @@ export default function PassAlongBatch() {
             {pendingAction === 'requestLabel' && (
               <div className={styles.labelForm}>
                 <label className={styles.labelFormField}>
-                  <span className={styles.labelFormLabel}>Name on label</span>
+                  <span className={styles.labelFormLabel}>Your name</span>
                   <input
                     className={styles.modalInput}
                     type="text"
