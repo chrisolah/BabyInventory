@@ -158,6 +158,32 @@
   margin-bottom: 10px;
 }
 
+/* Small descriptive line under a sectionTitle. Used for explanatory copy
+   that scopes the section without competing with the title for hierarchy. */
+.sectionSub {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--gray-600);
+  margin: -4px 0 12px 0;
+}
+
+/* Stacked input form for multi-field edits (shipping address). The fieldRow
+   children inside it stack vertically and the actions row pins to the
+   bottom-right. */
+.shippingForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shippingFormActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
 /* Placeholder copy used across all four tabs while #56–#59 are in flight.
    Keep the type smaller than body copy so it reads as "not the real thing
    yet" without being easily mistakable for an error state. */
