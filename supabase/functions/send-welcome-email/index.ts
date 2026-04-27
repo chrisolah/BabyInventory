@@ -369,7 +369,7 @@ function renderWelcomeEmail(c: WelcomeCtx): string {
                 Pass it on without the friction.
               </p>
               <p style="margin:0;font-size:15px;line-height:1.6;color:#5F5E5A;">
-                When something's outgrown, send it to another Sprigloop family or a local charity. We help with the labels and logistics so the good stuff doesn't end up in a bin.
+                When something's outgrown, send it to another Sprigloop family, a friend, or a local charity. Request a prepaid Sprigloop bag in the app, fill it, drop it in any mailbox. The good stuff stays out of a bin.
               </p>
             </td>
           </tr>

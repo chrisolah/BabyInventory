@@ -184,21 +184,21 @@ export default function Landing() {
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M2 15c0-2.5 1.8-4 4-4s4 1.5 4 4M8 15c0-2.5 1.8-4 4-4s4 1.5 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </div>
               <div className={styles.hubCardTitle}>Send to a Sprigloop family</div>
-              <div className={styles.hubCardBody}>Ships to Sprigloop first. We route the box to a family who&rsquo;s opted in to receiving. If we can&rsquo;t find a match, we&rsquo;ll donate it on your behalf. Addresses stay private on both ends.</div>
+              <div className={styles.hubCardBody}>Ships to Sprigloop first. We route the batch to a family who&rsquo;s opted in to receiving. If we can&rsquo;t find a match, we&rsquo;ll donate it on your behalf. Addresses stay private on both ends.</div>
             </div>
             <div className={styles.hubCard}>
               <div className={styles.hubCardIcon} style={{ background: 'var(--purple-light)', color: 'var(--purple-dark)' }}>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M3 16c0-3 2.7-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </div>
               <div className={styles.hubCardTitle}>A friend or family member</div>
-              <div className={styles.hubCardBody}>Sister-in-law, best friend, coworker with a new baby. Give us a name and address — we&rsquo;ll generate the label and track the handoff.</div>
+              <div className={styles.hubCardBody}>Sister-in-law, best friend, coworker with a new baby. Give us their name and address, and we&rsquo;ll mail you a Sprigloop bag with prepaid postage to fill and ship to them.</div>
             </div>
             <div className={styles.hubCard}>
               <div className={styles.hubCardIcon} style={{ background: 'var(--gray-100)', color: 'var(--gray-600)' }}>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3l2 4 4 .5-3 3 .8 4.2L9 12.8 5.2 14.7 6 10.5 3 7.5 7 7l2-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
               </div>
               <div className={styles.hubCardTitle}>A charity</div>
-              <div className={styles.hubCardBody}>Local Goodwill, shelter, or nonprofit you already trust. Same label flow — we just ship where you tell us.</div>
+              <div className={styles.hubCardBody}>Local Goodwill, shelter, or nonprofit you already trust. We&rsquo;ll mail you a Sprigloop bag with prepaid postage. Write the charity&rsquo;s address on it and drop it in any mailbox.</div>
             </div>
           </div>
           <button className={styles.hubCta} onClick={handleGetStarted}>Start a pass-along batch</button>
@@ -210,7 +210,7 @@ export default function Landing() {
           is the canonical label. Never "families in need" anywhere. */}
       <section className={styles.optIn}>
         <div className={styles.optInEyebrow}>Open to receiving?</div>
-        <h2 className={styles.optInHeadline}>Flip a switch in your profile.<br />Get a box when one&rsquo;s headed your way.</h2>
+        <h2 className={styles.optInHeadline}>Flip a switch in your profile.<br />Get a batch when one&rsquo;s headed your way.</h2>
         <p className={styles.optInBody}>Any Sprigloop household can opt in to receiving hand-me-downs. Pick sizes, pick genders, pause whenever. No applications, no listings to browse — we match you to a sender when the fit is right, and mail it.</p>
         <div className={styles.optInRow}>
           <div className={styles.optInBullet}>
@@ -219,7 +219,7 @@ export default function Landing() {
           </div>
           <div className={styles.optInBullet}>
             <div className={styles.optInBulletNum}>02</div>
-            <div className={styles.optInBulletText}><strong>We do the matching.</strong> When a sender picks &ldquo;Send to a Sprigloop family,&rdquo; we route the box to one of you.</div>
+            <div className={styles.optInBulletText}><strong>We do the matching.</strong> When a sender picks &ldquo;Send to a Sprigloop family,&rdquo; we route the batch to one of you.</div>
           </div>
           <div className={styles.optInBullet}>
             <div className={styles.optInBulletNum}>03</div>
