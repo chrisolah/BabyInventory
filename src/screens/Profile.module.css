@@ -332,6 +332,8 @@
 
 .renameInput {
   flex: 1;
+  /* min-height keeps the rename input at iOS HIG floor (44px). */
+  min-height: 44px;
   padding: 10px 12px;
   font-size: 14px;
   font-family: var(--font-body);
@@ -668,6 +670,8 @@
 
 .fieldInput {
   flex: 1;
+  /* min-height keeps inline-edit fields at iOS HIG floor (44px). */
+  min-height: 44px;
   padding: 10px 12px;
   font-size: 14px;
   font-family: var(--font-body);
@@ -999,6 +1003,9 @@
 }
 
 .receivingDate {
+  /* min-height keeps the date input at iOS HIG floor (44px). Was ~38px
+     until 2026-04-28. */
+  min-height: 44px;
   font-family: inherit;
   font-size: 14px;
   color: var(--gray-900);
