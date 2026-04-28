@@ -185,9 +185,9 @@ export default function ResetPassword() {
             Didn't get it? Check your spam folder or{' '}
             <button
               type="button"
+              className={styles.resendBtn}
               onClick={handleResendCode}
               disabled={loading}
-              style={{ background: 'none', border: 'none', color: '#085041', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
             >
               resend the code
             </button>
