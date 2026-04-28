@@ -1,0 +1,5 @@
+# Generated sweep artifacts (screenshots, reports)
+output/
+
+# Captured auth state for authed sweep
+.auth-state.json
