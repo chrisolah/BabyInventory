@@ -35,8 +35,10 @@
 .backBtn,
 .addBtn,
 .passBtn {
-  width: 36px;
-  height: 36px;
+  /* 44px keeps the icon-button circle at the iOS HIG tap-target floor.
+     Was 36px — bumped 2026-04-28 after authed mobile QA sweep. */
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
@@ -121,6 +123,10 @@
 
 .tab {
   flex: 1;
+  /* min-height: 44px keeps the Owned/Wish list segmented control at the
+     iOS HIG floor without changing visible padding. Was ~38px until
+     2026-04-28. */
+  min-height: 44px;
   padding: 10px 16px;
   font-family: var(--font-body);
   font-size: 14px;
@@ -278,6 +284,10 @@
   all: unset;
   box-sizing: border-box;
   width: 100%;
+  /* min-height keeps category section toggles (Tops and bodysuits, etc.)
+     at iOS HIG floor (44px). Padding 12px alone produced ~42px until
+     2026-04-28. */
+  min-height: 44px;
   padding: 12px 14px;
   display: flex;
   align-items: center;
@@ -594,7 +604,12 @@
 .ageNav::-webkit-scrollbar { display: none; }
 
 .ageChip {
-  padding: 6px 12px;
+  /* min-height keeps each chip at iOS HIG floor (44px). Was ~31px tall
+     until 2026-04-28. inline-flex centers the label vertically. */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 500;

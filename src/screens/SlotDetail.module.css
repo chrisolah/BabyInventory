@@ -20,8 +20,9 @@
 }
 
 .backBtn {
-  width: 36px;
-  height: 36px;
+  /* 44px = iOS HIG tap-target floor. Was 36px until 2026-04-28. */
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   cursor: pointer;

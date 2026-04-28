@@ -20,8 +20,9 @@
 }
 
 .backBtn {
-  width: 36px;
-  height: 36px;
+  /* 44px = iOS HIG tap-target floor. Was 36px until 2026-04-28. */
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
@@ -38,8 +39,9 @@
 }
 
 .headerSpacer {
-  width: 36px;
-  height: 36px;
+  /* Mirror .backBtn footprint so the centered title cell stays balanced. */
+  width: 44px;
+  height: 44px;
 }
 
 /* Stacks the "Add an item" title on top of an optional mobile-only sprig.
@@ -154,6 +156,9 @@
 }
 
 .segBtn {
+  /* min-height keeps the Own it / Want it segmented toggle at iOS HIG floor.
+     Was ~37px until 2026-04-28. */
+  min-height: 44px;
   padding: 10px;
   font-size: 13px;
   font-weight: 500;
@@ -231,6 +236,9 @@
 
 .input {
   width: 100%;
+  /* min-height: 44px keeps inputs at iOS HIG tap-target floor. Padding
+     11/13 alone produces ~42px (caught by mobile QA sweep 2026-04-28). */
+  min-height: 44px;
   padding: 11px 13px;
   font-size: 14px;
   font-family: var(--font-body);
@@ -318,6 +326,16 @@
 }
 
 .saveHint a {
+  /* Inline focus-jump links inside the "Still needed to save: …" paragraph.
+     min-height + inline-flex expands the tap area to iOS HIG floor without
+     disturbing the sentence flow; horizontal negative margins keep visible
+     spacing between adjacent links unchanged. */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  padding: 0 4px;
+  margin: 0 -4px;
   color: var(--teal);
   text-decoration: underline;
   cursor: pointer;

@@ -18,6 +18,10 @@
 }
 
 .btn {
+  /* min-height keeps both variants at iOS HIG floor (44px). The inline
+     variant produces ~40px from padding alone; primary is already above
+     floor but the explicit declaration documents intent. */
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
