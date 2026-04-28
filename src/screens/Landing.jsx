@@ -101,12 +101,20 @@ export default function Landing() {
             <div className={styles.featureCardTitle}>Plan ahead by size</div>
             <div className={styles.featureCardBody}>Know which sizes are coming up and what you still need before you need it.</div>
           </div>
+          {/* Pass-along card replaced "Share with your family" on 2026-04-28
+              after Chris pivoted away from animated preview strip. The bag
+              icon (handle + body silhouette) matches the bag visual used in
+              the Hub section below and in the scanFeatureMock — keeps the
+              landing's bag motif consistent throughout the page. */}
           <div className={styles.featureCard}>
             <div className={styles.featureIcon} style={{ background: 'var(--amber-light)' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="3" fill="#EF9F27"/><path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="#EF9F27" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 5.5 Q3 4.5 4 4.5 L5 4.5 Q5.6 1.8 8 1.8 Q10.4 1.8 11 4.5 L12 4.5 Q13 4.5 13 5.5 L13 13.6 Q13 14 12.6 14 L3.4 14 Q3 14 3 13.6 Z" fill="#EF9F27"/>
+                <path d="M5 4.5 Q5 2.6 8 2.6 Q11 2.6 11 4.5" stroke="#EF9F27" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+              </svg>
             </div>
-            <div className={styles.featureCardTitle}>Share with your family</div>
-            <div className={styles.featureCardBody}>Invite co-parents and grandparents. Everyone stays in sync on one wardrobe.</div>
+            <div className={styles.featureCardTitle}>Send what&rsquo;s outgrown</div>
+            <div className={styles.featureCardBody}>Mark items outgrown and we&rsquo;ll mail a prepaid bag. Drop it in any mailbox.</div>
           </div>
         </div>
       </section>
