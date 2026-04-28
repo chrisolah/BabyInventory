@@ -219,7 +219,7 @@ export default function Landing() {
           anywhere. */}
       <section className={styles.optIn}>
         <div className={styles.optInEyebrow}>Open to receiving?</div>
-        <h2 className={styles.optInHeadline}>Flip a switch in your profile.<br />Get a batch when one&rsquo;s headed your way.</h2>
+        <h2 className={styles.optInHeadline}>Flip a switch in your profile.<br />Get a bag from a Sprigloop family when the fit is right.</h2>
         <p className={styles.optInBody}>Any Sprigloop household can opt in to receive outgrown clothes from another Sprigloop family. Pick sizes, pick genders, pause whenever. No applications, no listings to browse — we match you to a sender when the fit is right, and mail it.</p>
         <div className={styles.optInRow}>
           <div className={styles.optInBullet}>
