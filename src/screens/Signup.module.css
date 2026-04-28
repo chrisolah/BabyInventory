@@ -130,14 +130,15 @@
 
 .loginLink {
   /* Inline within "Already have an account? Log in" paragraph. min-height
-     + inline-flex expands the tap area to 44px; horizontal negative margin
-     preserves the visible spacing within the sentence. */
+     gives the 44px vertical tap area. Horizontal padding/negative-margin
+     pair was removed 2026-04-28 — the trick overflowed the parent paragraph
+     by 1px on desktop widths (caught in desktop sweep) and was the same
+     gotcha that hit .forgotLink and .saveHint a. Click area = text width;
+     vertical 44px is what matters for tap accessibility. */
   min-height: 44px;
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-  padding: 0 6px;
-  margin: 0 -6px;
   background: none;
   border: none;
   color: var(--teal);
@@ -168,14 +169,12 @@
 
 .resendBtn {
   /* Inline within "Didn't get a code? resend the code." paragraph.
-     min-height + inline-flex expands the tap area to 44px; horizontal
-     negative margin preserves visual spacing within the sentence. */
+     Horizontal padding/negative-margin pair removed 2026-04-28 — overflowed
+     parent paragraph at desktop widths. Vertical 44px tap area preserved. */
   min-height: 44px;
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-  padding: 0 6px;
-  margin: 0 -6px;
   background: none;
   border: none;
   color: var(--teal);
