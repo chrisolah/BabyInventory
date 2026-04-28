@@ -88,6 +88,10 @@
 
 .input {
   width: 100%;
+  /* min-height: 44px keeps tap targets at the iOS HIG floor without
+     disrupting the existing visual rhythm. Padding 11/13 alone produces
+     ~42px which fails the mobile QA sweep. */
+  min-height: 44px;
   padding: 11px 13px;
   font-size: 14px;
   font-family: var(--font-body);
@@ -192,6 +196,9 @@
 }
 
 .methodBtn {
+  /* min-height keeps the segmented toggle at iOS HIG floor (44px). The
+     8px padding alone produces ~33px which fails the mobile QA sweep. */
+  min-height: 44px;
   padding: 8px;
   font-size: 13px;
   font-weight: 500;
