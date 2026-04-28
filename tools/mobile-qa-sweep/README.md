@@ -23,13 +23,14 @@ safe-area-insets, rubber-band scroll), keyboard popup pushing content, haptics,
 animations, and any state behind real interaction. Spot-check those on a real
 phone after fixing the layout issues this finds.
 
-## Two scripts
+## Three scripts
 
 - `public-sweep.mjs` — hits prod (https://sprigloop.com) for unauthenticated routes.
   Zero setup, runs anywhere you have network. **Start here.**
-- `authed-sweep.mjs` — hits local dev (http://localhost:5173) for authed routes.
-  Requires a one-time `auth-record.mjs` run to capture your sign-in state.
-  Add later if/when public sweep findings are addressed.
+- `auth-record.mjs` — opens a real browser, you sign in once, the session is
+  persisted to `.auth-state.json` (gitignored). Used by `authed-sweep.mjs`.
+- `authed-sweep.mjs` — hits authed routes (`/home`, `/inventory`, `/add-item`,
+  `/pass-along`, `/profile`) using the captured session.
 
 ## Running the public sweep
 
@@ -47,19 +48,33 @@ Output lands in `tools/mobile-qa-sweep/output/public/`:
 
 You can override the target with `BASE_URL=https://beta.sprigloop.com node …`.
 
-## Running the authed sweep (later)
+## Running the authed sweep
+
+Two-step flow. The recorder opens a real browser, waits for you to sign in,
+saves the session, and quits. The sweep then replays that session headlessly
+across all the post-login routes.
 
 ```bash
-# 1. Boot your dev server in another terminal
-npm run dev
-
-# 2. One-time: capture your auth state by signing in manually
 node tools/mobile-qa-sweep/auth-record.mjs
-# (a browser opens — sign in, then close it)
+```
 
-# 3. Run the sweep
+A non-headless Chromium opens at the login page. Sign in with your normal
+account (any auth method — password, OTP, whatever). As soon as you land at
+`/home` (or `/onboarding` for new accounts), the script auto-detects the
+URL change, saves `.auth-state.json`, and closes the browser.
+
+Then the sweep:
+
+```bash
 node tools/mobile-qa-sweep/authed-sweep.mjs
 ```
 
-The auth state is stored in `tools/mobile-qa-sweep/.auth-state.json`. It's
-gitignored. Re-record whenever your session expires.
+Output lands in `tools/mobile-qa-sweep/output/authed/` with the same shape
+as the public sweep (`report.md`, `report.json`, `screenshots/...`).
+
+If the captured session has expired by the time you run the sweep, the
+report will show "auth state appears stale" at the top and individual
+routes will be marked as bounced. Re-run `auth-record.mjs` and try again.
+
+By default both scripts target `https://sprigloop.com`. Override with
+`BASE_URL=https://beta.sprigloop.com` (must match between the two scripts).
