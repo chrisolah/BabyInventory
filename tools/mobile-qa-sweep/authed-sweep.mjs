@@ -29,15 +29,39 @@ import { dirname, resolve } from 'node:path'
 import { DIAGNOSTIC_FN } from './diagnostics.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const OUT_DIR = resolve(__dirname, 'output', 'authed')
 const STATE_PATH = resolve(__dirname, '.auth-state.json')
 const BASE_URL = process.env.BASE_URL || 'https://sprigloop.com'
 
-const VIEWPORTS = [
+// VIEWPORT_PROFILE: 'mobile' (default) or 'desktop'. See public-sweep.mjs
+// for full rationale. Same auth state works for both — Supabase session
+// doesn't care about viewport.
+const PROFILE = (process.env.VIEWPORT_PROFILE || 'mobile').toLowerCase()
+if (PROFILE !== 'mobile' && PROFILE !== 'desktop') {
+  console.error(
+    '[sweep] VIEWPORT_PROFILE must be "mobile" or "desktop", got: ' + PROFILE
+  )
+  process.exit(1)
+}
+const IS_DESKTOP = PROFILE === 'desktop'
+const OUT_DIR = resolve(
+  __dirname,
+  'output',
+  IS_DESKTOP ? 'authed-desktop' : 'authed'
+)
+
+const MOBILE_VIEWPORTS = [
   { name: 'iphone-se',     ...devices['iPhone SE'] },
   { name: 'iphone-14-pro', ...devices['iPhone 14 Pro'] },
   { name: 'pixel-7',       ...devices['Pixel 7'] },
 ]
+
+const DESKTOP_VIEWPORTS = [
+  { name: 'laptop-1280',  viewport: { width: 1280, height: 800 } },
+  { name: 'laptop-1440',  viewport: { width: 1440, height: 900 } },
+  { name: 'desktop-1920', viewport: { width: 1920, height: 1080 } },
+]
+
+const VIEWPORTS = IS_DESKTOP ? DESKTOP_VIEWPORTS : MOBILE_VIEWPORTS
 
 const ROUTES = [
   { path: '/home',       name: 'home' },
@@ -114,6 +138,19 @@ async function sweepRoute(browser, viewport, route) {
     }
     try {
       diagnostic = await page.evaluate(DIAGNOSTIC_FN)
+      // Filter small_tap_target on desktop — see public-sweep.mjs.
+      if (IS_DESKTOP && diagnostic) {
+        const kept = diagnostic.issues.filter((i) => i.kind !== 'small_tap_target')
+        const byKind = kept.reduce((acc, i) => {
+          acc[i.kind] = (acc[i.kind] || 0) + 1
+          return acc
+        }, {})
+        diagnostic = {
+          ...diagnostic,
+          issues: kept,
+          stats: { ...diagnostic.stats, total: kept.length, byKind },
+        }
+      }
     } catch (err) {
       errors.push('[diagnostic] ' + String(err))
     }
@@ -155,11 +192,21 @@ function severity(issue) {
 
 function buildMarkdown(results) {
   const lines = []
-  lines.push('# Mobile QA sweep — authed routes')
+  lines.push(
+    '# ' + (IS_DESKTOP ? 'Desktop' : 'Mobile') + ' QA sweep — authed routes'
+  )
   lines.push('')
   lines.push('Target: `' + BASE_URL + '`')
+  lines.push('Profile: `' + PROFILE + '`')
   lines.push('Run: ' + new Date().toISOString())
   lines.push('')
+  if (IS_DESKTOP) {
+    lines.push(
+      '_small_tap_target findings are filtered out on desktop (mouse-driven, ' +
+        '44px floor doesn\'t apply)._'
+    )
+    lines.push('')
+  }
 
   // Auth-bounce check first — if any route bounced, the session is dead.
   const bouncedAny = results.some((r) => r.authBounced)
@@ -251,6 +298,7 @@ function buildMarkdown(results) {
 
 async function main() {
   await ensureAuthState()
+  console.log('[sweep] profile: ' + PROFILE)
   console.log('[sweep] target: ' + BASE_URL)
   console.log('[sweep] viewports: ' + VIEWPORTS.map((v) => v.name).join(', '))
   console.log('[sweep] routes: ' + ROUTES.map((r) => r.name).join(', '))
