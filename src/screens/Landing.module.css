@@ -105,6 +105,9 @@
   cursor: pointer;
 }
 .heroSecondaryCta {
+  /* min-height keeps the secondary CTA at iOS HIG floor (44px). The
+     11px padding alone produces ~42px which fails the mobile QA sweep. */
+  min-height: 44px;
   font-size: 14px;
   font-weight: 500;
   font-family: var(--font-body);
@@ -482,6 +485,9 @@
   line-height: 1.5;
 }
 .hubCta {
+  /* min-height keeps the hub CTA at iOS HIG floor (44px). The 11px
+     padding alone produces ~40px which fails the mobile QA sweep. */
+  min-height: 44px;
   font-size: 14px;
   font-weight: 500;
   font-family: var(--font-body);
@@ -594,6 +600,9 @@
   margin-bottom: 1.25rem;
 }
 .missionCta {
+  /* min-height keeps the mission CTA at iOS HIG floor (44px). The 9px
+     padding alone produces ~35px which fails the mobile QA sweep. */
+  min-height: 44px;
   font-size: 13px;
   font-weight: 500;
   font-family: var(--font-body);
