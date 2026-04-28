@@ -18,16 +18,45 @@ import { dirname, resolve } from 'node:path'
 import { DIAGNOSTIC_FN } from './diagnostics.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const OUT_DIR = resolve(__dirname, 'output', 'public')
 const BASE_URL = process.env.BASE_URL || 'https://sprigloop.com'
 
-// Three representative phone widths. Heights are device-typical, but full-page
-// screenshots ignore height anyway — the entire scrollable page is captured.
-const VIEWPORTS = [
+// VIEWPORT_PROFILE: 'mobile' (default) or 'desktop'. Mobile uses the three
+// phone widths; desktop uses three laptop/monitor widths. Output dirs are
+// suffixed accordingly so they don't clobber each other.
+const PROFILE = (process.env.VIEWPORT_PROFILE || 'mobile').toLowerCase()
+if (PROFILE !== 'mobile' && PROFILE !== 'desktop') {
+  console.error(
+    '[sweep] VIEWPORT_PROFILE must be "mobile" or "desktop", got: ' + PROFILE
+  )
+  process.exit(1)
+}
+const IS_DESKTOP = PROFILE === 'desktop'
+const OUT_DIR = resolve(
+  __dirname,
+  'output',
+  IS_DESKTOP ? 'public-desktop' : 'public'
+)
+
+// Mobile: representative phone widths. Heights are device-typical, but
+// full-page screenshots ignore height anyway — the entire scrollable page
+// is captured.
+const MOBILE_VIEWPORTS = [
   { name: 'iphone-se',     ...devices['iPhone SE'] },        // 375 × 667
   { name: 'iphone-14-pro', ...devices['iPhone 14 Pro'] },    // 393 × 852
   { name: 'pixel-7',       ...devices['Pixel 7'] },          // 412 × 915
 ]
+
+// Desktop: three laptop/monitor widths. No isMobile/touch/dpi mimicry —
+// these are mouse-driven contexts. small_tap_target findings are filtered
+// out of desktop reports because 44px buttons aren't a requirement on
+// mouse + keyboard.
+const DESKTOP_VIEWPORTS = [
+  { name: 'laptop-1280',  viewport: { width: 1280, height: 800 } },
+  { name: 'laptop-1440',  viewport: { width: 1440, height: 900 } },
+  { name: 'desktop-1920', viewport: { width: 1920, height: 1080 } },
+]
+
+const VIEWPORTS = IS_DESKTOP ? DESKTOP_VIEWPORTS : MOBILE_VIEWPORTS
 
 const ROUTES = [
   { path: '/',               name: 'landing' },
@@ -81,6 +110,21 @@ async function sweepRoute(browser, viewport, route) {
     }
     try {
       diagnostic = await page.evaluate(DIAGNOSTIC_FN)
+      // Desktop is mouse-driven — small_tap_target findings don't apply.
+      // Filter them out (and recompute stats) so the report stays focused
+      // on what's actually a problem at this viewport class.
+      if (IS_DESKTOP && diagnostic) {
+        const kept = diagnostic.issues.filter((i) => i.kind !== 'small_tap_target')
+        const byKind = kept.reduce((acc, i) => {
+          acc[i.kind] = (acc[i.kind] || 0) + 1
+          return acc
+        }, {})
+        diagnostic = {
+          ...diagnostic,
+          issues: kept,
+          stats: { ...diagnostic.stats, total: kept.length, byKind },
+        }
+      }
     } catch (err) {
       errors.push('[diagnostic] ' + String(err))
     }
@@ -121,11 +165,21 @@ function severity(issue) {
 
 function buildMarkdown(results) {
   const lines = []
-  lines.push('# Mobile QA sweep — public routes')
+  lines.push(
+    '# ' + (IS_DESKTOP ? 'Desktop' : 'Mobile') + ' QA sweep — public routes'
+  )
   lines.push('')
   lines.push('Target: `' + BASE_URL + '`')
+  lines.push('Profile: `' + PROFILE + '`')
   lines.push('Run: ' + new Date().toISOString())
   lines.push('')
+  if (IS_DESKTOP) {
+    lines.push(
+      '_small_tap_target findings are filtered out on desktop (mouse-driven, ' +
+        '44px floor doesn\'t apply)._'
+    )
+    lines.push('')
+  }
 
   // Top-level summary
   let totalIssues = 0
@@ -202,6 +256,7 @@ function buildMarkdown(results) {
 }
 
 async function main() {
+  console.log('[sweep] profile: ' + PROFILE)
   console.log('[sweep] target: ' + BASE_URL)
   console.log('[sweep] viewports: ' + VIEWPORTS.map((v) => v.name).join(', '))
   console.log('[sweep] routes: ' + ROUTES.map((r) => r.name).join(', '))

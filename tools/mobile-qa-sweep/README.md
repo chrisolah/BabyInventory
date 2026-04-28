@@ -78,3 +78,23 @@ routes will be marked as bounced. Re-run `auth-record.mjs` and try again.
 
 By default both scripts target `https://sprigloop.com`. Override with
 `BASE_URL=https://beta.sprigloop.com` (must match between the two scripts).
+
+## Running against desktop viewports
+
+Both `public-sweep.mjs` and `authed-sweep.mjs` accept a `VIEWPORT_PROFILE` env
+var. Default is `mobile` (the three phone widths above). Set to `desktop` to
+sweep three laptop/monitor widths instead: 1280×800, 1440×900, 1920×1080.
+
+```bash
+VIEWPORT_PROFILE=desktop node tools/mobile-qa-sweep/public-sweep.mjs
+VIEWPORT_PROFILE=desktop node tools/mobile-qa-sweep/authed-sweep.mjs
+```
+
+Desktop output lands in `output/public-desktop/` and `output/authed-desktop/`
+so it doesn't clobber the mobile reports. The same captured `.auth-state.json`
+works for desktop authed runs — no need to re-record.
+
+`small_tap_target` findings are filtered out of desktop reports because 44×44
+is a touch-only requirement; on mouse-driven UIs, smaller controls are fine.
+All other checks (horizontal overflow, child overflow, content clipping,
+offscreen elements, small text) still apply.
