@@ -6,11 +6,11 @@
   display: inline-flex;
 }
 
-/* Same 36×36 pill as LogoutButton so the header layout stays unchanged
-   when we swap components. */
+/* 44×44 to meet iOS HIG tap-target floor. Was 36 until 2026-04-28; mirror
+   header backBtn dimensions across the authed app. */
 .btn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
