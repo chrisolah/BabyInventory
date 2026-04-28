@@ -161,15 +161,13 @@
 }
 
 .signupLink {
-  /* Inline within "Don't have an account? Sign up" paragraph. min-height
-     + inline-flex expands the tap area to 44px; horizontal negative margin
-     preserves visual spacing within the sentence. */
+  /* Inline within "Don't have an account? Sign up" paragraph. Horizontal
+     padding/negative-margin pair removed 2026-04-28 — overflowed parent
+     at desktop widths. Vertical 44px tap area preserved. */
   min-height: 44px;
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-  padding: 0 6px;
-  margin: 0 -6px;
   background: none;
   border: none;
   color: var(--teal);
@@ -199,15 +197,13 @@
 }
 
 .resendBtn {
-  /* Inline within "Didn't get it? resend the code." paragraph. min-height
-     + inline-flex expands the tap area to 44px; horizontal negative margin
-     preserves visual spacing within the sentence. */
+  /* Inline within "Didn't get it? resend the code." paragraph. Horizontal
+     padding/negative-margin pair removed 2026-04-28 — overflowed parent
+     at desktop widths. Vertical 44px tap area preserved. */
   min-height: 44px;
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-  padding: 0 6px;
-  margin: 0 -6px;
   background: none;
   border: none;
   color: var(--teal);
