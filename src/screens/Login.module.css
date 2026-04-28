@@ -12,16 +12,22 @@
   padding: 2rem 1.5rem;
 }
 
+/* Tap area expanded to 44px without moving the visible text:
+   padding 12/8 + matching negative margins on the three "free" sides.
+   Bottom margin compensates for the new padding so the gap to the
+   title below stays at the original 2rem. */
 .back {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 8px;
+  margin: -12px -8px 1.25rem -8px;
   font-size: 13px;
   color: var(--gray-600);
   background: none;
   border: none;
   cursor: pointer;
   font-family: var(--font-body);
-  margin-bottom: 2rem;
-  display: block;
-  padding: 0;
 }
 
 .logo {
@@ -76,6 +82,14 @@
 }
 
 .forgotLink {
+  /* Sits in .labelRow next to the Password label. min-height + inline-flex
+     bring the tap area to 44px without disturbing the row layout (the row
+     itself just grows to match). */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  margin: 0 -6px;
   background: none;
   border: none;
   color: var(--teal);
@@ -83,7 +97,6 @@
   font-weight: 500;
   cursor: pointer;
   font-family: var(--font-body);
-  padding: 0;
 }
 
 .input {
@@ -145,6 +158,15 @@
 }
 
 .signupLink {
+  /* Inline within "Don't have an account? Sign up" paragraph. min-height
+     + inline-flex expands the tap area to 44px; horizontal negative margin
+     preserves visual spacing within the sentence. */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  padding: 0 6px;
+  margin: 0 -6px;
   background: none;
   border: none;
   color: var(--teal);
@@ -174,6 +196,15 @@
 }
 
 .resendBtn {
+  /* Inline within "Didn't get it? resend the code." paragraph. min-height
+     + inline-flex expands the tap area to 44px; horizontal negative margin
+     preserves visual spacing within the sentence. */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  padding: 0 6px;
+  margin: 0 -6px;
   background: none;
   border: none;
   color: var(--teal);
@@ -182,7 +213,6 @@
   font-family: var(--font-body);
   text-decoration: underline;
   text-underline-offset: 3px;
-  padding: 0;
 }
 
 /* ── Method toggle ── */

@@ -19,9 +19,15 @@
   border: none;
   cursor: pointer;
   font-family: var(--font-body);
-  margin-bottom: 2rem;
-  display: block;
-  padding: 0;
+  /* Tap area expanded to 44px without moving the visible text:
+     padding 12/8 + matching negative margins on the three "free" sides.
+     Bottom margin compensates for the new padding so the gap to the
+     title below stays at the original 2rem. */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 8px;
+  margin: -12px -8px 1.25rem -8px;
 }
 
 .logo {
@@ -123,6 +129,15 @@
 }
 
 .loginLink {
+  /* Inline within "Already have an account? Log in" paragraph. min-height
+     + inline-flex expands the tap area to 44px; horizontal negative margin
+     preserves the visible spacing within the sentence. */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  padding: 0 6px;
+  margin: 0 -6px;
   background: none;
   border: none;
   color: var(--teal);
@@ -152,6 +167,15 @@
 }
 
 .resendBtn {
+  /* Inline within "Didn't get a code? resend the code." paragraph.
+     min-height + inline-flex expands the tap area to 44px; horizontal
+     negative margin preserves visual spacing within the sentence. */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  padding: 0 6px;
+  margin: 0 -6px;
   background: none;
   border: none;
   color: var(--teal);
@@ -160,7 +184,6 @@
   font-family: var(--font-body);
   text-decoration: underline;
   text-underline-offset: 3px;
-  padding: 0;
 }
 
 /* ── Method toggle ── */

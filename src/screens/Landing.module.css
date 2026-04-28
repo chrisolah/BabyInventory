@@ -29,6 +29,14 @@
   color: var(--gray-900);
 }
 .loginBtn {
+  /* Nav-right text-button. Padding + min-height bring the tap area to
+     iOS HIG floor (44px). Negative margin keeps the visible right edge
+     aligned with the existing nav padding. */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  margin-right: -12px;
   font-size: 13px;
   color: var(--gray-600);
   font-weight: 500;
