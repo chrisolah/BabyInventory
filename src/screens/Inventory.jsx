@@ -669,14 +669,12 @@ export default function Inventory() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <button
-          type="button"
-          className={styles.backBtn}
-          onClick={() => navigate('/home')}
-          aria-label="Back"
-        >
-          ←
-        </button>
+        {/* No back button — /inventory is the authed root; /home redirects
+            here once the user has any items, and there's nowhere meaningful
+            to navigate back to. Removed 2026-04-28 to give the title cell
+            more breathing room on small phones (was wrapping to two lines
+            at iPhone SE width because the back button + actions left only
+            ~85px for the title). */}
         <div className={styles.titleCell}>
           <div className={styles.title}>{title}</div>
           {/* Tiny mobile-only vine under the wardrobe name. IvySprig hides
