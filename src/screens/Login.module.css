@@ -82,14 +82,16 @@
 }
 
 .forgotLink {
-  /* Sits in .labelRow next to the Password label. min-height + inline-flex
-     bring the tap area to 44px without disturbing the row layout (the row
-     itself just grows to match). */
+  /* Sits in .labelRow at the right edge of a justify-content:space-between
+     flex row. min-height alone gets the tap area to 44px vertically; we
+     don't add the horizontal padding/negative-margin trick used elsewhere
+     because the button is anchored to the row's right edge — negative
+     right margin would push it past the parent (caught by the QA sweep
+     as a child_overflow). The button is already ~100px wide, so the
+     extra horizontal tap area isn't load-bearing. */
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  padding: 0 6px;
-  margin: 0 -6px;
   background: none;
   border: none;
   color: var(--teal);
@@ -97,6 +99,7 @@
   font-weight: 500;
   cursor: pointer;
   font-family: var(--font-body);
+  padding: 0;
 }
 
 .input {
