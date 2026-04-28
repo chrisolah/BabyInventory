@@ -14,7 +14,9 @@
   border-bottom: 0.5px solid var(--gray-200);
   padding: 12px 16px;
   display: grid;
-  grid-template-columns: 36px 1fr 36px;
+  /* 44px columns mirror .backBtn / .headerSpacer footprints (bumped to
+     44 from 36 on 2026-04-28 for tap-target compliance). */
+  grid-template-columns: 44px 1fr 44px;
   align-items: center;
   gap: 8px;
 }
@@ -326,16 +328,20 @@
 }
 
 .saveHint a {
-  /* Inline focus-jump links inside the "Still needed to save: …" paragraph.
-     min-height + inline-flex expands the tap area to iOS HIG floor without
-     disturbing the sentence flow; horizontal negative margins keep visible
-     spacing between adjacent links unchanged. */
+  /* Inline focus-jump links inside "Still needed to save: …". The earlier
+     negative-margin pattern overflowed the trailing link past its parent
+     span (caught by the QA sweep as child_overflow on the last item).
+     Switching to min-width + inline-flex with justify-content:center
+     guarantees 44×44 tap area without any negative-margin gymnastics.
+     Trade-off: short labels like "Type" / "Size" look slightly chunky in
+     the paragraph since the link box is wider than its text. Acceptable
+     for HIG-compliant tap targets. */
+  min-width: 44px;
   min-height: 44px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   vertical-align: middle;
-  padding: 0 4px;
-  margin: 0 -4px;
   color: var(--teal);
   text-decoration: underline;
   cursor: pointer;
