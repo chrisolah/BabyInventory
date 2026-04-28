@@ -98,7 +98,18 @@ async function sweepRoute(browser, viewport, route) {
   const errors = []
   page.on('pageerror', (err) => errors.push(String(err)))
   page.on('console', (msg) => {
-    if (msg.type() === 'error') errors.push('[console] ' + msg.text())
+    if (msg.type() !== 'error') return
+    const text = msg.text()
+    // "Failed to load resource: the server responded with a status of 404 ()"
+    // is captured (with URL) by the response listener below — skip the
+    // console version to avoid duplicates with empty-URL parens.
+    if (text.startsWith('Failed to load resource')) return
+    errors.push('[console] ' + text)
+  })
+  page.on('response', (resp) => {
+    const status = resp.status()
+    if (status === 404) errors.push('[404] ' + resp.url())
+    else if (status >= 500) errors.push('[' + status + '] ' + resp.url())
   })
 
   let loadOk = true
