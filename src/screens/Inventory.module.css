@@ -433,18 +433,27 @@
   font-weight: 500;
 }
 
-/* Right cluster: stacks the optional quantity pill on top of the two
-   inline action chips (Pass on / Tuck away). Column layout keeps each
-   piece tight against the right edge without crowding the body content.
-   Renamed from .itemRight 2026-04-29 alongside the chip-pair redesign;
-   the SectionItemRow component reuses this class for its intent chips. */
+/* Right cluster: lays the inline action chips out horizontally — Pass on
+   then Tuck away, left to right — so the two affordances read as a pair
+   rather than a stack. The optional quantity pill sits on top via the
+   wrap, kept right-aligned. Renamed from .itemRight 2026-04-29 alongside
+   the chip-pair redesign; SectionItemRow reuses this class for its
+   intent chips. */
 .itemActions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 4px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
   flex-shrink: 0;
+}
+
+/* Quantity pill spans the full chip row when present so it sits cleanly
+   above the two action chips rather than wedging between them. */
+.itemActions .itemQty {
+  flex-basis: 100%;
+  text-align: right;
 }
 
 /* Quantity pill — only rendered when item.quantity > 1. Reuses the badge
@@ -819,17 +828,17 @@
 /* ── Outgrown section (bottom of Owned tab) ──────────────────────────────
    Default-collapsed umbrella for items the household has moved out of
    active rotation: 'kept' (tucked away), 'pass_along' (in a bag), and
-   legacy 'outgrown' rows. The outer shell reuses the .group + GroupHeader
-   pattern from the active inventory above; the inner body uses
-   .outgrownCategoryGroup + .outgrownCategoryLabel as a quieter, non-
-   collapsible category divider so users see grouping without nesting
-   another collapse layer. Replaced the old top-of-tab .outgrownBanner CTA
-   on 2026-04-29 — items don't accumulate in transient outgrown anymore,
-   so a banner had no constituency. Section header surfaces the count. */
+   legacy 'outgrown' rows. Shares the .group + GroupHeader visual
+   treatment with the active inventory above so the section reads as a
+   continuation of the same table style — only the position (bottom of
+   list) and the contents (chip-driven intent toggles) distinguish it.
+   The inner body uses .outgrownCategoryGroup + .outgrownCategoryLabel
+   as a quieter, non-collapsible category divider so users see grouping
+   without nesting another collapse layer. Replaced the old top-of-tab
+   .outgrownBanner CTA on 2026-04-29 — items don't accumulate in
+   transient outgrown anymore, so a banner had no constituency. */
 .outgrownSection {
   margin-top: 16px;
-  background: var(--gray-50);
-  border-color: var(--gray-200);
 }
 
 .outgrownCategoryGroup {
@@ -837,6 +846,9 @@
   flex-direction: column;
 }
 
+/* Quiet inline category divider inside the section body. Not a button —
+   visual only, since the outer section header already owns the collapse
+   interaction and a second collapse layer would be UX clutter. */
 .outgrownCategoryLabel {
   display: flex;
   align-items: baseline;

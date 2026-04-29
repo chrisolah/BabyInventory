@@ -1406,6 +1406,9 @@ function SectionItemRow({ item, onClick, onPassOnChip, onTuckAwayChip, working }
       </div>
 
       <div className={styles.itemActions}>
+        {item.quantity > 1 && (
+          <span className={styles.itemQty}>×{item.quantity}</span>
+        )}
         <button
           type="button"
           className={
