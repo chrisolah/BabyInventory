@@ -108,67 +108,42 @@ export function AuthProvider({ children }) {
     return { user: data?.user ?? null, error: null }
   }
 
-  // Convert an anonymous account to a permanent one. Two-step flow that
-  // mirrors the existing 6-digit OTP pattern used for signup + recovery:
+  // Convert an anonymous account to a permanent one. Single-call flow:
+  // auth.updateUser({ email, password }) sets both fields on the same
+  // auth.users row, flipping is_anonymous=false (the project has
+  // "Confirm email" disabled so this happens inline with no extra
+  // round-trip). Same auth.users.id is preserved across the conversion,
+  // so every household / baby / clothing_items / pass_along_batches row
+  // written during the trial automatically belongs to the permanent
+  // account — no data migration required.
   //
-  //   1. requestEmailChange(email, password?) — calls
-  //      supabase.auth.updateUser({ email, password? }) which sets the
-  //      pending_email on the anon auth.users row and emails a 6-digit
-  //      confirmation code (Outlook Safe Links pre-fetch is neutered
-  //      because there's no clickable link, only a code — same reasoning
-  //      as project_otp_over_magic_link.md). When password is also passed,
-  //      it's stored on the row and effective once the email is verified;
-  //      future logins can use either email+password or email+OTP.
-  //   2. confirmEmailChange(email, token) — calls verifyOtp({type:'email_change'})
-  //      which finalizes the change. The auth.users row's email is set,
-  //      is_anonymous flips to false, and onAuthStateChange fires
-  //      USER_UPDATED. maybeFireWelcome above re-enters and (since it's
-  //      no longer anon) sends the welcome email; welcome_log dedupes.
+  // Future logins after this conversion can use either:
+  //   • email + password — Login.jsx's password method, signInWithPassword
+  //   • email + 6-digit OTP — Login.jsx's magic-link method, signInWithOtp
   //
-  // The same auth.users.id is preserved across the conversion, which is
-  // why every clothing_items / households / pass_along_batches row the
-  // user wrote during the trial automatically belongs to their permanent
-  // account post-conversion — no data migration required.
-  //
-  // Method semantics for the upgrade modal:
-  //   • 'magic'    → requestEmailChange(email)            (no password set)
-  //   • 'password' → requestEmailChange(email, password)  (password set on confirm)
-  //
-  // Returns { error, instantlyConverted } where instantlyConverted=true
-  // when the project has email confirmation / secure email change DISABLED
-  // (the case for sprigloop-beta + sprigloop-prod per project_dev_prod_environments.md).
-  // In that mode, updateUser flips the user to permanent immediately —
-  // no OTP is sent because there's nothing to verify. The modal uses
-  // this signal to skip the code-entry step and call onSuccess directly.
-  // For projects with confirmation enabled, instantlyConverted=false and
-  // the modal shows the code step as designed.
-  async function requestEmailChange(email, password) {
-    const payload = { email: email.trim() }
-    if (password && password.trim()) {
-      payload.password = password.trim()
+  // Both work because the user has both an email and a password set on
+  // their auth.users row. The user picks whichever they prefer at login.
+  // Password is required at conversion (not optional) because OTP-only
+  // accounts can't recover if email access is lost; pairing both gives
+  // the user redundancy.
+  async function upgradeAccount({ email, password }) {
+    const trimmedEmail = email.trim()
+    const trimmedPassword = password.trim()
+    if (!trimmedEmail) return { error: new Error('Email is required.') }
+    if (trimmedPassword.length < 8) {
+      return { error: new Error('Password must be at least 8 characters.') }
     }
-    const { error } = await supabase.auth.updateUser(payload)
-    if (error) return { error, instantlyConverted: false }
 
-    // Pull the latest user state so the caller knows whether OTP is still
-    // needed. If is_anonymous=false after the update, conversion already
-    // completed and we should skip the code step.
-    const { data } = await supabase.auth.getUser()
-    if (data?.user) setUser(data.user)
-    const instantlyConverted = !!(data?.user && data.user.is_anonymous === false)
-    return { error: null, instantlyConverted }
-  }
-
-  async function confirmEmailChange(email, token) {
-    const { error } = await supabase.auth.verifyOtp({
-      email: email.trim(),
-      token: token.trim(),
-      type: 'email_change',
+    const { error } = await supabase.auth.updateUser({
+      email: trimmedEmail,
+      password: trimmedPassword,
     })
     if (error) return { error }
-    // Pull the freshly-updated user so the consumer state reflects
+
+    // Pull the freshly-updated user so consumer state reflects
     // is_anonymous=false immediately, without waiting for the auth-state
-    // listener to deliver the USER_UPDATED event.
+    // listener to deliver the USER_UPDATED event. maybeFireWelcome will
+    // also pick up the listener event and send the welcome email.
     const { data } = await supabase.auth.getUser()
     if (data?.user) setUser(data.user)
     return { error: null }
@@ -186,8 +161,7 @@ export function AuthProvider({ children }) {
       isAnonymous,
       signOut,
       signInAnonymously,
-      requestEmailChange,
-      confirmEmailChange,
+      upgradeAccount,
     }}>
       {children}
     </AuthContext.Provider>
