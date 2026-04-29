@@ -162,15 +162,43 @@ export default function PassAlongList() {
     return b
   }, [batches])
 
-  // ── Create a fresh draft batch ─────────────────────────────────────────
-  // Default to Sprigloop destination — the most common/recommended path
-  // per the product framing. The user can switch on the detail screen
-  // before adding items or shipping.
+  // ── Open the household's draft bag (find or create) ────────────────────
+  // Single-bag-at-a-time rule (locked 2026-04-29): every add-to-bag path
+  // in the app — inline Pass-on chip on Owned, ItemDetail Pass on,
+  // section chip flips, this CTA — should funnel into the same draft.
+  // If a draft already exists we navigate straight to it; only when none
+  // exists do we create a fresh one. Default to 'family' destination
+  // (Sprigloop concierge); user can switch on the detail screen before
+  // shipping.
   async function handleCreate() {
     if (!household?.id || !user?.id || creating) return
     setCreating(true)
     setCreateError(null)
 
+    // 1. Look for an existing draft.
+    const { data: existing, error: findErr } = await supabase
+      .schema(currentSchema)
+      .from('pass_along_batches')
+      .select('id, reference_code')
+      .eq('household_id', household.id)
+      .eq('status', 'draft')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (findErr) {
+      setCreating(false)
+      setCreateError(findErr.message)
+      return
+    }
+
+    if (existing) {
+      setCreating(false)
+      navigate(`/pass-along/${existing.id}`)
+      return
+    }
+
+    // 2. No draft — create one.
     const { data, error: insErr } = await supabase
       .schema(currentSchema)
       .from('pass_along_batches')
@@ -266,17 +294,25 @@ export default function PassAlongList() {
 
             {createError && (
               <div className={styles.errorBanner}>
-                Couldn’t start a new bag: {createError}
+                Couldn’t open your bag: {createError}
               </div>
             )}
 
+            {/* Single-bag-at-a-time: when a draft exists this CTA opens
+                it; when no draft exists, it creates one. The label adapts
+                so users with an in-progress bag see "Continue your bag"
+                rather than being prompted to start a second one. */}
             <button
               type="button"
               className={styles.primaryBtn}
               onClick={handleCreate}
               disabled={creating}
             >
-              {creating ? 'Starting…' : 'Start a new bag'}
+              {creating
+                ? 'Opening…'
+                : buckets.drafts.length > 0
+                  ? 'Continue your bag'
+                  : 'Start a bag'}
             </button>
 
             {batches.length === 0 ? (

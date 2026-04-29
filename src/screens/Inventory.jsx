@@ -7,6 +7,7 @@ import { track } from '../lib/analytics'
 import {
   AGE_RANGES,
   CATEGORY_LABELS,
+  SLOT_BY_ID,
   computeCoverage,
   otherWishes,
   inferAgeRange,
@@ -45,6 +46,60 @@ const PRIORITY_LABEL = {
   must_have: 'Must have',
   nice_to_have: 'Nice to have',
   low_priority: 'Low priority',
+}
+
+const CONDITION_LABEL = {
+  new: 'New',
+  like_new: 'Like new',
+  good: 'Good',
+  fair: 'Fair',
+  worn: 'Worn',
+}
+
+const SEASON_LABEL = {
+  spring: 'Spring',
+  summer: 'Summer',
+  fall: 'Fall',
+  winter: 'Winter',
+  all_season: 'All-season',
+}
+
+// Pick the most identifying primary label for a row + the supporting meta
+// line. Falls through name → brand → slot label → 'Item' so unnamed rows
+// don't all collapse into the same humanized item_type ("One pieces"
+// repeated below "One-pieces" was the symptom). Meta picks up whatever
+// other fields the user filled (brand if not already used, slot label
+// if not already used, condition, season) so two same-type unnamed rows
+// differ visually when any descriptor exists.
+function buildItemDisplay(item) {
+  const slot = item.item_type ? SLOT_BY_ID[item.item_type] : null
+  const slotLabel = slot?.label || humanizeItemType(item.item_type)
+
+  let primary
+  let primarySource // 'name' | 'brand' | 'slot' | 'fallback'
+  if (item.name) {
+    primary = item.name
+    primarySource = 'name'
+  } else if (item.brand) {
+    primary = item.brand
+    primarySource = 'brand'
+  } else if (slotLabel) {
+    primary = slotLabel
+    primarySource = 'slot'
+  } else {
+    primary = 'Item'
+    primarySource = 'fallback'
+  }
+
+  const metaParts = []
+  if (primarySource !== 'brand' && item.brand) metaParts.push(item.brand)
+  if (primarySource !== 'slot' && slotLabel) metaParts.push(slotLabel)
+  if (item.condition) metaParts.push(CONDITION_LABEL[item.condition] || item.condition)
+  if (item.season) metaParts.push(SEASON_LABEL[item.season] || item.season)
+
+  // Cap at 3 parts so the meta line doesn't ellipsize away the more
+  // identifying earlier fields on narrow screens.
+  return { primary, meta: metaParts.slice(0, 3).join(' · ') }
 }
 
 // Display order for the Owned tab (categories grouping).
@@ -1317,13 +1372,20 @@ function OwnedEmptyState({ ageRange, totalOwnedCount, onAdd }) {
 // row-level onClick (which would navigate to the detail screen mid-flip).
 // On the Wish list tab the right cluster shows the priority badge instead.
 function ItemRow({ item, tab, onClick, onPassOn, onTuckAway, working }) {
-  const displayName = item.name || humanizeItemType(item.item_type)
-
   const isOwnedTab = tab === 'owned'
   const sizeLabel = item.size_label || '—'
   const sizeIsEmpty = !item.size_label
+
+  // On Owned tab, lean on buildItemDisplay so two unnamed same-category
+  // rows differ visually when any descriptor (brand, condition, season)
+  // is filled. Wishlist keeps the legacy display since priority is the
+  // information that matters there, not item identity.
+  const display = isOwnedTab
+    ? buildItemDisplay(item)
+    : { primary: item.name || humanizeItemType(item.item_type), meta: '' }
+  const displayName = display.primary
   const metaText = isOwnedTab
-    ? (item.brand || '')
+    ? display.meta
     : [item.size_label, item.brand, item.quantity > 1 ? `×${item.quantity}` : null]
         .filter(Boolean)
         .join(' · ')
@@ -1399,10 +1461,14 @@ function ItemRow({ item, tab, onClick, onPassOn, onTuckAway, working }) {
 // chips can render with one filled and the other outlined to make the
 // active state legible.
 function SectionItemRow({ item, onClick, onPassOnChip, onTuckAwayChip, working }) {
-  const displayName = item.name || humanizeItemType(item.item_type)
+  // Mirror Owned-tab item display so the bottom-of-Owned section reads
+  // as a continuation of the same table style (per the matching-stylings
+  // requirement) including row content, not just the surrounding card.
+  const display = buildItemDisplay(item)
+  const displayName = display.primary
+  const metaText = display.meta
   const sizeLabel = item.size_label || '—'
   const sizeIsEmpty = !item.size_label
-  const metaText = item.brand || ''
 
   const isKept = item.inventory_status === 'kept'
   const isInBag = item.inventory_status === 'pass_along'
