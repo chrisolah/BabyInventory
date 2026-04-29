@@ -16,28 +16,30 @@ import styles from './ItemDetail.module.css'
 //   - Load the item (RLS enforces household membership, so a bad/id from
 //     another household returns an empty result and we render "not found").
 //   - Show every field a parent entered, in a single scrollable body.
-//   - Offer three actions:
-//       1. Edit            → navigate to /item/:id/edit (reuses AddItem)
-//       2. Mark as outgrown → UPDATE inventory_status='outgrown' and bounce
-//                             back. Hides from Owned + wish-list coverage
-//                             views without deleting history. Reserved as
-//                             the trigger for the future exchange flow.
-//       3. Delete           → confirm-then-hard-delete. There's no undo
-//                             anywhere else in the app yet, and soft-delete
-//                             would leak into queries that don't filter on
-//                             it. A one-step confirm on a destructive action
-//                             is the lighter-weight guard.
-//
-// "Mark as outgrown" is only shown when the item is currently owned or
-// needed — already-outgrown rows don't need to be re-outgrown, and for
-// needed items the action doesn't really make sense (you're wishing for it,
-// you haven't worn it).
+//   - Offer status-aware actions (post-2026-04-29 redesign):
+//       1. Edit                → navigate to /item/:id/edit (reuses AddItem)
+//       2. Pass on              → flip to 'pass_along' + attach to a draft
+//                                 bag. Shown for owned, kept, and legacy
+//                                 outgrown rows. Hidden when the item is
+//                                 already in a bag.
+//       3. Tuck away            → flip to 'kept'. Shown for owned + legacy
+//                                 outgrown rows. Items the household is
+//                                 keeping (sibling/keepsake) instead of
+//                                 routing through pass-along.
+//       4. Move back to Owned   → flip 'kept' back to 'owned'. Shown for
+//                                 kept rows only. The reversal path for
+//                                 "sibling is now wearing them."
+//       5. Delete               → confirm-then-hard-delete. There's no
+//                                 undo anywhere else in the app yet, and
+//                                 soft-delete would leak into queries that
+//                                 don't filter on it.
 
 const STATUS_LABEL = {
   owned: 'Owned',
   needed: 'On wish list',
   outgrown: 'Outgrown',
   pass_along: 'In a bag',
+  kept: 'Tucked away',
   donated: 'Donated',
   exchanged: 'Exchanged',
 }
@@ -74,10 +76,11 @@ export default function ItemDetail() {
   const [item, setItem] = useState(null)
   const [error, setError] = useState(null)
 
-  // Destructive-action state. `pendingAction` drives the confirm modal copy
-  // + primary-button handler so we can reuse one modal for both Delete and
-  // Mark-as-outgrown (same layout, different verbs + consequences).
-  const [pendingAction, setPendingAction] = useState(null) // 'delete' | 'outgrow' | null
+  // Destructive-action state. `pendingAction` drives the confirm modal
+  // copy + primary-button handler. Currently only 'delete' uses the modal;
+  // Tuck away and Move back to Owned are non-destructive and skip the
+  // confirm step (they're reversible from the bottom-of-Owned section).
+  const [pendingAction, setPendingAction] = useState(null) // 'delete' | null
   const [working, setWorking] = useState(false)
   const [actionError, setActionError] = useState(null)
 
@@ -140,20 +143,28 @@ export default function ItemDetail() {
   const categoryLabel =
     CATEGORY_LABELS[item?.category] || humanizeItemType(item?.category)
 
-  // Mark-as-outgrown only makes sense for items the family currently has
-  // checked in as owned. For needed/outgrown/donated/exchanged rows we hide
-  // the button rather than gate it with a disabled state — less visual
-  // noise, and "outgrown" is a niche action in the first place.
-  const canMarkOutgrown = item?.inventory_status === 'owned'
-
-  // "Send this on" is available for items you still have (owned) or have
-  // already outgrown but haven't disposed of. It's hidden for wish-list
-  // rows (you don't own them), pass_along rows (already in a batch — we
-  // show the batch chip instead), and donated/exchanged rows (the item is
-  // already gone).
-  const canSendOn =
+  // Tuck-away is the alternative path for items the family is keeping for
+  // sibling/keepsake/etc. — it flips inventory_status to 'kept'. Available
+  // from owned and legacy outgrown rows. Hidden for wish-list / pass_along
+  // / donated / exchanged / already-kept rows.
+  const canTuckAway =
     item?.inventory_status === 'owned' ||
     item?.inventory_status === 'outgrown'
+
+  // Return-to-Owned is the inverse path off the kept state — sibling is
+  // wearing them now, or the parent decided to use them after all. Only
+  // shown for kept rows.
+  const canReturnToOwned = item?.inventory_status === 'kept'
+
+  // "Send this on" is available for items you still have (owned), have
+  // already outgrown but haven't disposed of, or are keeping (since kept
+  // rows can always be reclassified to pass-along — that's the locked
+  // 2026-04-29 design constraint). Hidden for wish-list, pass_along (the
+  // item already lives on the bag page), and donated/exchanged.
+  const canSendOn =
+    item?.inventory_status === 'owned' ||
+    item?.inventory_status === 'outgrown' ||
+    item?.inventory_status === 'kept'
   const inBatch = !!item?.pass_along_batch_id
 
   // ── Actions ────────────────────────────────────────────────────────────
@@ -277,7 +288,11 @@ export default function ItemDetail() {
     navigate(`/pass-along/${batchId}`)
   }
 
-  async function handleMarkOutgrown() {
+  // Tuck away — flip the item to 'kept' status. No confirm modal: kept is
+  // a non-destructive state (the item stays in the household) and it's
+  // fully reversible from this same screen via Move back to Owned, or
+  // from the bottom-of-Owned section's chip toggle.
+  async function handleTuckAway() {
     if (!item || working) return
     setWorking(true)
     setActionError(null)
@@ -285,7 +300,7 @@ export default function ItemDetail() {
     const { error: updErr } = await supabase
       .schema(currentSchema)
       .from('clothing_items')
-      .update({ inventory_status: 'outgrown' })
+      .update({ inventory_status: 'kept' })
       .eq('id', item.id)
 
     setWorking(false)
@@ -294,19 +309,37 @@ export default function ItemDetail() {
       return
     }
 
-    track.itemMarkedOutgrown({
-      category: item.category,
-      size_label: item.size_label,
-    })
-    // Flip owned → outgrown in the shared list so Inventory's Owned view
-    // drops this row on the way back.
+    track.itemTuckedAway?.({ id: item.id, from: 'item_detail' })
+    reloadItems()
+    navigate('/inventory')
+  }
+
+  // Move back to Owned — flip a kept item back to 'owned'. Mirror inverse
+  // of Tuck away. No confirm modal: also non-destructive and reversible.
+  async function handleReturnToOwned() {
+    if (!item || working) return
+    setWorking(true)
+    setActionError(null)
+
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('clothing_items')
+      .update({ inventory_status: 'owned' })
+      .eq('id', item.id)
+
+    setWorking(false)
+    if (updErr) {
+      setActionError(updErr.message)
+      return
+    }
+
+    track.itemReturnedToOwned?.({ id: item.id, from: 'item_detail' })
     reloadItems()
     navigate('/inventory')
   }
 
   function confirmLabel() {
     if (pendingAction === 'delete') return 'Delete item'
-    if (pendingAction === 'outgrow') return 'Mark as outgrown'
     return ''
   }
 
@@ -314,15 +347,11 @@ export default function ItemDetail() {
     if (pendingAction === 'delete') {
       return 'This removes the item permanently. You can\u2019t undo this.'
     }
-    if (pendingAction === 'outgrow') {
-      return 'Moves this item out of your active wardrobe. You\u2019ll still be able to pass it on when the exchange launches.'
-    }
     return ''
   }
 
   function runPendingAction() {
     if (pendingAction === 'delete') return handleDelete()
-    if (pendingAction === 'outgrow') return handleMarkOutgrown()
   }
 
   // ── Not found / load error ─────────────────────────────────────────────
@@ -490,9 +519,12 @@ export default function ItemDetail() {
               </section>
             )}
 
-            {/* Action stack — edit first (most common), then the pass-along
-                + outgrow affordances (only when applicable), delete last
-                in destructive styling. */}
+            {/* Action stack — edit first (most common), then the path-forward
+                affordances based on current status (Pass on / Tuck away for
+                owned + legacy outgrown rows; Pass on / Move back to Owned
+                for kept rows; nothing extra for pass_along since the item
+                already lives on a bag page), delete last in destructive
+                styling. */}
             <section className={styles.actions}>
               <button
                 type="button"
@@ -509,18 +541,29 @@ export default function ItemDetail() {
                   onClick={handleSendOn}
                   disabled={working}
                 >
-                  {working ? 'Working…' : 'Send this on'}
+                  {working ? 'Working…' : 'Pass on'}
                 </button>
               )}
 
-              {canMarkOutgrown && (
+              {canTuckAway && (
                 <button
                   type="button"
                   className={styles.secondaryBtn}
-                  onClick={() => setPendingAction('outgrow')}
+                  onClick={handleTuckAway}
                   disabled={working}
                 >
-                  Mark as outgrown
+                  {working ? 'Working…' : 'Tuck away'}
+                </button>
+              )}
+
+              {canReturnToOwned && (
+                <button
+                  type="button"
+                  className={styles.secondaryBtn}
+                  onClick={handleReturnToOwned}
+                  disabled={working}
+                >
+                  {working ? 'Working…' : 'Move back to Owned'}
                 </button>
               )}
 

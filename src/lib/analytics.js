@@ -234,6 +234,26 @@ export const track = {
   // "ship it yourself" once concierge goes live.
   passAlongLabelRequested: (props) =>
     logEvent('pass_along_label_requested', 'engagement', props),
+
+  // ── Outgrown / kept transitions (added 2026-04-29 with the kept fork) ──
+  // The new flow forks every outgrown moment into one of two paths:
+  //   - Pass on  → directly into a draft bag (tracked via passAlongItemAdded
+  //                with from='inventory_inline' or 'outgrown_section_chip')
+  //   - Tuck away → flips inventory_status to 'kept' (itemTuckedAway below)
+  // intentFlipped fires when a user reclassifies an item already in the
+  // Outgrown section (e.g. tapping the Pass on chip on a kept row to send
+  // it after all). Tells us how often the parent's first-tap intent gets
+  // revised after-the-fact — informs whether the inline two-chip choice is
+  // the right fork point or whether a chooser would land more decisions
+  // correctly the first time.
+  itemTuckedAway: (props) =>
+    logEvent('item_tucked_away', 'engagement', props),
+  itemTuckedAwayUndone: (props) =>
+    logEvent('item_tucked_away_undone', 'engagement', props),
+  itemReturnedToOwned: (props) =>
+    logEvent('item_returned_to_owned', 'engagement', props),
+  intentFlipped: (props) =>
+    logEvent('intent_flipped', 'engagement', props),
 }
 
 export { getSessionId }

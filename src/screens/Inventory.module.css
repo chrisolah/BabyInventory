@@ -433,10 +433,12 @@
   font-weight: 500;
 }
 
-/* Right cluster: stacks quantity pill (when qty > 1) above the inline
-   action button on the Owned tab. Vertical stack lets each piece sit
-   tight against the right edge without crowding the body content. */
-.itemRight {
+/* Right cluster: stacks the optional quantity pill on top of the two
+   inline action chips (Pass on / Tuck away). Column layout keeps each
+   piece tight against the right edge without crowding the body content.
+   Renamed from .itemRight 2026-04-29 alongside the chip-pair redesign;
+   the SectionItemRow component reuses this class for its intent chips. */
+.itemActions {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -459,43 +461,93 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Inline outgrown action — small text button that flips inventory_status
-   to 'outgrown' optimistically. Quiet styling so it doesn't compete with
-   the row's primary tap target (open detail) but visible enough that a
-   parent scanning a list can decide-and-flip in one tap. Wider tap area
-   than visual padding via the negative margin-trick in JSX would be
-   ideal; for now we lean on the 6px vertical padding (well above the
-   30px min recommended target on mobile when combined with row padding).
-*/
-.itemOutgrownBtn {
+/* Inline action chips on Owned rows — paired Pass on / Tuck away buttons
+   that route an outgrown item directly to the right destination without
+   the chooser middle-step. Filled treatment (vs. the old outlined
+   .itemOutgrownBtn) because the past-tense "Outgrown" label on an
+   outlined pill read as a status stamp rather than an action. Two chips
+   stacked on the right edge of each row; visual hierarchy via color:
+   Pass on (teal-light filled) is the dominant action since it advances
+   the funnel; Tuck away (gray filled) is the alternative path. */
+.itemPassOnBtn {
+  all: unset;
+  box-sizing: border-box;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 80ms ease, color 80ms ease;
+}
+
+.itemPassOnBtn:hover {
+  background: #B6E0CC;
+}
+
+.itemPassOnBtn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+
+.itemPassOnBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.itemTuckAwayBtn {
   all: unset;
   box-sizing: border-box;
   font-size: 11px;
   font-weight: 500;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 0.5px solid var(--gray-200);
-  background: var(--white);
-  color: var(--gray-600);
+  background: var(--gray-100);
+  color: var(--gray-700);
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 80ms ease, color 80ms ease, border-color 80ms ease;
+  transition: background-color 80ms ease, color 80ms ease;
 }
 
-.itemOutgrownBtn:hover {
-  background: var(--gray-50);
+.itemTuckAwayBtn:hover {
+  background: var(--gray-200);
   color: var(--gray-900);
-  border-color: var(--gray-300);
 }
 
-.itemOutgrownBtn:focus-visible {
+.itemTuckAwayBtn:focus-visible {
   outline: 2px solid var(--teal);
   outline-offset: 1px;
 }
 
-.itemOutgrownBtn:disabled {
+.itemTuckAwayBtn:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+/* Section-row chip variants — the SectionItemRow component layers these
+   on top of .itemPassOnBtn/.itemTuckAwayBtn to indicate which intent
+   is currently active. The active chip keeps its filled brand color so
+   the user can read the row's state at a glance; the inactive chip
+   drops to a muted outlined treatment so it reads as the alternative
+   action available on tap. */
+.intentChipActive {
+  /* Inherits the filled .itemPassOnBtn or .itemTuckAwayBtn treatment;
+     no overrides — the button's own filled style IS the active state. */
+}
+
+.intentChipInactive {
+  background: transparent;
+  border: 0.5px solid var(--gray-200);
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.intentChipInactive:hover {
+  background: var(--gray-50);
+  color: var(--gray-700);
+  border-color: var(--gray-300);
 }
 
 /* Toast — bottom-anchored confirmation with an Undo affordance. Lives in
@@ -764,58 +816,46 @@
   font-weight: 600;
 }
 
-/* Outgrown-pile banner — companion to the inline Outgrown action.
-   Whenever there are items sitting in 'outgrown' status under the
-   current baby filter, this CTA prompts the parent to convert the pile
-   into a pass-along batch in one tap. Teal-light (rather than the
-   amber warning treatment used for size-band rollovers) because this
-   is a positive next-step prompt, not an alert. Full-width clickable
-   button so the whole row is the tap target. */
-.outgrownBanner {
-  all: unset;
-  box-sizing: border-box;
+/* ── Outgrown section (bottom of Owned tab) ──────────────────────────────
+   Default-collapsed umbrella for items the household has moved out of
+   active rotation: 'kept' (tucked away), 'pass_along' (in a bag), and
+   legacy 'outgrown' rows. The outer shell reuses the .group + GroupHeader
+   pattern from the active inventory above; the inner body uses
+   .outgrownCategoryGroup + .outgrownCategoryLabel as a quieter, non-
+   collapsible category divider so users see grouping without nesting
+   another collapse layer. Replaced the old top-of-tab .outgrownBanner CTA
+   on 2026-04-29 — items don't accumulate in transient outgrown anymore,
+   so a banner had no constituency. Section header surfaces the count. */
+.outgrownSection {
+  margin-top: 16px;
+  background: var(--gray-50);
+  border-color: var(--gray-200);
+}
+
+.outgrownCategoryGroup {
   display: flex;
-  gap: 10px;
-  align-items: center;
+  flex-direction: column;
+}
+
+.outgrownCategoryLabel {
+  display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  padding: 12px 14px;
-  margin: 4px 0 8px;
-  background: var(--teal-light);
-  border: 0.5px solid #B6E0CC;
-  border-radius: 10px;
+  padding: 10px 14px 6px;
   font-family: var(--font-body);
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--teal-dark);
-  cursor: pointer;
-  transition: background-color 80ms ease;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  background: transparent;
 }
 
-.outgrownBanner:hover {
-  background: #D2EFE2;
-}
-
-.outgrownBanner:focus-visible {
-  outline: 2px solid var(--teal);
-  outline-offset: 2px;
-}
-
-.outgrownBannerBody {
-  flex: 1;
-  min-width: 0;
-}
-
-.outgrownBannerBody strong {
-  color: var(--teal-dark);
-  font-weight: 600;
-}
-
-.outgrownBannerCta {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--teal-dark);
-  white-space: nowrap;
-  flex-shrink: 0;
+.outgrownCategoryCount {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-400);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Shared section headers — slot table, other wishes, etc. */
