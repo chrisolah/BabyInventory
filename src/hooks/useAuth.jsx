@@ -111,11 +111,14 @@ export function AuthProvider({ children }) {
   // Convert an anonymous account to a permanent one. Two-step flow that
   // mirrors the existing 6-digit OTP pattern used for signup + recovery:
   //
-  //   1. requestEmailChange(email) — calls supabase.auth.updateUser({ email })
-  //      which sets the pending_email on the anon auth.users row and emails
-  //      a 6-digit confirmation code (Outlook Safe Links pre-fetch is
-  //      neutered because there's no clickable link, only a code — same
-  //      reasoning as project_otp_over_magic_link.md).
+  //   1. requestEmailChange(email, password?) — calls
+  //      supabase.auth.updateUser({ email, password? }) which sets the
+  //      pending_email on the anon auth.users row and emails a 6-digit
+  //      confirmation code (Outlook Safe Links pre-fetch is neutered
+  //      because there's no clickable link, only a code — same reasoning
+  //      as project_otp_over_magic_link.md). When password is also passed,
+  //      it's stored on the row and effective once the email is verified;
+  //      future logins can use either email+password or email+OTP.
   //   2. confirmEmailChange(email, token) — calls verifyOtp({type:'email_change'})
   //      which finalizes the change. The auth.users row's email is set,
   //      is_anonymous flips to false, and onAuthStateChange fires
@@ -126,8 +129,16 @@ export function AuthProvider({ children }) {
   // why every clothing_items / households / pass_along_batches row the
   // user wrote during the trial automatically belongs to their permanent
   // account post-conversion — no data migration required.
-  async function requestEmailChange(email) {
-    const { error } = await supabase.auth.updateUser({ email: email.trim() })
+  //
+  // Method semantics for the upgrade modal:
+  //   • 'magic'    → requestEmailChange(email)            (no password set)
+  //   • 'password' → requestEmailChange(email, password)  (password set on confirm)
+  async function requestEmailChange(email, password) {
+    const payload = { email: email.trim() }
+    if (password && password.trim()) {
+      payload.password = password.trim()
+    }
+    const { error } = await supabase.auth.updateUser(payload)
     return { error }
   }
 

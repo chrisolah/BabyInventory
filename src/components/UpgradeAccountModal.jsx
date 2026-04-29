@@ -27,7 +27,15 @@ import styles from './UpgradeAccountModal.module.css'
 export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
   const { requestEmailChange, confirmEmailChange } = useAuth()
   const [step, setStep] = useState('email') // 'email' | 'code'
+  // Mirror Signup.jsx's method toggle so the conversion moment offers the
+  // same two paths a fresh signup does: 'password' sets a password during
+  // upgrade (so future logins can skip the email round-trip), 'magic'
+  // skips it (passwordless — every login goes through email+OTP).
+  // Default 'magic' for the lower-friction path; user can flip to
+  // password if they prefer.
+  const [method, setMethod] = useState('magic') // 'magic' | 'password'
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -54,13 +62,18 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
 
   async function handleEmailSubmit(e) {
     e.preventDefault()
-    const trimmed = email.trim()
-    if (!trimmed || loading) return
+    const trimmedEmail = email.trim()
+    const trimmedPw = password.trim()
+    if (!trimmedEmail || loading) return
+    if (method === 'password' && !trimmedPw) return
 
     setLoading(true)
     setError(null)
 
-    const { error: reqErr } = await requestEmailChange(trimmed)
+    const { error: reqErr } = await requestEmailChange(
+      trimmedEmail,
+      method === 'password' ? trimmedPw : undefined,
+    )
     setLoading(false)
 
     if (reqErr) {
@@ -68,7 +81,7 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
       return
     }
 
-    track.upgradeEmailRequested?.({})
+    track.upgradeEmailRequested?.({ method })
     setStep('code')
     setCode('')
   }
@@ -94,7 +107,7 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
       return
     }
 
-    track.upgradeCompleted?.({})
+    track.upgradeCompleted?.({ method })
     onSuccess()
   }
 
@@ -102,7 +115,10 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
     if (!email.trim() || loading) return
     setLoading(true)
     setError(null)
-    const { error: reqErr } = await requestEmailChange(email)
+    const { error: reqErr } = await requestEmailChange(
+      email,
+      method === 'password' ? password : undefined,
+    )
     setLoading(false)
     if (reqErr) {
       setError(reqErr.message)
@@ -143,7 +159,36 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
               Save your wardrobe
             </h2>
             <p className={styles.body}>
-              Add an email to lock in everything you&rsquo;ve added so far. We&rsquo;ll send a 6-digit code to confirm.
+              Add an email to lock in everything you&rsquo;ve added so far.
+            </p>
+
+            {/* Method toggle — mirrors Signup.jsx so the conversion moment
+                offers the same shape as a fresh signup. Magic is the
+                default (lower-friction) path; users who want a password
+                they can type into a login form later flip the toggle. */}
+            <div className={styles.methodToggle}>
+              <button
+                type="button"
+                className={`${styles.methodBtn} ${method === 'magic' ? styles.methodActive : ''}`}
+                onClick={() => { setMethod('magic'); setError(null) }}
+                disabled={loading}
+              >
+                Email a code
+              </button>
+              <button
+                type="button"
+                className={`${styles.methodBtn} ${method === 'password' ? styles.methodActive : ''}`}
+                onClick={() => { setMethod('password'); setError(null) }}
+                disabled={loading}
+              >
+                Password
+              </button>
+            </div>
+
+            <p className={styles.methodHint}>
+              {method === 'password'
+                ? "Set a password you'll remember. We'll still email a code to verify your email."
+                : "We'll email you a 6-digit code. Type it in to save your account. No password to remember."}
             </p>
 
             <label className={styles.label} htmlFor="upgrade-email">
@@ -162,6 +207,26 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
               disabled={loading}
             />
 
+            {method === 'password' && (
+              <>
+                <label className={`${styles.label} ${styles.labelStacked}`} htmlFor="upgrade-password">
+                  Password
+                </label>
+                <input
+                  id="upgrade-password"
+                  type="password"
+                  className={styles.input}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  placeholder="At least 8 characters"
+                  minLength={8}
+                  required
+                  disabled={loading}
+                />
+              </>
+            )}
+
             {error && <div className={styles.error}>{error}</div>}
 
             <div className={styles.actions}>
@@ -176,9 +241,17 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
               <button
                 type="submit"
                 className={styles.primaryBtn}
-                disabled={loading || !email.trim()}
+                disabled={
+                  loading ||
+                  !email.trim() ||
+                  (method === 'password' && password.trim().length < 8)
+                }
               >
-                {loading ? 'Sending…' : 'Continue'}
+                {loading
+                  ? 'Sending…'
+                  : method === 'password'
+                    ? 'Create account'
+                    : 'Email me a code'}
               </button>
             </div>
           </form>

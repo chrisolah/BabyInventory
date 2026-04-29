@@ -56,6 +56,61 @@
   margin-bottom: 6px;
 }
 
+/* Used on the second label (password) when both Email and Password
+   inputs render in the same step. Adds top margin so the second field
+   doesn't crowd the first one's input. */
+.labelStacked {
+  margin-top: 14px;
+}
+
+/* Method toggle — segmented control with two buttons (Email-a-code /
+   Password). Mirrors the .methodToggle treatment in Signup.module.css /
+   Login.module.css so the conversion moment looks like a sibling of the
+   regular signup form, not a different surface. Sits below the modal's
+   intro copy and above the email field. */
+.methodToggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--gray-100);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 10px;
+}
+
+.methodBtn {
+  /* min-height keeps the segmented toggle at the iOS HIG floor (44px).
+     Same pattern as the Signup/Login methodBtn rules. */
+  min-height: 44px;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--gray-600);
+  transition: all 0.15s;
+}
+
+.methodBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.methodActive {
+  background: var(--white);
+  color: var(--gray-900);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.methodHint {
+  font-size: 12px;
+  color: var(--gray-500);
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
 .input {
   width: 100%;
   /* min-height keeps the input at iOS HIG floor (44px) without disrupting
