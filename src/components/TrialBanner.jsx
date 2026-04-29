@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useUpgradeGate } from '../contexts/UpgradeGateContext'
 import { track } from '../lib/analytics'
@@ -20,6 +21,19 @@ import styles from './TrialBanner.module.css'
 export default function TrialBanner() {
   const { isAnonymous } = useAuth()
   const { triggerUpgrade } = useUpgradeGate()
+
+  // Reserve space at the bottom of the document so the fixed-position
+  // banner doesn't cover page CTAs (Add buttons, Save buttons, etc.).
+  // Sets data-trial-banner="visible" on <body>; globals.css picks that
+  // up and adds padding-bottom equal to the banner height + safe-area.
+  // Cleared on unmount so permanent users don't keep the padding.
+  useEffect(() => {
+    if (!isAnonymous) return
+    document.body.setAttribute('data-trial-banner', 'visible')
+    return () => {
+      document.body.removeAttribute('data-trial-banner')
+    }
+  }, [isAnonymous])
 
   if (!isAnonymous) return null
 

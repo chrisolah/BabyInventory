@@ -37,6 +37,19 @@ body {
   min-height: 100vh;
 }
 
+/* Trial-banner reserved space — when an anonymous user is signed in,
+   TrialBanner sets `data-trial-banner="visible"` on <body> (see
+   TrialBanner.jsx). The padding-bottom here pushes the bottom of the
+   scrollable body up by the banner's height + the iOS safe-area inset
+   so page CTAs aren't covered by the fixed-position banner. The 84px
+   value covers the banner (~52px tall: 11 padding × 2 + 13 font × 1.4
+   line-height) plus the 12px bottom offset from the viewport edge plus
+   ~20px of breathing room so a button doesn't sit flush against the
+   banner's top edge. Cleared automatically when the banner unmounts. */
+body[data-trial-banner="visible"] {
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+}
+
 /* Hide scrollbars globally */
 ::-webkit-scrollbar { display: none; }
 * { scrollbar-width: none; }
