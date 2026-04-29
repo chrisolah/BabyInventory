@@ -535,29 +535,15 @@
   cursor: default;
 }
 
-/* Section-row chip variants — the SectionItemRow component layers these
-   on top of .itemPassOnBtn/.itemTuckAwayBtn to indicate which intent
-   is currently active. The active chip keeps its filled brand color so
-   the user can read the row's state at a glance; the inactive chip
-   drops to a muted outlined treatment so it reads as the alternative
-   action available on tap. */
-.intentChipActive {
-  /* Inherits the filled .itemPassOnBtn or .itemTuckAwayBtn treatment;
-     no overrides — the button's own filled style IS the active state. */
-}
-
-.intentChipInactive {
-  background: transparent;
-  border: 0.5px solid var(--gray-200);
-  color: var(--gray-500);
-  font-weight: 500;
-}
-
-.intentChipInactive:hover {
-  background: var(--gray-50);
-  color: var(--gray-700);
-  border-color: var(--gray-300);
-}
+/* (Removed 2026-04-29 .intentChipActive / .intentChipInactive variants —
+   SectionItemRow now uses the same filled .itemPassOnBtn / .itemTuckAwayBtn
+   treatment as ItemRow so both tables read as one visual system. Current
+   state on a section row is signaled by chip label ("In a bag →" vs
+   "Pass on") and by the disabled treatment on the Tuck-away chip when
+   the item is already kept. The earlier outlined-when-inactive variant
+   made the Pass-on chip look gray on kept rows while the identical chip
+   on Owned was teal — visually inconsistent across two tables that are
+   supposed to read as one.) */
 
 /* Toast — bottom-anchored confirmation with an Undo affordance. Lives in
    the page-level fixed-position layer so it floats above the scrolling

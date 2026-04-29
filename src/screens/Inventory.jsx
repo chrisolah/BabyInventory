@@ -1472,10 +1472,6 @@ function SectionItemRow({ item, onClick, onPassOnChip, onTuckAwayChip, working }
 
   const isKept = item.inventory_status === 'kept'
   const isInBag = item.inventory_status === 'pass_along'
-  // Legacy 'outgrown' rows inherit Pass-on intent since that was the
-  // original 2026-04-27 default. Combined with isInBag, the Pass on chip
-  // renders as active for both pass_along and legacy outgrown rows.
-  const isPassOnActive = isInBag || item.inventory_status === 'outgrown'
 
   return (
     <button
@@ -1499,12 +1495,14 @@ function SectionItemRow({ item, onClick, onPassOnChip, onTuckAwayChip, working }
         {item.quantity > 1 && (
           <span className={styles.itemQty}>×{item.quantity}</span>
         )}
+        {/* Section chips use the same filled treatment as Owned-row
+            chips so both tables read as one visual system. Current
+            state is signaled by the label (In a bag → for pass_along)
+            and by the Tuck-away chip's disabled state on kept rows,
+            not by recoloring the Pass-on chip. */}
         <button
           type="button"
-          className={
-            `${styles.itemPassOnBtn} ` +
-            (isPassOnActive ? styles.intentChipActive : styles.intentChipInactive)
-          }
+          className={styles.itemPassOnBtn}
           onClick={e => {
             e.stopPropagation()
             onPassOnChip()
@@ -1516,10 +1514,7 @@ function SectionItemRow({ item, onClick, onPassOnChip, onTuckAwayChip, working }
         </button>
         <button
           type="button"
-          className={
-            `${styles.itemTuckAwayBtn} ` +
-            (isKept ? styles.intentChipActive : styles.intentChipInactive)
-          }
+          className={styles.itemTuckAwayBtn}
           onClick={e => {
             e.stopPropagation()
             onTuckAwayChip()
