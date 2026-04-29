@@ -133,13 +133,30 @@ export function AuthProvider({ children }) {
   // Method semantics for the upgrade modal:
   //   • 'magic'    → requestEmailChange(email)            (no password set)
   //   • 'password' → requestEmailChange(email, password)  (password set on confirm)
+  //
+  // Returns { error, instantlyConverted } where instantlyConverted=true
+  // when the project has email confirmation / secure email change DISABLED
+  // (the case for sprigloop-beta + sprigloop-prod per project_dev_prod_environments.md).
+  // In that mode, updateUser flips the user to permanent immediately —
+  // no OTP is sent because there's nothing to verify. The modal uses
+  // this signal to skip the code-entry step and call onSuccess directly.
+  // For projects with confirmation enabled, instantlyConverted=false and
+  // the modal shows the code step as designed.
   async function requestEmailChange(email, password) {
     const payload = { email: email.trim() }
     if (password && password.trim()) {
       payload.password = password.trim()
     }
     const { error } = await supabase.auth.updateUser(payload)
-    return { error }
+    if (error) return { error, instantlyConverted: false }
+
+    // Pull the latest user state so the caller knows whether OTP is still
+    // needed. If is_anonymous=false after the update, conversion already
+    // completed and we should skip the code step.
+    const { data } = await supabase.auth.getUser()
+    if (data?.user) setUser(data.user)
+    const instantlyConverted = !!(data?.user && data.user.is_anonymous === false)
+    return { error: null, instantlyConverted }
   }
 
   async function confirmEmailChange(email, token) {

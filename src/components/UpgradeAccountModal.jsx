@@ -70,7 +70,7 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
     setLoading(true)
     setError(null)
 
-    const { error: reqErr } = await requestEmailChange(
+    const { error: reqErr, instantlyConverted } = await requestEmailChange(
       trimmedEmail,
       method === 'password' ? trimmedPw : undefined,
     )
@@ -82,6 +82,18 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
     }
 
     track.upgradeEmailRequested?.({ method })
+
+    // Project has email confirmation disabled → updateUser already
+    // flipped is_anonymous=false. No OTP is in the user's inbox; trying
+    // to advance to the code step would strand them waiting for a code
+    // that's never coming. Skip straight to onSuccess so the deferred
+    // save action replays and the user lands on /inventory.
+    if (instantlyConverted) {
+      track.upgradeCompleted?.({ method, instant: true })
+      onSuccess()
+      return
+    }
+
     setStep('code')
     setCode('')
   }
