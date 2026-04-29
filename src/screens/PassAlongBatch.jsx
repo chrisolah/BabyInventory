@@ -1369,7 +1369,9 @@ export default function PassAlongBatch() {
               <ul className={styles.pickerList}>
                 {pickerItems.map(it => {
                   const slot = it.item_type ? SLOT_BY_ID[it.item_type] : null
+                  // Picker rows are individual items — singular form.
                   const typeLabel =
+                    slot?.singular ||
                     slot?.label ||
                     CATEGORY_LABELS[it.category] ||
                     humanizeItemType(it.item_type || it.category)
@@ -1591,7 +1593,9 @@ function ReadonlyDestinationCard({ destination }) {
 // lookup to humanize item_type the same way Inventory + ItemDetail do.
 function ItemRow({ item, removable, onRemove, disabled }) {
   const slot = item.item_type ? SLOT_BY_ID[item.item_type] : null
+  // Bag-detail item rows are individual items — singular form.
   const typeLabel =
+    slot?.singular ||
     slot?.label ||
     CATEGORY_LABELS[item.category] ||
     humanizeItemType(item.item_type || item.category)

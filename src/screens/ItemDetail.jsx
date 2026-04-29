@@ -139,7 +139,9 @@ export default function ItemDetail() {
 
   // ── Derived labels ─────────────────────────────────────────────────────
   const slot = item?.item_type ? SLOT_BY_ID[item.item_type] : null
-  const typeLabel = slot?.label || humanizeItemType(item?.item_type)
+  // ItemDetail describes a single item, so prefer the singular form
+  // ("One-piece") over the category-level slot.label ("One-pieces").
+  const typeLabel = slot?.singular || slot?.label || humanizeItemType(item?.item_type)
   const categoryLabel =
     CATEGORY_LABELS[item?.category] || humanizeItemType(item?.category)
 

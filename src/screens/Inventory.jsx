@@ -73,7 +73,10 @@ const SEASON_LABEL = {
 // differ visually when any descriptor exists.
 function buildItemDisplay(item) {
   const slot = item.item_type ? SLOT_BY_ID[item.item_type] : null
-  const slotLabel = slot?.label || humanizeItemType(item.item_type)
+  // Individual-item context: prefer slot.singular ("One-piece") over the
+  // category-level slot.label ("One-pieces"). Falls back to label for
+  // any slots that don't define a singular, then to humanized item_type.
+  const slotLabel = slot?.singular || slot?.label || humanizeItemType(item.item_type)
 
   let primary
   let primarySource // 'name' | 'brand' | 'slot' | 'fallback'
