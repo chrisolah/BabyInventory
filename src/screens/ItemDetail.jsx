@@ -260,12 +260,16 @@ export default function ItemDetail() {
 
     // 2. Link the item into the batch. inventory_status flip keeps the
     //    item out of Owned/Outgrown views while it's packed.
+    //    pre_bag_inventory_status remembers the item's origin so removeItem
+    //    in PassAlongBatch can restore it correctly (Owned vs Tucked away
+    //    vs legacy outgrown) instead of forcing every removal to 'owned'.
     const { error: updErr } = await supabase
       .schema(currentSchema)
       .from('clothing_items')
       .update({
         pass_along_batch_id: batchId,
         inventory_status: 'pass_along',
+        pre_bag_inventory_status: item.inventory_status,
       })
       .eq('id', item.id)
 

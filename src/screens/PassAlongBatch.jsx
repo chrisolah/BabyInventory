@@ -227,7 +227,7 @@ export default function PassAlongBatch() {
       const { data: itemRows, error: iErr } = await supabase
         .schema(currentSchema)
         .from('clothing_items')
-        .select('id, name, item_type, category, size_label, quantity, brand, inventory_status')
+        .select('id, name, item_type, category, size_label, quantity, brand, inventory_status, pre_bag_inventory_status')
         .eq('pass_along_batch_id', id)
         .order('created_at', { ascending: true })
 
@@ -361,7 +361,12 @@ export default function PassAlongBatch() {
   }
 
   // ── Remove item from batch ─────────────────────────────────────────────
-  // Not a hard delete — the item goes back to the wardrobe as 'owned'.
+  // Not a hard delete — the item goes back to its pre-bag pile in the
+  // wardrobe (Owned / Tucked away / legacy outgrown), determined by
+  // pre_bag_inventory_status (set on attach). NULL falls back to 'owned'
+  // for legacy rows that predate migration #022. We also clear
+  // pre_bag_inventory_status so the column reflects "not currently
+  // associated with any bag."
   // Optimistic update: drop from local list immediately, roll back on error.
   async function removeItem(item) {
     if (!batch || locked || working) return
@@ -369,10 +374,15 @@ export default function PassAlongBatch() {
     setItems(items.filter(i => i.id !== item.id))
     setActionError(null)
 
+    const restoreStatus = item.pre_bag_inventory_status || 'owned'
     const { error: uErr } = await supabase
       .schema(currentSchema)
       .from('clothing_items')
-      .update({ pass_along_batch_id: null, inventory_status: 'owned' })
+      .update({
+        pass_along_batch_id: null,
+        inventory_status: restoreStatus,
+        pre_bag_inventory_status: null,
+      })
       .eq('id', item.id)
 
     if (uErr) {
@@ -471,12 +481,18 @@ export default function PassAlongBatch() {
     setPickerError(null)
     setActionError(null)
 
+    // Picker only surfaces items currently in 'owned' status (see the
+    // eligibleItems filter), so every row in this bulk update has the
+    // same pre-bag origin. Stamping pre_bag_inventory_status='owned' on
+    // all of them lets removeItem / handleDelete restore correctly later
+    // without a per-row read.
     const { error: updErr } = await supabase
       .schema(currentSchema)
       .from('clothing_items')
       .update({
         pass_along_batch_id: batch.id,
         inventory_status: 'pass_along',
+        pre_bag_inventory_status: 'owned',
       })
       .in('id', ids)
 
@@ -757,8 +773,13 @@ export default function PassAlongBatch() {
   }
 
   // ── Delete draft ───────────────────────────────────────────────────────
-  // Before deleting the batch, unlink any items and bounce their status
-  // back to 'owned' so nothing is orphaned or lost from the wardrobe.
+  // Before deleting the batch, unlink any items and bounce each one back
+  // to its pre-bag pile (Owned / Tucked away / legacy outgrown) so nothing
+  // is orphaned or lost. Items with different origins land in different
+  // statuses, so we group by pre_bag_inventory_status and UPDATE per
+  // group — typically one or two queries since most items came from the
+  // same pile. Items with NULL pre_bag_inventory_status default to
+  // 'owned' (legacy rows that predate migration #022).
   // RLS enforces draft-only delete server-side, but we also gate the
   // button to keep the UI honest.
   async function handleDelete() {
@@ -767,15 +788,28 @@ export default function PassAlongBatch() {
     setActionError(null)
 
     if (items.length > 0) {
-      const { error: relinkErr } = await supabase
-        .schema(currentSchema)
-        .from('clothing_items')
-        .update({ pass_along_batch_id: null, inventory_status: 'owned' })
-        .eq('pass_along_batch_id', batch.id)
-      if (relinkErr) {
-        setWorking(false)
-        setActionError(relinkErr.message)
-        return
+      const groupsByStatus = new Map()
+      for (const it of items) {
+        const target = it.pre_bag_inventory_status || 'owned'
+        if (!groupsByStatus.has(target)) groupsByStatus.set(target, [])
+        groupsByStatus.get(target).push(it.id)
+      }
+
+      for (const [target, ids] of groupsByStatus) {
+        const { error: relinkErr } = await supabase
+          .schema(currentSchema)
+          .from('clothing_items')
+          .update({
+            pass_along_batch_id: null,
+            inventory_status: target,
+            pre_bag_inventory_status: null,
+          })
+          .in('id', ids)
+        if (relinkErr) {
+          setWorking(false)
+          setActionError(relinkErr.message)
+          return
+        }
       }
     }
 

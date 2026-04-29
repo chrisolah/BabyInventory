@@ -187,12 +187,19 @@ export default function Inventory() {
 
     const { batchId, createdNewBatch } = ensured
 
+    // Save the item's current inventory_status into pre_bag_inventory_status
+    // so removeItem in PassAlongBatch can restore to the right pile when
+    // the user takes it back out (Owned vs Tucked away vs legacy outgrown).
+    // Without this, every removal lands in 'owned' even for items that
+    // came from the kept pile.
+    const prevStatus = item.inventory_status
     const { error: attachErr } = await supabase
       .schema(currentSchema)
       .from('clothing_items')
       .update({
         pass_along_batch_id: batchId,
         inventory_status: 'pass_along',
+        pre_bag_inventory_status: prevStatus,
       })
       .eq('id', item.id)
 
@@ -219,6 +226,7 @@ export default function Inventory() {
       id: item.id,
       name: item.name || humanizeItemType(item.item_type),
       batchId,
+      prevStatus,
     })
 
     reloadItems()
@@ -234,6 +242,7 @@ export default function Inventory() {
       return next
     })
 
+    const prevStatus = item.inventory_status
     const { error: updErr } = await supabase
       .schema(currentSchema)
       .from('clothing_items')
@@ -257,17 +266,22 @@ export default function Inventory() {
       kind: 'tuck_away',
       id: item.id,
       name: item.name || humanizeItemType(item.item_type),
+      prevStatus,
     })
 
     reloadItems()
   }
 
-  // Undo the most recent toast action. Reverts to 'owned' regardless of
-  // path; if it was a Pass on, also detach from the bag so the bag's item
-  // count drops back.
+  // Undo the most recent toast action. Restores to actionToast.prevStatus
+  // (the item's status BEFORE the just-completed action) so a kept-row
+  // chip flip undoes back to kept, an Owned-row inline undoes to owned,
+  // etc. If kind === 'pass_on', also detach from the bag and clear
+  // pre_bag_inventory_status (the row is no longer associated with any
+  // bag, and a future re-attach should record fresh origin).
   async function handleUndoToast() {
     if (!actionToast) return
-    const { kind, id, name } = actionToast
+    const { kind, id, name, prevStatus } = actionToast
+    const restoreStatus = prevStatus || 'owned'
 
     setPendingHideIds(prev => {
       const next = new Set(prev)
@@ -277,8 +291,12 @@ export default function Inventory() {
     setActionToast(null)
 
     const update = kind === 'pass_on'
-      ? { inventory_status: 'owned', pass_along_batch_id: null }
-      : { inventory_status: 'owned' }
+      ? {
+          inventory_status: restoreStatus,
+          pass_along_batch_id: null,
+          pre_bag_inventory_status: null,
+        }
+      : { inventory_status: restoreStatus }
 
     const { error: updErr } = await supabase
       .schema(currentSchema)
@@ -337,6 +355,8 @@ export default function Inventory() {
   }
 
   // Flip a pass_along/outgrown item back to 'kept' (detaches from bag).
+  // Clears pre_bag_inventory_status since the item is no longer in a
+  // bag and a future re-attach should record fresh origin.
   async function handleSectionTuckAway(item) {
     if (!item) return
     if (item.inventory_status === 'kept') return // already there
@@ -351,7 +371,11 @@ export default function Inventory() {
     const { error: updErr } = await supabase
       .schema(currentSchema)
       .from('clothing_items')
-      .update({ inventory_status: 'kept', pass_along_batch_id: null })
+      .update({
+        inventory_status: 'kept',
+        pass_along_batch_id: null,
+        pre_bag_inventory_status: null,
+      })
       .eq('id', item.id)
 
     if (updErr) {
