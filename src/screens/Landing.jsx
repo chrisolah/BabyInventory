@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { track } from '../lib/analytics'
+import { useAuth } from '../hooks/useAuth'
 import IvyDecoration from '../components/IvyDecoration'
 import IvyBanner from '../components/IvyBanner'
 import styles from './Landing.module.css'
@@ -25,32 +26,61 @@ import styles from './Landing.module.css'
 export default function Landing() {
   const navigate = useNavigate()
   const hubRef = useRef(null)
+  const { signInAnonymously } = useAuth()
+  // Pending while the anon sign-in API call is in flight, so rapid taps
+  // on a CTA can't fire multiple sign-ins in parallel and rapid taps
+  // get visual feedback (button stays disabled briefly).
+  const [starting, setStarting] = useState(false)
 
   useEffect(() => {
     track.pageViewed({ page: 'landing', referrer: document.referrer })
   }, [])
 
+  // Shared trial-entry handler. Every "Try Sprigloop" CTA on this page
+  // funnels through here so the analytics distinction (which CTA was
+  // tapped) is preserved while the actual sign-in + navigation logic is
+  // identical. On a Supabase API failure (e.g., Anonymous Sign-Ins not
+  // enabled), we fall back to the legacy /signup route so the user can
+  // still progress; the error is logged for surfacing later.
+  async function startTrial(ctaName) {
+    if (starting) return
+    setStarting(true)
+    track.ctaClicked(ctaName)
+    const { error } = await signInAnonymously()
+    if (error) {
+      console.error('Anonymous sign-in failed; falling back to /signup', error)
+      track.ctaClicked('try_anon_fallback_signup')
+      setStarting(false)
+      navigate('/signup')
+      return
+    }
+    // PublicRoute would redirect a freshly-authed user to /home anyway,
+    // but onboarding is the right first stop for a brand-new account so
+    // we navigate explicitly. Onboarding's own resume logic will route
+    // to /home if the user somehow already finished (shouldn't, since
+    // they were anon a tick ago).
+    setStarting(false)
+    navigate('/onboarding')
+  }
+
   function handleGetStarted() {
-    track.ctaClicked('get_started')
-    navigate('/signup')
+    startTrial('get_started')
   }
 
   function handleSeeHub() {
     // Secondary hero CTA — scrolls to the pass-along hub section instead of
-    // bouncing the user straight to signup. Curious parents browse; committed
-    // ones click Get started.
+    // bouncing the user straight into the trial. Curious parents browse;
+    // committed ones tap Try Sprigloop above.
     track.ctaClicked('see_pass_along_hub')
     hubRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   function handleJoinCommunity() {
-    track.ctaClicked('join_community')
-    navigate('/signup')
+    startTrial('join_community')
   }
 
   function handleCreateAccount() {
-    track.ctaClicked('create_account_footer')
-    navigate('/signup')
+    startTrial('create_account_footer')
   }
 
   return (
@@ -78,7 +108,9 @@ export default function Landing() {
         <p className={styles.heroEnv}>Built for parents who&rsquo;d rather pass it on than throw it out.</p>
         <p className={styles.sub}>Sprigloop is a wardrobe app for baby clothes, with a built-in way to pass them on to another family once they&rsquo;re outgrown.</p>
         <div className={styles.heroBtns}>
-          <button className={styles.heroCta} onClick={handleGetStarted}>Get started free</button>
+          <button className={styles.heroCta} onClick={handleGetStarted} disabled={starting}>
+            {starting ? 'Starting…' : 'Try Sprigloop free'}
+          </button>
           <button className={styles.heroSecondaryCta} onClick={handleSeeHub}>See how pass-along works</button>
         </div>
       </section>
@@ -209,7 +241,9 @@ export default function Landing() {
               <div className={styles.hubCardBody}>Local Goodwill, shelter, or nonprofit you already trust. We&rsquo;ll mail you a Sprigloop bag with prepaid postage. Write the charity&rsquo;s address on it and drop it in any mailbox.</div>
             </div>
           </div>
-          <button className={styles.hubCta} onClick={handleGetStarted}>Start a bag</button>
+          <button className={styles.hubCta} onClick={handleGetStarted} disabled={starting}>
+            {starting ? 'Starting…' : 'Try Sprigloop free'}
+          </button>
         </div>
       </section>
 
@@ -241,7 +275,9 @@ export default function Landing() {
         <div className={styles.missionBand}>
           <div className={styles.missionHeadline}>Every baby deserves a full wardrobe. Every parent deserves an easier week.</div>
           <p className={styles.missionBody}>Babies outgrow clothes in weeks &mdash; most still have years of life left. Sprigloop keeps them moving: out of your house, into another baby&rsquo;s drawer, never into landfill. With as little friction for you as possible.</p>
-          <button className={styles.missionCta} onClick={handleJoinCommunity}>Join Sprigloop</button>
+          <button className={styles.missionCta} onClick={handleJoinCommunity} disabled={starting}>
+            {starting ? 'Starting…' : 'Try Sprigloop free'}
+          </button>
           <div className={styles.statRow}>
             <div><div className={styles.statNum}>Three</div><div className={styles.statLabel}>Destinations per bag</div></div>
             <div><div className={styles.statNum}>Free</div><div className={styles.statLabel}>Always, for all families</div></div>
@@ -253,7 +289,9 @@ export default function Landing() {
       <section className={styles.finalCta}>
         <div className={styles.finalHeadline}>Ready to get started?</div>
         <p className={styles.finalSub}>Organize your wardrobe, plan for what&rsquo;s next, and send outgrown clothes somewhere they&rsquo;ll be loved next, not landfilled. Free for every family. Always.</p>
-        <button className={styles.finalCtaBtn} onClick={handleCreateAccount}>Create your account</button>
+        <button className={styles.finalCtaBtn} onClick={handleCreateAccount} disabled={starting}>
+          {starting ? 'Starting…' : 'Try Sprigloop free'}
+        </button>
       </section>
     </div>
   )

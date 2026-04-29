@@ -27,6 +27,12 @@ const welcomeAttemptedFor = new Set()
 function maybeFireWelcome(user) {
   if (!user?.id) return
   if (welcomeAttemptedFor.has(user.id)) return
+  // Anonymous trial users (Supabase is_anonymous=true, no email) are
+  // skipped — there's no inbox to deliver to. The welcome fires later
+  // when they upgrade to a permanent account; that conversion produces
+  // a USER_UPDATED event with is_anonymous=false and a real email,
+  // which the same maybeFireWelcome call below picks up.
+  if (user.is_anonymous) return
   // Already sent on a previous session — the metadata field is the source
   // of truth, so we can skip the network call entirely. New signups arrive
   // here without the field set.
@@ -82,8 +88,49 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  // Pre-signup trial entry point. Creates an anonymous Supabase user — a real
+  // auth.users row with is_anonymous=true — so the visitor can use the app
+  // (RLS works because every policy is keyed on auth.uid()) without giving
+  // up an email. The first save in the app surfaces a blocking modal that
+  // calls upgradeToAccount to convert this row into a permanent account
+  // without losing any data.
+  //
+  // Anonymous Sign-Ins must be enabled in the Supabase project: Authentication
+  // → Providers → Anonymous Sign-Ins. Without that, this call returns an
+  // error from the API.
+  async function signInAnonymously() {
+    const { data, error } = await supabase.auth.signInAnonymously()
+    if (error) return { error }
+    // The onAuthStateChange listener will also pick this up and call setUser,
+    // but doing it here too means the caller can navigate immediately after
+    // await without racing the listener.
+    if (data?.user) setUser(data.user)
+    return { user: data?.user ?? null, error: null }
+  }
+
+  // Convert an anonymous account to a permanent one. The implementation
+  // path is defined in Phase 2 (project_anonymous_trial_signup.md) — left as
+  // a stub here so callers can reference the function name now without the
+  // full upgrade-modal plumbing landing in Phase 1.
+  // eslint-disable-next-line no-unused-vars
+  async function upgradeToAccount({ email }) {
+    return { error: new Error('upgradeToAccount not implemented yet — see Phase 2') }
+  }
+
+  // Convenience derived flag — true while the visitor is in trial mode.
+  // Components that need to gate writes (AddItem, ScanCommit, BagCreate)
+  // check this to decide whether to surface the upgrade modal.
+  const isAnonymous = !!user?.is_anonymous
+
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      isAnonymous,
+      signOut,
+      signInAnonymously,
+      upgradeToAccount,
+    }}>
       {children}
     </AuthContext.Provider>
   )
