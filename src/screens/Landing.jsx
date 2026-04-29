@@ -113,8 +113,8 @@ export default function Landing() {
                 <path d="M5 4.5 Q5 2.6 8 2.6 Q11 2.6 11 4.5" stroke="#EF9F27" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
               </svg>
             </div>
-            <div className={styles.featureCardTitle}>Send what&rsquo;s outgrown</div>
-            <div className={styles.featureCardBody}>Mark items outgrown and we&rsquo;ll mail a prepaid bag. Drop it in any mailbox.</div>
+            <div className={styles.featureCardTitle}>Pass on what&rsquo;s outgrown</div>
+            <div className={styles.featureCardBody}>Mark items outgrown and we&rsquo;ll mail a prepaid bag. Drop it in any mailbox and we&rsquo;ll pass it on to another family.</div>
           </div>
         </div>
       </section>
