@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
+import { useUpgradeGate } from '../contexts/UpgradeGateContext'
 import { SLOTS, SLOT_BY_ID, AGE_RANGES, CATEGORY_LABELS } from '../lib/wardrobe'
 import { track } from '../lib/analytics'
 import styles from './BatchReview.module.css'
@@ -68,6 +69,7 @@ export default function BatchReview({
   onPartialSave,
 }) {
   const { household, currentBaby, babies, reloadItems } = useHousehold()
+  const { requireRealAccount } = useUpgradeGate()
 
   // The default baby_id for any row that hasn't been explicitly assigned
   // via the per-row chip. Mirrors AddItem's "inherit the chip switcher's
@@ -166,6 +168,23 @@ export default function BatchReview({
 
   async function doSave() {
     if (!canSave) return
+    // Gate behind a real account first so an anonymous trial user gets
+    // the upgrade modal before any of these inserts commit. After
+    // successful upgrade, the body below runs against the (now permanent)
+    // account. If the user dismisses, _runSave is never called and we
+    // leave the review surface in its current state.
+    try {
+      await requireRealAccount(_runSave)
+    } catch (e) {
+      if (e?.cancelled) return
+      // _runSave handles its own error captioning when the inserts fail;
+      // anything that bubbles to here is unexpected and worth surfacing.
+      setSaving(false)
+      setSaveError(e.message || 'Couldn’t save the batch.')
+    }
+  }
+
+  async function _runSave() {
     setSaving(true)
     setSaveError(null)
     setSavedCount(0)

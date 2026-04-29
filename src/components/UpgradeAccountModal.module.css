@@ -1,0 +1,198 @@
+/* UpgradeAccountModal — blocking overlay shown when an anonymous trial
+   user tries to commit a write. Visual language matches the existing
+   confirm modals on PassAlongBatch + ItemDetail (white card, gray-900
+   backdrop, max-width 420 to mirror the auth-form width). */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 26, 24, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 80;
+  /* Slightly above the standard modal layer (z-60 toast on Inventory)
+     so this gate sits above any in-progress confirmation toasts. */
+}
+
+.modal {
+  background: var(--white);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+  /* Animate in so the modal doesn't pop abruptly. Respects
+     prefers-reduced-motion via the @media block at the bottom. */
+  animation: upgradeModalIn 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin: 0 0 8px;
+}
+
+.body {
+  font-size: 14px;
+  color: var(--gray-600);
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+
+.body strong {
+  color: var(--gray-900);
+  font-weight: 600;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-600);
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  /* min-height keeps the input at iOS HIG floor (44px) without disrupting
+     the visual rhythm. Matches the .input rules on Login/Signup. */
+  min-height: 44px;
+  padding: 11px 13px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--gray-900);
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: var(--teal);
+}
+
+/* Code-entry input — bigger, monospaced, centered. Mirrors the existing
+   reset-password code-entry treatment so users feel the same affordance
+   regardless of which OTP flow they're in. */
+.codeInput {
+  font-size: 22px;
+  letter-spacing: 0.4em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  padding: 14px 13px;
+}
+
+.error {
+  font-size: 13px;
+  color: #A32D2D;
+  background: #FDF2F2;
+  border: 0.5px solid #F09595;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 12px;
+}
+
+.resendRow {
+  font-size: 13px;
+  color: var(--gray-600);
+  margin-top: 10px;
+}
+
+.resendBtn {
+  background: none;
+  border: none;
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+  /* min-height honored via line-height + parent .resendRow padding. */
+}
+
+.resendBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.cancelBtn {
+  /* min-height keeps the cancel button at the iOS HIG tap-target floor.
+     Same pattern as the modalCancel rule used on PassAlongBatch /
+     ItemDetail confirm modals. */
+  min-height: 44px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: var(--white);
+  color: var(--gray-700);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cancelBtn:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+}
+
+.cancelBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.primaryBtn {
+  min-height: 44px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: var(--teal);
+  color: var(--teal-light);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.primaryBtn:hover {
+  opacity: 0.92;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@keyframes upgradeModalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal {
+    animation: none;
+  }
+}

@@ -108,13 +108,42 @@ export function AuthProvider({ children }) {
     return { user: data?.user ?? null, error: null }
   }
 
-  // Convert an anonymous account to a permanent one. The implementation
-  // path is defined in Phase 2 (project_anonymous_trial_signup.md) — left as
-  // a stub here so callers can reference the function name now without the
-  // full upgrade-modal plumbing landing in Phase 1.
-  // eslint-disable-next-line no-unused-vars
-  async function upgradeToAccount({ email }) {
-    return { error: new Error('upgradeToAccount not implemented yet — see Phase 2') }
+  // Convert an anonymous account to a permanent one. Two-step flow that
+  // mirrors the existing 6-digit OTP pattern used for signup + recovery:
+  //
+  //   1. requestEmailChange(email) — calls supabase.auth.updateUser({ email })
+  //      which sets the pending_email on the anon auth.users row and emails
+  //      a 6-digit confirmation code (Outlook Safe Links pre-fetch is
+  //      neutered because there's no clickable link, only a code — same
+  //      reasoning as project_otp_over_magic_link.md).
+  //   2. confirmEmailChange(email, token) — calls verifyOtp({type:'email_change'})
+  //      which finalizes the change. The auth.users row's email is set,
+  //      is_anonymous flips to false, and onAuthStateChange fires
+  //      USER_UPDATED. maybeFireWelcome above re-enters and (since it's
+  //      no longer anon) sends the welcome email; welcome_log dedupes.
+  //
+  // The same auth.users.id is preserved across the conversion, which is
+  // why every clothing_items / households / pass_along_batches row the
+  // user wrote during the trial automatically belongs to their permanent
+  // account post-conversion — no data migration required.
+  async function requestEmailChange(email) {
+    const { error } = await supabase.auth.updateUser({ email: email.trim() })
+    return { error }
+  }
+
+  async function confirmEmailChange(email, token) {
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: token.trim(),
+      type: 'email_change',
+    })
+    if (error) return { error }
+    // Pull the freshly-updated user so the consumer state reflects
+    // is_anonymous=false immediately, without waiting for the auth-state
+    // listener to deliver the USER_UPDATED event.
+    const { data } = await supabase.auth.getUser()
+    if (data?.user) setUser(data.user)
+    return { error: null }
   }
 
   // Convenience derived flag — true while the visitor is in trial mode.
@@ -129,7 +158,8 @@ export function AuthProvider({ children }) {
       isAnonymous,
       signOut,
       signInAnonymously,
-      upgradeToAccount,
+      requestEmailChange,
+      confirmEmailChange,
     }}>
       {children}
     </AuthContext.Provider>

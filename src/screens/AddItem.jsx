@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useHousehold } from '../contexts/HouseholdContext'
+import { useUpgradeGate } from '../contexts/UpgradeGateContext'
 import { track } from '../lib/analytics'
 import { SLOTS, SLOT_BY_ID } from '../lib/wardrobe'
 import ProfileMenu from '../components/ProfileMenu'
@@ -73,6 +74,7 @@ const PRIORITIES = [
 export default function AddItem() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { requireRealAccount } = useUpgradeGate()
   // Household + currently-selected baby come from context. On create we
   // pre-attach selectedBabyId as baby_id so items "inherit" the Inventory
   // view the user was just looking at. On edit we leave baby_id alone —
@@ -390,73 +392,78 @@ export default function AddItem() {
       notes: notes.trim() || null,
     }
 
-    if (isEditMode && existingItem) {
-      // Edit path: UPDATE only the editable columns. Deliberately don't
-      // touch inventory_status — the detail page's Mark-as-outgrown and
-      // other lifecycle actions own that column. Flipping the owned/needed
-      // toggle in edit mode *does* affect it (you're saying the item is
-      // now wished-for instead of owned), so include that when it changes.
-      const patch = { ...fields }
-      if (mode !== existingItem.inventory_status && (mode === 'owned' || mode === 'needed')) {
-        patch.inventory_status = mode
-      }
+    // Both edit and create paths run inside requireRealAccount so an
+    // anonymous trial user gets the upgrade modal before either write
+    // commits. After successful upgrade, the deferred action runs and
+    // the user lands on the appropriate next screen as if nothing
+    // happened. If they dismiss the modal, we throw a cancelled marker
+    // and the catch block rolls saving=false with no error toast.
+    try {
+      await requireRealAccount(async () => {
+        if (isEditMode && existingItem) {
+          // Edit path: UPDATE only the editable columns. Deliberately don't
+          // touch inventory_status — the detail page's Mark-as-outgrown and
+          // other lifecycle actions own that column. Flipping the owned/needed
+          // toggle in edit mode *does* affect it (you're saying the item is
+          // now wished-for instead of owned), so include that when it changes.
+          const patch = { ...fields }
+          if (mode !== existingItem.inventory_status && (mode === 'owned' || mode === 'needed')) {
+            patch.inventory_status = mode
+          }
 
-      const { error: updErr } = await supabase
-        .schema(currentSchema)
-        .from('clothing_items')
-        .update(patch)
-        .eq('id', existingItem.id)
+          const { error: updErr } = await supabase
+            .schema(currentSchema)
+            .from('clothing_items')
+            .update(patch)
+            .eq('id', existingItem.id)
 
+          if (updErr) throw new Error(updErr.message)
+
+          track.itemEdited({ mode, category, size_label: sizeLabel })
+          // Refresh the items list in HouseholdContext so Inventory shows the
+          // edited row next time it renders, without a per-mount refetch.
+          reloadItems()
+          // Back to the detail page so the user sees the saved result (and
+          // can dismiss/edit again without another navigation hop).
+          navigate(`/item/${existingItem.id}`)
+          return
+        }
+
+        // Create path. baby_id follows the chip switcher's current selection:
+        //   - specific baby picked → attach their id, the item lives in their wardrobe
+        //   - 'all' picked         → null, the item is shared across babies
+        //   - single-baby household → context forces selectedBabyId to that baby,
+        //                              so currentBaby is populated and we attach it
+        // The "unassigned / shared" semantic is deliberate — it matches how we
+        // filter (null baby_id shows under every specific baby) so there's a
+        // single mental model for how null is treated.
+        const row = {
+          household_id: household.id,
+          baby_id: currentBaby?.id ?? null,
+          ...fields,
+          inventory_status: mode,
+          name: null, // Reserved for the parent-supplied nickname; not collected yet.
+        }
+
+        const { error: insertErr } = await supabase
+          .schema(currentSchema)
+          .from('clothing_items')
+          .insert(row)
+
+        if (insertErr) throw new Error(insertErr.message)
+
+        track.itemSaved({ mode, category, size_label: sizeLabel })
+        // Refresh the items list in HouseholdContext so Inventory shows the new
+        // row immediately without a per-mount refetch.
+        reloadItems()
+        navigate('/inventory')
+      })
       setSaving(false)
-
-      if (updErr) {
-        setError(updErr.message)
-        return
-      }
-
-      track.itemEdited({ mode, category, size_label: sizeLabel })
-      // Refresh the items list in HouseholdContext so Inventory shows the
-      // edited row next time it renders, without a per-mount refetch.
-      reloadItems()
-      // Back to the detail page so the user sees the saved result (and
-      // can dismiss/edit again without another navigation hop).
-      navigate(`/item/${existingItem.id}`)
-      return
+    } catch (e) {
+      setSaving(false)
+      if (e?.cancelled) return  // user dismissed the upgrade modal; leave form as-is
+      setError(e.message || 'Couldn’t save the item.')
     }
-
-    // Create path. baby_id follows the chip switcher's current selection:
-    //   - specific baby picked → attach their id, the item lives in their wardrobe
-    //   - 'all' picked         → null, the item is shared across babies
-    //   - single-baby household → context forces selectedBabyId to that baby,
-    //                              so currentBaby is populated and we attach it
-    // The "unassigned / shared" semantic is deliberate — it matches how we
-    // filter (null baby_id shows under every specific baby) so there's a
-    // single mental model for how null is treated.
-    const row = {
-      household_id: household.id,
-      baby_id: currentBaby?.id ?? null,
-      ...fields,
-      inventory_status: mode,
-      name: null, // Reserved for the parent-supplied nickname; not collected yet.
-    }
-
-    const { error: insertErr } = await supabase
-      .schema(currentSchema)
-      .from('clothing_items')
-      .insert(row)
-
-    setSaving(false)
-
-    if (insertErr) {
-      setError(insertErr.message)
-      return
-    }
-
-    track.itemSaved({ mode, category, size_label: sizeLabel })
-    // Refresh the items list in HouseholdContext so Inventory shows the new
-    // row immediately without a per-mount refetch.
-    reloadItems()
-    navigate('/inventory')
   }
 
   // In edit mode we need both the household context AND the existing row

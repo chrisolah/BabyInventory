@@ -235,6 +235,25 @@ export const track = {
   passAlongLabelRequested: (props) =>
     logEvent('pass_along_label_requested', 'engagement', props),
 
+  // ── Anonymous-trial upgrade gate (Phase 2 of the anon-trial flow) ──
+  // Fires whenever the upgrade modal blocks a write while the user is
+  // still anonymous, plus key step transitions inside the modal. Lets
+  // us answer two product questions:
+  //   • Conversion rate: of users who hit the gate, what fraction
+  //     actually finish the OTP verification? (gate_opened → completed)
+  //   • Drop-off step: among dismissals, are users bailing before they
+  //     enter their email or after seeing the OTP step?
+  // The `step` prop on opened/dismissed carries 'email' | 'code' so the
+  // funnel can be sliced by where the user was in the flow.
+  upgradeModalOpened: (props) =>
+    logEvent('upgrade_modal_opened', 'engagement', props),
+  upgradeEmailRequested: (props) =>
+    logEvent('upgrade_email_requested', 'engagement', props),
+  upgradeCompleted: (props) =>
+    logEvent('upgrade_completed', 'engagement', props),
+  upgradeModalDismissed: (props) =>
+    logEvent('upgrade_modal_dismissed', 'engagement', props),
+
   // ── Outgrown / kept transitions (added 2026-04-29 with the kept fork) ──
   // The new flow forks every outgrown moment into one of two paths:
   //   - Pass on  → directly into a draft bag (tracked via passAlongItemAdded

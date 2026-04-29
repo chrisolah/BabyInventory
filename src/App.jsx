@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { HouseholdProvider } from './contexts/HouseholdContext'
+import { UpgradeGateProvider } from './contexts/UpgradeGateContext'
 import './styles/globals.css'
 
 import Landing from './screens/Landing'
@@ -98,10 +99,17 @@ function ProtectedLayout() {
   const { user, loading } = useAuth()
   if (loading) return <div />
   if (!user) return <Navigate to="/" replace />
+  // UpgradeGateProvider sits inside ProtectedLayout so the gate is mounted
+  // on every authed route (where writes that need a real account live)
+  // but isn't loaded for unauth pages. The provider reads `isAnonymous`
+  // from useAuth to decide whether to intercept actions; its modal lives
+  // alongside the routed Outlet and overlays everything when triggered.
   return (
     <HouseholdProvider>
-      <Outlet />
-      <IvyDecoration />
+      <UpgradeGateProvider>
+        <Outlet />
+        <IvyDecoration />
+      </UpgradeGateProvider>
     </HouseholdProvider>
   )
 }
