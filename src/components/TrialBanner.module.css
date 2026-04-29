@@ -1,0 +1,72 @@
+/* TrialBanner — bottom-fixed pill spanning the viewport width minus a
+   small inset, visible whenever the user is anonymous. Amber-light fill
+   matches the existing "warm warning" treatment used on the Wishlist
+   outgrow banner so users read it as a friendly nudge rather than a
+   blocking alert. Pinned to the bottom safe-area inset on mobile so it
+   clears the iOS home indicator. */
+
+.banner {
+  all: unset;
+  box-sizing: border-box;
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--amber-light);
+  border: 0.5px solid #F1D79F;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.4;
+  color: #7E5510;
+  cursor: pointer;
+  /* Below toast layer (z-60) so transient toasts can overlay if both
+     happen to render — rare but possible if a user is anonymous (banner
+     visible) and somehow triggers an action toast. In practice anon
+     users have no items to act on, so this overlap is theoretical. */
+  z-index: 50;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  transition: background 0.15s, transform 0.12s;
+  /* Center under desktop layouts where the body content is constrained
+     to ~720px. The banner stays at the viewport edges — that's the
+     intended behavior for a global affordance — but max-width lets us
+     contain it on extra-wide screens so it doesn't span 1920px. */
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.banner:hover {
+  background: #F8E5BE;
+}
+
+.banner:active {
+  transform: translateY(1px);
+}
+
+.banner:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.body strong {
+  color: #5F3F07;
+  font-weight: 600;
+}
+
+.cta {
+  font-weight: 600;
+  color: #5F3F07;
+  white-space: nowrap;
+  flex-shrink: 0;
+}

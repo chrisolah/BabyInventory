@@ -20,6 +20,7 @@ import PassAlongList from './screens/PassAlongList'
 import Profile from './screens/Profile'
 import AcceptInvite from './screens/AcceptInvite'
 import IvyDecoration from './components/IvyDecoration'
+import TrialBanner from './components/TrialBanner'
 
 // React Router v6 doesn't auto-scroll to the top on route change, so
 // scroll position carries between pages. Most noticeable on mobile:
@@ -109,6 +110,12 @@ function ProtectedLayout() {
       <UpgradeGateProvider>
         <Outlet />
         <IvyDecoration />
+        {/* TrialBanner self-gates on isAnonymous and renders nothing for
+            permanent users. Mounted here (not per-screen) so the
+            affordance is consistent across every authed surface. Sits
+            inside UpgradeGateProvider so its tap handler can call
+            triggerUpgrade. */}
+        <TrialBanner />
       </UpgradeGateProvider>
     </HouseholdProvider>
   )

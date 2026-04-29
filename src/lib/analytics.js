@@ -253,6 +253,14 @@ export const track = {
     logEvent('upgrade_completed', 'engagement', props),
   upgradeModalDismissed: (props) =>
     logEvent('upgrade_modal_dismissed', 'engagement', props),
+  // TrialBanner tap — proactive upgrade trigger from the persistent
+  // bottom banner (vs. reactive trigger when a save action hits the
+  // gate). Splitting the events lets the funnel distinguish "visitor
+  // upgraded because they wanted to lock in their data" from "visitor
+  // upgraded because they bumped into the gate." Different intent
+  // signals.
+  trialBannerTapped: (props) =>
+    logEvent('trial_banner_tapped', 'engagement', props),
 
   // ── Outgrown / kept transitions (added 2026-04-29 with the kept fork) ──
   // The new flow forks every outgrown moment into one of two paths:

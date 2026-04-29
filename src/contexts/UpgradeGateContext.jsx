@@ -50,6 +50,19 @@ export function UpgradeGateProvider({ children }) {
     [isAnonymous],
   )
 
+  // Open the upgrade modal directly without queuing a deferred action.
+  // Used by the persistent TrialBanner so anonymous users can convert
+  // proactively without first attempting a save. No-op when the user is
+  // already permanent.
+  const triggerUpgrade = useCallback(() => {
+    if (!isAnonymous) return
+    setPending({
+      action: async () => {},
+      resolve: () => {},
+      reject: () => {},
+    })
+  }, [isAnonymous])
+
   async function handleUpgradeSuccess() {
     const current = pendingRef.current
     if (!current) return
@@ -70,7 +83,7 @@ export function UpgradeGateProvider({ children }) {
   }
 
   return (
-    <UpgradeGateContext.Provider value={{ requireRealAccount }}>
+    <UpgradeGateContext.Provider value={{ requireRealAccount, triggerUpgrade }}>
       {children}
       {pending && (
         <UpgradeAccountModal
