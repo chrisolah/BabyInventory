@@ -185,7 +185,7 @@ export default function PassAlongList() {
 
     setCreating(false)
     if (insErr || !data) {
-      setCreateError(insErr?.message || 'Couldn’t start a new batch.')
+      setCreateError(insErr?.message || 'Couldn’t start a new bag.')
       return
     }
 
@@ -220,7 +220,7 @@ export default function PassAlongList() {
           <div className={styles.title}>Pass-along</div>
           <div className={styles.subtitle}>
             {batches.length > 0
-              ? `${batches.length} batch${batches.length === 1 ? '' : 'es'}`
+              ? `${batches.length} bag${batches.length === 1 ? '' : 's'}`
               : 'Community exchange'}
           </div>
           <IvySprig />
@@ -236,7 +236,7 @@ export default function PassAlongList() {
         )}
         {error && !householdError && (
           <div className={styles.errorBanner}>
-            Couldn’t load batches: {error}
+            Couldn’t load bags: {error}
           </div>
         )}
 
@@ -258,7 +258,7 @@ export default function PassAlongList() {
             <section className={styles.intro}>
               <div className={styles.introTitle}>Send clothes on to their next home</div>
               <div className={styles.introBody}>
-                Bundle outgrown items into a batch and ship the bag to
+                Bundle outgrown items into a bag and pass them along to
                 another Sprigloop family, a friend or family member, or
                 a charity.
               </div>
@@ -266,7 +266,7 @@ export default function PassAlongList() {
 
             {createError && (
               <div className={styles.errorBanner}>
-                Couldn’t start a new batch: {createError}
+                Couldn’t start a new bag: {createError}
               </div>
             )}
 
@@ -276,12 +276,12 @@ export default function PassAlongList() {
               onClick={handleCreate}
               disabled={creating}
             >
-              {creating ? 'Starting…' : 'Start a new batch'}
+              {creating ? 'Starting…' : 'Start a new bag'}
             </button>
 
             {batches.length === 0 ? (
               <div className={styles.emptyCard}>
-                No batches yet. When you’ve got a pile of outgrown clothes,
+                No bags yet. When you’ve got a pile of outgrown clothes,
                 start one here — we’ll walk you through packing and shipping.
               </div>
             ) : (

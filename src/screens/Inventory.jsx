@@ -200,7 +200,7 @@ export default function Inventory() {
   async function handlePassItOn() {
     if (!outgrownToast) return
     if (!household?.id || !user?.id) {
-      setError('Couldn’t start a batch — household not loaded.')
+      setError('Couldn’t start a bag — household not loaded.')
       return
     }
     const { id, name } = outgrownToast
@@ -229,7 +229,7 @@ export default function Inventory() {
       .maybeSingle()
 
     if (findErr) {
-      setError(`Couldn’t find a draft batch: ${findErr.message}`)
+      setError(`Couldn’t find a draft bag: ${findErr.message}`)
       return
     }
 
@@ -248,7 +248,7 @@ export default function Inventory() {
         .select('id')
         .maybeSingle()
       if (insErr || !newBatch) {
-        setError(`Couldn’t start a batch: ${insErr?.message ?? 'unknown'}`)
+        setError(`Couldn’t start a bag: ${insErr?.message ?? 'unknown'}`)
         return
       }
       batchId = newBatch.id
@@ -272,7 +272,7 @@ export default function Inventory() {
       .eq('id', id)
 
     if (attachErr) {
-      setError(`Couldn’t add ${name} to the batch: ${attachErr.message}`)
+      setError(`Couldn’t add ${name} to the bag: ${attachErr.message}`)
       return
     }
 
@@ -307,7 +307,7 @@ export default function Inventory() {
   // client.
   async function handlePassOnAllOutgrown() {
     if (!household?.id || !user?.id) {
-      setError('Couldn’t start a batch — household not loaded.')
+      setError('Couldn’t start a bag — household not loaded.')
       return
     }
     if (outgrownItems.length === 0) return
@@ -330,7 +330,7 @@ export default function Inventory() {
       .maybeSingle()
 
     if (findErr) {
-      setError(`Couldn’t find a draft batch: ${findErr.message}`)
+      setError(`Couldn’t find a draft bag: ${findErr.message}`)
       return
     }
 
@@ -348,7 +348,7 @@ export default function Inventory() {
         .select('id')
         .maybeSingle()
       if (insErr || !newBatch) {
-        setError(`Couldn’t start a batch: ${insErr?.message ?? 'unknown'}`)
+        setError(`Couldn’t start a bag: ${insErr?.message ?? 'unknown'}`)
         return
       }
       batchId = newBatch.id
@@ -373,7 +373,7 @@ export default function Inventory() {
       .in('id', ids)
 
     if (bulkErr) {
-      setError(`Couldn’t add items to the batch: ${bulkErr.message}`)
+      setError(`Couldn’t add items to the bag: ${bulkErr.message}`)
       return
     }
 

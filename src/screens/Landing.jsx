@@ -185,14 +185,14 @@ export default function Landing() {
         <div className={styles.hubBand}>
           <div className={styles.hubEyebrow}>When baby outgrows them</div>
           <h2 className={styles.hubHeadline}>Three places your outgrown<br />clothes can go.</h2>
-          <p className={styles.hubBody}>Pick a destination and Sprigloop takes it from there. No selling, no drop-off logistics, no swapping addresses with strangers. Every batch is one less bag in the landfill &mdash; and one less new garment manufactured to take its place.</p>
+          <p className={styles.hubBody}>Pick a destination and Sprigloop takes it from there. No selling, no drop-off logistics, no swapping addresses with strangers. Every bag passed on is one less in the landfill, and one less new garment manufactured to take its place.</p>
           <div className={styles.hubGrid}>
             <div className={styles.hubCard}>
               <div className={styles.hubCardIcon} style={{ background: 'var(--amber-light)', color: 'var(--amber-dark)' }}>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M2 15c0-2.5 1.8-4 4-4s4 1.5 4 4M8 15c0-2.5 1.8-4 4-4s4 1.5 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </div>
               <div className={styles.hubCardTitle}>Send to a Sprigloop family</div>
-              <div className={styles.hubCardBody}>Ships to Sprigloop first. We route the batch to a family who&rsquo;s opted in to receiving. If we can&rsquo;t find a match, we&rsquo;ll donate it on your behalf. Addresses stay private on both ends.</div>
+              <div className={styles.hubCardBody}>Ships to Sprigloop first. We route the bag to a family who&rsquo;s opted in to receiving. If we can&rsquo;t find a match, we&rsquo;ll donate it on your behalf. Addresses stay private on both ends.</div>
             </div>
             <div className={styles.hubCard}>
               <div className={styles.hubCardIcon} style={{ background: 'var(--purple-light)', color: 'var(--purple-dark)' }}>
@@ -209,7 +209,7 @@ export default function Landing() {
               <div className={styles.hubCardBody}>Local Goodwill, shelter, or nonprofit you already trust. We&rsquo;ll mail you a Sprigloop bag with prepaid postage. Write the charity&rsquo;s address on it and drop it in any mailbox.</div>
             </div>
           </div>
-          <button className={styles.hubCta} onClick={handleGetStarted}>Start a pass-along batch</button>
+          <button className={styles.hubCta} onClick={handleGetStarted}>Start a bag</button>
         </div>
       </section>
 
@@ -228,7 +228,7 @@ export default function Landing() {
           </div>
           <div className={styles.optInBullet}>
             <div className={styles.optInBulletNum}>02</div>
-            <div className={styles.optInBulletText}><strong>We do the matching.</strong> When a sender picks &ldquo;Send to a Sprigloop family,&rdquo; we route the batch to one of you.</div>
+            <div className={styles.optInBulletText}><strong>We do the matching.</strong> When a sender picks &ldquo;Send to a Sprigloop family,&rdquo; we route the bag to one of you.</div>
           </div>
           <div className={styles.optInBullet}>
             <div className={styles.optInBulletNum}>03</div>
@@ -243,7 +243,7 @@ export default function Landing() {
           <p className={styles.missionBody}>Babies outgrow clothes in weeks &mdash; most still have years of life left. Sprigloop keeps them moving: out of your house, into another baby&rsquo;s drawer, never into landfill. With as little friction for you as possible.</p>
           <button className={styles.missionCta} onClick={handleJoinCommunity}>Join Sprigloop</button>
           <div className={styles.statRow}>
-            <div><div className={styles.statNum}>Three</div><div className={styles.statLabel}>Destinations per batch</div></div>
+            <div><div className={styles.statNum}>Three</div><div className={styles.statLabel}>Destinations per bag</div></div>
             <div><div className={styles.statNum}>Free</div><div className={styles.statLabel}>Always, for all families</div></div>
             <div><div className={styles.statNum}>Opt-in</div><div className={styles.statLabel}>Receive when you&rsquo;re ready</div></div>
           </div>

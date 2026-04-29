@@ -901,7 +901,7 @@ export default function PassAlongBatch() {
           ←
         </button>
         <div className={styles.titleBlock}>
-          <div className={styles.title}>Pass-along batch</div>
+          <div className={styles.title}>Pass-along bag</div>
           {batch && (
             <div className={styles.subtitle}>{batch.reference_code}</div>
           )}
@@ -938,7 +938,7 @@ export default function PassAlongBatch() {
                 nothing else on the page is actionable. */}
             {isCanceled && (
               <div className={styles.infoBanner}>
-                This batch was canceled. It stays in your history for your records.
+                This bag was canceled. It stays in your history for your records.
               </div>
             )}
 
@@ -1268,7 +1268,7 @@ export default function PassAlongBatch() {
             </div>
             <div className={styles.modalBody}>
               Pick anything from your wardrobe you’d like to include in
-              this batch.
+              this bag.
             </div>
 
             {/* Baby filter — only renders for multi-baby households. 'All'

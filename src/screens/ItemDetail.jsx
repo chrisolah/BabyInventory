@@ -37,7 +37,7 @@ const STATUS_LABEL = {
   owned: 'Owned',
   needed: 'On wish list',
   outgrown: 'Outgrown',
-  pass_along: 'In pass-along batch',
+  pass_along: 'In a bag',
   donated: 'Donated',
   exchanged: 'Exchanged',
 }
@@ -479,10 +479,10 @@ export default function ItemDetail() {
                 >
                   <div>
                     <div className={styles.batchLinkTop}>
-                      In pass-along batch
+                      In a bag
                     </div>
                     <div className={styles.batchLinkRef}>
-                      {batchInfo?.reference_code || 'Open batch'}
+                      {batchInfo?.reference_code || 'Open bag'}
                     </div>
                   </div>
                   <span className={styles.batchLinkChevron} aria-hidden="true">›</span>

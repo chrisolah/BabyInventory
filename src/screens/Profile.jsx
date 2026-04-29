@@ -791,7 +791,7 @@ function ReceivingSection({ household, onUpdated }) {
               Notes for Sprigloop
             </div>
             <div className={styles.receivingFieldHint}>
-              Anything we should know when matching batches to your
+              Anything we should know when matching bags to your
               household — sibling on the way, a preference, an allergy.
               Only Sprigloop sees this.
             </div>
