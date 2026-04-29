@@ -133,11 +133,16 @@
      gives the 44px vertical tap area. Horizontal padding/negative-margin
      pair was removed 2026-04-28 — the trick overflowed the parent paragraph
      by 1px on desktop widths (caught in desktop sweep) and was the same
-     gotcha that hit .forgotLink and .saveHint a. Click area = text width;
-     vertical 44px is what matters for tap accessibility. */
+     gotcha that hit .forgotLink and .saveHint a.
+     min-width: 44px + justify-content: center added 2026-04-29 to bring
+     the horizontal tap area up to HIG floor — "Log in" text alone is
+     ~36px wide. Adds a small amount of inline-flex spread but doesn't
+     overflow the parent (paragraph is content-width). */
   min-height: 44px;
+  min-width: 44px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   vertical-align: middle;
   background: none;
   border: none;

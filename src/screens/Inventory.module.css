@@ -6,11 +6,13 @@
 }
 
 /* ── Header ───────────────────────────────────────────────── */
-/* 1fr auto 1fr keeps the title (middle `auto` cell) visually centered
-   regardless of the side clusters' widths. The left (back button) and
-   right (Add + Logout) clusters occupy equal 1fr tracks and are pinned
-   to their respective edges via justify-self, so adding or removing a
-   right-hand button no longer shifts the title off-center. */
+/* Mobile default: 2-column grid with title taking the leftover 1fr so
+   it has the maximum breathing room next to the action cluster. Title
+   centers within its own cell (visually slightly left-of-center, but the
+   action cluster occupies a meaningful share of the narrow viewport so
+   that drift is small and the comfort win on tight phones is worth it).
+   This was the layout shipped 2026-04-28 when the back button was
+   removed. */
 .header {
   position: sticky;
   top: 0;
@@ -19,13 +21,32 @@
   border-bottom: 0.5px solid var(--gray-200);
   padding: 12px 16px;
   display: grid;
-  /* 1fr auto since the back button was removed (2026-04-28). Title fills
-     the available horizontal space (no longer competing with a leading
-     button column) and the action cluster sits at its natural width on
-     the right. */
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 8px;
+}
+
+/* Desktop: switch to a 3-column grid with the title's auto middle column
+   sandwiched between two minmax(92px, 1fr) spacer columns so it lands
+   at the page's true visual center. 92px = passBtn 44 + gap 4 + addBtn 44
+   — mirrors the right-side action cluster's content min-width so the
+   left and right tracks stay symmetric (an unconstrained 1fr on the left
+   would collapse below the right's content-min and pull the title left,
+   which was the desktop centering bug Chris reported 2026-04-28). The
+   leading column is intentionally empty; .titleCell and .headerActions
+   pin to columns 2 and 3 explicitly. Breakpoint matches the codebase's
+   tablet threshold (Home/BabyFormModal/InviteMemberModal/TagScanner all
+   pivot at 600px). */
+@media (min-width: 600px) {
+  .header {
+    grid-template-columns: minmax(92px, 1fr) auto minmax(92px, 1fr);
+  }
+  .titleCell {
+    grid-column: 2;
+  }
+  .headerActions {
+    grid-column: 3;
+  }
 }
 
 /* Right-side action cluster — keeps Add and Logout grouped. */
@@ -85,8 +106,11 @@
 }
 
 /* Stacks the wardrobe title on top of an optional mobile-only sprig.
-   Occupies the 1fr middle cell of the header grid. On desktop the sprig
-   hides itself so this cell collapses back to just the title text. */
+   On mobile (<600px) this falls in the leftover 1fr cell of the
+   2-column header grid. At ≥600px the @media block above promotes it to
+   the auto middle column of a 3-column grid so the title lands at the
+   page's visual center. On desktop the sprig hides itself so this cell
+   collapses back to just the title text. */
 .titleCell {
   display: flex;
   flex-direction: column;

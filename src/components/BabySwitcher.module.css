@@ -25,6 +25,16 @@
   all: unset;
   box-sizing: border-box;
   flex: 0 0 auto;
+  /* min-height keeps the chip at the iOS HIG tap-target floor (44px).
+     Padding 6px alone produced ~31px which failed the 2026-04-29 sweep —
+     newly visible because a second baby (Huck) was added to test data,
+     and the BabySwitcher only renders when there's >1 baby. inline-flex
+     + align-items: center centers the label vertically within the
+     enlarged box without changing the horizontal padding (visual spread
+     stays the same). */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 500;

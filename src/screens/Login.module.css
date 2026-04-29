@@ -163,10 +163,16 @@
 .signupLink {
   /* Inline within "Don't have an account? Sign up" paragraph. Horizontal
      padding/negative-margin pair removed 2026-04-28 — overflowed parent
-     at desktop widths. Vertical 44px tap area preserved. */
+     at desktop widths. Vertical 44px tap area preserved.
+     min-width: 44px (added 2026-04-29) brings the tap area to the iOS HIG
+     floor on the horizontal axis too — "Sign up" text alone is ~50px so
+     this is mostly a no-op for this label, but kept for consistency with
+     the shorter "Log in" label on Signup/ResetPassword pages. */
   min-height: 44px;
+  min-width: 44px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   vertical-align: middle;
   background: none;
   border: none;
