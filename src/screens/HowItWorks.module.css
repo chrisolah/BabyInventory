@@ -1,0 +1,204 @@
+.page {
+  background: var(--white);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Nav (matches Landing) ── */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 0.5px solid var(--gray-100);
+  background: var(--white);
+  position: relative;
+  z-index: 2;
+}
+.logo {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--gray-900);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.loginBtn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  margin-right: -12px;
+  font-size: 13px;
+  color: var(--gray-600);
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+/* ── Article wrapper ── */
+.article {
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 2.5rem 1.5rem 4rem;
+  font-family: var(--font-body);
+  color: var(--gray-900);
+  line-height: 1.6;
+}
+
+/* ── Hero ── */
+.hero {
+  margin-bottom: 3rem;
+}
+.eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 1.25rem;
+}
+.h1 {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 6vw, 48px);
+  font-weight: 500;
+  line-height: 1.15;
+  color: var(--gray-900);
+  margin: 0 0 1rem;
+}
+.lede {
+  font-size: 18px;
+  color: var(--gray-700, #3B3B38);
+  margin: 0;
+}
+
+/* ── Numbered steps ── */
+.step {
+  margin-bottom: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 0.5px solid var(--gray-100);
+  position: relative;
+}
+.stepNum {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--teal-dark);
+  background: var(--teal-light);
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+.h2 {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3.5vw, 28px);
+  font-weight: 500;
+  color: var(--gray-900);
+  margin: 0 0 0.75rem;
+  line-height: 1.25;
+}
+.step p,
+.destinations p,
+.faqItem p {
+  margin: 0 0 0.875rem;
+  font-size: 16px;
+  color: var(--gray-900);
+}
+
+/* ── Destinations ── */
+.destinations {
+  margin-bottom: 3rem;
+  padding-top: 1.5rem;
+  border-top: 0.5px solid var(--gray-100);
+}
+.h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--teal-dark);
+  margin: 1.75rem 0 0.5rem;
+}
+
+/* ── FAQ ── */
+.faq {
+  margin-bottom: 3rem;
+  padding-top: 1.5rem;
+  border-top: 0.5px solid var(--gray-100);
+}
+.faqItem {
+  border-bottom: 0.5px solid var(--gray-100);
+  padding: 1rem 0;
+}
+.faqItem summary {
+  font-weight: 500;
+  font-size: 16px;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 44px;
+  color: var(--gray-900);
+}
+.faqItem summary::-webkit-details-marker { display: none; }
+.faqItem summary::after {
+  content: '+';
+  font-size: 22px;
+  color: var(--gray-600);
+  font-weight: 400;
+  transition: transform 120ms ease;
+}
+.faqItem[open] summary::after {
+  content: '–';
+}
+.faqItem p {
+  padding-top: 0.5rem;
+}
+
+/* ── Final CTA ── */
+.finalCta {
+  margin-top: 1rem;
+  padding: 2.5rem 1.5rem;
+  background: var(--teal-light);
+  border-radius: 16px;
+  text-align: center;
+}
+.finalCta .h2 {
+  margin-bottom: 0.5rem;
+}
+.finalCta p {
+  color: var(--gray-700, #3B3B38);
+  margin: 0 0 1.5rem;
+}
+.ctaBtn {
+  background: var(--teal);
+  color: var(--white);
+  border: none;
+  padding: 0 28px;
+  min-height: 48px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+.ctaBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
