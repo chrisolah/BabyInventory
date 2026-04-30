@@ -60,6 +60,7 @@ const VIEWPORTS = IS_DESKTOP ? DESKTOP_VIEWPORTS : MOBILE_VIEWPORTS
 
 const ROUTES = [
   { path: '/',               name: 'landing' },
+  { path: '/how-it-works',   name: 'how-it-works' },
   { path: '/signup',         name: 'signup' },
   { path: '/login',          name: 'login' },
   { path: '/reset-password', name: 'reset-password' },

@@ -2,9 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
-import IvyDecoration from '../components/IvyDecoration'
 import IvyBanner from '../components/IvyBanner'
 import styles from './HowItWorks.module.css'
+
+// IvyDecoration is mounted by LandingLayout (the parent route element),
+// not here. That keeps the desktop ivy persistent across navigation
+// between Landing and HowItWorks. IvyBanner stays inline because it
+// sits between the nav and hero, which a parent layout can't position.
 
 // Public SEO page — long-tail keyword targets:
 //   "baby clothes inventory app" / "track baby clothes by size" /
@@ -66,10 +70,6 @@ export default function HowItWorks() {
 
   return (
     <div className={styles.page}>
-      {/* Decorative ivy in the left gutter — same component as Landing.
-          Fixed-position, pointer-events:none, hides itself below 960px so
-          mobile layout is unaffected. */}
-      <IvyDecoration />
       <nav className={styles.nav}>
         <button
           className={styles.logo}

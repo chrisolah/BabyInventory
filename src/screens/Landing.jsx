@@ -2,9 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { track } from '../lib/analytics'
 import { useAuth } from '../hooks/useAuth'
-import IvyDecoration from '../components/IvyDecoration'
 import IvyBanner from '../components/IvyBanner'
 import styles from './Landing.module.css'
+
+// IvyDecoration is mounted by LandingLayout (the parent route element),
+// not here. That keeps the desktop ivy persistent across navigation
+// between Landing and HowItWorks instead of restarting its 9s grow
+// animation on every route change. IvyBanner stays inline because it
+// sits between the nav and hero, which a parent layout can't position.
 
 // Landing page — aligned with V1.9 addendum (2026-04-23).
 //
@@ -85,9 +90,6 @@ export default function Landing() {
 
   return (
     <div className={styles.page}>
-      {/* Decorative ivy in the left gutter. Fixed-position, pointer-events:none,
-          hides itself below 960px viewport — can't affect layout. */}
-      <IvyDecoration />
       <nav className={styles.nav}>
         <div className={styles.navLeft}>
           <div className={styles.logo}>sprigloop</div>
