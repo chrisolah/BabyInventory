@@ -6,11 +6,13 @@
 }
 
 /* ── Header ───────────────────────────────────────────────── */
-/* 1fr auto 1fr keeps the title (middle `auto` cell) visually centered
-   regardless of the side clusters' widths. The left (back button) and
-   right (Add + Logout) clusters occupy equal 1fr tracks and are pinned
-   to their respective edges via justify-self, so adding or removing a
-   right-hand button no longer shifts the title off-center. */
+/* Mobile default: 2-column grid with title taking the leftover 1fr so
+   it has the maximum breathing room next to the action cluster. Title
+   centers within its own cell (visually slightly left-of-center, but the
+   action cluster occupies a meaningful share of the narrow viewport so
+   that drift is small and the comfort win on tight phones is worth it).
+   This was the layout shipped 2026-04-28 when the back button was
+   removed. */
 .header {
   position: sticky;
   top: 0;
@@ -19,13 +21,32 @@
   border-bottom: 0.5px solid var(--gray-200);
   padding: 12px 16px;
   display: grid;
-  /* 1fr auto since the back button was removed (2026-04-28). Title fills
-     the available horizontal space (no longer competing with a leading
-     button column) and the action cluster sits at its natural width on
-     the right. */
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 8px;
+}
+
+/* Desktop: switch to a 3-column grid with the title's auto middle column
+   sandwiched between two minmax(92px, 1fr) spacer columns so it lands
+   at the page's true visual center. 92px = passBtn 44 + gap 4 + addBtn 44
+   — mirrors the right-side action cluster's content min-width so the
+   left and right tracks stay symmetric (an unconstrained 1fr on the left
+   would collapse below the right's content-min and pull the title left,
+   which was the desktop centering bug Chris reported 2026-04-28). The
+   leading column is intentionally empty; .titleCell and .headerActions
+   pin to columns 2 and 3 explicitly. Breakpoint matches the codebase's
+   tablet threshold (Home/BabyFormModal/InviteMemberModal/TagScanner all
+   pivot at 600px). */
+@media (min-width: 600px) {
+  .header {
+    grid-template-columns: minmax(92px, 1fr) auto minmax(92px, 1fr);
+  }
+  .titleCell {
+    grid-column: 2;
+  }
+  .headerActions {
+    grid-column: 3;
+  }
 }
 
 /* Right-side action cluster — keeps Add and Logout grouped. */
@@ -85,8 +106,11 @@
 }
 
 /* Stacks the wardrobe title on top of an optional mobile-only sprig.
-   Occupies the 1fr middle cell of the header grid. On desktop the sprig
-   hides itself so this cell collapses back to just the title text. */
+   On mobile (<600px) this falls in the leftover 1fr cell of the
+   2-column header grid. At ≥600px the @media block above promotes it to
+   the auto middle column of a 3-column grid so the title lands at the
+   page's visual center. On desktop the sprig hides itself so this cell
+   collapses back to just the title text. */
 .titleCell {
   display: flex;
   flex-direction: column;
@@ -409,16 +433,27 @@
   font-weight: 500;
 }
 
-/* Right cluster: stacks quantity pill (when qty > 1) above the inline
-   action button on the Owned tab. Vertical stack lets each piece sit
-   tight against the right edge without crowding the body content. */
-.itemRight {
+/* Right cluster: lays the inline action chips out horizontally — Pass on
+   then Tuck away, left to right — so the two affordances read as a pair
+   rather than a stack. The optional quantity pill sits on top via the
+   wrap, kept right-aligned. Renamed from .itemRight 2026-04-29 alongside
+   the chip-pair redesign; SectionItemRow reuses this class for its
+   intent chips. */
+.itemActions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 4px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
   flex-shrink: 0;
+}
+
+/* Quantity pill spans the full chip row when present so it sits cleanly
+   above the two action chips rather than wedging between them. */
+.itemActions .itemQty {
+  flex-basis: 100%;
+  text-align: right;
 }
 
 /* Quantity pill — only rendered when item.quantity > 1. Reuses the badge
@@ -435,44 +470,80 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Inline outgrown action — small text button that flips inventory_status
-   to 'outgrown' optimistically. Quiet styling so it doesn't compete with
-   the row's primary tap target (open detail) but visible enough that a
-   parent scanning a list can decide-and-flip in one tap. Wider tap area
-   than visual padding via the negative margin-trick in JSX would be
-   ideal; for now we lean on the 6px vertical padding (well above the
-   30px min recommended target on mobile when combined with row padding).
-*/
-.itemOutgrownBtn {
+/* Inline action chips on Owned rows — paired Pass on / Tuck away buttons
+   that route an outgrown item directly to the right destination without
+   the chooser middle-step. Filled treatment (vs. the old outlined
+   .itemOutgrownBtn) because the past-tense "Outgrown" label on an
+   outlined pill read as a status stamp rather than an action. Two chips
+   stacked on the right edge of each row; visual hierarchy via color:
+   Pass on (teal-light filled) is the dominant action since it advances
+   the funnel; Tuck away (gray filled) is the alternative path. */
+.itemPassOnBtn {
+  all: unset;
+  box-sizing: border-box;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 80ms ease, color 80ms ease;
+}
+
+.itemPassOnBtn:hover {
+  background: #B6E0CC;
+}
+
+.itemPassOnBtn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+
+.itemPassOnBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.itemTuckAwayBtn {
   all: unset;
   box-sizing: border-box;
   font-size: 11px;
   font-weight: 500;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 0.5px solid var(--gray-200);
-  background: var(--white);
-  color: var(--gray-600);
+  background: var(--gray-100);
+  color: var(--gray-700);
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 80ms ease, color 80ms ease, border-color 80ms ease;
+  transition: background-color 80ms ease, color 80ms ease;
 }
 
-.itemOutgrownBtn:hover {
-  background: var(--gray-50);
+.itemTuckAwayBtn:hover {
+  background: var(--gray-200);
   color: var(--gray-900);
-  border-color: var(--gray-300);
 }
 
-.itemOutgrownBtn:focus-visible {
+.itemTuckAwayBtn:focus-visible {
   outline: 2px solid var(--teal);
   outline-offset: 1px;
 }
 
-.itemOutgrownBtn:disabled {
+.itemTuckAwayBtn:disabled {
   opacity: 0.5;
   cursor: default;
 }
+
+/* (Removed 2026-04-29 .intentChipActive / .intentChipInactive variants —
+   SectionItemRow now uses the same filled .itemPassOnBtn / .itemTuckAwayBtn
+   treatment as ItemRow so both tables read as one visual system. Current
+   state on a section row is signaled by chip label ("In a bag →" vs
+   "Pass on") and by the disabled treatment on the Tuck-away chip when
+   the item is already kept. The earlier outlined-when-inactive variant
+   made the Pass-on chip look gray on kept rows while the identical chip
+   on Owned was teal — visually inconsistent across two tables that are
+   supposed to read as one.) */
 
 /* Toast — bottom-anchored confirmation with an Undo affordance. Lives in
    the page-level fixed-position layer so it floats above the scrolling
@@ -740,58 +811,49 @@
   font-weight: 600;
 }
 
-/* Outgrown-pile banner — companion to the inline Outgrown action.
-   Whenever there are items sitting in 'outgrown' status under the
-   current baby filter, this CTA prompts the parent to convert the pile
-   into a pass-along batch in one tap. Teal-light (rather than the
-   amber warning treatment used for size-band rollovers) because this
-   is a positive next-step prompt, not an alert. Full-width clickable
-   button so the whole row is the tap target. */
-.outgrownBanner {
-  all: unset;
-  box-sizing: border-box;
+/* ── Outgrown section (bottom of Owned tab) ──────────────────────────────
+   Default-collapsed umbrella for items the household has moved out of
+   active rotation: 'kept' (tucked away), 'pass_along' (in a bag), and
+   legacy 'outgrown' rows. Shares the .group + GroupHeader visual
+   treatment with the active inventory above so the section reads as a
+   continuation of the same table style — only the position (bottom of
+   list) and the contents (chip-driven intent toggles) distinguish it.
+   The inner body uses .outgrownCategoryGroup + .outgrownCategoryLabel
+   as a quieter, non-collapsible category divider so users see grouping
+   without nesting another collapse layer. Replaced the old top-of-tab
+   .outgrownBanner CTA on 2026-04-29 — items don't accumulate in
+   transient outgrown anymore, so a banner had no constituency. */
+.outgrownSection {
+  margin-top: 16px;
+}
+
+.outgrownCategoryGroup {
   display: flex;
-  gap: 10px;
-  align-items: center;
+  flex-direction: column;
+}
+
+/* Quiet inline category divider inside the section body. Not a button —
+   visual only, since the outer section header already owns the collapse
+   interaction and a second collapse layer would be UX clutter. */
+.outgrownCategoryLabel {
+  display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  padding: 12px 14px;
-  margin: 4px 0 8px;
-  background: var(--teal-light);
-  border: 0.5px solid #B6E0CC;
-  border-radius: 10px;
+  padding: 10px 14px 6px;
   font-family: var(--font-body);
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--teal-dark);
-  cursor: pointer;
-  transition: background-color 80ms ease;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  background: transparent;
 }
 
-.outgrownBanner:hover {
-  background: #D2EFE2;
-}
-
-.outgrownBanner:focus-visible {
-  outline: 2px solid var(--teal);
-  outline-offset: 2px;
-}
-
-.outgrownBannerBody {
-  flex: 1;
-  min-width: 0;
-}
-
-.outgrownBannerBody strong {
-  color: var(--teal-dark);
-  font-weight: 600;
-}
-
-.outgrownBannerCta {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--teal-dark);
-  white-space: nowrap;
-  flex-shrink: 0;
+.outgrownCategoryCount {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-400);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Shared section headers — slot table, other wishes, etc. */

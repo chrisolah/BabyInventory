@@ -27,6 +27,12 @@ const welcomeAttemptedFor = new Set()
 function maybeFireWelcome(user) {
   if (!user?.id) return
   if (welcomeAttemptedFor.has(user.id)) return
+  // Anonymous trial users (Supabase is_anonymous=true, no email) are
+  // skipped — there's no inbox to deliver to. The welcome fires later
+  // when they upgrade to a permanent account; that conversion produces
+  // a USER_UPDATED event with is_anonymous=false and a real email,
+  // which the same maybeFireWelcome call below picks up.
+  if (user.is_anonymous) return
   // Already sent on a previous session — the metadata field is the source
   // of truth, so we can skip the network call entirely. New signups arrive
   // here without the field set.
@@ -82,8 +88,81 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  // Pre-signup trial entry point. Creates an anonymous Supabase user — a real
+  // auth.users row with is_anonymous=true — so the visitor can use the app
+  // (RLS works because every policy is keyed on auth.uid()) without giving
+  // up an email. The first save in the app surfaces a blocking modal that
+  // calls upgradeToAccount to convert this row into a permanent account
+  // without losing any data.
+  //
+  // Anonymous Sign-Ins must be enabled in the Supabase project: Authentication
+  // → Providers → Anonymous Sign-Ins. Without that, this call returns an
+  // error from the API.
+  async function signInAnonymously() {
+    const { data, error } = await supabase.auth.signInAnonymously()
+    if (error) return { error }
+    // The onAuthStateChange listener will also pick this up and call setUser,
+    // but doing it here too means the caller can navigate immediately after
+    // await without racing the listener.
+    if (data?.user) setUser(data.user)
+    return { user: data?.user ?? null, error: null }
+  }
+
+  // Convert an anonymous account to a permanent one. Single-call flow:
+  // auth.updateUser({ email, password }) sets both fields on the same
+  // auth.users row, flipping is_anonymous=false (the project has
+  // "Confirm email" disabled so this happens inline with no extra
+  // round-trip). Same auth.users.id is preserved across the conversion,
+  // so every household / baby / clothing_items / pass_along_batches row
+  // written during the trial automatically belongs to the permanent
+  // account — no data migration required.
+  //
+  // Future logins after this conversion can use either:
+  //   • email + password — Login.jsx's password method, signInWithPassword
+  //   • email + 6-digit OTP — Login.jsx's magic-link method, signInWithOtp
+  //
+  // Both work because the user has both an email and a password set on
+  // their auth.users row. The user picks whichever they prefer at login.
+  // Password is required at conversion (not optional) because OTP-only
+  // accounts can't recover if email access is lost; pairing both gives
+  // the user redundancy.
+  async function upgradeAccount({ email, password }) {
+    const trimmedEmail = email.trim()
+    const trimmedPassword = password.trim()
+    if (!trimmedEmail) return { error: new Error('Email is required.') }
+    if (trimmedPassword.length < 8) {
+      return { error: new Error('Password must be at least 8 characters.') }
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      email: trimmedEmail,
+      password: trimmedPassword,
+    })
+    if (error) return { error }
+
+    // Pull the freshly-updated user so consumer state reflects
+    // is_anonymous=false immediately, without waiting for the auth-state
+    // listener to deliver the USER_UPDATED event. maybeFireWelcome will
+    // also pick up the listener event and send the welcome email.
+    const { data } = await supabase.auth.getUser()
+    if (data?.user) setUser(data.user)
+    return { error: null }
+  }
+
+  // Convenience derived flag — true while the visitor is in trial mode.
+  // Components that need to gate writes (AddItem, ScanCommit, BagCreate)
+  // check this to decide whether to surface the upgrade modal.
+  const isAnonymous = !!user?.is_anonymous
+
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      isAnonymous,
+      signOut,
+      signInAnonymously,
+      upgradeAccount,
+    }}>
       {children}
     </AuthContext.Provider>
   )

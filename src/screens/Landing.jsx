@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { track } from '../lib/analytics'
+import { useAuth } from '../hooks/useAuth'
 import IvyDecoration from '../components/IvyDecoration'
 import IvyBanner from '../components/IvyBanner'
 import styles from './Landing.module.css'
@@ -25,32 +26,61 @@ import styles from './Landing.module.css'
 export default function Landing() {
   const navigate = useNavigate()
   const hubRef = useRef(null)
+  const { signInAnonymously } = useAuth()
+  // Pending while the anon sign-in API call is in flight, so rapid taps
+  // on a CTA can't fire multiple sign-ins in parallel and rapid taps
+  // get visual feedback (button stays disabled briefly).
+  const [starting, setStarting] = useState(false)
 
   useEffect(() => {
     track.pageViewed({ page: 'landing', referrer: document.referrer })
   }, [])
 
+  // Shared trial-entry handler. Every "Try Sprigloop" CTA on this page
+  // funnels through here so the analytics distinction (which CTA was
+  // tapped) is preserved while the actual sign-in + navigation logic is
+  // identical. On a Supabase API failure (e.g., Anonymous Sign-Ins not
+  // enabled), we fall back to the legacy /signup route so the user can
+  // still progress; the error is logged for surfacing later.
+  async function startTrial(ctaName) {
+    if (starting) return
+    setStarting(true)
+    track.ctaClicked(ctaName)
+    const { error } = await signInAnonymously()
+    if (error) {
+      console.error('Anonymous sign-in failed; falling back to /signup', error)
+      track.ctaClicked('try_anon_fallback_signup')
+      setStarting(false)
+      navigate('/signup')
+      return
+    }
+    // PublicRoute would redirect a freshly-authed user to /home anyway,
+    // but onboarding is the right first stop for a brand-new account so
+    // we navigate explicitly. Onboarding's own resume logic will route
+    // to /home if the user somehow already finished (shouldn't, since
+    // they were anon a tick ago).
+    setStarting(false)
+    navigate('/onboarding')
+  }
+
   function handleGetStarted() {
-    track.ctaClicked('get_started')
-    navigate('/signup')
+    startTrial('get_started')
   }
 
   function handleSeeHub() {
     // Secondary hero CTA — scrolls to the pass-along hub section instead of
-    // bouncing the user straight to signup. Curious parents browse; committed
-    // ones click Get started.
+    // bouncing the user straight into the trial. Curious parents browse;
+    // committed ones tap Try Sprigloop above.
     track.ctaClicked('see_pass_along_hub')
     hubRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   function handleJoinCommunity() {
-    track.ctaClicked('join_community')
-    navigate('/signup')
+    startTrial('join_community')
   }
 
   function handleCreateAccount() {
-    track.ctaClicked('create_account_footer')
-    navigate('/signup')
+    startTrial('create_account_footer')
   }
 
   return (
@@ -78,7 +108,9 @@ export default function Landing() {
         <p className={styles.heroEnv}>Built for parents who&rsquo;d rather pass it on than throw it out.</p>
         <p className={styles.sub}>Sprigloop is a wardrobe app for baby clothes, with a built-in way to pass them on to another family once they&rsquo;re outgrown.</p>
         <div className={styles.heroBtns}>
-          <button className={styles.heroCta} onClick={handleGetStarted}>Get started free</button>
+          <button className={styles.heroCta} onClick={handleGetStarted} disabled={starting}>
+            {starting ? 'Starting…' : 'Try Sprigloop free'}
+          </button>
           <button className={styles.heroSecondaryCta} onClick={handleSeeHub}>See how pass-along works</button>
         </div>
       </section>
@@ -113,8 +145,8 @@ export default function Landing() {
                 <path d="M5 4.5 Q5 2.6 8 2.6 Q11 2.6 11 4.5" stroke="#EF9F27" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
               </svg>
             </div>
-            <div className={styles.featureCardTitle}>Send what&rsquo;s outgrown</div>
-            <div className={styles.featureCardBody}>Mark items outgrown and we&rsquo;ll mail a prepaid bag. Drop it in any mailbox.</div>
+            <div className={styles.featureCardTitle}>Pass on what&rsquo;s outgrown</div>
+            <div className={styles.featureCardBody}>Mark items outgrown and we&rsquo;ll mail a prepaid bag. Drop it in any mailbox and we&rsquo;ll pass it on to another family.</div>
           </div>
         </div>
       </section>
@@ -185,14 +217,14 @@ export default function Landing() {
         <div className={styles.hubBand}>
           <div className={styles.hubEyebrow}>When baby outgrows them</div>
           <h2 className={styles.hubHeadline}>Three places your outgrown<br />clothes can go.</h2>
-          <p className={styles.hubBody}>Pick a destination and Sprigloop takes it from there. No selling, no drop-off logistics, no swapping addresses with strangers. Every batch is one less bag in the landfill &mdash; and one less new garment manufactured to take its place.</p>
+          <p className={styles.hubBody}>Pick a destination and Sprigloop takes it from there. No selling, no drop-off logistics, no swapping addresses with strangers. Every bag passed on is one less in the landfill, and one less new garment manufactured to take its place.</p>
           <div className={styles.hubGrid}>
             <div className={styles.hubCard}>
               <div className={styles.hubCardIcon} style={{ background: 'var(--amber-light)', color: 'var(--amber-dark)' }}>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M2 15c0-2.5 1.8-4 4-4s4 1.5 4 4M8 15c0-2.5 1.8-4 4-4s4 1.5 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </div>
               <div className={styles.hubCardTitle}>Send to a Sprigloop family</div>
-              <div className={styles.hubCardBody}>Ships to Sprigloop first. We route the batch to a family who&rsquo;s opted in to receiving. If we can&rsquo;t find a match, we&rsquo;ll donate it on your behalf. Addresses stay private on both ends.</div>
+              <div className={styles.hubCardBody}>Ships to Sprigloop first. We route the bag to a family who&rsquo;s opted in to receiving. If we can&rsquo;t find a match, we&rsquo;ll donate it on your behalf. Addresses stay private on both ends.</div>
             </div>
             <div className={styles.hubCard}>
               <div className={styles.hubCardIcon} style={{ background: 'var(--purple-light)', color: 'var(--purple-dark)' }}>
@@ -209,7 +241,9 @@ export default function Landing() {
               <div className={styles.hubCardBody}>Local Goodwill, shelter, or nonprofit you already trust. We&rsquo;ll mail you a Sprigloop bag with prepaid postage. Write the charity&rsquo;s address on it and drop it in any mailbox.</div>
             </div>
           </div>
-          <button className={styles.hubCta} onClick={handleGetStarted}>Start a pass-along batch</button>
+          <button className={styles.hubCta} onClick={handleGetStarted} disabled={starting}>
+            {starting ? 'Starting…' : 'Try Sprigloop free'}
+          </button>
         </div>
       </section>
 
@@ -228,7 +262,7 @@ export default function Landing() {
           </div>
           <div className={styles.optInBullet}>
             <div className={styles.optInBulletNum}>02</div>
-            <div className={styles.optInBulletText}><strong>We do the matching.</strong> When a sender picks &ldquo;Send to a Sprigloop family,&rdquo; we route the batch to one of you.</div>
+            <div className={styles.optInBulletText}><strong>We do the matching.</strong> When a sender picks &ldquo;Send to a Sprigloop family,&rdquo; we route the bag to one of you.</div>
           </div>
           <div className={styles.optInBullet}>
             <div className={styles.optInBulletNum}>03</div>
@@ -241,9 +275,11 @@ export default function Landing() {
         <div className={styles.missionBand}>
           <div className={styles.missionHeadline}>Every baby deserves a full wardrobe. Every parent deserves an easier week.</div>
           <p className={styles.missionBody}>Babies outgrow clothes in weeks &mdash; most still have years of life left. Sprigloop keeps them moving: out of your house, into another baby&rsquo;s drawer, never into landfill. With as little friction for you as possible.</p>
-          <button className={styles.missionCta} onClick={handleJoinCommunity}>Join Sprigloop</button>
+          <button className={styles.missionCta} onClick={handleJoinCommunity} disabled={starting}>
+            {starting ? 'Starting…' : 'Try Sprigloop free'}
+          </button>
           <div className={styles.statRow}>
-            <div><div className={styles.statNum}>Three</div><div className={styles.statLabel}>Destinations per batch</div></div>
+            <div><div className={styles.statNum}>Three</div><div className={styles.statLabel}>Destinations per bag</div></div>
             <div><div className={styles.statNum}>Free</div><div className={styles.statLabel}>Always, for all families</div></div>
             <div><div className={styles.statNum}>Opt-in</div><div className={styles.statLabel}>Receive when you&rsquo;re ready</div></div>
           </div>
@@ -253,7 +289,9 @@ export default function Landing() {
       <section className={styles.finalCta}>
         <div className={styles.finalHeadline}>Ready to get started?</div>
         <p className={styles.finalSub}>Organize your wardrobe, plan for what&rsquo;s next, and send outgrown clothes somewhere they&rsquo;ll be loved next, not landfilled. Free for every family. Always.</p>
-        <button className={styles.finalCtaBtn} onClick={handleCreateAccount}>Create your account</button>
+        <button className={styles.finalCtaBtn} onClick={handleCreateAccount} disabled={starting}>
+          {starting ? 'Starting…' : 'Try Sprigloop free'}
+        </button>
       </section>
     </div>
   )

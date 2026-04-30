@@ -234,6 +234,53 @@ export const track = {
   // "ship it yourself" once concierge goes live.
   passAlongLabelRequested: (props) =>
     logEvent('pass_along_label_requested', 'engagement', props),
+
+  // ── Anonymous-trial upgrade gate (Phase 2 of the anon-trial flow) ──
+  // Fires whenever the upgrade modal blocks a write while the user is
+  // still anonymous, plus key step transitions inside the modal. Lets
+  // us answer two product questions:
+  //   • Conversion rate: of users who hit the gate, what fraction
+  //     actually finish the OTP verification? (gate_opened → completed)
+  //   • Drop-off step: among dismissals, are users bailing before they
+  //     enter their email or after seeing the OTP step?
+  // The `step` prop on opened/dismissed carries 'email' | 'code' so the
+  // funnel can be sliced by where the user was in the flow.
+  upgradeModalOpened: (props) =>
+    logEvent('upgrade_modal_opened', 'engagement', props),
+  upgradeEmailRequested: (props) =>
+    logEvent('upgrade_email_requested', 'engagement', props),
+  upgradeCompleted: (props) =>
+    logEvent('upgrade_completed', 'engagement', props),
+  upgradeModalDismissed: (props) =>
+    logEvent('upgrade_modal_dismissed', 'engagement', props),
+  // TrialBanner tap — proactive upgrade trigger from the persistent
+  // bottom banner (vs. reactive trigger when a save action hits the
+  // gate). Splitting the events lets the funnel distinguish "visitor
+  // upgraded because they wanted to lock in their data" from "visitor
+  // upgraded because they bumped into the gate." Different intent
+  // signals.
+  trialBannerTapped: (props) =>
+    logEvent('trial_banner_tapped', 'engagement', props),
+
+  // ── Outgrown / kept transitions (added 2026-04-29 with the kept fork) ──
+  // The new flow forks every outgrown moment into one of two paths:
+  //   - Pass on  → directly into a draft bag (tracked via passAlongItemAdded
+  //                with from='inventory_inline' or 'outgrown_section_chip')
+  //   - Tuck away → flips inventory_status to 'kept' (itemTuckedAway below)
+  // intentFlipped fires when a user reclassifies an item already in the
+  // Outgrown section (e.g. tapping the Pass on chip on a kept row to send
+  // it after all). Tells us how often the parent's first-tap intent gets
+  // revised after-the-fact — informs whether the inline two-chip choice is
+  // the right fork point or whether a chooser would land more decisions
+  // correctly the first time.
+  itemTuckedAway: (props) =>
+    logEvent('item_tucked_away', 'engagement', props),
+  itemTuckedAwayUndone: (props) =>
+    logEvent('item_tucked_away_undone', 'engagement', props),
+  itemReturnedToOwned: (props) =>
+    logEvent('item_returned_to_owned', 'engagement', props),
+  intentFlipped: (props) =>
+    logEvent('intent_flipped', 'engagement', props),
 }
 
 export { getSessionId }

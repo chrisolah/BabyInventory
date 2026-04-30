@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { HouseholdProvider } from './contexts/HouseholdContext'
+import { UpgradeGateProvider } from './contexts/UpgradeGateContext'
 import './styles/globals.css'
 
 import Landing from './screens/Landing'
@@ -19,6 +20,7 @@ import PassAlongList from './screens/PassAlongList'
 import Profile from './screens/Profile'
 import AcceptInvite from './screens/AcceptInvite'
 import IvyDecoration from './components/IvyDecoration'
+import TrialBanner from './components/TrialBanner'
 
 // React Router v6 doesn't auto-scroll to the top on route change, so
 // scroll position carries between pages. Most noticeable on mobile:
@@ -98,10 +100,23 @@ function ProtectedLayout() {
   const { user, loading } = useAuth()
   if (loading) return <div />
   if (!user) return <Navigate to="/" replace />
+  // UpgradeGateProvider sits inside ProtectedLayout so the gate is mounted
+  // on every authed route (where writes that need a real account live)
+  // but isn't loaded for unauth pages. The provider reads `isAnonymous`
+  // from useAuth to decide whether to intercept actions; its modal lives
+  // alongside the routed Outlet and overlays everything when triggered.
   return (
     <HouseholdProvider>
-      <Outlet />
-      <IvyDecoration />
+      <UpgradeGateProvider>
+        <Outlet />
+        <IvyDecoration />
+        {/* TrialBanner self-gates on isAnonymous and renders nothing for
+            permanent users. Mounted here (not per-screen) so the
+            affordance is consistent across every authed surface. Sits
+            inside UpgradeGateProvider so its tap handler can call
+            triggerUpgrade. */}
+        <TrialBanner />
+      </UpgradeGateProvider>
     </HouseholdProvider>
   )
 }

@@ -68,11 +68,18 @@ export const CATEGORY_LABELS = {
 //
 // Ordering matters: SLOTS is evaluated in order when mapping an item to a slot,
 // so more-specific slots come before fallbacks in the same category.
+// Each slot has both a `label` (plural — used for slot/category headers
+// like "Bodysuits" on the Wish list and SlotDetail) and a `singular`
+// (used when referring to an individual item, e.g. an Inventory row's
+// fallback name when the user didn't enter one). Most singulars are the
+// label minus a trailing 's'; pluralia tantum (Shorts, Pants & leggings,
+// Pajamas) and uncountables (Rain gear, Swimwear) keep the same form.
 export const SLOTS = [
   // ── Tops and bodysuits ────────────────────────────────────────────────
   {
     id: 'bodysuits',
     label: 'Bodysuits',
+    singular: 'Bodysuit',
     category: 'tops_and_bodysuits',
     keywords: ['bodysuit', 'onesie'],
     hint: 'Short & long sleeve',
@@ -82,6 +89,7 @@ export const SLOTS = [
   {
     id: 'day_tops',
     label: 'Day tops',
+    singular: 'Day top',
     category: 'tops_and_bodysuits',
     keywords: ['t_shirt', 'tshirt', 'top', 'tee', 'shirt', 'sweater', 'cardigan', 'hoodie'],
     hint: null,
@@ -93,6 +101,7 @@ export const SLOTS = [
   {
     id: 'one_pieces',
     label: 'One-pieces',
+    singular: 'One-piece',
     category: 'one_pieces',
     keywords: ['coverall', 'romper', 'one_piece', 'onepiece', 'jumpsuit'],
     hint: 'Long-leg coveralls',
@@ -104,6 +113,7 @@ export const SLOTS = [
   {
     id: 'shorts',
     label: 'Shorts',
+    singular: 'Shorts', // pluralia tantum
     category: 'bottoms',
     keywords: ['short'],
     hint: 'Seasonal',
@@ -112,6 +122,7 @@ export const SLOTS = [
   {
     id: 'pants_leggings',
     label: 'Pants & leggings',
+    singular: 'Pants & leggings', // pluralia tantum
     category: 'bottoms',
     keywords: ['pants', 'legging', 'jogger', 'trouser'],
     hint: null,
@@ -123,6 +134,7 @@ export const SLOTS = [
   {
     id: 'dresses',
     label: 'Dresses',
+    singular: 'Dress',
     category: 'dresses_and_skirts',
     keywords: ['dress', 'skirt'],
     hint: null,
@@ -134,6 +146,7 @@ export const SLOTS = [
   {
     id: 'sleep_sacks',
     label: 'Sleep sacks',
+    singular: 'Sleep sack',
     category: 'sleepwear',
     keywords: ['sack', 'swaddle'],
     hint: null,
@@ -143,6 +156,7 @@ export const SLOTS = [
   {
     id: 'pajamas',
     label: 'Pajamas',
+    singular: 'Pajamas', // pluralia tantum
     category: 'sleepwear',
     keywords: ['sleepsuit', 'sleeper', 'pajama', 'pyjama', 'pj', 'nightgown'],
     hint: 'Sleepsuits & 2-piece',
@@ -155,6 +169,7 @@ export const SLOTS = [
   {
     id: 'rain_gear',
     label: 'Rain gear',
+    singular: 'Rain gear', // uncountable
     category: 'outerwear',
     keywords: ['rain', 'puddle'],
     hint: null,
@@ -163,6 +178,7 @@ export const SLOTS = [
   {
     id: 'jackets',
     label: 'Jackets',
+    singular: 'Jacket',
     category: 'outerwear',
     keywords: ['jacket', 'coat', 'snowsuit', 'parka'],
     hint: null,
@@ -174,6 +190,7 @@ export const SLOTS = [
   {
     id: 'socks',
     label: 'Socks',
+    singular: 'Sock',
     category: 'footwear',
     keywords: ['sock'],
     hint: 'They disappear.',
@@ -183,6 +200,7 @@ export const SLOTS = [
   {
     id: 'shoes',
     label: 'Shoes / booties',
+    singular: 'Shoe / bootie',
     category: 'footwear',
     keywords: ['shoe', 'bootie', 'boot', 'sandal'],
     hint: null,
@@ -194,6 +212,7 @@ export const SLOTS = [
   {
     id: 'hats',
     label: 'Hats',
+    singular: 'Hat',
     category: 'accessories',
     keywords: ['hat', 'beanie', 'cap', 'bonnet'],
     hint: 'Sun + warm',
@@ -202,6 +221,7 @@ export const SLOTS = [
   {
     id: 'mittens',
     label: 'Mittens',
+    singular: 'Mitten',
     category: 'accessories',
     keywords: ['mitten', 'glove'],
     hint: 'Scratch prevention',
@@ -211,6 +231,7 @@ export const SLOTS = [
   {
     id: 'bibs',
     label: 'Bibs',
+    singular: 'Bib',
     category: 'accessories',
     keywords: ['bib'],
     hint: null,
@@ -219,6 +240,7 @@ export const SLOTS = [
   {
     id: 'burp_cloths',
     label: 'Burp cloths',
+    singular: 'Burp cloth',
     category: 'accessories',
     keywords: ['burp', 'muslin'],
     hint: null,
@@ -230,6 +252,7 @@ export const SLOTS = [
   {
     id: 'swimwear',
     label: 'Swimwear',
+    singular: 'Swimwear', // uncountable
     category: 'swimwear',
     keywords: ['swim'],
     hint: 'Seasonal',

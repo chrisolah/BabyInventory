@@ -7,6 +7,7 @@ import { track } from '../lib/analytics'
 import {
   AGE_RANGES,
   CATEGORY_LABELS,
+  SLOT_BY_ID,
   computeCoverage,
   otherWishes,
   inferAgeRange,
@@ -35,6 +36,8 @@ const STATUS_LABEL = {
   owned: 'Owned',
   needed: 'Needed',
   outgrown: 'Outgrown',
+  pass_along: 'In a bag',
+  kept: 'Tucked away',
   donated: 'Donated',
   exchanged: 'Exchanged',
 }
@@ -43,6 +46,63 @@ const PRIORITY_LABEL = {
   must_have: 'Must have',
   nice_to_have: 'Nice to have',
   low_priority: 'Low priority',
+}
+
+const CONDITION_LABEL = {
+  new: 'New',
+  like_new: 'Like new',
+  good: 'Good',
+  fair: 'Fair',
+  worn: 'Worn',
+}
+
+const SEASON_LABEL = {
+  spring: 'Spring',
+  summer: 'Summer',
+  fall: 'Fall',
+  winter: 'Winter',
+  all_season: 'All-season',
+}
+
+// Pick the most identifying primary label for a row + the supporting meta
+// line. Falls through name → brand → slot label → 'Item' so unnamed rows
+// don't all collapse into the same humanized item_type ("One pieces"
+// repeated below "One-pieces" was the symptom). Meta picks up whatever
+// other fields the user filled (brand if not already used, slot label
+// if not already used, condition, season) so two same-type unnamed rows
+// differ visually when any descriptor exists.
+function buildItemDisplay(item) {
+  const slot = item.item_type ? SLOT_BY_ID[item.item_type] : null
+  // Individual-item context: prefer slot.singular ("One-piece") over the
+  // category-level slot.label ("One-pieces"). Falls back to label for
+  // any slots that don't define a singular, then to humanized item_type.
+  const slotLabel = slot?.singular || slot?.label || humanizeItemType(item.item_type)
+
+  let primary
+  let primarySource // 'name' | 'brand' | 'slot' | 'fallback'
+  if (item.name) {
+    primary = item.name
+    primarySource = 'name'
+  } else if (item.brand) {
+    primary = item.brand
+    primarySource = 'brand'
+  } else if (slotLabel) {
+    primary = slotLabel
+    primarySource = 'slot'
+  } else {
+    primary = 'Item'
+    primarySource = 'fallback'
+  }
+
+  const metaParts = []
+  if (primarySource !== 'brand' && item.brand) metaParts.push(item.brand)
+  if (primarySource !== 'slot' && slotLabel) metaParts.push(slotLabel)
+  if (item.condition) metaParts.push(CONDITION_LABEL[item.condition] || item.condition)
+  if (item.season) metaParts.push(SEASON_LABEL[item.season] || item.season)
+
+  // Cap at 3 parts so the meta line doesn't ellipsize away the more
+  // identifying earlier fields on narrow screens.
+  return { primary, meta: metaParts.slice(0, 3).join(' · ') }
 }
 
 // Display order for the Owned tab (categories grouping).
@@ -82,141 +142,46 @@ export default function Inventory() {
   const [tab, setTab] = useState('owned') // 'owned' | 'wishlist'
   const [error, setError] = useState(null)
 
-  // ── Inline outgrown action ──────────────────────────────────────────────
-  // Optimistic flip from owned → outgrown without opening ItemDetail. The
-  // pending set hides items from the rendered list as soon as the user
-  // taps, before the DB roundtrip lands. The toast gives a 5s undo window
-  // because outgrown items currently aren't viewable from any list (mistap
-  // recovery is otherwise effectively impossible without a direct URL).
-  //
-  // Multi-tap behavior: each new flip replaces the toast (last-tap-wins).
-  // Earlier flips are already committed to the DB and remain in the
-  // optimistic-pending set until the next reloadItems lands the canonical
-  // state. If a parent rapid-fires multiple Outgrown buttons, only the
-  // most recent has an undo affordance — flag if this becomes a real
-  // pattern (it shouldn't; outgrown is a thoughtful per-item decision).
-  const [pendingOutgrownIds, setPendingOutgrownIds] = useState(() => new Set())
-  const [outgrownToast, setOutgrownToast] = useState(null)
-    // { id, name } | null
+  // ── Inline action handlers (Owned tab) ─────────────────────────────────
+  // Two paths from each Owned row's inline chips:
+  //   - Pass on   → flip status to 'pass_along', attach to a draft bag.
+  //                 Toast offers View bag + Undo.
+  //   - Tuck away → flip status to 'kept'. Toast offers Undo only.
+  // Both use pendingHideIds to hide rows instantly while the DB roundtrip
+  // resolves. The toast's `kind` field tells Undo what to revert to and
+  // which secondary action to render. (Replaces the older outgrown→toast
+  // →pass-it-on two-step path from 2026-04-27.)
+  const [pendingHideIds, setPendingHideIds] = useState(() => new Set())
+  const [actionToast, setActionToast] = useState(null)
+    // { kind: 'pass_on' | 'tuck_away', id, name, batchId? } | null
 
   // Auto-dismiss the toast after 5s. Each new toast value replaces the
   // previous one; effect cleanup clears the in-flight timer so we don't
   // double-fire dismissals.
   useEffect(() => {
-    if (!outgrownToast) return
-    const t = setTimeout(() => setOutgrownToast(null), 5000)
+    if (!actionToast) return
+    const t = setTimeout(() => setActionToast(null), 5000)
     return () => clearTimeout(t)
-  }, [outgrownToast])
+  }, [actionToast])
 
   // Once a fresh items list lands from the server, the optimistic pending
-  // set is obsolete — the canonical list already excludes outgrown items
-  // via the inventory_status filter. Clearing here prevents the set from
+  // set is obsolete — the canonical list's inventory_status filters
+  // already exclude hidden items. Clearing here prevents the set from
   // accumulating stale ids across many flips during a session.
   useEffect(() => {
-    if (pendingOutgrownIds.size > 0) setPendingOutgrownIds(new Set())
+    if (pendingHideIds.size > 0) setPendingHideIds(new Set())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items])
 
-  async function handleMarkOutgrown(item) {
-    if (!item || pendingOutgrownIds.has(item.id)) return
-
-    // Optimistic: hide instantly so the row doesn't sit there while the
-    // network call resolves. Toast becomes the user's only handle to
-    // undo, which is the correct UX hierarchy (instant feedback > slow
-    // confirmation).
-    setPendingOutgrownIds(prev => {
-      const next = new Set(prev)
-      next.add(item.id)
-      return next
-    })
-    setOutgrownToast({
-      id: item.id,
-      name: item.name || humanizeItemType(item.item_type),
-    })
-
-    const { error: updErr } = await supabase
-      .schema(currentSchema)
-      .from('clothing_items')
-      .update({ inventory_status: 'outgrown' })
-      .eq('id', item.id)
-
-    if (updErr) {
-      // Roll back the optimistic state so the item snaps back into the
-      // list and the error is visible. The toast disappears on the next
-      // setOutgrownToast(null) so dismissing here keeps the surface tidy.
-      setPendingOutgrownIds(prev => {
-        const next = new Set(prev)
-        next.delete(item.id)
-        return next
-      })
-      setOutgrownToast(null)
-      setError(`Couldn’t mark ${item.name || 'item'} outgrown: ${updErr.message}`)
-      return
-    }
-
-    track.itemMarkedOutgrown?.({ id: item.id, from: 'inventory_inline' })
-    reloadItems()
-  }
-
-  async function handleUndoOutgrown() {
-    if (!outgrownToast) return
-    const { id, name } = outgrownToast
-
-    // Local state first: take the item out of pending so reloadItems'
-    // refetch lands a canonical owned row that won't get filtered out.
-    setPendingOutgrownIds(prev => {
-      const next = new Set(prev)
-      next.delete(id)
-      return next
-    })
-    setOutgrownToast(null)
-
-    const { error: updErr } = await supabase
-      .schema(currentSchema)
-      .from('clothing_items')
-      .update({ inventory_status: 'owned' })
-      .eq('id', id)
-
-    if (updErr) {
-      setError(`Couldn’t undo outgrown for ${name}: ${updErr.message}`)
-      return
-    }
-
-    track.itemMarkedOutgrownUndone?.({ id })
-    reloadItems()
-  }
-
-  // ── Pass it on: bridge from outgrown to a pass-along batch ─────────────
-  // Outgrown alone is a dead-end status (no view surfaces these items).
-  // The toast's primary action funnels that moment directly into the
-  // pass-along flow: find the household's most recent draft batch (or
-  // create a fresh one with the default 'family' destination, same as
-  // PassAlongList's create CTA), attach this item, navigate to the batch.
-  //
-  // Status mechanic: the item was just stamped 'outgrown' by
-  // handleMarkOutgrown. Attaching to a batch flips it to 'pass_along'
-  // (matches the picker flow in PassAlongBatch.jsx) and sets the FK.
-  // Two writes total, but both are small + atomic on the row level.
-  async function handlePassItOn() {
-    if (!outgrownToast) return
+  // Find-or-create the household's most recent draft bag. Shared by
+  // handlePassOn and handleSectionChipTap. Returns
+  // { batchId, createdNewBatch } or { error: string }. Reusing an
+  // existing draft matches the parent's mental model of "I'm building
+  // a pile to send" rather than spawning a fresh bag for every item.
+  async function ensureDraftBatch() {
     if (!household?.id || !user?.id) {
-      setError('Couldn’t start a batch — household not loaded.')
-      return
+      return { error: 'Couldn’t start a bag — household not loaded.' }
     }
-    const { id, name } = outgrownToast
-
-    // Optimistically dismiss the toast so the navigation feels snappy.
-    // The pending-set entry stays — once we land on PassAlongBatch the
-    // canonical fetch there is independent of Inventory's items list,
-    // and our reloadItems() at the end will catch up Inventory.
-    setOutgrownToast(null)
-
-    // Find the most recent draft batch for the household. Reusing an
-    // existing draft matches the parent's mental model of "I'm building
-    // a pile to send" — adding more items to the same pile rather than
-    // spawning a fresh batch every time. If there isn't one, we create.
-    let batchId = null
-    let createdNewBatch = false
 
     const { data: existingDraft, error: findErr } = await supabase
       .schema(currentSchema)
@@ -229,163 +194,265 @@ export default function Inventory() {
       .maybeSingle()
 
     if (findErr) {
-      setError(`Couldn’t find a draft batch: ${findErr.message}`)
-      return
+      return { error: `Couldn’t find a draft bag: ${findErr.message}` }
     }
 
     if (existingDraft) {
-      batchId = existingDraft.id
-    } else {
-      const { data: newBatch, error: insErr } = await supabase
-        .schema(currentSchema)
-        .from('pass_along_batches')
-        .insert({
-          household_id: household.id,
-          created_by: user.id,
-          destination_type: 'family',
-          // status defaults to 'draft', reference_code auto-generated
-        })
-        .select('id')
-        .maybeSingle()
-      if (insErr || !newBatch) {
-        setError(`Couldn’t start a batch: ${insErr?.message ?? 'unknown'}`)
-        return
-      }
-      batchId = newBatch.id
-      createdNewBatch = true
-      track.passAlongBatchCreated?.({
-        id: batchId,
-        from: 'outgrown_toast',
-      })
+      return { batchId: existingDraft.id, createdNewBatch: false }
     }
 
-    // Attach + flip status. The clothing_items_status_check accepts
-    // 'pass_along' (migration 010), and the FK accepts the batch we
-    // just resolved. RLS lets household members update their own rows.
+    const { data: newBatch, error: insErr } = await supabase
+      .schema(currentSchema)
+      .from('pass_along_batches')
+      .insert({
+        household_id: household.id,
+        created_by: user.id,
+        destination_type: 'family',
+        // status defaults to 'draft', reference_code auto-generated
+      })
+      .select('id')
+      .maybeSingle()
+
+    if (insErr || !newBatch) {
+      return { error: `Couldn’t start a bag: ${insErr?.message ?? 'unknown'}` }
+    }
+
+    track.passAlongBatchCreated?.({ id: newBatch.id, from: 'inventory_inline' })
+    return { batchId: newBatch.id, createdNewBatch: true }
+  }
+
+  async function handlePassOn(item, opts = {}) {
+    if (!item || pendingHideIds.has(item.id)) return
+    const { from = 'inventory_inline' } = opts
+
+    // Optimistic hide.
+    setPendingHideIds(prev => {
+      const next = new Set(prev)
+      next.add(item.id)
+      return next
+    })
+
+    const ensured = await ensureDraftBatch()
+    if (ensured.error) {
+      setPendingHideIds(prev => {
+        const next = new Set(prev)
+        next.delete(item.id)
+        return next
+      })
+      setError(ensured.error)
+      return
+    }
+
+    const { batchId, createdNewBatch } = ensured
+
+    // Save the item's current inventory_status into pre_bag_inventory_status
+    // so removeItem in PassAlongBatch can restore to the right pile when
+    // the user takes it back out (Owned vs Tucked away vs legacy outgrown).
+    // Without this, every removal lands in 'owned' even for items that
+    // came from the kept pile.
+    const prevStatus = item.inventory_status
     const { error: attachErr } = await supabase
       .schema(currentSchema)
       .from('clothing_items')
       .update({
         pass_along_batch_id: batchId,
         inventory_status: 'pass_along',
+        pre_bag_inventory_status: prevStatus,
       })
-      .eq('id', id)
+      .eq('id', item.id)
 
     if (attachErr) {
-      setError(`Couldn’t add ${name} to the batch: ${attachErr.message}`)
+      setPendingHideIds(prev => {
+        const next = new Set(prev)
+        next.delete(item.id)
+        return next
+      })
+      const name = item.name || humanizeItemType(item.item_type)
+      setError(`Couldn’t add ${name} to the bag: ${attachErr.message}`)
       return
     }
 
-    // Take the item out of the optimistic-pending set so reloadItems'
-    // canonical refetch isn't shadowed by stale local state — though
-    // since the item is now status='pass_along' the owned-list filter
-    // would exclude it anyway, this is belt-and-braces.
-    setPendingOutgrownIds(prev => {
-      const next = new Set(prev)
-      next.delete(id)
-      return next
-    })
-
     track.passAlongItemAdded?.({
-      from: 'outgrown_toast',
+      from,
       batch_id: batchId,
       created_new_batch: createdNewBatch,
       count: 1,
     })
 
-    reloadItems()
-    navigate(`/pass-along/${batchId}`)
-  }
-
-  // ── Pass on the entire outgrown pile (banner action) ───────────────────
-  // Single-tap path for the accumulated case: parent has marked a bunch
-  // of stuff outgrown over time and wants to deal with the pile in one
-  // go. Same find-or-create draft pattern as handlePassItOn, but the
-  // attach is a bulk update of every outgrown item in the current
-  // baby-filtered view. RLS scopes to household membership, so the
-  // .in('id', [...]) filter is safe even though the IDs come from the
-  // client.
-  async function handlePassOnAllOutgrown() {
-    if (!household?.id || !user?.id) {
-      setError('Couldn’t start a batch — household not loaded.')
-      return
-    }
-    if (outgrownItems.length === 0) return
-
-    const ids = outgrownItems.map(i => i.id)
-    const count = ids.length
-
-    // Find or create a draft batch — same logic as the toast path.
-    let batchId = null
-    let createdNewBatch = false
-
-    const { data: existingDraft, error: findErr } = await supabase
-      .schema(currentSchema)
-      .from('pass_along_batches')
-      .select('id')
-      .eq('household_id', household.id)
-      .eq('status', 'draft')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (findErr) {
-      setError(`Couldn’t find a draft batch: ${findErr.message}`)
-      return
-    }
-
-    if (existingDraft) {
-      batchId = existingDraft.id
-    } else {
-      const { data: newBatch, error: insErr } = await supabase
-        .schema(currentSchema)
-        .from('pass_along_batches')
-        .insert({
-          household_id: household.id,
-          created_by: user.id,
-          destination_type: 'family',
-        })
-        .select('id')
-        .maybeSingle()
-      if (insErr || !newBatch) {
-        setError(`Couldn’t start a batch: ${insErr?.message ?? 'unknown'}`)
-        return
-      }
-      batchId = newBatch.id
-      createdNewBatch = true
-      track.passAlongBatchCreated?.({
-        id: batchId,
-        from: 'outgrown_banner',
-      })
-    }
-
-    // Bulk attach: one UPDATE with .in('id', [...]) for every outgrown
-    // row. PostgREST handles arrays of up to a few thousand IDs
-    // cleanly; we won't approach that limit at one-baby-per-household
-    // scale.
-    const { error: bulkErr } = await supabase
-      .schema(currentSchema)
-      .from('clothing_items')
-      .update({
-        pass_along_batch_id: batchId,
-        inventory_status: 'pass_along',
-      })
-      .in('id', ids)
-
-    if (bulkErr) {
-      setError(`Couldn’t add items to the batch: ${bulkErr.message}`)
-      return
-    }
-
-    track.passAlongItemAdded?.({
-      from: 'outgrown_banner',
-      batch_id: batchId,
-      created_new_batch: createdNewBatch,
-      count,
+    setActionToast({
+      kind: 'pass_on',
+      id: item.id,
+      name: item.name || humanizeItemType(item.item_type),
+      batchId,
+      prevStatus,
     })
 
     reloadItems()
+  }
+
+  async function handleTuckAway(item, opts = {}) {
+    if (!item || pendingHideIds.has(item.id)) return
+    const { from = 'inventory_inline' } = opts
+
+    setPendingHideIds(prev => {
+      const next = new Set(prev)
+      next.add(item.id)
+      return next
+    })
+
+    const prevStatus = item.inventory_status
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('clothing_items')
+      .update({ inventory_status: 'kept' })
+      .eq('id', item.id)
+
+    if (updErr) {
+      setPendingHideIds(prev => {
+        const next = new Set(prev)
+        next.delete(item.id)
+        return next
+      })
+      const name = item.name || humanizeItemType(item.item_type)
+      setError(`Couldn’t tuck away ${name}: ${updErr.message}`)
+      return
+    }
+
+    track.itemTuckedAway?.({ id: item.id, from })
+
+    setActionToast({
+      kind: 'tuck_away',
+      id: item.id,
+      name: item.name || humanizeItemType(item.item_type),
+      prevStatus,
+    })
+
+    reloadItems()
+  }
+
+  // Undo the most recent toast action. Restores to actionToast.prevStatus
+  // (the item's status BEFORE the just-completed action) so a kept-row
+  // chip flip undoes back to kept, an Owned-row inline undoes to owned,
+  // etc. If kind === 'pass_on', also detach from the bag and clear
+  // pre_bag_inventory_status (the row is no longer associated with any
+  // bag, and a future re-attach should record fresh origin).
+  async function handleUndoToast() {
+    if (!actionToast) return
+    const { kind, id, name, prevStatus } = actionToast
+    const restoreStatus = prevStatus || 'owned'
+
+    setPendingHideIds(prev => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+    setActionToast(null)
+
+    const update = kind === 'pass_on'
+      ? {
+          inventory_status: restoreStatus,
+          pass_along_batch_id: null,
+          pre_bag_inventory_status: null,
+        }
+      : { inventory_status: restoreStatus }
+
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('clothing_items')
+      .update(update)
+      .eq('id', id)
+
+    if (updErr) {
+      setError(`Couldn’t undo for ${name}: ${updErr.message}`)
+      return
+    }
+
+    if (kind === 'pass_on') {
+      // No tracker yet for "pass-on undone"; reuse the existing
+      // outgrown-undone event to keep telemetry surface area small.
+      track.itemMarkedOutgrownUndone?.({ id })
+    } else {
+      track.itemTuckedAwayUndone?.({ id })
+    }
+
+    reloadItems()
+  }
+
+  // Toast secondary action after Pass on. Just navigates; the toast
+  // auto-dismisses on the route change.
+  function handleViewBagFromToast() {
+    if (!actionToast?.batchId) return
+    const batchId = actionToast.batchId
+    setActionToast(null)
     navigate(`/pass-along/${batchId}`)
+  }
+
+  // Section-row chip handlers (bottom-of-Owned "Outgrown" section).
+  // The chip on each row is dual-purpose: it shows current intent, and
+  // tapping it flips the item's status (or navigates if it's already in
+  // a bag). handleSectionChipTap covers the Pass-on side; handleSectionTuckAway
+  // covers the inverse on items currently in pass_along/outgrown.
+
+  // Tap the "Pass on" chip on a kept/legacy-outgrown row, or tap the bag
+  // icon next to a pass_along row to navigate to the bag it's in.
+  async function handleSectionChipTap(item) {
+    if (!item) return
+    if (item.inventory_status === 'pass_along') {
+      if (item.pass_along_batch_id) {
+        navigate(`/pass-along/${item.pass_along_batch_id}`)
+      }
+      return
+    }
+    if (item.inventory_status === 'kept') {
+      track.intentFlipped?.({
+        from_status: 'kept',
+        to_status: 'pass_along',
+      })
+    }
+    await handlePassOn(item, { from: 'outgrown_section_chip' })
+  }
+
+  // Flip a pass_along/outgrown item back to 'kept' (detaches from bag).
+  // Clears pre_bag_inventory_status since the item is no longer in a
+  // bag and a future re-attach should record fresh origin.
+  async function handleSectionTuckAway(item) {
+    if (!item) return
+    if (item.inventory_status === 'kept') return // already there
+    if (pendingHideIds.has(item.id)) return
+
+    setPendingHideIds(prev => {
+      const next = new Set(prev)
+      next.add(item.id)
+      return next
+    })
+
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('clothing_items')
+      .update({
+        inventory_status: 'kept',
+        pass_along_batch_id: null,
+        pre_bag_inventory_status: null,
+      })
+      .eq('id', item.id)
+
+    if (updErr) {
+      setPendingHideIds(prev => {
+        const next = new Set(prev)
+        next.delete(item.id)
+        return next
+      })
+      const name = item.name || humanizeItemType(item.item_type)
+      setError(`Couldn’t tuck away ${name}: ${updErr.message}`)
+      return
+    }
+
+    track.intentFlipped?.({
+      from_status: item.inventory_status,
+      to_status: 'kept',
+    })
+    track.itemTuckedAway?.({ id: item.id, from: 'outgrown_section_chip' })
+    reloadItems()
   }
 
   // The currently selected age range on the Wish list tab. Initialized from
@@ -410,6 +477,12 @@ export default function Inventory() {
   // Wish-list seed is exhaustive.
   const [ownedCollapsed, setOwnedCollapsed] = useState(() => new Set())
   const [wishCollapsed, setWishCollapsed] = useState(() => new Set(CATEGORY_ORDER))
+
+  // Outgrown section (bottom of Owned tab). Default-collapsed: the
+  // section's whole point is to stay out of the way of the active
+  // inventory until the user opts in. Header surfaces the count so the
+  // user knows there's stuff there even when the body is hidden.
+  const [outgrownSectionCollapsed, setOutgrownSectionCollapsed] = useState(true)
 
   function toggleOwnedGroup(cat) {
     setOwnedCollapsed(prev => {
@@ -463,17 +536,35 @@ export default function Inventory() {
     [items, selectedBabyId],
   )
 
-  // Outgrown items pool — anything sitting in 'outgrown' status with no
-  // batch attached. These are the items the household has flagged "no
-  // longer fits" but hasn't routed anywhere yet. Filtered through the
-  // baby selector so the banner reflects what the user is currently
-  // viewing — single-baby households see everything; multi-baby
-  // households scoped to one baby see only that baby's pile, which
-  // matches their mental model when they tap "Pass them all on."
-  const outgrownItems = useMemo(
-    () => babyFilteredItems.filter(i => i.inventory_status === 'outgrown'),
-    [babyFilteredItems],
+  // Outgrown section pool — items the household has moved out of active
+  // rotation, regardless of intent: 'kept' (tucked away), 'pass_along'
+  // (in a bag), or legacy 'outgrown' (pre-redesign transient state).
+  // Filtered through the baby selector so the section header count
+  // reflects what the user is currently scoping to. Excludes items in
+  // pendingHideIds so an optimistic flip doesn't briefly show the same
+  // row in both Owned and the Outgrown section while the DB resolves.
+  const outgrownSectionItems = useMemo(
+    () => babyFilteredItems.filter(i =>
+      (i.inventory_status === 'kept' ||
+        i.inventory_status === 'pass_along' ||
+        i.inventory_status === 'outgrown') &&
+      !pendingHideIds.has(i.id)
+    ),
+    [babyFilteredItems, pendingHideIds],
   )
+
+  // Group section items by category for the same .group/.GroupHeader
+  // visual rhythm as the active Owned list, so the section's expanded
+  // body looks like a quieter mirror of what's above.
+  const outgrownSectionGrouped = useMemo(() => {
+    const groups = Object.fromEntries(CATEGORY_ORDER.map(c => [c, []]))
+    for (const it of outgrownSectionItems) {
+      if (groups[it.category]) groups[it.category].push(it)
+    }
+    return CATEGORY_ORDER
+      .filter(c => groups[c].length > 0)
+      .map(c => ({ category: c, items: groups[c] }))
+  }, [outgrownSectionItems])
 
   // ── Owned tab: items grouped by category, filtered by selected age range ─
   // The Owned tab now has an age-range nav mirroring the Wish list. Users
@@ -483,7 +574,7 @@ export default function Inventory() {
   const ownedGrouped = useMemo(() => {
     const filtered = babyFilteredItems.filter(i =>
       i.inventory_status === 'owned' &&
-      !pendingOutgrownIds.has(i.id) &&
+      !pendingHideIds.has(i.id) &&
       (!selectedAgeRange || i.size_label === selectedAgeRange)
     )
     const groups = Object.fromEntries(CATEGORY_ORDER.map(c => [c, []]))
@@ -493,7 +584,7 @@ export default function Inventory() {
     return CATEGORY_ORDER
       .filter(c => groups[c].length > 0)
       .map(c => ({ category: c, items: groups[c] }))
-  }, [babyFilteredItems, selectedAgeRange, pendingOutgrownIds])
+  }, [babyFilteredItems, selectedAgeRange, pendingHideIds])
 
   // ── Owned tab: auto-collapse only when content overflows the viewport ────
   // The rule: Owned-tab groups should stay EXPANDED by default on small
@@ -753,32 +844,6 @@ export default function Inventory() {
         {/* ── Owned tab ─────────────────────────────────────────── */}
         {!loading && !error && tab === 'owned' && selectedAgeRange && (
           <>
-            {/* Outgrown pile banner — the "pile-up" companion to the
-                inline Outgrown action. Visible whenever there are items
-                in 'outgrown' status under the current baby filter, so
-                a parent who's been rapid-cleaning has a visible CTA to
-                turn the pile into a pass-along batch. Sits above the
-                age-range nav because it's a household-level prompt,
-                not age-band-specific. Hidden when count is 0 so it
-                doesn't take space when there's nothing to act on. */}
-            {outgrownItems.length > 0 && (
-              <button
-                type="button"
-                className={styles.outgrownBanner}
-                onClick={handlePassOnAllOutgrown}
-                aria-label={`Pass on ${outgrownItems.length} outgrown ${pluralize(outgrownItems.length, 'item')}`}
-              >
-                <span className={styles.outgrownBannerBody}>
-                  <strong>{outgrownItems.length}</strong>{' '}
-                  outgrown {pluralize(outgrownItems.length, 'item')} ready
-                  to pass on
-                </span>
-                <span className={styles.outgrownBannerCta} aria-hidden="true">
-                  Pass them on →
-                </span>
-              </button>
-            )}
-
             {/* Age-range chip navbar — mirrors the Wish list nav so users can
                 stock forward (12-18M in April when baby is 3-6M) without
                 switching tabs. The baby's current band gets a teal dot so
@@ -819,8 +884,9 @@ export default function Inventory() {
                           item={it}
                           tab="owned"
                           onClick={() => navigate(`/item/${it.id}`)}
-                          onOutgrown={handleMarkOutgrown}
-                          outgrowing={pendingOutgrownIds.has(it.id)}
+                          onPassOn={handlePassOn}
+                          onTuckAway={handleTuckAway}
+                          working={pendingHideIds.has(it.id)}
                         />
                       ))}
                     </div>
@@ -853,6 +919,53 @@ export default function Inventory() {
                 </div>
               </>
             )}
+
+            {/* ── Outgrown section ─────────────────────────────────────
+                Bottom-of-Owned umbrella for items the household has moved
+                out of active rotation. Renders 'kept', 'pass_along', and
+                legacy 'outgrown' rows together; per-row chip indicates
+                intent (Tuck away / Pass on / arrow into bag). Section
+                header is a collapsible button — collapsed by default so
+                the active inventory above it stays the focus, count
+                visible so the user knows there's stuff to look at. */}
+            {outgrownSectionItems.length > 0 && (
+              <section
+                className={`${styles.group} ${styles.outgrownSection}`}
+                aria-label="Outgrown"
+              >
+                <GroupHeader
+                  title="Outgrown"
+                  meta={`${outgrownSectionItems.length} ${pluralize(outgrownSectionItems.length, 'item')}`}
+                  collapsed={outgrownSectionCollapsed}
+                  onToggle={() => setOutgrownSectionCollapsed(s => !s)}
+                  contentId="outgrown-section"
+                />
+                {!outgrownSectionCollapsed && (
+                  <div className={styles.groupItems} id="outgrown-section">
+                    {outgrownSectionGrouped.map(group => (
+                      <div className={styles.outgrownCategoryGroup} key={group.category}>
+                        <div className={styles.outgrownCategoryLabel}>
+                          {CATEGORY_LABELS[group.category] || group.category}
+                          <span className={styles.outgrownCategoryCount}>
+                            {group.items.length}
+                          </span>
+                        </div>
+                        {group.items.map(it => (
+                          <SectionItemRow
+                            key={it.id}
+                            item={it}
+                            onClick={() => navigate(`/item/${it.id}`)}
+                            onPassOnChip={() => handleSectionChipTap(it)}
+                            onTuckAwayChip={() => handleSectionTuckAway(it)}
+                            working={pendingHideIds.has(it.id)}
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
           </>
         )}
 
@@ -876,32 +989,37 @@ export default function Inventory() {
         )}
       </main>
 
-      {/* Outgrown-flip undo toast — fixed-positioned at the bottom of the
-          viewport, auto-dismisses after 5s (handled by the effect on
-          outgrownToast). The Undo button reverts the optimistic flip and
-          fires a DB write to restore inventory_status='owned'. We render
-          this at the page level rather than inside the list so it stays
-          put while the list scrolls underneath. */}
-      {outgrownToast && (
+      {/* Action toast — fixed-positioned at the bottom of the viewport,
+          auto-dismisses after 5s (handled by the effect on actionToast).
+          Two flavors based on actionToast.kind:
+            - 'pass_on'   → "Added to your bag" + "View bag" + Undo
+            - 'tuck_away' → "Tucked away" + Undo
+          The Undo button reverts the optimistic flip and fires a DB write
+          to restore inventory_status='owned' (also detaches from the bag
+          if the action was Pass on). Rendered at the page level so it
+          stays put while the list scrolls underneath. */}
+      {actionToast && (
         <div className={styles.toast} role="status" aria-live="polite">
           <span className={styles.toastBody}>
-            Marked <strong>{outgrownToast.name}</strong> outgrown
+            {actionToast.kind === 'pass_on' ? (
+              <>Added <strong>{actionToast.name}</strong> to your bag</>
+            ) : (
+              <>Tucked <strong>{actionToast.name}</strong> away</>
+            )}
           </span>
-          {/* Primary action: queue this item into a draft pass-along
-              batch and jump to it. The whole point of the outgrown moment
-              is that it's the natural cue to pass things on — without
-              this button the action was a dead-end. */}
-          <button
-            type="button"
-            className={styles.toastPrimary}
-            onClick={handlePassItOn}
-          >
-            Pass it on →
-          </button>
+          {actionToast.kind === 'pass_on' && (
+            <button
+              type="button"
+              className={styles.toastPrimary}
+              onClick={handleViewBagFromToast}
+            >
+              View bag →
+            </button>
+          )}
           <button
             type="button"
             className={styles.toastUndo}
-            onClick={handleUndoOutgrown}
+            onClick={handleUndoToast}
           >
             Undo
           </button>
@@ -1249,25 +1367,32 @@ function OwnedEmptyState({ ageRange, totalOwnedCount, onAdd }) {
 // Rendered as a <button> so tapping anywhere on the row opens the item
 // detail page. `all: unset` on .itemRow in the stylesheet strips the
 // default button chrome; we redeclare only the visual bits we want.
-function ItemRow({ item, tab, onClick, onOutgrown, outgrowing }) {
-  const displayName = item.name || humanizeItemType(item.item_type)
-
-  // Owned tab: size lives in the chip (left), quantity + Outgrown action
-  // live in the right cluster, brand carries the meta line solo. Wishlist
-  // tab keeps the original badge (Must have / Nice to have / Needed) — the
-  // priority signal there is meaningful, unlike "Owned" on the Owned tab
-  // which was redundant with the tab itself.
+//
+// On the Owned tab the right cluster carries two inline action chips:
+//   - Pass on   → adds the item to a draft bag (pass_along status)
+//   - Tuck away → flips the item to 'kept' status
+// Both chips stop event propagation so tapping them doesn't also fire the
+// row-level onClick (which would navigate to the detail screen mid-flip).
+// On the Wish list tab the right cluster shows the priority badge instead.
+function ItemRow({ item, tab, onClick, onPassOn, onTuckAway, working }) {
   const isOwnedTab = tab === 'owned'
   const sizeLabel = item.size_label || '—'
   const sizeIsEmpty = !item.size_label
+
+  // On Owned tab, lean on buildItemDisplay so two unnamed same-category
+  // rows differ visually when any descriptor (brand, condition, season)
+  // is filled. Wishlist keeps the legacy display since priority is the
+  // information that matters there, not item identity.
+  const display = isOwnedTab
+    ? buildItemDisplay(item)
+    : { primary: item.name || humanizeItemType(item.item_type), meta: '' }
+  const displayName = display.primary
   const metaText = isOwnedTab
-    ? (item.brand || '')
+    ? display.meta
     : [item.size_label, item.brand, item.quantity > 1 ? `×${item.quantity}` : null]
         .filter(Boolean)
         .join(' · ')
 
-  // Wishlist-only badge (priority). On Owned, the right-side cluster
-  // replaces this entirely with quantity + the inline outgrown action.
   const wishBadge = !isOwnedTab
     ? (PRIORITY_LABEL[item.priority] ?? 'Needed')
     : null
@@ -1291,32 +1416,118 @@ function ItemRow({ item, tab, onClick, onOutgrown, outgrowing }) {
       </div>
 
       {isOwnedTab ? (
-        <div className={styles.itemRight}>
+        <div className={styles.itemActions}>
           {item.quantity > 1 && (
             <span className={styles.itemQty}>×{item.quantity}</span>
           )}
-          {/* Inline action — flip status owned → outgrown without opening
-              the detail screen. The button's onClick stops propagation so
-              tapping the action doesn't also fire the row's onClick (which
-              would navigate to the detail screen mid-flip). */}
-          {onOutgrown && (
+          {onPassOn && (
             <button
               type="button"
-              className={styles.itemOutgrownBtn}
+              className={styles.itemPassOnBtn}
               onClick={e => {
                 e.stopPropagation()
-                onOutgrown(item)
+                onPassOn(item)
               }}
-              disabled={outgrowing}
-              aria-label={`Mark ${displayName} as outgrown`}
+              disabled={working}
+              aria-label={`Pass on ${displayName}`}
             >
-              Outgrown
+              Pass on
+            </button>
+          )}
+          {onTuckAway && (
+            <button
+              type="button"
+              className={styles.itemTuckAwayBtn}
+              onClick={e => {
+                e.stopPropagation()
+                onTuckAway(item)
+              }}
+              disabled={working}
+              aria-label={`Tuck away ${displayName}`}
+            >
+              Tuck away
             </button>
           )}
         </div>
       ) : (
         <span className={styles.itemBadge}>{wishBadge}</span>
       )}
+    </button>
+  )
+}
+
+// ── Section item row (bottom-of-Owned Outgrown section) ───────────────────
+// Renders an item already moved out of active rotation (kept, pass_along,
+// or legacy outgrown). The right cluster shows ONE intent chip reflecting
+// current state; tapping the chip toggles the intent (or navigates if the
+// item is already in a bag). For visual clarity both Pass-on and Tuck-away
+// chips can render with one filled and the other outlined to make the
+// active state legible.
+function SectionItemRow({ item, onClick, onPassOnChip, onTuckAwayChip, working }) {
+  // Mirror Owned-tab item display so the bottom-of-Owned section reads
+  // as a continuation of the same table style (per the matching-stylings
+  // requirement) including row content, not just the surrounding card.
+  const display = buildItemDisplay(item)
+  const displayName = display.primary
+  const metaText = display.meta
+  const sizeLabel = item.size_label || '—'
+  const sizeIsEmpty = !item.size_label
+
+  const isKept = item.inventory_status === 'kept'
+  const isInBag = item.inventory_status === 'pass_along'
+
+  return (
+    <button
+      type="button"
+      className={styles.itemRow}
+      onClick={onClick}
+      aria-label={`Open ${displayName}`}
+    >
+      <div
+        className={`${styles.itemThumb} ${sizeIsEmpty ? styles.itemThumbEmpty : ''}`}
+        aria-hidden="true"
+      >
+        {sizeLabel}
+      </div>
+      <div className={styles.itemBody}>
+        <div className={styles.itemName}>{displayName}</div>
+        {metaText && <div className={styles.itemMeta}>{metaText}</div>}
+      </div>
+
+      <div className={styles.itemActions}>
+        {item.quantity > 1 && (
+          <span className={styles.itemQty}>×{item.quantity}</span>
+        )}
+        {/* Section chips use the same filled treatment as Owned-row
+            chips so both tables read as one visual system. Current
+            state is signaled by the label (In a bag → for pass_along)
+            and by the Tuck-away chip's disabled state on kept rows,
+            not by recoloring the Pass-on chip. */}
+        <button
+          type="button"
+          className={styles.itemPassOnBtn}
+          onClick={e => {
+            e.stopPropagation()
+            onPassOnChip()
+          }}
+          disabled={working}
+          aria-label={isInBag ? `View bag for ${displayName}` : `Pass on ${displayName}`}
+        >
+          {isInBag ? 'In a bag →' : 'Pass on'}
+        </button>
+        <button
+          type="button"
+          className={styles.itemTuckAwayBtn}
+          onClick={e => {
+            e.stopPropagation()
+            onTuckAwayChip()
+          }}
+          disabled={working || isKept}
+          aria-label={`Tuck ${displayName} away`}
+        >
+          {isKept ? 'Tucked away' : 'Tuck away'}
+        </button>
+      </div>
     </button>
   )
 }
