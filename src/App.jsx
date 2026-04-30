@@ -6,6 +6,7 @@ import { UpgradeGateProvider } from './contexts/UpgradeGateContext'
 import './styles/globals.css'
 
 import Landing from './screens/Landing'
+import HowItWorks from './screens/HowItWorks'
 import Signup from './screens/Signup'
 import Login from './screens/Login'
 import ResetPassword from './screens/ResetPassword'
@@ -148,6 +149,10 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
+      {/* /how-it-works is a public marketing/SEO page. Unguarded so authed
+          and unauthed visitors both reach it; PublicRoute would bounce
+          authed users to /home and break inbound search traffic. */}
+      <Route path="/how-it-works" element={<HowItWorks />} />
       <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       {/* /reset-password is unguarded — it needs to render whether the user is signed in (recovery session) or not (expired link), and handles both cases itself. */}
