@@ -25,9 +25,13 @@
   border: none;
   padding: 0;
   cursor: pointer;
+  /* Same pattern as Landing.module.css's .logo — the flex-centering +
+     line-height: 1 keep the wordmark's text baseline aligned with the
+     adjacent nav buttons. */
   min-height: 44px;
   display: inline-flex;
   align-items: center;
+  line-height: 1;
 }
 .loginBtn {
   min-height: 44px;
