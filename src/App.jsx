@@ -21,6 +21,7 @@ import PassAlongList from './screens/PassAlongList'
 import Profile from './screens/Profile'
 import AcceptInvite from './screens/AcceptInvite'
 import IvyDecoration from './components/IvyDecoration'
+import LandingLayout from './components/LandingLayout'
 import TrialBanner from './components/TrialBanner'
 
 // React Router v6 doesn't auto-scroll to the top on route change, so
@@ -148,11 +149,19 @@ function PublicRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
-      {/* /how-it-works is a public marketing/SEO page. Unguarded so authed
-          and unauthed visitors both reach it; PublicRoute would bounce
-          authed users to /home and break inbound search traffic. */}
-      <Route path="/how-it-works" element={<HowItWorks />} />
+      {/* LandingLayout wraps the two marketing/SEO routes so the IvyDecoration
+          mounted inside the layout persists across navigation between them.
+          Without this wrapper, the desktop ivy's 9-second grow animation
+          restarted every time the user clicked "How it works" from the
+          landing nav. Other public routes (Signup, Login, etc.) are
+          intentionally left outside — they don't render ivy. */}
+      <Route element={<LandingLayout />}>
+        <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
+        {/* /how-it-works is a public marketing/SEO page. Unguarded so authed
+            and unauthed visitors both reach it; PublicRoute would bounce
+            authed users to /home and break inbound search traffic. */}
+        <Route path="/how-it-works" element={<HowItWorks />} />
+      </Route>
       <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       {/* /reset-password is unguarded — it needs to render whether the user is signed in (recovery session) or not (expired link), and handles both cases itself. */}
