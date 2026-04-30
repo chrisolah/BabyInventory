@@ -77,6 +77,13 @@
   color: var(--gray-900);
   margin: 0 0 1rem;
 }
+.h1 em {
+  /* Italic-teal accent matches Landing.module.css's .headline em pattern
+     ("organized" italicized in the hero). Visual continuity between the
+     two pages without copying exact words. */
+  font-style: italic;
+  color: var(--teal);
+}
 .lede {
   font-size: 18px;
   color: var(--gray-700, #3B3B38);
@@ -91,18 +98,16 @@
   position: relative;
 }
 .stepNum {
+  /* Big "01"/"02"/"03" markers in Fraunces — echoes the .optInBulletNum
+     pattern in Landing but at H2-companion size since each step is its
+     own section, not an inline bullet. */
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 36px;
   font-weight: 500;
-  color: var(--teal-dark);
-  background: var(--teal-light);
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0.75rem;
+  color: var(--teal);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  margin-bottom: 0.5rem;
 }
 .h2 {
   font-family: var(--font-display);
@@ -120,18 +125,67 @@
   color: var(--gray-900);
 }
 
-/* ── Destinations ── */
+/* ── Destinations: hub-style card grid mirroring Landing.module.css's
+   .hub band. Same gray-50 band, same hubCard treatment, parallel layout.
+   Visual continuity for visitors who arrive via the landing nav link. */
 .destinations {
   margin-bottom: 3rem;
   padding-top: 1.5rem;
-  border-top: 0.5px solid var(--gray-100);
 }
-.h3 {
-  font-family: var(--font-display);
-  font-size: 20px;
+.destinationsBand {
+  background: var(--gray-50);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 16px;
+  padding: 2rem;
+}
+.destinationsEyebrow {
+  display: inline-block;
+  font-size: 12px;
   font-weight: 500;
-  color: var(--teal-dark);
-  margin: 1.75rem 0 0.5rem;
+  background: var(--amber-light);
+  color: var(--amber-dark);
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 1rem;
+}
+.destinationsHeadline {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--gray-900);
+  line-height: 1.25;
+  margin: 0 0 1.25rem;
+}
+.destinationsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+.destinationCard {
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+}
+.destinationIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.destinationTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+.destinationBody {
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.5;
 }
 
 /* ── FAQ ── */

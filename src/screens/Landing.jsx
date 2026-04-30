@@ -89,7 +89,18 @@ export default function Landing() {
           hides itself below 960px viewport — can't affect layout. */}
       <IvyDecoration />
       <nav className={styles.nav}>
-        <div className={styles.logo}>sprigloop</div>
+        <div className={styles.navLeft}>
+          <div className={styles.logo}>sprigloop</div>
+          <button
+            className={styles.navLink}
+            onClick={() => {
+              track.ctaClicked('nav_how_it_works')
+              navigate('/how-it-works')
+            }}
+          >
+            How it works
+          </button>
+        </div>
         <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
       </nav>
 
