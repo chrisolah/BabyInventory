@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
+import IvyDecoration from '../components/IvyDecoration'
+import IvyBanner from '../components/IvyBanner'
 import styles from './HowItWorks.module.css'
 
 // Public SEO page — long-tail keyword targets:
@@ -64,6 +66,10 @@ export default function HowItWorks() {
 
   return (
     <div className={styles.page}>
+      {/* Decorative ivy in the left gutter — same component as Landing.
+          Fixed-position, pointer-events:none, hides itself below 960px so
+          mobile layout is unaffected. */}
+      <IvyDecoration />
       <nav className={styles.nav}>
         <button
           className={styles.logo}
@@ -77,10 +83,13 @@ export default function HowItWorks() {
         </button>
       </nav>
 
+      {/* Mobile-only horizontal vine matching Landing. Hides itself ≥ 960px. */}
+      <IvyBanner />
+
       <article className={styles.article}>
         <header className={styles.hero}>
           <div className={styles.eyebrow}>Free for all families</div>
-          <h1 className={styles.h1}>How Sprigloop works.</h1>
+          <h1 className={styles.h1}>How Sprigloop <em>works</em>.</h1>
           <p className={styles.lede}>
             Sprigloop is a free baby clothes inventory app. You add what your baby owns,
             organize it by size, and pass on what they outgrow to another Sprigloop family.
@@ -89,7 +98,7 @@ export default function HowItWorks() {
         </header>
 
         <section className={styles.step}>
-          <div className={styles.stepNum}>1</div>
+          <div className={styles.stepNum}>01</div>
           <h2 className={styles.h2}>Add your baby&rsquo;s clothes to your inventory</h2>
           <p>
             Take a photo of a clothing tag and Sprigloop pulls out the brand, size, and
@@ -104,7 +113,7 @@ export default function HowItWorks() {
         </section>
 
         <section className={styles.step}>
-          <div className={styles.stepNum}>2</div>
+          <div className={styles.stepNum}>02</div>
           <h2 className={styles.h2}>Track and organize baby clothes by size</h2>
           <p>
             Sprigloop groups every item by size and age range, so you always know what fits
@@ -119,7 +128,7 @@ export default function HowItWorks() {
         </section>
 
         <section className={styles.step}>
-          <div className={styles.stepNum}>3</div>
+          <div className={styles.stepNum}>03</div>
           <h2 className={styles.h2}>Pass on what they outgrow</h2>
           <p>
             When clothes don&rsquo;t fit anymore, Sprigloop sends you a prepaid bag. You
@@ -135,30 +144,81 @@ export default function HowItWorks() {
         </section>
 
         <section className={styles.destinations}>
-          <h2 className={styles.h2}>Where outgrown baby clothes can go</h2>
+          <div className={styles.destinationsBand}>
+            <div className={styles.destinationsEyebrow}>Three destinations per bag</div>
+            <h2 className={styles.destinationsHeadline}>
+              Where outgrown baby clothes can go.
+            </h2>
+            <div className={styles.destinationsGrid}>
+              <div className={styles.destinationCard}>
+                <div
+                  className={styles.destinationIcon}
+                  style={{ background: 'var(--purple-light)', color: 'var(--purple-dark)' }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
+                    <path
+                      d="M3 16c0-3 2.7-5 6-5s6 2 6 5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+                <div className={styles.destinationTitle}>Send to a friend</div>
+                <div className={styles.destinationBody}>
+                  Name a friend when you start your bag. Sprigloop ships the bag to you,
+                  you write their address on it, and we route it to them. They get baby
+                  clothes that have already proven themselves.
+                </div>
+              </div>
 
-          <h3 className={styles.h3}>Send to a friend</h3>
-          <p>
-            Name a friend or family member when you start your bag. Sprigloop ships the bag
-            to you, you fill it, you write their address, and we route it to them. They get
-            baby clothes that have already proven themselves. You skip the awkward
-            coordination.
-          </p>
+              <div className={styles.destinationCard}>
+                <div
+                  className={styles.destinationIcon}
+                  style={{ background: 'var(--amber-light)', color: 'var(--amber-dark)' }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <circle cx="6" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+                    <circle cx="12" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+                    <path
+                      d="M2 15c0-2.5 1.8-4 4-4s4 1.5 4 4M8 15c0-2.5 1.8-4 4-4s4 1.5 4 4"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+                <div className={styles.destinationTitle}>Send to a Sprigloop family</div>
+                <div className={styles.destinationBody}>
+                  Other Sprigloop households opt in to receive. We match a bag to them
+                  when the fit is right. No listings, no applications, no awkward asks.
+                </div>
+              </div>
 
-          <h3 className={styles.h3}>Send to a Sprigloop family</h3>
-          <p>
-            Other Sprigloop households can opt in to receive outgrown clothes from another
-            Sprigloop family. They tell us their sizes and preferences, and we match a bag
-            to them when the fit is right. No listings to browse, no applications, no
-            awkward asks. The clothes go to a family who can use them right now.
-          </p>
-
-          <h3 className={styles.h3}>Donate outgrown baby clothes</h3>
-          <p>
-            If a Sprigloop family isn&rsquo;t the right match, your bag goes to a donation
-            partner instead. You can also pick this destination directly when you start the
-            bag. Either way, the clothes leave your house and stay out of the landfill.
-          </p>
+              <div className={styles.destinationCard}>
+                <div
+                  className={styles.destinationIcon}
+                  style={{ background: 'var(--gray-100)', color: 'var(--gray-600)' }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path
+                      d="M9 3l2 4 4 .5-3 3 .8 4.2L9 12.8 5.2 14.7 6 10.5 3 7.5 7 7l2-4z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div className={styles.destinationTitle}>Donate outgrown baby clothes</div>
+                <div className={styles.destinationBody}>
+                  If a Sprigloop family isn&rsquo;t a match, your bag goes to a donation
+                  partner. You can also pick this destination directly when you start the
+                  bag.
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className={styles.faq}>
