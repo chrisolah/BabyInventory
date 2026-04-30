@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /home
+Disallow: /inventory
+Disallow: /add-item
+Disallow: /item/
+Disallow: /onboarding
+Disallow: /pass-along
+Disallow: /profile
+Disallow: /reset-password
+Disallow: /invite/
+
+Sitemap: https://sprigloop.com/sitemap.xml
