@@ -33,6 +33,15 @@
   font-size: 20px;
   font-weight: 500;
   color: var(--gray-900);
+  /* Match the flex-centering pattern used by .navLink and .loginBtn so
+     all three nav items resolve their vertical positions through the
+     same 44px row + inline-flex centering. Without this, the logo's
+     default line-height drops its baseline a few pixels above the
+     buttons' centered text and the row reads as misaligned. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  line-height: 1;
 }
 .navLink {
   /* Matches loginBtn sizing for tap-target parity (44px floor). Subtle
