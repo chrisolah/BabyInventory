@@ -51,7 +51,11 @@ jobs:
           VITE_ENV: production
 
       - name: Deploy to Vercel (production)
-        run: npx vercel@latest --token=${{ secrets.VERCEL_TOKEN }} --prod --yes
+        # Pinned to vercel@52 (latest 52.x.x) on 2026-04-30 because
+        # vercel@53.0.1 shipped with a transitive dep on @vercel/go@3.6.0
+        # that was never published to npm, causing ETARGET on every CI
+        # run. Bump back to @latest once 53.x stabilizes.
+        run: npx vercel@52 --token=${{ secrets.VERCEL_TOKEN }} --prod --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
