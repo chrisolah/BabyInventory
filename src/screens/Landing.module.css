@@ -15,7 +15,12 @@
 .nav {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  /* baseline alignment lines up the text baselines of the three nav items
+     (Fraunces wordmark, DM Sans link, DM Sans button). center alignment
+     looks "off" here because Fraunces has descenders that visually pull
+     "sprigloop" lower than DM Sans capitals, so center-aligned glyphs
+     don't share an optical baseline. */
+  align-items: baseline;
   padding: 1.25rem 1.5rem;
   border-bottom: 0.5px solid var(--gray-100);
   background: var(--white);
@@ -24,7 +29,10 @@
 }
 .navLeft {
   display: flex;
-  align-items: center;
+  /* same reasoning as .nav above — baseline alignment makes the wordmark
+     and the "How it works" link share a visual baseline rather than a
+     center-of-box. */
+  align-items: baseline;
   gap: 18px;
   min-width: 0;
 }
