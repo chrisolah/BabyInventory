@@ -269,8 +269,10 @@ export default function HowItWorks() {
           <details className={styles.faqItem}>
             <summary>What ages does Sprigloop cover?</summary>
             <p>
-              Newborn through toddler. Sprigloop is built for the 0-3 wardrobe, where
-              clothes get outgrown fastest.
+              The size-matching features are built around the 0-24 month bands today.
+              You can still track items in older sizes; they&rsquo;ll just sit outside
+              the automatic age-band sorting. Expanding the supported sizes is on our
+              roadmap as we add new features.
             </p>
           </details>
         </section>
@@ -374,7 +376,7 @@ export default function HowItWorks() {
                 name: 'What ages does Sprigloop cover?',
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: 'Newborn through toddler. Sprigloop is built for the 0-3 wardrobe.',
+                  text: 'The size-matching features are built around the 0-24 month bands today. You can still track items in older sizes; they will sit outside the automatic age-band sorting. Expanding the supported sizes is on our roadmap as we add new features.',
                 },
               },
             ],

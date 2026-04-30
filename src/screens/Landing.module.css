@@ -14,27 +14,25 @@
    actually masks the leaves behind the nav. */
 .nav {
   display: flex;
-  justify-content: space-between;
-  /* baseline alignment lines up the text baselines of the three nav items
-     (Fraunces wordmark, DM Sans link, DM Sans button). center alignment
-     looks "off" here because Fraunces has descenders that visually pull
-     "sprigloop" lower than DM Sans capitals, so center-aligned glyphs
-     don't share an optical baseline. */
+  /* All three nav items (.logo, .navLink, .loginBtn) sit as direct flex
+     siblings here, sharing a single baseline-alignment context. An earlier
+     iteration wrapped .logo + .navLink in a .navLeft flex container with
+     justify-content: space-between on .nav, but that created a nested
+     flex-baseline calculation that left Log in visibly offset from the
+     other two. Flat layout + baseline + margin-left:auto on Log in fixes
+     it.
+
+     baseline alignment (rather than center) is what makes the wordmark
+     and the buttons share an optical baseline — Fraunces has descenders
+     that pull "sprigloop" visually lower than the DM Sans button text
+     would land if we centered the boxes instead. */
   align-items: baseline;
+  gap: 18px;
   padding: 1.25rem 1.5rem;
   border-bottom: 0.5px solid var(--gray-100);
   background: var(--white);
   position: relative;
   z-index: 2;
-}
-.navLeft {
-  display: flex;
-  /* same reasoning as .nav above — baseline alignment makes the wordmark
-     and the "How it works" link share a visual baseline rather than a
-     center-of-box. */
-  align-items: baseline;
-  gap: 18px;
-  min-width: 0;
 }
 .logo {
   font-family: var(--font-display);
@@ -72,13 +70,17 @@
 }
 @media (max-width: 380px) {
   /* iPhone SE territory — tighten the gap so wordmark + link + Log in
-     all fit without the link wrapping. */
-  .navLeft { gap: 12px; }
+     all fit without the link wrapping. Gap lives on .nav now (the
+     flattened flex container) since .navLeft was removed. */
+  .nav { gap: 12px; }
 }
 .loginBtn {
   /* Nav-right text-button. Padding + min-height bring the tap area to
      iOS HIG floor (44px). Negative margin keeps the visible right edge
-     aligned with the existing nav padding. */
+     aligned with the existing nav padding. margin-left:auto pushes Log in
+     to the right edge while .logo + .navLink stay grouped on the left,
+     replacing the old justify-content:space-between + .navLeft wrapper. */
+  margin-left: auto;
   min-height: 44px;
   display: inline-flex;
   align-items: center;

@@ -91,18 +91,16 @@ export default function Landing() {
   return (
     <div className={styles.page}>
       <nav className={styles.nav}>
-        <div className={styles.navLeft}>
-          <div className={styles.logo}>sprigloop</div>
-          <button
-            className={styles.navLink}
-            onClick={() => {
-              track.ctaClicked('nav_how_it_works')
-              navigate('/how-it-works')
-            }}
-          >
-            How it works
-          </button>
-        </div>
+        <div className={styles.logo}>sprigloop</div>
+        <button
+          className={styles.navLink}
+          onClick={() => {
+            track.ctaClicked('nav_how_it_works')
+            navigate('/how-it-works')
+          }}
+        >
+          How it works
+        </button>
         <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
       </nav>
 
