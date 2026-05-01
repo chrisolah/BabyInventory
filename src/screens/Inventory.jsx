@@ -456,6 +456,50 @@ export default function Inventory() {
     reloadItems()
   }
 
+  // Move-back-to-Owned restores an item from the Outgrown section back into
+  // active rotation. Works for BOTH 'kept' (tucked away) and legacy 'outgrown'
+  // statuses — anything sitting in the Outgrown section is a candidate. Mirrors
+  // ItemDetail's handleReturnToOwned so the two paths behave identically.
+  // Added 2026-05-01 in response to "we need a way to move an item out of
+  // outgrown back into the owned section" — the existing affordance lived
+  // only on ItemDetail, requiring a drill-in for what should be a one-tap
+  // correction. Replaces the inline Tuck-away chip on the Outgrown section.
+  async function handleSectionMoveBack(item) {
+    if (!item) return
+    if (item.inventory_status === 'owned') return // already there
+    if (pendingHideIds.has(item.id)) return
+
+    setPendingHideIds(prev => {
+      const next = new Set(prev)
+      next.add(item.id)
+      return next
+    })
+
+    const { error: updErr } = await supabase
+      .schema(currentSchema)
+      .from('clothing_items')
+      .update({
+        inventory_status: 'owned',
+        pass_along_batch_id: null,
+        pre_bag_inventory_status: null,
+      })
+      .eq('id', item.id)
+
+    if (updErr) {
+      setPendingHideIds(prev => {
+        const next = new Set(prev)
+        next.delete(item.id)
+        return next
+      })
+      const name = item.name || humanizeItemType(item.item_type)
+      setError(`Couldn't move ${name} back to Owned: ${updErr.message}`)
+      return
+    }
+
+    track.itemReturnedToOwned?.({ id: item.id, from: 'inventory_inline' })
+    reloadItems()
+  }
+
   // The currently selected age range on the Wish list tab. Initialized from
   // the baby's DOB once we've loaded it; falls back to '3-6M' as a reasonable
   // middle-of-the-road default if we have no baby data.
@@ -963,7 +1007,7 @@ export default function Inventory() {
                             item={it}
                             onClick={() => navigate(`/item/${it.id}`)}
                             onPassOnChip={() => handleSectionChipTap(it)}
-                            onTuckAwayChip={() => handleSectionTuckAway(it)}
+                            onMoveBackChip={() => handleSectionMoveBack(it)}
                             working={pendingHideIds.has(it.id)}
                           />
                         ))}
@@ -1467,12 +1511,11 @@ function ItemRow({ item, tab, onClick, onPassOn, onTuckAway, working }) {
 
 // ── Section item row (bottom-of-Owned Outgrown section) ───────────────────
 // Renders an item already moved out of active rotation (kept, pass_along,
-// or legacy outgrown). The right cluster shows ONE intent chip reflecting
-// current state; tapping the chip toggles the intent (or navigates if the
-// item is already in a bag). For visual clarity both Pass-on and Tuck-away
-// chips can render with one filled and the other outlined to make the
-// active state legible.
-function SectionItemRow({ item, onClick, onPassOnChip, onTuckAwayChip, working }) {
+// or legacy outgrown). Two chips per row: Pass on (forward an item into a
+// bag) and Move back (restore to Owned). Tuck-away as an inline action was
+// removed 2026-05-01 — it remains available via ItemDetail since it's a
+// less-frequent intent and was crowding the row.
+function SectionItemRow({ item, onClick, onPassOnChip, onMoveBackChip, working }) {
   // Mirror Owned-tab item display so the bottom-of-Owned section reads
   // as a continuation of the same table style (per the matching-stylings
   // requirement) including row content, not just the surrounding card.
@@ -1482,7 +1525,6 @@ function SectionItemRow({ item, onClick, onPassOnChip, onTuckAwayChip, working }
   const sizeLabel = item.size_label || '—'
   const sizeIsEmpty = !item.size_label
 
-  const isKept = item.inventory_status === 'kept'
   const isInBag = item.inventory_status === 'pass_along'
 
   return (
@@ -1507,11 +1549,11 @@ function SectionItemRow({ item, onClick, onPassOnChip, onTuckAwayChip, working }
         {item.quantity > 1 && (
           <span className={styles.itemQty}>×{item.quantity}</span>
         )}
-        {/* Section chips use the same filled treatment as Owned-row
-            chips so both tables read as one visual system. Current
-            state is signaled by the label (In a bag → for pass_along)
-            and by the Tuck-away chip's disabled state on kept rows,
-            not by recoloring the Pass-on chip. */}
+        {/* Section chips use the same filled treatment as Owned-row chips
+            so both tables read as one visual system. Pass on stays teal
+            (forward action); Move back is gray (restorative / corrective
+            action). When the item is already in a bag, Pass on flips to
+            "In a bag →" and acts as a navigate-to-bag affordance. */}
         <button
           type="button"
           className={styles.itemPassOnBtn}
@@ -1526,15 +1568,15 @@ function SectionItemRow({ item, onClick, onPassOnChip, onTuckAwayChip, working }
         </button>
         <button
           type="button"
-          className={styles.itemTuckAwayBtn}
+          className={styles.itemMoveBackBtn}
           onClick={e => {
             e.stopPropagation()
-            onTuckAwayChip()
+            onMoveBackChip()
           }}
-          disabled={working || isKept}
-          aria-label={`Tuck ${displayName} away`}
+          disabled={working}
+          aria-label={`Move ${displayName} back to Owned`}
         >
-          {isKept ? 'Tucked away' : 'Tuck away'}
+          Move back
         </button>
       </div>
     </button>
