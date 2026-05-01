@@ -7,6 +7,7 @@ import { track } from '../lib/analytics'
 import { SLOT_BY_ID, CATEGORY_LABELS } from '../lib/wardrobe'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
+import Eyebrow from '../components/Eyebrow'
 import styles from './ItemDetail.module.css'
 
 // Item detail — drill-down view for a single row in beta.clothing_items.
@@ -453,9 +454,13 @@ export default function ItemDetail() {
             </section>
 
             {/* Details section — only renders fields that are actually set,
-                so a minimally-filled item doesn't look empty. */}
+                so a minimally-filled item doesn't look empty.
+                Eyebrow pill replaces the small uppercase DM Sans title
+                (added 2026-05-01) to mirror the section-opener motif from
+                the landing. Teal because Details is the primary content
+                section on this surface. */}
             <section className={styles.section}>
-              <div className={styles.sectionTitle}>Details</div>
+              <Eyebrow color="teal">Details</Eyebrow>
               <dl className={styles.detailList}>
                 <DetailRow label="Category" value={categoryLabel} />
                 <DetailRow label="Type" value={typeLabel} />
@@ -487,7 +492,7 @@ export default function ItemDetail() {
 
             {item.notes && (
               <section className={styles.section}>
-                <div className={styles.sectionTitle}>Notes</div>
+                <Eyebrow color="gray">Notes</Eyebrow>
                 <div className={styles.notes}>{item.notes}</div>
               </section>
             )}
@@ -504,7 +509,7 @@ export default function ItemDetail() {
                 decision has been made, we just surface where the item went. */}
             {inBatch && (
               <section className={styles.section}>
-                <div className={styles.sectionTitle}>Pass-along</div>
+                <Eyebrow color="purple">Pass-along</Eyebrow>
                 <button
                   type="button"
                   className={styles.batchLink}
