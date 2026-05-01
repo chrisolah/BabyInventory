@@ -978,12 +978,10 @@ export default function Inventory() {
                 className={`${styles.group} ${styles.outgrownSection}`}
                 aria-label="Outgrown"
               >
-                {/* Eyebrow pill above the section header (added 2026-05-01)
-                    establishes the section as a distinct category from the
-                    Owned groups above. The GroupHeader below stays as the
-                    collapsible control — the eyebrow names the bucket, the
-                    header carries the count + chevron behavior. */}
-                <Eyebrow color="amber" className={styles.outgrownEyebrow}>Outgrown</Eyebrow>
+                {/* No eyebrow above this section — the GroupHeader's
+                    "Outgrown" title already carries the category label;
+                    a pill that also said "Outgrown" was redundant
+                    (removed 2026-05-01 same day it shipped). */}
                 <GroupHeader
                   title="Outgrown"
                   meta={`${outgrownSectionItems.length} ${pluralize(outgrownSectionItems.length, 'item')}`}
