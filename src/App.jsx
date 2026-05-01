@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'rea
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { HouseholdProvider } from './contexts/HouseholdContext'
 import { UpgradeGateProvider } from './contexts/UpgradeGateContext'
+import { track } from './lib/analytics'
 import './styles/globals.css'
 
 import Landing from './screens/Landing'
@@ -20,9 +21,16 @@ import PassAlongBatch from './screens/PassAlongBatch'
 import PassAlongList from './screens/PassAlongList'
 import Profile from './screens/Profile'
 import AcceptInvite from './screens/AcceptInvite'
+import Admin from './screens/Admin'
 import IvyDecoration from './components/IvyDecoration'
 import LandingLayout from './components/LandingLayout'
 import TrialBanner from './components/TrialBanner'
+
+// Client-side admin allowlist — kept in sync with beta._admin_emails() in the
+// migration. Server is the source of truth; this lives client-side only so the
+// /admin route can gate without a roundtrip. If they drift, the route guard
+// might let a non-admin in but the RPCs would still reject — fail-safe direction.
+const ADMIN_EMAILS = new Set(['chris@sprigloop.com', 'chrisjolah@outlook.com'])
 
 // React Router v6 doesn't auto-scroll to the top on route change, so
 // scroll position carries between pages. Most noticeable on mobile:
@@ -80,6 +88,36 @@ function ScrollToTop() {
   }, [])
 
   return null
+}
+
+// Global pageview listener — fires track.pageViewed({ path }) on every route
+// change. The acquisition-funnel pageviews on Landing and HowItWorks already
+// fire from those screens with funnel_id='acquisition' attached, so we skip
+// them here to avoid double-counting (and to keep the funnel rollup unchanged).
+// /admin is also skipped — Chris reading his own dashboard shouldn't pollute
+// the page-visits count it's measuring.
+function TrackPageViews() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    if (pathname === '/' || pathname === '/how-it-works') return
+    if (pathname.startsWith('/admin')) return
+    track.pageViewed({ path: pathname })
+  }, [pathname])
+  return null
+}
+
+// AdminGuard gates /admin on email allowlist membership. Lives outside
+// ProtectedLayout so we don't drag in HouseholdProvider/UpgradeGateProvider —
+// admin is a tools surface and doesn't need household state. Mirrors
+// PublicRoute's loading-spinner pattern: render <div /> while auth is still
+// resolving, redirect non-admins to /home.
+function AdminGuard({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return <div />
+  if (!user) return <Navigate to="/" replace />
+  const email = (user.email ?? '').toLowerCase()
+  if (!ADMIN_EMAILS.has(email)) return <Navigate to="/home" replace />
+  return children
 }
 
 // ProtectedLayout is the shared parent for every authed route. Written as a
@@ -195,6 +233,11 @@ function AppRoutes() {
         <Route path="/pass-along/:id" element={<PassAlongBatch />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
+      {/* /admin is gated by AdminGuard (email allowlist) and lives outside
+          ProtectedLayout — it's a tools surface that doesn't need
+          HouseholdProvider/UpgradeGateProvider/TrialBanner. The Admin screen
+          handles its own internal tabbing for visits/funnel/households. */}
+      <Route path="/admin/*" element={<AdminGuard><Admin /></AdminGuard>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
@@ -205,6 +248,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ScrollToTop />
+        <TrackPageViews />
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
