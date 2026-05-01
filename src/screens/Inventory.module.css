@@ -478,12 +478,21 @@
    stacked on the right edge of each row; visual hierarchy via color:
    Pass on (teal-light filled) is the dominant action since it advances
    the funnel; Tuck away (gray filled) is the alternative path. */
+/* Inline action chips — iOS HIG 44px tap-target floor (raised 2026-05-01
+   after mobile QA flagged 22px height). The visible pill stays compact via
+   the small font + horizontal padding; min-height + inline-flex stretches
+   the tappable bounds without changing how the chip reads visually next to
+   its sibling text content. */
 .itemPassOnBtn {
   all: unset;
   box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   font-size: 11px;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 0 10px;
   border-radius: 999px;
   background: var(--teal-light);
   color: var(--teal-dark);
@@ -509,9 +518,13 @@
 .itemTuckAwayBtn {
   all: unset;
   box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   font-size: 11px;
   font-weight: 500;
-  padding: 4px 10px;
+  padding: 0 10px;
   border-radius: 999px;
   background: var(--gray-100);
   color: var(--gray-700);
@@ -541,9 +554,13 @@
 .itemMoveBackBtn {
   all: unset;
   box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   font-size: 11px;
   font-weight: 500;
-  padding: 4px 10px;
+  padding: 0 10px;
   border-radius: 999px;
   background: var(--gray-100);
   color: var(--gray-700);
@@ -678,6 +695,19 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* iPhone SE (320px) is too narrow to fit "Day top · New" + the action chips
+   on one line without clipping the meta. Below 360px viewports, let the
+   meta wrap to a second line instead — the row gets a few pixels taller
+   but the meta no longer truncates with ellipsis. (Mobile QA 2026-05-01
+   flagged this as content_clipped HIGH on iphone-se / 320px.) */
+@media (max-width: 359px) {
+  .itemMeta {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
 }
 
 .itemBadge {
