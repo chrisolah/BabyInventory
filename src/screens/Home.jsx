@@ -9,6 +9,7 @@ import IvySprig from '../components/IvySprig'
 import BabySwitcher from '../components/BabySwitcher'
 import InviteMemberModal from '../components/InviteMemberModal'
 import TagScanner from '../components/TagScanner'
+import Eyebrow from '../components/Eyebrow'
 import styles from './Home.module.css'
 
 // Home is the signed-in landing page for the inventory app. For now it's a
@@ -230,8 +231,14 @@ export default function Home() {
 
         {/* Scan-a-tag is the headline CTA. "Start your inventory" remains
             beneath it for users who prefer to go straight to manual entry
-            or for cases where the camera hand-off fails. */}
+            or for cases where the camera hand-off fails.
+
+            Eyebrow pills above each block carry the landing's section-opener
+            motif into Home (added 2026-05-01). One per top-level section,
+            colored semantically — teal for the active CTA, gray for the
+            neutral/secondary path. */}
         <div className={styles.scanBlock}>
+          <Eyebrow color="teal">Quick start</Eyebrow>
           <TagScanner
             variant="primary"
             from="home"
@@ -245,17 +252,20 @@ export default function Home() {
           </div>
         </div>
 
-        <button
-          type="button"
-          className={styles.emptyCard}
-          onClick={() => navigate('/inventory')}
-        >
-          <div className={styles.emptyTitle}>Start your inventory</div>
-          <div className={styles.emptySub}>
-            Tap here to see your wardrobe and add your first item — a onesie,
-            sleepsuit, anything you already have.
-          </div>
-        </button>
+        <div className={styles.startSection}>
+          <Eyebrow color="gray">Your inventory</Eyebrow>
+          <button
+            type="button"
+            className={styles.emptyCard}
+            onClick={() => navigate('/inventory')}
+          >
+            <div className={styles.emptyTitle}>Start your inventory</div>
+            <div className={styles.emptySub}>
+              Tap here to see your wardrobe and add your first item — a onesie,
+              sleepsuit, anything you already have.
+            </div>
+          </button>
+        </div>
       </main>
 
       {showInvite && (

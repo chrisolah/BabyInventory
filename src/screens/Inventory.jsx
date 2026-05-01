@@ -17,6 +17,7 @@ import {
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import BabySwitcher from '../components/BabySwitcher'
+import Eyebrow from '../components/Eyebrow'
 import styles from './Inventory.module.css'
 
 // Inventory has two tabs:
@@ -933,6 +934,12 @@ export default function Inventory() {
                 className={`${styles.group} ${styles.outgrownSection}`}
                 aria-label="Outgrown"
               >
+                {/* Eyebrow pill above the section header (added 2026-05-01)
+                    establishes the section as a distinct category from the
+                    Owned groups above. The GroupHeader below stays as the
+                    collapsible control — the eyebrow names the bucket, the
+                    header carries the count + chevron behavior. */}
+                <Eyebrow color="amber" className={styles.outgrownEyebrow}>Outgrown</Eyebrow>
                 <GroupHeader
                   title="Outgrown"
                   meta={`${outgrownSectionItems.length} ${pluralize(outgrownSectionItems.length, 'item')}`}
@@ -1073,9 +1080,11 @@ function WishlistView({
         </button>
       )}
 
-      {/* Coverage summary header */}
+      {/* Coverage summary header — eyebrow pill replaces the DM Sans title
+          to mirror the section-opener motif from the landing (added
+          2026-05-01). */}
       <div className={styles.sectionHead}>
-        <span className={styles.sectionTitle}>Recommended wardrobe</span>
+        <Eyebrow color="teal">Recommended wardrobe</Eyebrow>
         <span className={styles.sectionMeta}>
           {coverageSummary.owned} of {coverageSummary.recommended}
         </span>

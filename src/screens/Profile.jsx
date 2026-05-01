@@ -7,6 +7,7 @@ import { track } from '../lib/analytics'
 import IvySprig from '../components/IvySprig'
 import InviteMemberModal from '../components/InviteMemberModal'
 import BabyFormModal from '../components/BabyFormModal'
+import Eyebrow from '../components/Eyebrow'
 import styles from './Profile.module.css'
 
 // Profile is the settings / account hub. Entry point is ProfileMenu's "Profile"
@@ -1155,9 +1156,13 @@ function AccountTab() {
 
   return (
     <div className={styles.tabPanel} role="tabpanel">
-      {/* ── Your account ───────────────────────────────────────────── */}
+      {/* ── Your account ─────────────────────────────────────────────
+          Eyebrow pill replaces the DM Sans section title (added 2026-05-01)
+          to mirror the landing's section-opener motif. The tab strip already
+          says "Account", so the eyebrow narrows it to the personal-details
+          slice rather than restating the tab label. */}
       <section className={styles.section}>
-        <div className={styles.sectionTitle}>Your account</div>
+        <Eyebrow color="teal" className={styles.sectionEyebrow}>Account</Eyebrow>
 
         {/* Name row */}
         <div className={styles.fieldRow}>
@@ -1291,7 +1296,7 @@ function AccountTab() {
           We don't use a modal here because the form is short enough to
           live in the page flow without crowding. */}
       <section className={styles.section}>
-        <div className={styles.sectionTitle}>Shipping address</div>
+        <Eyebrow color="purple" className={styles.sectionEyebrow}>Shipping</Eyebrow>
         <div className={styles.sectionSub}>
           Where we ship pass-along bags to you. We save this automatically when
           you request a bag — edit here if anything changes.
@@ -1471,9 +1476,12 @@ function AccountTab() {
         </div>
       </section>
 
-      {/* ── Leaving Sprigloop ────────────────────────────────────────── */}
+      {/* ── Leaving Sprigloop ──────────────────────────────────────────
+          The amber eyebrow signals caution without going as harsh as a
+          "Danger zone" header would. Section retains its quiet styling so
+          destructive actions don't visually dominate the page. */}
       <section className={`${styles.section} ${styles.sectionQuiet}`}>
-        <div className={styles.sectionTitleQuiet}>Leaving Sprigloop</div>
+        <Eyebrow color="amber" className={styles.sectionEyebrow}>Caution</Eyebrow>
 
         <div className={styles.quietRow}>
           <div className={styles.quietRowBody}>
