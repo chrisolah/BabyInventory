@@ -164,6 +164,15 @@
   margin-bottom: 10px;
 }
 
+/* Bottom-spacing utility for the Eyebrow component when it replaces a
+   .sectionTitle inside a Profile section (added 2026-05-01 with the design-
+   unification pass). The Eyebrow itself has no margin so it sits flush in
+   flex-gap parents like Home; here, .section is a plain block container, so
+   we need explicit margin to match the prior sectionTitle's 10px gap. */
+.sectionEyebrow {
+  margin-bottom: 10px;
+}
+
 /* Small descriptive line under a sectionTitle. Used for explanatory copy
    that scopes the section without competing with the title for hierarchy. */
 .sectionSub {

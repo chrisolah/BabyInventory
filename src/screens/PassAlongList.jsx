@@ -6,7 +6,18 @@ import { useHousehold } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
+import Eyebrow from '../components/Eyebrow'
 import styles from './PassAlongList.module.css'
+
+// Eyebrow color mapping per bucket — semantic, not decorative:
+//   drafts   = gray   (neutral / in-progress, the user can still edit)
+//   inFlight = teal   (active / on-the-way, the meaningful current state)
+//   closed   = purple (completed / done, archival weight)
+const BUCKET_EYEBROW_COLOR = {
+  drafts:   'gray',
+  inFlight: 'teal',
+  closed:   'purple',
+}
 
 // PassAlongList — top-level hub for community exchange on the sender side.
 // Route: /pass-along
@@ -326,10 +337,16 @@ export default function PassAlongList() {
                 if (rows.length === 0) return null
                 return (
                   <section key={key} className={styles.group}>
+                    {/* Eyebrow pill replaces the DM Sans groupLabel (added
+                        2026-05-01 with the design-unification pass). Mirrors
+                        the landing's section-opener motif; color is semantic
+                        per BUCKET_EYEBROW_COLOR. The count stays alongside
+                        as a separate span so the existing alignment + style
+                        of the count don't change. */}
                     <div className={styles.groupHeader}>
-                      <span className={styles.groupLabel}>
+                      <Eyebrow color={BUCKET_EYEBROW_COLOR[key] ?? 'gray'}>
                         {BUCKET_LABEL[key]}
-                      </span>
+                      </Eyebrow>
                       <span className={styles.groupCount}>
                         {rows.length}
                       </span>

@@ -827,6 +827,15 @@
   margin-top: 16px;
 }
 
+/* Spacing for the eyebrow pill above the Outgrown section's collapsible
+   header (added 2026-05-01 with the design-unification pass). The pill
+   sits in the section's padding rather than as part of the GroupHeader
+   button so it reads as a section-level category badge, not a control. */
+.outgrownEyebrow {
+  display: inline-block;
+  margin: 12px 0 8px 14px;
+}
+
 .outgrownCategoryGroup {
   display: flex;
   flex-direction: column;
