@@ -14,12 +14,13 @@
 //
 // Output: tools/mobile-qa-sweep/output/authed/
 //
-// Routes covered: /home, /inventory, /add-item, /pass-along, /profile.
-// ID-bearing detail routes (/item/:id, /pass-along/:id, /inventory/slot/...)
-// are out of scope for this version — they need real IDs to navigate to,
-// which would mean either querying the DOM after /inventory + /pass-along
-// loads, or seeding deterministic data. Add later if those layouts start
-// breaking.
+// Routes covered: /home, /inventory, /add-item, /pass-along, /profile, /admin,
+// and /item/:id (resolved at runtime from the first row in /inventory).
+// /admin requires the saved auth state to be for an admin email; if it isn't,
+// the route will bounce to /home and the bounce-detection below will flag it.
+// /item/:id is skipped with a log message if /inventory returns zero items.
+// Other ID-bearing routes (/pass-along/:id, /inventory/slot/...) are still
+// out of scope — add later if those layouts regress.
 
 import { chromium, devices } from '@playwright/test'
 import { mkdir, writeFile, rm, access } from 'node:fs/promises'
@@ -63,12 +64,20 @@ const DESKTOP_VIEWPORTS = [
 
 const VIEWPORTS = IS_DESKTOP ? DESKTOP_VIEWPORTS : MOBILE_VIEWPORTS
 
-const ROUTES = [
-  { path: '/home',       name: 'home' },
-  { path: '/inventory',  name: 'inventory' },
-  { path: '/add-item',   name: 'add-item' },
-  { path: '/pass-along', name: 'pass-along' },
-  { path: '/profile',    name: 'profile' },
+// Profile is split into two route entries because the screen has multiple
+// tabs (Household / Account / Notifications) and the URL ?tab= param picks
+// which one renders. Without an explicit ?tab=, /profile defaults to
+// Household. The 2026-05-01 design-unification eyebrows live in the Account
+// tab, so we capture both — Household catches the unchanged baseline,
+// Account catches the new pills.
+const STATIC_ROUTES = [
+  { path: '/home',                 name: 'home' },
+  { path: '/inventory',            name: 'inventory' },
+  { path: '/add-item',             name: 'add-item' },
+  { path: '/pass-along',           name: 'pass-along' },
+  { path: '/profile',              name: 'profile-household' },
+  { path: '/profile?tab=account',  name: 'profile-account' },
+  { path: '/admin',                name: 'admin' },
 ]
 
 async function fresh(dir) {
@@ -84,6 +93,47 @@ async function ensureAuthState() {
     console.error('[sweep] Run `node tools/mobile-qa-sweep/auth-record.mjs` first.')
     process.exit(1)
   }
+}
+
+// One-shot pre-pass: load /inventory at a default mobile viewport, click the
+// first item row, capture the resulting /item/:id URL, return the id. Used to
+// build a /item/:id route to append to the sweep so ItemDetail layout gets
+// the same treatment as the static routes.
+//
+// Returns null (and logs) if /inventory has no items, the row click doesn't
+// navigate within 5s, or anything throws. Sweep proceeds with static routes
+// only when null.
+async function discoverItemId(browser) {
+  const context = await browser.newContext({
+    ...devices['iPhone 14 Pro'],
+    storageState: STATE_PATH,
+    ignoreHTTPSErrors: true,
+  })
+  const page = await context.newPage()
+  let id = null
+  try {
+    await page.goto(BASE_URL + '/inventory', { waitUntil: 'networkidle', timeout: 30_000 })
+    await page.waitForTimeout(1500)
+    // SectionItemRow + ItemRow both render as <button aria-label="Open <name>">,
+    // so this selector reaches the first inventory row regardless of which tab
+    // (Owned / Wish list / etc.) the saved session lands on by default.
+    const firstRow = page.locator('button[aria-label^="Open "]').first()
+    const count = await firstRow.count()
+    if (count === 0) {
+      console.log('[sweep] /inventory has no items — skipping /item/:id sweep')
+      return null
+    }
+    await firstRow.click()
+    await page.waitForURL(/\/item\/[^/?#]+/, { timeout: 5_000 }).catch(() => null)
+    const m = page.url().match(/\/item\/([^/?#]+)/)
+    if (m) id = m[1]
+    else console.log('[sweep] click on first row didn\'t navigate to /item/:id — skipping')
+  } catch (err) {
+    console.log('[sweep] item-id discovery failed: ' + err.message + ' — skipping /item/:id')
+  } finally {
+    await context.close()
+  }
+  return id
 }
 
 async function sweepRoute(browser, viewport, route) {
@@ -201,7 +251,7 @@ function severity(issue) {
   }
 }
 
-function buildMarkdown(results) {
+function buildMarkdown(results, routes) {
   const lines = []
   lines.push(
     '# ' + (IS_DESKTOP ? 'Desktop' : 'Mobile') + ' QA sweep — authed routes'
@@ -240,12 +290,12 @@ function buildMarkdown(results) {
   }
   lines.push('## Summary')
   lines.push('')
-  lines.push('- Routes swept: ' + ROUTES.length)
+  lines.push('- Routes swept: ' + routes.length)
   lines.push('- Viewports: ' + VIEWPORTS.map((v) => v.name).join(', '))
   lines.push('- Total issues flagged: **' + totalIssues + '** (' + highIssues + ' high-severity)')
   lines.push('')
 
-  for (const route of ROUTES) {
+  for (const route of routes) {
     lines.push('## ' + route.name + ' (`' + route.path + '`)')
     lines.push('')
     for (const viewport of VIEWPORTS) {
@@ -312,15 +362,28 @@ async function main() {
   console.log('[sweep] profile: ' + PROFILE)
   console.log('[sweep] target: ' + BASE_URL)
   console.log('[sweep] viewports: ' + VIEWPORTS.map((v) => v.name).join(', '))
-  console.log('[sweep] routes: ' + ROUTES.map((r) => r.name).join(', '))
   await fresh(OUT_DIR)
 
   const browser = await chromium.launch({ headless: true })
+
+  // Discover the first item id once before the main loop so /item/:id can
+  // be swept across all viewports against the same item. If discovery fails
+  // (zero items, click didn't navigate, network error), the sweep proceeds
+  // with the static routes only.
+  console.log('[sweep] discovering item id for /item/:id sweep …')
+  const itemId = await discoverItemId(browser)
+  const routes = [...STATIC_ROUTES]
+  if (itemId) {
+    routes.push({ path: '/item/' + itemId, name: 'item-detail' })
+    console.log('[sweep] item id: ' + itemId)
+  }
+  console.log('[sweep] routes: ' + routes.map((r) => r.name).join(', '))
+
   const results = []
 
   try {
     for (const viewport of VIEWPORTS) {
-      for (const route of ROUTES) {
+      for (const route of routes) {
         process.stdout.write('  ' + viewport.name + ' ' + route.name + ' … ')
         const r = await sweepRoute(browser, viewport, route)
         if (r.authBounced) {
@@ -342,7 +405,7 @@ async function main() {
     resolve(OUT_DIR, 'report.json'),
     JSON.stringify({ baseUrl: BASE_URL, ranAt: new Date().toISOString(), results }, null, 2)
   )
-  await writeFile(resolve(OUT_DIR, 'report.md'), buildMarkdown(results))
+  await writeFile(resolve(OUT_DIR, 'report.md'), buildMarkdown(results, routes))
 
   console.log('')
   console.log('[sweep] done')
