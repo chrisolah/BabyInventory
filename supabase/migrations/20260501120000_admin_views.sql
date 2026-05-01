@@ -220,7 +220,7 @@ begin
   with members as (
     select
       hm.household_id,
-      array_agg(u.email order by hm.role = 'owner' desc, u.email) as emails,
+      array_agg(u.email::text order by hm.role = 'owner' desc, u.email) as emails,
       count(*)::int as cnt
     from beta.household_members hm
     left join auth.users u on u.id = hm.user_id
@@ -229,7 +229,7 @@ begin
   babies_agg as (
     select
       b.household_id,
-      array_agg(coalesce(b.name, '(unnamed)') order by b.created_at) as names,
+      array_agg(coalesce(b.name, '(unnamed)')::text order by b.created_at) as names,
       count(*)::int as cnt
     from beta.babies b
     group by b.household_id
@@ -252,16 +252,21 @@ begin
     )
     group by hm.household_id
   )
+  -- Explicit casts on every returned column. Postgres requires the result row
+  -- type to match the RETURNS TABLE declaration exactly — auth.users.email is
+  -- varchar in the Supabase auth schema, not text, so a bare array_agg(u.email)
+  -- returns varchar[] and trips "structure of query does not match function
+  -- result type". Same defensive cast on the scalar columns.
   select
-    h.id                                 as household_id,
-    h.name                               as household_name,
-    coalesce(m.cnt, 0)                   as member_count,
-    coalesce(m.emails, array[]::text[])  as member_emails,
-    coalesce(ba.cnt, 0)                  as baby_count,
-    coalesce(ba.names, array[]::text[])  as baby_names,
-    coalesce(ia.cnt, 0)                  as item_count,
-    le.last_at                           as last_event_at,
-    h.created_at                         as created_at
+    h.id::uuid                          as household_id,
+    h.name::text                        as household_name,
+    coalesce(m.cnt, 0)::int             as member_count,
+    coalesce(m.emails, array[]::text[]) as member_emails,
+    coalesce(ba.cnt, 0)::int            as baby_count,
+    coalesce(ba.names, array[]::text[]) as baby_names,
+    coalesce(ia.cnt, 0)::int            as item_count,
+    le.last_at::timestamptz             as last_event_at,
+    h.created_at::timestamptz           as created_at
   from beta.households h
   left join members    m  on m.household_id  = h.id
   left join babies_agg ba on ba.household_id = h.id
@@ -275,7 +280,7 @@ begin
       from beta.household_members hm
       left join auth.users u on u.id = hm.user_id
       where hm.household_id = h.id
-        and (u.email is null or u.email <> all (beta._admin_emails()))
+        and (u.email is null or u.email::text <> all (beta._admin_emails()))
     )
   )
   order by le.last_at desc nulls last, h.created_at desc;
