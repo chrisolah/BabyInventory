@@ -7,13 +7,34 @@
 --   beta.admin_daily_visits(...)     → daily distinct sessions + users
 --   beta.admin_household_summary(...) → CRM-ish roll-up of households
 --
--- Admin allowlist is intentionally inline (single email today). When a second
--- admin appears, replace the constant with a real `beta.admin_users` table.
+-- Admin allowlist is centralized in beta._admin_emails() — update that one
+-- function to add/remove admins. When the list grows past ~5, swap it for a
+-- real `beta.admin_users` table.
 --
 -- "Hide my sessions" semantics: when _exclude_admins is true, any session_id
 -- ever seen carrying an admin user_id is excluded entirely — so Chris's
 -- pre-login landing hits get filtered too, not just the post-signup events.
 -- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 0. _admin_emails() — single source of truth for the admin allowlist.
+--    Every other function in this migration delegates to this.
+-- ----------------------------------------------------------------------------
+create or replace function beta._admin_emails()
+returns text[]
+language sql
+immutable
+security definer
+set search_path = beta, public
+as $$
+  select array[
+    'chris@sprigloop.com',
+    'chrisjolah@outlook.com'
+  ]::text[];
+$$;
+
+revoke all on function beta._admin_emails() from public;
+
 
 -- ----------------------------------------------------------------------------
 -- 1. is_admin()
@@ -26,9 +47,7 @@ security definer
 set search_path = beta, public
 as $$
   select coalesce(
-    (select email from auth.users where id = auth.uid()) = any (array[
-      'chris@sprigloop.com'
-    ]),
+    (select email from auth.users where id = auth.uid()) = any (beta._admin_emails()),
     false
   );
 $$;
@@ -59,7 +78,7 @@ as $$
   select distinct e.session_id::text
   from beta.events e
   join auth.users u on u.id = e.user_id
-  where u.email = any (array['chris@sprigloop.com']);
+  where u.email = any (beta._admin_emails());
 $$;
 
 revoke all on function beta._admin_session_ids() from public;
@@ -256,7 +275,7 @@ begin
       from beta.household_members hm
       left join auth.users u on u.id = hm.user_id
       where hm.household_id = h.id
-        and (u.email is null or u.email <> all (array['chris@sprigloop.com']))
+        and (u.email is null or u.email <> all (beta._admin_emails()))
     )
   )
   order by le.last_at desc nulls last, h.created_at desc;
