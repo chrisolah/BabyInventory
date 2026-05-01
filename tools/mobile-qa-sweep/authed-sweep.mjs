@@ -114,10 +114,16 @@ async function discoverItemId(browser) {
   try {
     await page.goto(BASE_URL + '/inventory', { waitUntil: 'networkidle', timeout: 30_000 })
     await page.waitForTimeout(1500)
-    // SectionItemRow + ItemRow both render as <button aria-label="Open <name>">,
-    // so this selector reaches the first inventory row regardless of which tab
-    // (Owned / Wish list / etc.) the saved session lands on by default.
-    const firstRow = page.locator('button[aria-label^="Open "]').first()
+    // SectionItemRow + ItemRow both render as <button aria-label="Open <name>">
+    // and both pin the .itemRow class. The class hash from CSS modules makes
+    // the literal class name volatile (Inventory_itemRow_<hash>), so we match
+    // on the substring 'itemRow' which survives rebuilds. The aria-label part
+    // alone wasn't enough — ProfileMenu's <button aria-label="Open profile
+    // menu"> sits higher in DOM order and was being clicked instead, opening
+    // the dropdown rather than navigating to a row.
+    const firstRow = page
+      .locator('button[class*="itemRow"][aria-label^="Open "]')
+      .first()
     const count = await firstRow.count()
     if (count === 0) {
       console.log('[sweep] /inventory has no items — skipping /item/:id sweep')
