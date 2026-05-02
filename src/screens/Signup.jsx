@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { track, getSessionId } from '../lib/analytics'
+import MarketingFooter from '../components/MarketingFooter'
 import styles from './Signup.module.css'
 
 // Whitelist for ?next= post-auth redirects. Only same-origin paths starting
@@ -248,6 +249,7 @@ export default function Signup() {
             .
           </p>
         </div>
+        <MarketingFooter />
       </div>
     )
   }
@@ -350,6 +352,7 @@ export default function Signup() {
           </button>
         </div>
       </div>
+      <MarketingFooter />
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
+import MarketingFooter from '../components/MarketingFooter'
 import styles from './AcceptInvite.module.css'
 
 // Format a household name for prose copy: "Olah" → "the Olah Household".
@@ -210,6 +211,7 @@ export default function AcceptInvite() {
           <div className={styles.logo}>sprigloop</div>
           <div className={styles.loadingState}>Checking your invite…</div>
         </div>
+        <MarketingFooter />
       </div>
     )
   }
@@ -232,6 +234,7 @@ export default function AcceptInvite() {
             </button>
           </div>
         </div>
+        <MarketingFooter />
       </div>
     )
   }
@@ -251,6 +254,7 @@ export default function AcceptInvite() {
             </button>
           </div>
         </div>
+        <MarketingFooter />
       </div>
     )
   }
@@ -278,6 +282,7 @@ export default function AcceptInvite() {
             )}
           </div>
         </div>
+        <MarketingFooter />
       </div>
     )
   }
@@ -299,6 +304,7 @@ export default function AcceptInvite() {
             </button>
           </div>
         </div>
+        <MarketingFooter />
       </div>
     )
   }
@@ -320,6 +326,7 @@ export default function AcceptInvite() {
             </button>
           </div>
         </div>
+        <MarketingFooter />
       </div>
     )
   }
@@ -339,6 +346,7 @@ export default function AcceptInvite() {
             Welcome to {invite?.household_name ? <em className={styles.titleAccent}>{householdLabel(invite.household_name)}</em> : 'the household'}. Taking you to your home now…
           </p>
         </div>
+        <MarketingFooter />
       </div>
     )
   }
@@ -444,6 +452,7 @@ export default function AcceptInvite() {
           </>
         )}
       </div>
+      <MarketingFooter />
     </div>
   )
 }
