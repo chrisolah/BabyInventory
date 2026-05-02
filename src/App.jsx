@@ -56,34 +56,48 @@ const ADMIN_EMAILS = new Set(['chris@sprigloop.com', 'chrisjolah@outlook.com'])
 //   4. `useLayoutEffect` runs after DOM mutation but before paint, so the
 //      user never sees a frame of the previous scroll position flashing
 //      before the reset.
+// Local helper — resets every plausible scroll-controlling element to top.
+// Different browsers + iOS versions own scroll on different elements (window,
+// documentElement, body), so we hit all three. Cheap and idempotent.
+function resetScrollTop() {
+  try { window.scrollTo(0, 0) } catch (_) { /* no-op */ }
+  if (document.documentElement) document.documentElement.scrollTop = 0
+  if (document.body) document.body.scrollTop = 0
+}
+
 function ScrollToTop() {
   const { pathname } = useLocation()
 
-  // One-time: take scroll restoration out of the browser's hands.
+  // Defensive double-set: index.html already pins this before React loads,
+  // but we redo it here in case a third-party library has flipped it back.
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual'
     }
   }, [])
 
-  // Fires on initial mount AND on every subsequent pathname change.
+  // Three-pass reset on every pathname change:
+  //   1. useLayoutEffect — sync, before paint, hits the common case
+  //   2. useEffect       — post-paint, catches any sync re-layout that
+  //                        scrolled before paint completed
+  //   3. requestAnimationFrame — next frame, catches async content shifts
+  //                              (lazy-loaded data, focus side effects,
+  //                              measurements after first render)
+  // One of the three lands even when the others miss. Cost is negligible.
   useLayoutEffect(() => {
-    // Legacy 2-arg form — works on every mobile browser we care about.
-    window.scrollTo(0, 0)
-    // Belt-and-suspenders for the cases where the scrolling element is
-    // <html> or <body> directly (varies by iOS version + engine mode).
-    if (document.documentElement) document.documentElement.scrollTop = 0
-    if (document.body) document.body.scrollTop = 0
+    resetScrollTop()
+  }, [pathname])
+
+  useEffect(() => {
+    resetScrollTop()
+    const raf = requestAnimationFrame(resetScrollTop)
+    return () => cancelAnimationFrame(raf)
   }, [pathname])
 
   // bfcache restore path — effects above don't re-run, so we hook pageshow.
   useEffect(() => {
     const onPageShow = (e) => {
-      if (e.persisted) {
-        window.scrollTo(0, 0)
-        if (document.documentElement) document.documentElement.scrollTop = 0
-        if (document.body) document.body.scrollTop = 0
-      }
+      if (e.persisted) resetScrollTop()
     }
     window.addEventListener('pageshow', onPageShow)
     return () => window.removeEventListener('pageshow', onPageShow)
