@@ -76,9 +76,9 @@ export default function About() {
 
         <section className={styles.section}>
           <p>
-            Sprigloop started with a question I couldn't shake. My wife and I
-            live in a small house, and I hate clutter and waste in equal
-            measure. Where do baby clothes go when babies outgrow them?
+            Sprigloop started with a question I couldn't shake while I was
+            sorting through a stack of clothes a family member had passed
+            forward to us. Where do baby clothes go when babies outgrow them?
           </p>
           <p>
             Most of them end up in landfill. The rest sit in bags in basements
@@ -129,9 +129,8 @@ export default function About() {
           <p>
             <strong>I'm not trying to save the planet.</strong> I'm trying to
             make one frustrating, wasteful part of new parenthood a little
-            easier and a little more connected. If a few thousand families end
-            up using Sprigloop, the keep-out-of-landfill math gets meaningful.
-            If only a few do, it's still a tool I want for myself.
+            easier and a little more connected. Even if only a few do, it's
+            still a tool for you and my growing family.
           </p>
         </section>
 
