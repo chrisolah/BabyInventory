@@ -1,0 +1,131 @@
+/* Contact page — minimal by design. Same nav + hero shape as About so the
+   two pages read as siblings, but body is one centered card with the email
+   and an honest expectation line. */
+
+.page {
+  background: var(--white);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 0.5px solid var(--gray-100);
+  background: var(--white);
+  position: relative;
+  z-index: 2;
+}
+.logo {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--gray-900);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+.loginBtn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  margin-right: -12px;
+  font-size: 13px;
+  color: var(--gray-600);
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+.article {
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 2.5rem 1.5rem 4rem;
+  font-family: var(--font-body);
+  color: var(--gray-900);
+  line-height: 1.6;
+}
+
+.hero {
+  margin-bottom: 2.5rem;
+}
+.eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 1.25rem;
+}
+.h1 {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 6vw, 44px);
+  font-weight: 500;
+  line-height: 1.15;
+  color: var(--gray-900);
+  margin: 0 0 1rem;
+}
+.h1 em {
+  font-style: italic;
+  color: var(--teal);
+}
+.lede {
+  font-size: 17px;
+  color: var(--gray-700, #3B3B38);
+  margin: 0;
+}
+
+/* ── Email card ─────────────────────────────────────────────────── */
+.emailCard {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: 14px;
+  padding: 1.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.emailLabel {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-600);
+}
+.emailLink {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 4.5vw, 26px);
+  font-weight: 500;
+  color: var(--teal-dark);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  /* Long emails on iPhone-SE (320px) need wrap-anywhere or the box
+     overflows the card. break-word lets it wrap mid-word at the @ if
+     needed without horizontal scroll. */
+  word-break: break-word;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.emailLink:hover {
+  color: var(--teal);
+}
+.emailHint {
+  font-size: 14px;
+  color: var(--gray-600);
+}
