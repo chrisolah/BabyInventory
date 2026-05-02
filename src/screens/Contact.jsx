@@ -24,7 +24,7 @@ export default function Contact() {
     document.title = 'Contact Sprigloop: email Chris directly'
     descMeta?.setAttribute(
       'content',
-      'Send Sprigloop founder Chris a note. There is no support team. I read every email and usually reply within a day or two.',
+      'Send Sprigloop founder Chris a note. Ideas, improvements, and issues are all welcome.',
     )
 
     return () => {
@@ -61,8 +61,9 @@ export default function Contact() {
           <div className={styles.eyebrow}>Contact</div>
           <h1 className={styles.h1}>Send Chris a <em>note</em>.</h1>
           <p className={styles.lede}>
-            There's no support team behind Sprigloop. It's just me. I read
-            every email and usually reply within a day or two.
+            I'm building Sprigloop for myself, my wife, and you. I want to
+            make this as useful as possible for every family using it. Send
+            me a note with ideas, improvements, or issues. I'm here to help.
           </p>
         </header>
 
@@ -76,8 +77,7 @@ export default function Contact() {
             chris@sprigloop.com
           </a>
           <div className={styles.emailHint}>
-            Feedback, questions, bag help, and feature requests are all
-            welcome.
+            I usually reply within a day or two.
           </div>
         </section>
       </article>

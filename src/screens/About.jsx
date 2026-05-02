@@ -76,9 +76,9 @@ export default function About() {
 
         <section className={styles.section}>
           <p>
-            Sprigloop started with a question I couldn't shake while I was
-            sorting through a stack of clothes a family member had passed
-            forward to us. Where do baby clothes go when babies outgrow them?
+            Sprigloop started with a question I couldn't shake. My wife and I
+            live in a small house, and I hate clutter and waste in equal
+            measure. Where do baby clothes go when babies outgrow them?
           </p>
           <p>
             Most of them end up in landfill. The rest sit in bags in basements
@@ -125,8 +125,6 @@ export default function About() {
             <strong>I'm doing this part-time.</strong> Sprigloop is
             bootstrapped and small. If you email me, you're emailing the
             founder, not a support team. I usually reply within a day or two.
-            The flip side: I move slower than a venture-funded competitor
-            would, and I've made peace with that.
           </p>
           <p>
             <strong>I'm not trying to save the planet.</strong> I'm trying to
