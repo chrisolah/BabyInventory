@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import IvyDecoration from './IvyDecoration'
+import MarketingFooter from './MarketingFooter'
 
 // Layout wrapper for the marketing/SEO pages (Landing + HowItWorks).
 // Mounting IvyDecoration here (instead of inside each page) keeps the
@@ -17,11 +18,16 @@ import IvyDecoration from './IvyDecoration'
 // Other public routes (Signup, Login, ResetPassword, AcceptInvite) are
 // intentionally left outside this layout — they don't currently render
 // ivy and shouldn't suddenly start.
+// MarketingFooter mounts here for the same continuity reason as IvyDecoration:
+// updating once updates all four marketing pages (Landing, HowItWorks, About,
+// Contact). Authed surfaces never get this footer because they have their own
+// chrome and a marketing footer would compete with the app's layout.
 export default function LandingLayout() {
   return (
     <>
       <IvyDecoration />
       <Outlet />
+      <MarketingFooter />
     </>
   )
 }
