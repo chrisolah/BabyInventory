@@ -2,6 +2,12 @@
 # push` — sections NOT in this file get reset to CLI defaults on push, so any
 # dashboard-only setting we depend on must be mirrored here. Full reference:
 # https://supabase.com/docs/guides/cli/config
+#
+# DON'T run `supabase config push` directly. Use the wrapper:
+#   tools/safe-config-push.sh beta
+#   tools/safe-config-push.sh prod
+# It refuses to push if [api] is missing, warns if [auth] is missing, and
+# always runs --dry-run with explicit confirmation before the real push.
 
 # ── API: exposed Postgres schemas ───────────────────────────────────────────
 # The whole app lives in the `beta` schema (see project_dev_prod_environments
