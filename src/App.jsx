@@ -8,6 +8,8 @@ import './styles/globals.css'
 
 import Landing from './screens/Landing'
 import HowItWorks from './screens/HowItWorks'
+import About from './screens/About'
+import Contact from './screens/Contact'
 import Signup from './screens/Signup'
 import Login from './screens/Login'
 import ResetPassword from './screens/ResetPassword'
@@ -195,10 +197,13 @@ function AppRoutes() {
           intentionally left outside — they don't render ivy. */}
       <Route element={<LandingLayout />}>
         <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
-        {/* /how-it-works is a public marketing/SEO page. Unguarded so authed
-            and unauthed visitors both reach it; PublicRoute would bounce
-            authed users to /home and break inbound search traffic. */}
+        {/* /how-it-works, /about, /contact are public marketing/SEO pages.
+            Unguarded so authed and unauthed visitors both reach them;
+            PublicRoute would bounce authed users to /home and break inbound
+            search traffic + footer links from inside the app. */}
         <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
       </Route>
       <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
