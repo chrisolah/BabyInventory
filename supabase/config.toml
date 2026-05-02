@@ -1,6 +1,19 @@
-# Supabase CLI config. Only the bits we actually use are set here; everything
-# else falls back to the CLI defaults. Full reference:
+# Supabase CLI config. Anything in this file is asserted on `supabase config
+# push` — sections NOT in this file get reset to CLI defaults on push, so any
+# dashboard-only setting we depend on must be mirrored here. Full reference:
 # https://supabase.com/docs/guides/cli/config
+
+# ── API: exposed Postgres schemas ───────────────────────────────────────────
+# The whole app lives in the `beta` schema (see project_dev_prod_environments
+# memory). The CLI default for [api].schemas is just public + graphql_public,
+# so without this block, `supabase config push` will silently strip beta from
+# the PostgREST exposure and every authed page in the app will start failing
+# with "Invalid schema: beta". Bit prod on 2026-05-02 after a templates push
+# — added this block to make the push safe.
+[api]
+schemas = ["public", "graphql_public", "beta"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
 
 # ── Edge function overrides ─────────────────────────────────────────────────
 # scan-clothing-tag does its own JWT validation inside the function (it calls
