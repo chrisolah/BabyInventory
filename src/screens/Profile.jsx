@@ -1150,7 +1150,7 @@ function AccountTab() {
       `Thanks.`,
     )
     track.accountDeletionRequested()
-    window.location.href = `mailto:support@littleloop.app?subject=${subject}&body=${body}`
+    window.location.href = `mailto:chris@sprigloop.com?subject=${subject}&body=${body}`
     setDeleteSent(true)
   }
 
