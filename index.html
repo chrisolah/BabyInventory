@@ -30,6 +30,17 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Take scroll restoration out of the browser's hands BEFORE React loads.
+         If we wait for App.jsx's useEffect to do this, the browser may have
+         already auto-restored scroll position from history on a refresh or
+         back/forward, and we'd see a flash of the wrong position before our
+         JS-side ScrollToTop runs. Pinning to 'manual' here means every
+         navigation is owned by App.jsx's ScrollToTop component. -->
+    <script>
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
