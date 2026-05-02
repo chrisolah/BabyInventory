@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { track } from '../lib/analytics'
+import MarketingFooter from '../components/MarketingFooter'
 import styles from './ResetPassword.module.css'
 
 // Password reset flow, end-to-end on a single unguarded route.
@@ -194,6 +195,7 @@ export default function ResetPassword() {
             .
           </p>
         </div>
+        <MarketingFooter />
       </div>
     )
   }
@@ -217,6 +219,7 @@ export default function ResetPassword() {
             Go to log in
           </button>
         </div>
+        <MarketingFooter />
       </div>
     )
   }
@@ -277,6 +280,7 @@ export default function ResetPassword() {
           </button>
         </div>
       </div>
+      <MarketingFooter />
     </div>
   )
 }

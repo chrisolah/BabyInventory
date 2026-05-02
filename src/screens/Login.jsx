@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { track } from '../lib/analytics'
+import MarketingFooter from '../components/MarketingFooter'
 import styles from './Login.module.css'
 
 // Whitelist for ?next= post-auth redirects. We only honour same-origin paths
@@ -240,6 +241,7 @@ export default function Login() {
             .
           </p>
         </div>
+        <MarketingFooter />
       </div>
     )
   }
@@ -340,6 +342,7 @@ export default function Login() {
           </button>
         </div>
       </div>
+      <MarketingFooter />
     </div>
   )
 }
