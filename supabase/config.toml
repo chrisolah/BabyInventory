@@ -37,6 +37,15 @@ max_rows = 1000
 [functions.scan-clothing-tag]
 verify_jwt = false
 
+# send-email-outbox is called by pg_cron via net.http_post(), which doesn't
+# auto-include the service_role JWT that Studio Database Webhooks add. The
+# function still gates every request via OUTBOX_DISPATCH_SECRET in the
+# x-webhook-secret header, so the JWT check is redundant here. Without this
+# override, the gateway returns "UNAUTHORIZED_NO_AUTH_HEADER" before the
+# function ever runs and the cron loop can't dispatch anything.
+[functions.send-email-outbox]
+verify_jwt = false
+
 # ── Auth email templates ────────────────────────────────────────────────────
 # Brand-styled HTML for the five Supabase auth emails. Pushed to remote
 # projects via `supabase config push --project-ref <ref>`. Source HTML lives
