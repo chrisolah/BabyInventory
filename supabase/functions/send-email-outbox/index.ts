@@ -804,6 +804,132 @@ async function render_d14_reengage(args: RenderArgs): Promise<RenderResult> {
   return { subject, html, text, headers: LIFECYCLE_HEADERS }
 }
 
+// bag_delivered — Email #15. Transactional confirmation that a fulfilled
+// pass_along_batch reached the recipient. Fires on the same status
+// transition as first_pass_along (→ 'fulfilled') but always — no
+// "first per household" gate. On a user's first fulfilled bag, both
+// emails fire (different purposes: this is the transactional receipt,
+// first_pass_along is the one-time celebration).
+//
+// Payload (built by beta.enqueue_bag_delivered_email trigger):
+//   first_name      — user's first name, or null
+//   item_count      — items in the delivered batch
+//   recipient_label — pre-resolved string (privacy contract preserves
+//                     family-destination anonymity, person/charity carry
+//                     the user-typed name)
+//   batch_id        — pass_along_batches.id (for diagnostics)
+function render_bag_delivered(payload: Record<string, unknown>): RenderedEmail {
+  const firstName = (payload.first_name as string | null) || null
+  const itemCount = Number((payload.item_count as number | undefined) ?? 0)
+  const recipientRaw = (payload.recipient_label as string | undefined) || 'the recipient'
+  const greeting = firstName ? `${esc(firstName)},` : 'Hi,'
+  const itemNoun = itemCount === 1 ? 'item' : 'items'
+  const recipient = esc(recipientRaw)
+  const historyUrl = `${APP_URL}/pass-along`
+
+  return {
+    subject: `Your bag made it.`,
+    html: shell({
+      title: 'Your bag made it',
+      bodyHtml: `
+    <span style="display:inline-block;font-size:12px;font-weight:500;background:#E1F5EE;color:#085041;padding:4px 14px;border-radius:999px;margin:14px 28px 0;">Delivered</span>
+    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">It <em style="font-style:italic;color:#1D9E75;">made it</em>.</h1>
+    <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${greeting}</p>
+      <p style="margin:0 0 12px;">Your bundle of ${itemCount} ${itemNoun} was delivered to ${recipient}. Off your shelf and into someone else's rotation.</p>
+      <p style="margin:0 0 12px;">We've moved them out of your wardrobe automatically. Nothing else for you to do.</p>
+    </div>
+    <div style="padding:14px 28px 4px;">
+      <a href="${esc(historyUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">See your pass-along history</a>
+    </div>
+    <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">Bundles like this are why Sprigloop exists. Thanks for sending one.</p>
+      <p style="margin:0;">— Chris</p>
+    </div>`,
+    }),
+    text: [
+      `Your bag made it.`,
+      ``,
+      `${firstName ? firstName + ',' : 'Hi,'}`,
+      ``,
+      `Your bundle of ${itemCount} ${itemNoun} was delivered to ${recipientRaw}. Off your shelf and into someone else's rotation.`,
+      ``,
+      `We've moved them out of your wardrobe automatically. Nothing else for you to do.`,
+      ``,
+      `See your pass-along history: ${historyUrl}`,
+      ``,
+      `Bundles like this are why Sprigloop exists. Thanks for sending one.`,
+      `— Chris`,
+      ``,
+      `—`,
+      `Sprigloop · Detroit, MI`,
+      `${APP_URL}/about · ${APP_URL}/contact`,
+    ].join('\n'),
+  }
+}
+
+// invite_accepted — Email #26. Transactional notification to the inviter
+// that someone accepted their household invite. Fires when
+// pending_invites.accepted_at transitions null → non-null.
+//
+// Payload (built by beta.enqueue_invite_accepted_email trigger):
+//   inviter_first_name   — to greet the inviter, or null for "Hi,"
+//   accepter_first_name  — appears in subject + headline
+//   accepter_full_name   — fallback if first_name extraction fails
+function render_invite_accepted(payload: Record<string, unknown>): RenderedEmail {
+  const inviterFirst = (payload.inviter_first_name as string | null) || null
+  const accepterFirst = (payload.accepter_first_name as string | null) || 'Someone'
+  const greeting = inviterFirst ? `${esc(inviterFirst)},` : 'Hi,'
+  const homeUrl = `${APP_URL}/home`
+  const accepterEsc = esc(accepterFirst)
+
+  return {
+    subject: `${accepterFirst} joined your household.`,
+    html: shell({
+      title: `${accepterFirst} joined your household`,
+      bodyHtml: `
+    <span style="display:inline-block;font-size:12px;font-weight:500;background:#E1F5EE;color:#085041;padding:4px 14px;border-radius:999px;margin:14px 28px 0;">Joined</span>
+    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">${accepterEsc} is <em style="font-style:italic;color:#1D9E75;">in</em>.</h1>
+    <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${greeting}</p>
+      <p style="margin:0 0 12px;">${accepterEsc} accepted your invite. You're now both looking at the same wardrobe.</p>
+    </div>
+    <p style="font-family:'Fraunces',Georgia,serif;font-size:14px;font-weight:500;color:#085041;letter-spacing:0.04em;text-transform:uppercase;padding:18px 28px 4px;margin:0;">What changes</p>
+    <div style="padding:8px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 6px;color:#2C2C2A;font-weight:500;">Both of you can scan and edit.</p>
+      <p style="margin:0 0 14px;">Anything either of you adds shows up for the other instantly.</p>
+      <p style="margin:0 0 6px;color:#2C2C2A;font-weight:500;">You'll both see the same outgrown shelf.</p>
+      <p style="margin:0 0 14px;">When something fits no longer, either of you can flag it for pass-along.</p>
+    </div>
+    <div style="padding:14px 28px 4px;">
+      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open the wardrobe</a>
+    </div>
+    <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0;">— Chris</p>
+    </div>`,
+    }),
+    text: [
+      `${accepterFirst} is in.`,
+      ``,
+      `${inviterFirst ? inviterFirst + ',' : 'Hi,'}`,
+      ``,
+      `${accepterFirst} accepted your invite. You're now both looking at the same wardrobe.`,
+      ``,
+      `What changes:`,
+      `  - Both of you can scan and edit. Anything either of you adds shows up for the other instantly.`,
+      `  - You'll both see the same outgrown shelf. When something fits no longer, either of you can flag it for pass-along.`,
+      ``,
+      `Open the wardrobe: ${homeUrl}`,
+      ``,
+      `— Chris`,
+      ``,
+      `—`,
+      `Sprigloop · Detroit, MI`,
+      `${APP_URL}/about · ${APP_URL}/contact`,
+    ].join('\n'),
+  }
+}
+
 // renderTemplate — central router. Throws on unknown template_id; the
 // dispatcher catches and marks the row 'failed' with the error message.
 // Returning a SkipResult is NOT an error — the dispatcher honors it by
@@ -818,6 +944,10 @@ async function renderTemplate(template_id: string, args: RenderArgs): Promise<Re
       return render_first_pass_along(args.payload)
     case 'bag_request_notify':
       return render_bag_request_notify(args.payload)
+    case 'bag_delivered':
+      return render_bag_delivered(args.payload)
+    case 'invite_accepted':
+      return render_invite_accepted(args.payload)
     case 'd2_nudge':
       return await render_d2_nudge(args)
     case 'd4_invite':
