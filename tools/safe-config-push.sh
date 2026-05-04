@@ -12,7 +12,9 @@
 # This wrapper enforces three things before letting you push:
 #   1. config.toml MUST contain `[api]` (refuse if missing)
 #   2. config.toml SHOULD contain `[auth]` (warn + require confirmation)
-#   3. `--dry-run` runs first, you read the diff, you type "yes" to proceed
+#   3. Lists every `[section]` in config.toml + requires you to type "yes"
+#      before the push runs. (CLI v2.90+ removed `config push --dry-run`,
+#      so the section list is the best preview we can offer.)
 #
 # Usage:
 #   tools/safe-config-push.sh adojihtjkfhozwbxfjae    # beta
@@ -93,17 +95,22 @@ EOF
   fi
 done
 
-# ── Dry-run first; require confirmation before real push ─────────────────
+# ── Show what's in config.toml + require explicit confirmation ───────────
+# `supabase config push` does not support --dry-run as of CLI v2.90.x, so
+# we can't show a real diff. Best we can do is print the sections currently
+# in config.toml so you can sanity-check what's about to be asserted,
+# and require a typed 'yes' before the destructive command runs.
 echo ""
 echo "─────────────────────────────────────────────────────────────"
-echo "DRY RUN: showing what would change on $ENV_LABEL ($PROJECT_REF)"
-echo "─────────────────────────────────────────────────────────────"
-supabase config push --project-ref "$PROJECT_REF" --dry-run
-
+echo "About to push to $ENV_LABEL ($PROJECT_REF)."
 echo ""
-echo "─────────────────────────────────────────────────────────────"
-echo "Review the diff above carefully. Anything you didn't expect?"
-echo "Especially watch for: api.schemas, auth.site_url, auth.additional_redirect_urls."
+echo "Sections in $CONFIG that will be asserted:"
+grep -E "^\[" "$CONFIG" | sed 's/^/  /'
+echo ""
+echo "Anything NOT listed above will be reset to CLI defaults on the"
+echo "remote project. Common things to watch for:"
+echo "  - [api]   schemas, extra_search_path"
+echo "  - [auth]  site_url, additional_redirect_urls, OTP expiry"
 echo "─────────────────────────────────────────────────────────────"
 read -r -p "Type 'yes' to push to $ENV_LABEL for real: " CONFIRM
 if [ "$CONFIRM" != "yes" ]; then
