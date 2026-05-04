@@ -93,7 +93,11 @@ export const SLOTS = [
     category: 'tops_and_bodysuits',
     keywords: ['t_shirt', 'tshirt', 'top', 'tee', 'shirt', 'sweater', 'cardigan', 'hoodie'],
     hint: null,
-    recommended: 4,
+    // Newborns wear bodysuits more than separates; day tops ramp up as
+    // bodysuits taper. Aligned with external checklists (Babylist, Mom
+    // Money Map, mommylabornurse 2026 audit) suggesting 4-7 in older sizes.
+    recommended: 5,
+    perAge: { '0-3M': 3, '3-6M': 4, '6-9M': 5, '9-12M': 5, '12-18M': 6, '18-24M': 6 },
     fallback: true, // anything in tops_and_bodysuits that isn't a bodysuit
   },
 
@@ -150,8 +154,12 @@ export const SLOTS = [
     category: 'sleepwear',
     keywords: ['sack', 'swaddle'],
     hint: null,
+    // Slot covers BOTH swaddles and sleep sacks. Newborn period needs the
+    // most because of cycle-through from spit-up + diaper blowouts —
+    // external checklists cluster around 4-6 swaddles for newborns. Tapers
+    // as baby transitions out of swaddling around 4 months.
     recommended: 2,
-    perAge: { '0-3M': 2, '3-6M': 2, '6-9M': 2, '9-12M': 2, '12-18M': 1, '18-24M': 1 },
+    perAge: { '0-3M': 5, '3-6M': 3, '6-9M': 2, '9-12M': 2, '12-18M': 1, '18-24M': 1 },
   },
   {
     id: 'pajamas',
@@ -160,8 +168,12 @@ export const SLOTS = [
     category: 'sleepwear',
     keywords: ['sleepsuit', 'sleeper', 'pajama', 'pyjama', 'pj', 'nightgown'],
     hint: 'Sleepsuits & 2-piece',
-    recommended: 7,
-    perAge: { '0-3M': 4, '3-6M': 7, '6-9M': 7, '9-12M': 7, '12-18M': 6, '18-24M': 5 },
+    // Newborn need is highest (overnight blowouts cycle through pajamas
+    // fast); curve flattens after 6 months as fewer changes are needed.
+    // External checklists cluster at 4-6 across most ranges; previous 7
+    // for 3-6/6-9/9-12 was higher than consensus.
+    recommended: 5,
+    perAge: { '0-3M': 6, '3-6M': 6, '6-9M': 5, '9-12M': 5, '12-18M': 5, '18-24M': 4 },
     fallback: true,
   },
 
@@ -204,7 +216,11 @@ export const SLOTS = [
     category: 'footwear',
     keywords: ['shoe', 'bootie', 'boot', 'sandal'],
     hint: null,
+    // Pre-walking (typically pre-9 months), babies don't really need shoes;
+    // a single pair of soft-soled booties for warmth covers it. Walking
+    // typically starts 9-15 months — recommended count steps up there.
     recommended: 2,
+    perAge: { '0-3M': 1, '3-6M': 1, '6-9M': 1, '9-12M': 2, '12-18M': 3, '18-24M': 3 },
     fallback: true,
   },
 
@@ -235,7 +251,12 @@ export const SLOTS = [
     category: 'accessories',
     keywords: ['bib'],
     hint: null,
+    // Two distinct use cases drive the curve: drool/spit-up bibs in the
+    // newborn period (4-6 work), then feeding bibs starting around 4-6
+    // months when solids begin (consensus 7-8 needed for one per meal).
+    // Tapers as feeding gets cleaner past 12 months.
     recommended: 5,
+    perAge: { '0-3M': 4, '3-6M': 6, '6-9M': 7, '9-12M': 7, '12-18M': 5, '18-24M': 4 },
   },
   {
     id: 'burp_cloths',
