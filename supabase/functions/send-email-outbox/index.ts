@@ -55,6 +55,21 @@ interface RenderedEmail {
   headers?: Record<string, string>
 }
 
+// Renderers can short-circuit by returning a SkipResult. The dispatcher
+// marks the outbox row status='skipped' with the reason as last_error
+// (the email_outbox_error_when_failed constraint requires last_error for
+// both 'failed' and 'skipped' statuses). Used by lifecycle templates with
+// a "send only if condition" gate — d4 invite (skip if co-parent exists),
+// d7 snapshot (skip if zero items), d14 re-engagement (skip if active
+// recently).
+interface SkipResult {
+  skip: string
+}
+type RenderResult = RenderedEmail | SkipResult
+function isSkip(r: RenderResult): r is SkipResult {
+  return (r as SkipResult).skip !== undefined
+}
+
 // Marketing-style emails (lifecycle nudges, recurring digests) MUST set
 // these headers per Gmail/Apple Mail bulk-sender requirements. The unsub
 // mailto goes to a real address that Resend's automatic suppression list
@@ -568,9 +583,232 @@ async function render_d2_nudge(args: RenderArgs): Promise<RenderedEmail> {
   return { subject, html, text, headers: LIFECYCLE_HEADERS }
 }
 
+// d4_invite — Email #06. D+4 onboarding nudge to invite a co-parent.
+// Skips if the user's household already has a co-parent or pending invite,
+// since the email's whole purpose is to suggest something they've already
+// done.
+//
+// Conditional skip via beta._user_has_co_parent(user_id). Renderer
+// returns SkipResult when condition met.
+async function render_d4_invite(args: RenderArgs): Promise<RenderResult> {
+  if (args.recipientUserId) {
+    const { data, error } = await args.supabase.schema('beta').rpc('_user_has_co_parent', {
+      _user_id: args.recipientUserId,
+    })
+    if (!error && data === true) {
+      return { skip: 'already_has_co_parent' }
+    }
+  }
+
+  const firstName = (args.payload.first_name as string | null) || null
+  const greeting = firstName ? `${esc(firstName)},` : 'Hi,'
+  const inviteUrl = `${APP_URL}/profile`
+
+  const subject = `Who else is washing the onesies?`
+  const html = shell({
+    title: 'Add the other person',
+    bodyHtml: `
+    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">Add the other <em style="font-style:italic;color:#1D9E75;">person</em>.</h1>
+    <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${greeting}</p>
+      <p style="margin:0 0 12px;">Whoever else is doing laundry, putting the baby down, packing the diaper bag — they should see the same wardrobe you do.</p>
+      <p style="margin:0 0 12px;">Inviting takes ten seconds. They get an email with a one-tap link. No new account, no app store, nothing else to set up.</p>
+    </div>
+    <div style="padding:14px 28px 4px;">
+      <a href="${esc(inviteUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Invite a co-parent</a>
+    </div>
+    <p style="font-family:'Fraunces',Georgia,serif;font-size:14px;font-weight:500;color:#085041;letter-spacing:0.04em;text-transform:uppercase;padding:18px 28px 4px;margin:0;">Common cases</p>
+    <div style="padding:8px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 6px;color:#2C2C2A;font-weight:500;">A partner.</p>
+      <p style="margin:0 0 14px;">They can scan from their phone. Same household, one wardrobe.</p>
+      <p style="margin:0 0 6px;color:#2C2C2A;font-weight:500;">A grandparent or babysitter.</p>
+      <p style="margin:0 0 14px;">Read-only is fine. They see what fits without having to ask.</p>
+    </div>
+    <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0;">— Chris</p>
+    </div>`,
+  })
+
+  const text = [
+    `Add the other person.`,
+    ``,
+    `${firstName ? firstName + ',' : 'Hi,'}`,
+    ``,
+    `Whoever else is doing laundry, putting the baby down, packing the diaper bag — they should see the same wardrobe you do.`,
+    ``,
+    `Inviting takes ten seconds. They get an email with a one-tap link. No new account, no app store, nothing else to set up.`,
+    ``,
+    `Invite a co-parent: ${inviteUrl}`,
+    ``,
+    `Common cases:`,
+    `  - A partner. They can scan from their phone. Same household, one wardrobe.`,
+    `  - A grandparent or babysitter. Read-only is fine. They see what fits without having to ask.`,
+    ``,
+    `— Chris`,
+    ``,
+    `—`,
+    `Onboarding nudge from Sprigloop. Reply with "stop" to pause these.`,
+    `${APP_URL}/about · ${APP_URL}/contact`,
+  ].join('\n')
+
+  return { subject, html, text, headers: LIFECYCLE_HEADERS }
+}
+
+// d7_snapshot — Email #07. D+7 weekly summary. Skips if zero items
+// scanned (an empty wardrobe snapshot has nothing to say). Renders a
+// live stat-card from beta._user_inventory_stats, which returns:
+//   { total, owned, outgrown, top_brand }
+// "Outgrown" here covers the union of statuses that mean the item is
+// no longer in active use — outgrown, donated, exchanged, passed_along —
+// matching the inventory-app definition.
+async function render_d7_snapshot(args: RenderArgs): Promise<RenderResult> {
+  if (!args.recipientUserId) return { skip: 'no_user_id' }
+
+  const { data: stats, error } = await args.supabase.schema('beta').rpc('_user_inventory_stats', {
+    _user_id: args.recipientUserId,
+  })
+  if (error) return { skip: `stats_lookup_failed: ${error.message}` }
+  const total = Number((stats as Record<string, unknown> | null)?.total ?? 0)
+  if (total < 1) return { skip: 'zero_items' }
+
+  const owned = Number((stats as Record<string, unknown>).owned ?? 0)
+  const outgrown = Number((stats as Record<string, unknown>).outgrown ?? 0)
+  const topBrand = (stats as Record<string, unknown>).top_brand as string | null
+
+  const firstName = (args.payload.first_name as string | null) || null
+  const greeting = firstName ? `${esc(firstName)},` : 'Hi,'
+  const homeUrl = `${APP_URL}/home`
+
+  const statRow = (key: string, val: string) => `
+        <tr>
+          <td style="padding:6px 0;color:#888780;font-size:14px;">${esc(key)}</td>
+          <td style="padding:6px 0;color:#2C2C2A;font-size:14px;text-align:right;font-variant-numeric:tabular-nums;">${esc(val)}</td>
+        </tr>`
+
+  const statRows = [
+    statRow('Items scanned', String(total)),
+    statRow('In active use', String(owned)),
+    outgrown > 0 ? statRow('Outgrown', String(outgrown)) : '',
+    topBrand ? statRow('Top brand', topBrand) : '',
+  ].filter(Boolean).join('')
+
+  const subject = `A week in. Here's what you've got.`
+  const html = shell({
+    title: 'A week in',
+    bodyHtml: `
+    <span style="display:inline-block;font-size:12px;font-weight:500;background:#E1F5EE;color:#085041;padding:4px 14px;border-radius:999px;margin:14px 28px 0;">Week one</span>
+    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">A week <em style="font-style:italic;color:#1D9E75;">in</em>.</h1>
+    <p style="font-family:'Fraunces',Georgia,serif;font-size:17px;font-style:italic;color:#085041;line-height:1.4;padding:6px 28px 0;margin:0;">Here's what your wardrobe looks like so far.</p>
+    <div style="padding:0 28px;margin-top:14px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${greeting}</p>
+    </div>
+    <div style="padding:0 28px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F9F9F7;border:1px solid #F1EFE8;border-radius:8px;padding:14px 18px;">${statRows}
+      </table>
+    </div>
+    <div style="padding:14px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">Not bad for a week. The more you scan, the easier the size shifts get and the more obvious the pass-along moments become.</p>
+    </div>
+    <div style="padding:14px 28px 4px;">
+      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open the wardrobe</a>
+    </div>
+    <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0;">— Chris</p>
+    </div>`,
+  })
+
+  const text = [
+    `A week in.`,
+    ``,
+    `${firstName ? firstName + ',' : 'Hi,'}`,
+    ``,
+    `Here's what your wardrobe looks like so far.`,
+    ``,
+    `  Items scanned: ${total}`,
+    `  In active use: ${owned}`,
+    outgrown > 0 ? `  Outgrown:      ${outgrown}` : '',
+    topBrand ? `  Top brand:     ${topBrand}` : '',
+    ``,
+    `Not bad for a week. The more you scan, the easier the size shifts get and the more obvious the pass-along moments become.`,
+    ``,
+    `Open the wardrobe: ${homeUrl}`,
+    ``,
+    `— Chris`,
+    ``,
+    `—`,
+    `Weekly summary while you get settled. Reply with "stop" to pause these.`,
+    `${APP_URL}/about · ${APP_URL}/contact`,
+  ].filter((l) => l !== '').join('\n')
+
+  return { subject, html, text, headers: LIFECYCLE_HEADERS }
+}
+
+// d14_reengage — Email #08. D+14 last-onboarding-nudge re-engagement.
+// Skips if the user's been active recently (auth.users.last_sign_in_at
+// within the last 7 days). Soft "no pressure" framing — explicitly the
+// final onboarding nudge before the program goes silent.
+async function render_d14_reengage(args: RenderArgs): Promise<RenderResult> {
+  if (args.recipientUserId) {
+    const { data, error } = await args.supabase.schema('beta').rpc('_user_active_within_days', {
+      _user_id: args.recipientUserId,
+      _days: 7,
+    })
+    if (!error && data === true) {
+      return { skip: 'active_recently' }
+    }
+  }
+
+  const firstName = (args.payload.first_name as string | null) || null
+  const greeting = firstName ? `${esc(firstName)},` : 'Hi,'
+  const homeUrl = `${APP_URL}/home`
+
+  const subject = `It's still here when you're ready.`
+  const html = shell({
+    title: 'No pressure',
+    bodyHtml: `
+    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">No <em style="font-style:italic;color:#1D9E75;">pressure</em>.</h1>
+    <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${greeting}</p>
+      <p style="margin:0 0 12px;">You signed up two weeks ago and life probably got busy. That tracks. Babies are a lot.</p>
+      <p style="margin:0 0 12px;">Sprigloop will be here when you have ten quiet minutes. The wardrobe you started will be exactly how you left it. Pick it up whenever.</p>
+    </div>
+    <div style="padding:14px 28px 4px;">
+      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open Sprigloop</a>
+    </div>
+    <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">If it's not the right time, no hard feelings. Reply and tell me what got in the way and I'll take notes.</p>
+      <p style="margin:0;">— Chris</p>
+    </div>`,
+  })
+
+  const text = [
+    `No pressure.`,
+    ``,
+    `${firstName ? firstName + ',' : 'Hi,'}`,
+    ``,
+    `You signed up two weeks ago and life probably got busy. That tracks. Babies are a lot.`,
+    ``,
+    `Sprigloop will be here when you have ten quiet minutes. The wardrobe you started will be exactly how you left it. Pick it up whenever.`,
+    ``,
+    `Open Sprigloop: ${homeUrl}`,
+    ``,
+    `If it's not the right time, no hard feelings. Reply and tell me what got in the way and I'll take notes.`,
+    ``,
+    `— Chris`,
+    ``,
+    `—`,
+    `Last onboarding nudge. After this, you'll only hear from us when something happens with your wardrobe.`,
+    `${APP_URL}/about · ${APP_URL}/contact`,
+  ].join('\n')
+
+  return { subject, html, text, headers: LIFECYCLE_HEADERS }
+}
+
 // renderTemplate — central router. Throws on unknown template_id; the
 // dispatcher catches and marks the row 'failed' with the error message.
-async function renderTemplate(template_id: string, args: RenderArgs): Promise<RenderedEmail> {
+// Returning a SkipResult is NOT an error — the dispatcher honors it by
+// marking the row 'skipped' instead.
+async function renderTemplate(template_id: string, args: RenderArgs): Promise<RenderResult> {
   switch (template_id) {
     case 'test_ping':
       return render_test_ping(args.payload)
@@ -582,6 +820,12 @@ async function renderTemplate(template_id: string, args: RenderArgs): Promise<Re
       return render_bag_request_notify(args.payload)
     case 'd2_nudge':
       return await render_d2_nudge(args)
+    case 'd4_invite':
+      return await render_d4_invite(args)
+    case 'd7_snapshot':
+      return await render_d7_snapshot(args)
+    case 'd14_reengage':
+      return await render_d14_reengage(args)
     // Future templates land here. Each is a render_<id> function above
     // plus a case here.
     default:
@@ -678,9 +922,10 @@ Deno.serve(async (req) => {
 
   let sent = 0
   let failed = 0
+  let skipped = 0
 
   for (const row of rows) {
-    let rendered: RenderedEmail
+    let rendered: RenderResult
     try {
       rendered = await renderTemplate(row.template_id, {
         payload: row.payload,
@@ -691,6 +936,12 @@ Deno.serve(async (req) => {
       const msg = err instanceof Error ? err.message : String(err)
       await supabase.schema('beta').rpc('mark_outbox_failed', { _id: row.id, _error: `render: ${msg}` })
       failed += 1
+      continue
+    }
+
+    if (isSkip(rendered)) {
+      await supabase.schema('beta').rpc('mark_outbox_skipped', { _id: row.id, _reason: rendered.skip })
+      skipped += 1
       continue
     }
 
@@ -713,7 +964,7 @@ Deno.serve(async (req) => {
   }
 
   return new Response(
-    JSON.stringify({ ok: true, claimed: rows.length, sent, failed }),
+    JSON.stringify({ ok: true, claimed: rows.length, sent, failed, skipped }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 })
