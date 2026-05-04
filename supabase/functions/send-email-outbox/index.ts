@@ -930,6 +930,207 @@ function render_invite_accepted(payload: Record<string, unknown>): RenderedEmail
   }
 }
 
+// birthday_eve — Email #18. Lifecycle. Sent the day before a baby's
+// birthday with a year-in-review stat card. Static content per send;
+// renderer pulls live stats at send time so the numbers reflect what
+// actually happened that year. No skip — every birthday is worth
+// acknowledging, even if the wardrobe is sparse.
+//
+// Payload (built by beta.enqueue_baby_lifecycle trigger):
+//   first_name      — recipient's first name (the household member)
+//   baby_name       — baby's name; falls back to "your baby"
+//   year_number     — which birthday this is (1, 2, ...) — drives copy
+//   baby_id         — for stat lookups (household-scoped)
+//   household_id    — for stat lookups
+async function render_birthday_eve(args: RenderArgs): Promise<RenderResult> {
+  const firstName = (args.payload.first_name as string | null) || null
+  const babyNameRaw = (args.payload.baby_name as string | null) || null
+  const yearNumber = Number(args.payload.year_number ?? 1)
+  const householdId = (args.payload.household_id as string | undefined) || null
+
+  const greeting = firstName ? `${esc(firstName)},` : 'Hi,'
+  const babyDisplay = babyNameRaw || 'your baby'
+  const babyEsc = esc(babyDisplay)
+  const homeUrl = `${APP_URL}/home`
+
+  // Pull the year's stats. Window = (one year ending tomorrow), since
+  // scheduled_for = birthday - 1 day. Renderer falls back to zero stats
+  // if the lookup fails; the email still sends.
+  let itemsTotal = 0
+  let itemsPassedAlong = 0
+  let sizesWorn: string[] = []
+  if (householdId) {
+    const yearEnd = new Date()
+    yearEnd.setDate(yearEnd.getDate() + 1)
+    const yearStart = new Date(yearEnd)
+    yearStart.setFullYear(yearStart.getFullYear() - 1)
+    const { data, error } = await args.supabase.schema('beta').rpc('_household_year_stats', {
+      _household_id: householdId,
+      _start: yearStart.toISOString().slice(0, 10),
+      _end: yearEnd.toISOString().slice(0, 10),
+    })
+    if (!error && data) {
+      const stats = data as Record<string, unknown>
+      itemsTotal = Number(stats.items_total ?? 0)
+      itemsPassedAlong = Number(stats.items_passed_along ?? 0)
+      sizesWorn = (stats.sizes_worn as string[] | null) ?? []
+    }
+  }
+
+  const yearLabel = yearNumber === 1 ? 'One year' : `${yearNumber} years`
+  const sizesRange = sizesWorn.length > 0
+    ? (sizesWorn.length === 1 ? sizesWorn[0] : `${sizesWorn[0]} → ${sizesWorn[sizesWorn.length - 1]}`)
+    : '—'
+
+  const statRow = (key: string, val: string) => `
+        <tr>
+          <td style="padding:6px 0;color:#888780;font-size:14px;">${esc(key)}</td>
+          <td style="padding:6px 0;color:#2C2C2A;font-size:14px;text-align:right;font-variant-numeric:tabular-nums;">${esc(val)}</td>
+        </tr>`
+
+  const statRows = [
+    sizesWorn.length > 0 ? statRow('Sizes worn this year', sizesRange) : '',
+    statRow('Items in the wardrobe', String(itemsTotal)),
+    itemsPassedAlong > 0 ? statRow('Items passed along', String(itemsPassedAlong)) : '',
+  ].filter(Boolean).join('')
+
+  const subject = `${yearLabel} of ${babyDisplay}.`
+  const html = shell({
+    title: subject,
+    bodyHtml: `
+    <span style="display:inline-block;font-size:12px;font-weight:500;background:#E1F5EE;color:#085041;padding:4px 14px;border-radius:999px;margin:14px 28px 0;">Tomorrow</span>
+    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:30px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">${yearLabel} of <em style="font-style:italic;color:#1D9E75;">${babyEsc}</em>.</h1>
+    <p style="font-family:'Fraunces',Georgia,serif;font-size:17px;font-style:italic;color:#085041;line-height:1.4;padding:6px 28px 0;margin:0;">A short look back at the wardrobe that made it through.</p>
+    <div style="padding:0 28px;margin-top:14px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${greeting}</p>
+    </div>
+    ${statRows ? `<div style="padding:0 28px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F9F9F7;border:1px solid #F1EFE8;border-radius:8px;padding:14px 18px;">${statRows}
+      </table>
+    </div>` : ''}
+    <div style="padding:14px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${yearLabel === 'One year' ? 'One year is a lot of laundry.' : `${yearLabel} is a lot of laundry.`} We're not going to make a fuss about it. Just wanted you to see the numbers and know we're glad you've spent some of this year here.</p>
+    </div>
+    <div style="padding:14px 28px 4px;">
+      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">See the year in wardrobe</a>
+    </div>
+    <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">Happy birthday to ${babyEsc}.</p>
+      <p style="margin:0;">— Chris</p>
+    </div>`,
+  })
+
+  const text = [
+    `${yearLabel} of ${babyDisplay}.`,
+    ``,
+    `${firstName ? firstName + ',' : 'Hi,'}`,
+    ``,
+    sizesWorn.length > 0 ? `  Sizes worn this year:  ${sizesRange}` : '',
+    `  Items in the wardrobe: ${itemsTotal}`,
+    itemsPassedAlong > 0 ? `  Items passed along:    ${itemsPassedAlong}` : '',
+    ``,
+    `${yearLabel === 'One year' ? 'One year is a lot of laundry.' : `${yearLabel} is a lot of laundry.`} We're not going to make a fuss about it. Just wanted you to see the numbers and know we're glad you've spent some of this year here.`,
+    ``,
+    `See the year in wardrobe: ${homeUrl}`,
+    ``,
+    `Happy birthday to ${babyDisplay}.`,
+    `— Chris`,
+    ``,
+    `—`,
+    `Birthday markers from Sprigloop. Reply with "stop" to pause these.`,
+    `${APP_URL}/about · ${APP_URL}/contact`,
+  ].filter((l) => l !== '').join('\n')
+
+  return { subject, html, text, headers: LIFECYCLE_HEADERS }
+}
+
+// size_shift — Email #09. Lifecycle. Fires ~2 weeks before the baby
+// crosses into the next size band. Skips if zero items in the next
+// band — the email's whole purpose is "here's what you've got ready",
+// and an empty inventory has nothing to celebrate.
+//
+// Payload (built by beta.enqueue_baby_lifecycle trigger):
+//   first_name    — recipient's first name
+//   baby_name     — baby's name; falls back to "your baby"
+//   current_band  — band the baby is leaving (e.g., '3-6M')
+//   next_band     — band they're about to enter (e.g., '6-9M')
+//   baby_id       — for diagnostics
+//   household_id  — for the items-in-band lookup
+async function render_size_shift(args: RenderArgs): Promise<RenderResult> {
+  const householdId = (args.payload.household_id as string | undefined) || null
+  const nextBand = (args.payload.next_band as string | undefined) || ''
+  if (!householdId || !nextBand) return { skip: 'missing_payload' }
+
+  const { data: itemsInNext, error } = await args.supabase.schema('beta').rpc('_household_items_in_band_count', {
+    _household_id: householdId,
+    _band: nextBand,
+  })
+  if (error) return { skip: `band_count_failed: ${error.message}` }
+  const nextCount = Number(itemsInNext ?? 0)
+  if (nextCount < 1) return { skip: 'zero_items_in_next_band' }
+
+  const firstName = (args.payload.first_name as string | null) || null
+  const babyNameRaw = (args.payload.baby_name as string | null) || null
+  const currentBand = (args.payload.current_band as string | undefined) || ''
+  const greeting = firstName ? `${esc(firstName)},` : 'Hi,'
+  const babyDisplay = babyNameRaw || 'your baby'
+  const babyEsc = esc(babyDisplay)
+  const nextEsc = esc(nextBand)
+  const homeUrl = `${APP_URL}/home`
+  const itemNoun = nextCount === 1 ? 'item' : 'items'
+
+  const subject = `${babyDisplay}'s about to need ${nextBand}.`
+  const html = shell({
+    title: subject,
+    bodyHtml: `
+    <span style="display:inline-block;font-size:12px;font-weight:500;background:#FFF4D6;color:#7A5A00;padding:4px 14px;border-radius:999px;margin:14px 28px 0;">Coming up next</span>
+    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">${babyEsc}'s about to need <em style="font-style:italic;color:#1D9E75;">${nextEsc}</em>.</h1>
+    <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${greeting}</p>
+      <p style="margin:0 0 12px;">By our math, the ${esc(currentBand)} shelf has a few weeks left. Here's what's already waiting for the next stretch.</p>
+    </div>
+    <div style="padding:0 28px;margin-top:6px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F9F9F7;border:1px solid #F1EFE8;border-radius:8px;padding:14px 18px;">
+        <tr>
+          <td style="padding:6px 0;color:#888780;font-size:14px;">In ${nextEsc}, ready</td>
+          <td style="padding:6px 0;color:#2C2C2A;font-size:14px;text-align:right;font-variant-numeric:tabular-nums;font-weight:500;">${nextCount} ${itemNoun}</td>
+        </tr>
+      </table>
+    </div>
+    <div style="padding:14px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">If anything's been tucked away in a closet from a baby shower or older siblings, now's a good time to scan it in.</p>
+    </div>
+    <div style="padding:14px 28px 4px;">
+      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open the wardrobe</a>
+    </div>
+    <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0;">— Chris</p>
+    </div>`,
+  })
+
+  const text = [
+    `${babyDisplay}'s about to need ${nextBand}.`,
+    ``,
+    `${firstName ? firstName + ',' : 'Hi,'}`,
+    ``,
+    `By our math, the ${currentBand} shelf has a few weeks left. Here's what's already waiting for the next stretch.`,
+    ``,
+    `  In ${nextBand}, ready: ${nextCount} ${itemNoun}`,
+    ``,
+    `If anything's been tucked away in a closet from a baby shower or older siblings, now's a good time to scan it in.`,
+    ``,
+    `Open the wardrobe: ${homeUrl}`,
+    ``,
+    `— Chris`,
+    ``,
+    `—`,
+    `Sent because ${babyDisplay} is approaching a new size. Reply with "stop" to pause these.`,
+    `${APP_URL}/about · ${APP_URL}/contact`,
+  ].join('\n')
+
+  return { subject, html, text, headers: LIFECYCLE_HEADERS }
+}
+
 // renderTemplate — central router. Throws on unknown template_id; the
 // dispatcher catches and marks the row 'failed' with the error message.
 // Returning a SkipResult is NOT an error — the dispatcher honors it by
@@ -956,6 +1157,10 @@ async function renderTemplate(template_id: string, args: RenderArgs): Promise<Re
       return await render_d7_snapshot(args)
     case 'd14_reengage':
       return await render_d14_reengage(args)
+    case 'birthday_eve':
+      return await render_birthday_eve(args)
+    case 'size_shift':
+      return await render_size_shift(args)
     // Future templates land here. Each is a render_<id> function above
     // plus a case here.
     default:
