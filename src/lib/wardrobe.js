@@ -328,12 +328,22 @@ export function getSlotForItem(item) {
 }
 
 // ── Recommended quantity lookup ────────────────────────────────────────────
-// Returns the recommended count for a given slot at a given age range.
-// Falls back to the slot's flat `recommended` if no perAge entry exists.
-export function recommendedQty(slot, ageRange) {
+// Returns the recommended count for a given slot at a given age range,
+// multiplied by babyCount. Falls back to the slot's flat `recommended` if
+// no perAge entry exists.
+//
+// babyCount > 1 reflects households viewing the "all babies" tab — each
+// baby will pass through this size band, so the recommended quantity scales.
+// Sequential babies hand items down so the practical need is lower than
+// the linear multiplier suggests, but the wishlist is guidance not
+// prescription (per the recommendation tooltip), so linear is fine for v1.
+export function recommendedQty(slot, ageRange, babyCount = 1) {
   if (!slot) return 0
-  if (slot.perAge && slot.perAge[ageRange] != null) return slot.perAge[ageRange]
-  return slot.recommended ?? 0
+  const base = (slot.perAge && slot.perAge[ageRange] != null)
+    ? slot.perAge[ageRange]
+    : (slot.recommended ?? 0)
+  const count = Math.max(1, Math.floor(babyCount) || 1)
+  return base * count
 }
 
 // ── Coverage computation ───────────────────────────────────────────────────
@@ -344,7 +354,7 @@ export function recommendedQty(slot, ageRange) {
 //
 // Where:
 //   ownedCount:   sum of quantity across owned items in this slot + age range
-//   recommended:  target count for this slot + age range
+//   recommended:  target count for this slot + age range × babyCount
 //   needed:       max(recommended - ownedCount, 0) — i.e. the gap
 //   status:       'complete' | 'gap' | 'empty' (empty when ownedCount === 0)
 //   ownedItems:   the raw item rows for this slot that are owned
@@ -352,9 +362,13 @@ export function recommendedQty(slot, ageRange) {
 //                 (inventory_status === 'needed'). These don't reduce the gap
 //                 but are shown in slot detail.
 //
+// babyCount scales the recommended target for "all babies" views — single-
+// baby views pass 1 (or omit), all-babies views pass the household's
+// baby count.
+//
 // Returned in SLOTS order, one row per slot. Slots with recommended=0 are
 // dropped (shouldn't happen today but keeps the API forgiving).
-export function computeCoverage(items, ageRange) {
+export function computeCoverage(items, ageRange, babyCount = 1) {
   const bySlotOwned = {}
   const bySlotNeeded = {}
 
@@ -376,7 +390,7 @@ export function computeCoverage(items, ageRange) {
 
   const rows = []
   for (const slot of SLOTS) {
-    const recommended = recommendedQty(slot, ageRange)
+    const recommended = recommendedQty(slot, ageRange, babyCount)
     if (recommended <= 0) continue
     const ownedEntry = bySlotOwned[slot.id] || { count: 0, items: [] }
     const neededEntry = bySlotNeeded[slot.id] || { count: 0, items: [] }
