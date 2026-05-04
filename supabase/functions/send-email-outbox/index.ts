@@ -120,12 +120,81 @@ function render_test_ping(payload: Record<string, unknown>): RenderedEmail {
   }
 }
 
+// bag_on_the_way — Email #14. Fires when a Sprigloop bag is dispatched TO
+// the user (their pass_along_batch enters status 'bag_in_transit'). Migrated
+// from a standalone send-bag-on-the-way function 2026-05-04.
+//
+// Payload (built by beta.enqueue_bag_on_the_way trigger):
+//   first_name        — user's first name, or null
+//   item_count        — items in this batch
+//   recipient_label   — pre-resolved (e.g. "another Sprigloop family", or
+//                       the recipient name typed in for person/charity)
+//   bag_url           — deep link into the app for this bag
+//   batch_id          — pass_along_batches.id (for diagnostics only)
+function render_bag_on_the_way(payload: Record<string, unknown>): RenderedEmail {
+  const firstName = (payload.first_name as string | null) || null
+  const itemCount = Number((payload.item_count as number | undefined) ?? 0)
+  const recipientRaw = (payload.recipient_label as string | undefined) || 'the recipient'
+  const bagUrl = (payload.bag_url as string | undefined) || `${APP_URL}/`
+  const greeting = firstName ? `${esc(firstName)},` : 'Hi,'
+  const itemNoun = itemCount === 1 ? 'item' : 'items'
+  const recipient = esc(recipientRaw)
+  return {
+    subject: 'Your Sprigloop bag is on the way',
+    html: shell({
+      title: 'Your Sprigloop bag is on the way',
+      bodyHtml: `
+    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">Your bag is on the <em style="font-style:italic;color:#1D9E75;">way</em>.</h1>
+    <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${greeting} I just shipped you a Sprigloop bag for your ${itemCount} ${itemNoun}, headed to ${recipient}. Should arrive in the next few days.</p>
+    </div>
+    <p style="font-family:'Fraunces',Georgia,serif;font-size:14px;font-weight:500;color:#085041;letter-spacing:0.04em;text-transform:uppercase;padding:18px 28px 4px;margin:0;">When it gets here</p>
+    <div style="padding:8px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 6px;color:#2C2C2A;font-weight:500;">1. Fill the bag.</p>
+      <p style="margin:0 0 14px;">All the items you flagged for pass-along. The bag fits a stack — no need to fold tight.</p>
+      <p style="margin:0 0 6px;color:#2C2C2A;font-weight:500;">2. Write the address on it.</p>
+      <p style="margin:0 0 14px;">There's a space on the front of the bag for the recipient's address. You'll see it in the app too.</p>
+      <p style="margin:0 0 6px;color:#2C2C2A;font-weight:500;">3. Drop it in any mailbox.</p>
+      <p style="margin:0 0 14px;">Postage is already on the bag. Blue box, post office counter, mail carrier pickup — whatever's easiest.</p>
+    </div>
+    <div style="padding:14px 28px 4px;">
+      <a href="${esc(bagUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open this bag in Sprigloop</a>
+    </div>
+    <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">I'll let you know when it lands at ${recipient}.</p>
+      <p style="margin:0;">— Chris</p>
+    </div>`,
+    }),
+    text: [
+      `Your Sprigloop bag is on the way.`,
+      ``,
+      `${firstName ? firstName + ',' : 'Hi,'} I just shipped you a Sprigloop bag for your ${itemCount} ${itemNoun}, headed to ${recipientRaw}. Should arrive in the next few days.`,
+      ``,
+      `When it gets here:`,
+      `  1. Fill the bag with the items you flagged for pass-along.`,
+      `  2. Write the address on the front of the bag — also visible in the app.`,
+      `  3. Drop it in any mailbox. Postage is already on it.`,
+      ``,
+      `Open this bag: ${bagUrl}`,
+      ``,
+      `I'll let you know when it lands at ${recipientRaw}.`,
+      `— Chris`,
+      ``,
+      `—`,
+      `Sprigloop · Detroit, MI`,
+      `${APP_URL}/about · ${APP_URL}/contact`,
+    ].join('\n'),
+  }
+}
+
 // renderTemplate — central router. Throws on unknown template_id; the
 // dispatcher catches and marks the row 'failed' with the error message.
 function renderTemplate(template_id: string, payload: Record<string, unknown>): RenderedEmail {
   switch (template_id) {
     case 'test_ping':
       return render_test_ping(payload)
+    case 'bag_on_the_way':
+      return render_bag_on_the_way(payload)
     // Future templates land here. Each is a render_<id> function above
     // plus a case here.
     default:
