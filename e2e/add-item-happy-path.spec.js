@@ -32,9 +32,19 @@ test('signup → onboard → add item → item appears in inventory', async ({ p
   await page.locator('input[type="date"]').fill('2025-06-15')
   await page.getByRole('button', { name: /^continue$/i }).click()
 
-  await page.getByRole('button', { name: /by age/i }).click()
+  // Receiving step (added 2026-04-25 mom-interview round). Toggle defaults
+  // off, so the advance button reads "Not right now". If the default ever
+  // flips, the button reads "Continue" — match loosely.
+  await page.getByRole('button', { name: /^(not right now|continue)$/i }).click()
 
+  // Invite step.
   await page.getByRole('button', { name: /skip for now/i }).click()
+
+  // Scan step (added 2026-04-25 onboarding scan exposure). Skip with the
+  // same skip-link pattern as invite.
+  await page.getByRole('button', { name: /skip for now/i }).click()
+
+  // Done screen.
   await page.getByRole('button', { name: /go to my inventory/i }).click()
 
   // Now on /home — the empty-state card deep-links to /inventory.

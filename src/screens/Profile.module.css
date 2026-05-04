@@ -317,11 +317,16 @@
 .editLink {
   all: unset;
   box-sizing: border-box;
-  /* min-height keeps the inline Rename / edit-style links at iOS HIG
-     floor. Was ~25px until 2026-04-28. inline-flex centers the label. */
+  /* min-height + min-width keeps the inline Rename / edit-style links at
+     iOS HIG floor on both axes. min-height was added 2026-04-28; min-width
+     added 2026-05-04 after mobile QA sweep flagged 40px-wide "Edit" buttons
+     in the account-tab field rows. justify-content centers the label so
+     the wider hit area still reads as a tight pill. */
   min-height: 44px;
+  min-width: 44px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   font-size: 13px;
   color: var(--teal-dark);
   cursor: pointer;
@@ -606,9 +611,13 @@
 
 /* Ghost button — outlined, not filled. Final destructive styling lands
    with #59; until then the buttons are disabled so the row is visible
-   without implying a wired-up action. */
+   without implying a wired-up action.
+   min-height + min-width pin the iOS HIG 44px floor — added 2026-05-04
+   after mobile QA flagged Sign out / Leave / Delete at 31px tall. */
 .quietBtn {
   flex: 0 0 auto;
+  min-height: 44px;
+  min-width: 44px;
   padding: 6px 12px;
   font-size: 13px;
   font-family: var(--font-body);
