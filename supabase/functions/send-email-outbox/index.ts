@@ -50,6 +50,30 @@ interface RenderedEmail {
   subject: string
   html: string
   text: string
+  // Optional extra headers (List-Unsubscribe, etc.) — only set by templates
+  // that need them. Transactional templates leave this undefined.
+  headers?: Record<string, string>
+}
+
+// Marketing-style emails (lifecycle nudges, recurring digests) MUST set
+// these headers per Gmail/Apple Mail bulk-sender requirements. The unsub
+// mailto goes to a real address that Resend's automatic suppression list
+// also picks up via the One-Click POST contract.
+const UNSUB_MAILTO = 'mailto:customersupport@sprigloop.com?subject=Unsubscribe%20from%20Sprigloop'
+const LIFECYCLE_HEADERS: Record<string, string> = {
+  'List-Unsubscribe': `<${UNSUB_MAILTO}>`,
+  'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+}
+
+// Render context passed to async renderers that need DB access
+// (lifecycle templates that render conditional content based on the
+// recipient's live state). Pure renderers ignore everything except
+// payload — see render_test_ping for the pattern.
+interface RenderArgs {
+  payload: Record<string, unknown>
+  recipientUserId: string | null
+  // deno-lint-ignore no-explicit-any
+  supabase: any
 }
 
 // ── Constant-time secret comparison ──────────────────────────────────────
@@ -429,18 +453,135 @@ function formatDateTime(iso: string): string {
   }
 }
 
+// d2_nudge — Email #05. Sends 2 days after signup. Conditionally renders
+// based on the user's item count at send time:
+//   - <5 items: "Five tags is the magic number" — original onboarding nudge
+//   - >=5 items: "Sprigloop's earning its keep" — softer acknowledgment +
+//     soft pointer to the wardrobe
+//
+// Triggered by AFTER INSERT/UPDATE on auth.users (see migration
+// enqueue_d2_nudge). Enqueued with scheduled_for = signup + 2 days, so the
+// dispatcher picks it up automatically when the time comes — no separate
+// daily cron needed.
+//
+// Payload (built by trigger):
+//   first_name — snapshot at signup; null if no name metadata
+async function render_d2_nudge(args: RenderArgs): Promise<RenderedEmail> {
+  const firstName = (args.payload.first_name as string | null) || null
+
+  // Live state lookup. The user_id always comes from the outbox row, not
+  // payload — the trigger sets recipient_user_id when enqueuing. If no
+  // user_id (shouldn't happen for this template), assume the encouragement
+  // variant — better to under-engage than over-shame.
+  let itemCount = 0
+  if (args.recipientUserId) {
+    const { data, error } = await args.supabase.schema('beta').rpc('_user_item_count', {
+      _user_id: args.recipientUserId,
+    })
+    if (!error && typeof data === 'number') itemCount = data
+  }
+
+  const greeting = firstName ? `${esc(firstName)},` : 'Hi,'
+  const homeUrl = `${APP_URL}/home`
+  const engaged = itemCount >= 5
+
+  const subject = engaged
+    ? `Sprigloop's earning its keep.`
+    : `Want to see Sprigloop click?`
+
+  const headlinePlain = engaged
+    ? `Five down.`
+    : `Five tags is the magic number.`
+  const headlineHtml = engaged
+    ? `Five <em style="font-style:italic;color:#1D9E75;">down</em>.`
+    : `Five tags is the magic <em style="font-style:italic;color:#1D9E75;">number</em>.`
+
+  const bodyPlain = engaged
+    ? [
+        `${firstName ? firstName + ',' : 'Hi,'}`,
+        ``,
+        `Sprigloop becomes useful around here. Sizes start lining up, the next-up shelf becomes obvious, pass-along is a one-tap thing instead of a Saturday project.`,
+        ``,
+        `Keep snapping when something new comes in. The wardrobe stays current with about thirty seconds of tag photos a week.`,
+      ].join('\n')
+    : [
+        `${firstName ? firstName + ',' : 'Hi,'}`,
+        ``,
+        `Sprigloop is one of those apps that feels pointless empty and useful the second it has a few items in it. Five is the threshold.`,
+        ``,
+        `Grab whatever's nearest. A onesie on the changing table, a sleeper in the wash basket. Take a picture of the tag. We do the rest.`,
+        ``,
+        `Once your wardrobe is in, the size shifts get easier, the duplicates get obvious, and pass-along becomes a one-tap thing instead of a Saturday project.`,
+      ].join('\n')
+
+  const bodyHtml = engaged
+    ? `
+    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">${headlineHtml}</h1>
+    <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${greeting}</p>
+      <p style="margin:0 0 12px;">Sprigloop becomes useful around here. Sizes start lining up, the next-up shelf becomes obvious, pass-along is a one-tap thing instead of a Saturday project.</p>
+      <p style="margin:0 0 12px;">Keep snapping when something new comes in. The wardrobe stays current with about thirty seconds of tag photos a week.</p>
+    </div>
+    <div style="padding:14px 28px 4px;">
+      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open the wardrobe</a>
+    </div>
+    <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0;">— Chris</p>
+    </div>`
+    : `
+    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">${headlineHtml}</h1>
+    <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${greeting}</p>
+      <p style="margin:0 0 12px;">Sprigloop is one of those apps that feels pointless empty and useful the second it has a few items in it. Five is the threshold.</p>
+      <p style="margin:0 0 12px;">Grab whatever's nearest. A onesie on the changing table, a sleeper in the wash basket. Take a picture of the tag. We do the rest.</p>
+    </div>
+    <div style="padding:14px 28px 4px;">
+      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Snap one now</a>
+    </div>
+    <p style="font-family:'Fraunces',Georgia,serif;font-size:14px;font-weight:500;color:#085041;letter-spacing:0.04em;text-transform:uppercase;padding:18px 28px 4px;margin:0;">Why we ask</p>
+    <div style="padding:8px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">Once your wardrobe is in, the size shifts get easier, the duplicates get obvious, and pass-along becomes a one-tap thing instead of a Saturday project.</p>
+    </div>
+    <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0;">— Chris</p>
+    </div>`
+
+  const html = shell({
+    title: headlinePlain,
+    bodyHtml,
+  })
+
+  const text = [
+    headlinePlain,
+    ``,
+    bodyPlain,
+    ``,
+    engaged ? `Open the wardrobe: ${homeUrl}` : `Snap one now: ${homeUrl}`,
+    ``,
+    `— Chris`,
+    ``,
+    `—`,
+    `Onboarding nudge from Sprigloop. Reply with "stop" to pause these.`,
+    `${APP_URL}/about · ${APP_URL}/contact`,
+  ].join('\n')
+
+  return { subject, html, text, headers: LIFECYCLE_HEADERS }
+}
+
 // renderTemplate — central router. Throws on unknown template_id; the
 // dispatcher catches and marks the row 'failed' with the error message.
-function renderTemplate(template_id: string, payload: Record<string, unknown>): RenderedEmail {
+async function renderTemplate(template_id: string, args: RenderArgs): Promise<RenderedEmail> {
   switch (template_id) {
     case 'test_ping':
-      return render_test_ping(payload)
+      return render_test_ping(args.payload)
     case 'bag_on_the_way':
-      return render_bag_on_the_way(payload)
+      return render_bag_on_the_way(args.payload)
     case 'first_pass_along':
-      return render_first_pass_along(payload)
+      return render_first_pass_along(args.payload)
     case 'bag_request_notify':
-      return render_bag_request_notify(payload)
+      return render_bag_request_notify(args.payload)
+    case 'd2_nudge':
+      return await render_d2_nudge(args)
     // Future templates land here. Each is a render_<id> function above
     // plus a case here.
     default:
@@ -454,9 +595,22 @@ async function sendViaResend(opts: {
   subject: string
   html: string
   text: string
+  headers?: Record<string, string>
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const key = Deno.env.get('RESEND_API_KEY')
   if (!key) return { ok: false, error: 'resend_not_configured' }
+
+  const body: Record<string, unknown> = {
+    from: FROM_ADDRESS,
+    to: [opts.to],
+    reply_to: REPLY_TO,
+    subject: opts.subject,
+    html: opts.html,
+    text: opts.text,
+  }
+  if (opts.headers && Object.keys(opts.headers).length > 0) {
+    body.headers = opts.headers
+  }
 
   const resp = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -464,14 +618,7 @@ async function sendViaResend(opts: {
       Authorization: `Bearer ${key}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      from: FROM_ADDRESS,
-      to: [opts.to],
-      reply_to: REPLY_TO,
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text,
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!resp.ok) {
@@ -535,7 +682,11 @@ Deno.serve(async (req) => {
   for (const row of rows) {
     let rendered: RenderedEmail
     try {
-      rendered = renderTemplate(row.template_id, row.payload)
+      rendered = await renderTemplate(row.template_id, {
+        payload: row.payload,
+        recipientUserId: row.recipient_user_id,
+        supabase,
+      })
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       await supabase.schema('beta').rpc('mark_outbox_failed', { _id: row.id, _error: `render: ${msg}` })
@@ -548,6 +699,7 @@ Deno.serve(async (req) => {
       subject: rendered.subject,
       html: rendered.html,
       text: rendered.text,
+      headers: rendered.headers,
     })
 
     if (!sendRes.ok) {
