@@ -48,14 +48,21 @@ test('signup + full onboarding lands user on /home', async ({ page }) => {
   await page.locator('input[type="date"]').fill('2025-06-15')
   await page.getByRole('button', { name: /^continue$/i }).click()
 
-  // ── Step 3: size mode ───────────────────────────────────────────────────
-  await expect(page.getByRole('heading', { name: /how do you think about sizes/i })).toBeVisible()
-
-  // Each card is a <button>. "By age" is distinct enough to match exactly.
-  await page.getByRole('button', { name: /by age/i }).click()
+  // ── Step 3: receiving opt-in ────────────────────────────────────────────
+  // Replaces the size_mode picker (dropped 2026-04-25). Toggle defaults
+  // off; we leave it off and tap "Not right now". "Continue" appears in
+  // the same slot when the toggle is on, so match loosely.
+  await expect(page.getByRole('heading', { name: /open to receiving/i })).toBeVisible()
+  await page.getByRole('button', { name: /^(not right now|continue)$/i }).click()
 
   // ── Step 4: invite ──────────────────────────────────────────────────────
   await expect(page.getByRole('heading', { name: /invite a family member/i })).toBeVisible()
+  await page.getByRole('button', { name: /skip for now/i }).click()
+
+  // ── Step 5: try the photo-scan ──────────────────────────────────────────
+  // Added 2026-04-25 to expose the scan flow during onboarding. Skip
+  // through it — happy-path doesn't exercise the scanner here.
+  await expect(page.getByRole('heading', { name: /try the photo-scan/i })).toBeVisible()
   await page.getByRole('button', { name: /skip for now/i }).click()
 
   // ── Done screen + navigate to /home ─────────────────────────────────────
