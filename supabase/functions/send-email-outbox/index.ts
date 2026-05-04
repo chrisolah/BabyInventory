@@ -187,6 +187,75 @@ function render_bag_on_the_way(payload: Record<string, unknown>): RenderedEmail 
   }
 }
 
+// first_pass_along — Email #17. One-time founder note when a household's
+// FIRST pass-along batch reaches 'fulfilled'. Migrated from a standalone
+// send-first-pass-along function 2026-05-04.
+//
+// Custom footer (one-time-note framing) means we don't use the standard
+// shell() helper — HTML is inlined here.
+//
+// Payload (built by beta.enqueue_first_pass_along trigger):
+//   first_name    — user's first name, or null
+//   item_count    — items in this first fulfilled batch
+//   household_id  — for diagnostics / dedup audit
+//   batch_id      — for diagnostics
+function render_first_pass_along(payload: Record<string, unknown>): RenderedEmail {
+  const firstName = (payload.first_name as string | null) || null
+  const itemCount = Number((payload.item_count as number | undefined) ?? 0)
+  const greeting = firstName ? `${esc(firstName)},` : 'Hi,'
+  const itemNoun = itemCount === 1 ? 'item' : 'items'
+  return {
+    subject: "First bundle out the door. That's huge.",
+    html: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>First bundle out the door. That's huge.</title>
+</head>
+<body style="margin:0;padding:0;background:#EDECE5;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#2C2C2A;">
+  <div style="max-width:580px;margin:24px auto;background:#FFF;border-radius:12px;overflow:hidden;">
+    <div style="padding:22px 28px 4px;">
+      <span style="font-family:'Fraunces',Georgia,serif;font-size:20px;font-weight:500;letter-spacing:-0.01em;">sprigloop</span>
+    </div>
+    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">First bundle out the <em style="font-style:italic;color:#1D9E75;">door</em>.</h1>
+    <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${greeting}</p>
+      <p style="margin:0 0 12px;">Most baby clothing exists for about three months and then sits in a bin in someone's basement for years. The math is brutal.</p>
+      <p style="margin:0 0 12px;">You just broke that loop for ${itemCount} ${itemNoun}. They're in active use again, in another Sprigloop family.</p>
+      <p style="margin:0 0 12px;">That's the whole thing. That's what Sprigloop is for. Thanks for being one of the first parents to actually do it.</p>
+    </div>
+    <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0;">— Chris<br><span style="color:#888780;font-size:13px;">Founder, Sprigloop</span></p>
+    </div>
+    <div style="padding:22px 28px 24px;border-top:1px solid #F1EFE8;margin-top:18px;font-size:12px;color:#888780;line-height:1.55;">
+      One-time note &middot; only sent on your first bundle<br>
+      <a href="${APP_URL}/about" style="color:#888780;">About Sprigloop</a> &middot; <a href="${APP_URL}/contact" style="color:#888780;">Contact</a>
+    </div>
+  </div>
+</body>
+</html>`,
+    text: [
+      `First bundle out the door.`,
+      ``,
+      `${firstName ? firstName + ',' : 'Hi,'}`,
+      ``,
+      `Most baby clothing exists for about three months and then sits in a bin in someone's basement for years. The math is brutal.`,
+      ``,
+      `You just broke that loop for ${itemCount} ${itemNoun}. They're in active use again, in another Sprigloop family.`,
+      ``,
+      `That's the whole thing. That's what Sprigloop is for. Thanks for being one of the first parents to actually do it.`,
+      ``,
+      `— Chris`,
+      `Founder, Sprigloop`,
+      ``,
+      `—`,
+      `One-time note · only sent on your first bundle`,
+      `${APP_URL}/about · ${APP_URL}/contact`,
+    ].join('\n'),
+  }
+}
+
 // renderTemplate — central router. Throws on unknown template_id; the
 // dispatcher catches and marks the row 'failed' with the error message.
 function renderTemplate(template_id: string, payload: Record<string, unknown>): RenderedEmail {
@@ -195,6 +264,8 @@ function renderTemplate(template_id: string, payload: Record<string, unknown>): 
       return render_test_ping(payload)
     case 'bag_on_the_way':
       return render_bag_on_the_way(payload)
+    case 'first_pass_along':
+      return render_first_pass_along(payload)
     // Future templates land here. Each is a render_<id> function above
     // plus a case here.
     default:
