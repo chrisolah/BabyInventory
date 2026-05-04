@@ -256,6 +256,179 @@ function render_first_pass_along(payload: Record<string, unknown>): RenderedEmai
   }
 }
 
+// bag_request_notify — Operational mail to Chris when a user requests a
+// Sprigloop bag (concierge_tasks INSERT, task_type='bag_request'). NOT
+// user-facing — recipient is the operations alias. Migrated from the
+// standalone notify-bag-request function 2026-05-04.
+//
+// Trades brand polish for at-a-glance scannability — destination + bag SKU
+// up top, full address in a monospace block, task id for marking resolved.
+//
+// Payload (built by beta.enqueue_bag_request_notify trigger):
+//   task_id           — concierge_tasks.id (used in subject + body)
+//   destination_type  — 'family' | 'person' | 'charity'
+//   reference_code    — pass_along_batches reference (e.g. BLUE-OAK-3471)
+//   ship_to_address   — newline-joined full address (or empty)
+//   requester_email   — best-effort, may be empty
+//   requester_name    — best-effort, may be empty
+//   household_name    — best-effort, may be empty
+//   requested_at      — ISO timestamp (rendered with locale formatting)
+//   related_batch_id  — pass_along_batches.id (for diagnostics; may be null)
+function render_bag_request_notify(payload: Record<string, unknown>): RenderedEmail {
+  const taskId = (payload.task_id as string | undefined) || ''
+  const destType = (payload.destination_type as string | undefined) || 'unknown'
+  const referenceCode = (payload.reference_code as string | undefined) || '—'
+  const shipToAddress = (payload.ship_to_address as string | undefined) || ''
+  const requesterEmail = (payload.requester_email as string | undefined) || ''
+  const requesterName = (payload.requester_name as string | undefined) || ''
+  const householdName = (payload.household_name as string | undefined) || ''
+  const requestedAt = (payload.requested_at as string | undefined) || ''
+
+  const bag = bagSkuFor(destType)
+  const dest = destinationLabel(destType)
+  const requester = requesterName || requesterEmail || 'Unknown user'
+  const requesterEmailLine = requesterEmail
+    ? `<a href="mailto:${esc(requesterEmail)}" style="color:#085041;">${esc(requesterEmail)}</a>`
+    : '—'
+  const householdLine = householdName ? esc(householdName) : '—'
+  const addrBlock = shipToAddress
+    ? esc(shipToAddress).replace(/\n/g, '<br>')
+    : '—'
+  const who = householdName || requesterName || requesterEmail || 'a user'
+  const subject = `Bag request: ${bag.sku} for ${who} (${referenceCode})`
+
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(subject)}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F9F9F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#2C2C2A;-webkit-font-smoothing:antialiased;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F9F9F7;">
+    <tr>
+      <td align="center" style="padding:24px 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#FFFFFF;border-radius:10px;border:1px solid #F1EFE8;">
+          <tr>
+            <td style="padding:20px 28px 4px 28px;">
+              <span style="display:inline-block;font-size:11px;font-weight:600;background:#FFF4D6;color:#7A5A00;padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:0.05em;">New bag request</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:10px 28px 4px 28px;">
+              <h1 style="margin:0;font-size:22px;line-height:1.3;font-weight:600;color:#2C2C2A;">${esc(bag.sku)}</h1>
+              <p style="margin:4px 0 0 0;font-size:14px;color:#5F5E5A;">${esc(bag.description)}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px 0 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size:14px;line-height:1.55;">
+                <tr><td style="padding:6px 0;color:#888780;width:130px;vertical-align:top;">Destination</td><td style="padding:6px 0;color:#2C2C2A;"><strong>${esc(dest)}</strong></td></tr>
+                <tr><td style="padding:6px 0;color:#888780;vertical-align:top;">Reference</td><td style="padding:6px 0;color:#2C2C2A;font-family:'SF Mono',Menlo,Consolas,monospace;">${esc(referenceCode)}</td></tr>
+                <tr><td style="padding:6px 0;color:#888780;vertical-align:top;">Requested by</td><td style="padding:6px 0;color:#2C2C2A;">${esc(requester)}</td></tr>
+                <tr><td style="padding:6px 0;color:#888780;vertical-align:top;">Email</td><td style="padding:6px 0;color:#2C2C2A;">${requesterEmailLine}</td></tr>
+                <tr><td style="padding:6px 0;color:#888780;vertical-align:top;">Household</td><td style="padding:6px 0;color:#2C2C2A;">${householdLine}</td></tr>
+                <tr><td style="padding:6px 0;color:#888780;vertical-align:top;">Requested at</td><td style="padding:6px 0;color:#2C2C2A;">${esc(formatDateTime(requestedAt))}</td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px 0 28px;">
+              <p style="margin:0 0 6px 0;font-size:12px;font-weight:600;color:#888780;text-transform:uppercase;letter-spacing:0.05em;">Ship the bag to</p>
+              <div style="background:#F9F9F7;border:1px solid #F1EFE8;border-radius:8px;padding:12px 14px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:14px;line-height:1.55;color:#2C2C2A;">${addrBlock}</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px 4px 28px;">
+              <p style="margin:0;font-size:13px;line-height:1.55;color:#5F5E5A;">Mark this resolved in the <strong>concierge_tasks</strong> table once the bag is in the mail. Task id: <span style="font-family:'SF Mono',Menlo,Consolas,monospace;color:#2C2C2A;">${esc(taskId)}</span></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:14px 28px 22px 28px;">
+              <p style="margin:0;font-size:11px;line-height:1.5;color:#888780;">Sent via the email outbox when a row was inserted into <code>beta.concierge_tasks</code> with <code>task_type='bag_request'</code>.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+
+  const text = [
+    `NEW BAG REQUEST`,
+    ``,
+    `${bag.sku}`,
+    `${bag.description}`,
+    ``,
+    `Destination:    ${dest}`,
+    `Reference:      ${referenceCode}`,
+    `Requested by:   ${requester}`,
+    `Email:          ${requesterEmail || '—'}`,
+    `Household:      ${householdName || '—'}`,
+    `Requested at:   ${formatDateTime(requestedAt)}`,
+    ``,
+    `Ship the bag to:`,
+    shipToAddress || '—',
+    ``,
+    `Mark resolved in concierge_tasks once the bag is in the mail.`,
+    `Task id: ${taskId}`,
+    ``,
+    `(Sent via outbox on INSERT into beta.concierge_tasks where task_type='bag_request'.)`,
+  ].join('\n')
+
+  return { subject, html, text }
+}
+
+// Helpers used by render_bag_request_notify. Lifted from the old
+// notify-bag-request function so the bag-SKU mapping stays in source.
+function bagSkuFor(destType: string): { sku: string; description: string } {
+  switch (destType) {
+    case 'family':
+      return {
+        sku: 'Prelabeled-HQ bag',
+        description: 'Preprinted to Sprigloop HQ. Postage billed only when scanned at the post office.',
+      }
+    case 'person':
+      return {
+        sku: 'Blank-label flat-rate bag',
+        description: 'USPS Priority Mail flat rate, postage prepaid. User writes the recipient address on the bag.',
+      }
+    case 'charity':
+      return {
+        sku: 'Blank-label flat-rate bag',
+        description: 'USPS Priority Mail flat rate, postage prepaid. User writes the charity address on the bag.',
+      }
+    default:
+      return { sku: 'Unknown SKU', description: `Destination type "${destType}" — verify before shipping.` }
+  }
+}
+
+function destinationLabel(destType: string): string {
+  switch (destType) {
+    case 'family':  return 'Another Sprigloop family'
+    case 'person':  return 'A specific person (friend / family)'
+    case 'charity': return 'A local charity'
+    default:        return destType
+  }
+}
+
+function formatDateTime(iso: string): string {
+  if (!iso) return '—'
+  try {
+    return new Date(iso).toLocaleString('en-US', {
+      weekday: 'short',
+      month:   'short',
+      day:     'numeric',
+      hour:    'numeric',
+      minute:  '2-digit',
+      timeZoneName: 'short',
+    })
+  } catch {
+    return iso
+  }
+}
+
 // renderTemplate — central router. Throws on unknown template_id; the
 // dispatcher catches and marks the row 'failed' with the error message.
 function renderTemplate(template_id: string, payload: Record<string, unknown>): RenderedEmail {
@@ -266,6 +439,8 @@ function renderTemplate(template_id: string, payload: Record<string, unknown>): 
       return render_bag_on_the_way(payload)
     case 'first_pass_along':
       return render_first_pass_along(payload)
+    case 'bag_request_notify':
+      return render_bag_request_notify(payload)
     // Future templates land here. Each is a render_<id> function above
     // plus a case here.
     default:
