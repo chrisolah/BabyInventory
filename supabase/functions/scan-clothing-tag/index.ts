@@ -92,15 +92,20 @@ const SIZES = ['0-3M', '3-6M', '6-9M', '9-12M', '12-18M', '18-24M'] as const
 // "late fall" type distinctions that don't matter for parenting.
 const SEASONS = ['warm_weather', 'cold_weather', 'all_season'] as const
 
+// Must stay in sync with SLOTS in src/lib/wardrobe.js. The Tier 1 + Tier 2
+// taxonomy expansion (migration 036, 2026-05-05) split overloaded slots
+// (pajamas → footed/2-piece/sleep_gowns; hats → warm/sun; jackets →
+// light/winter/snowsuits) and added bottoms/footwear/accessories rows
+// (sweaters, overalls, boots, hair_accessories).
 const SLOT_IDS = [
-  'bodysuits', 'day_tops',
+  'bodysuits', 'day_tops', 'sweaters',
   'one_pieces',
-  'shorts', 'pants_leggings',
+  'shorts', 'pants_leggings', 'overalls',
   'dresses',
-  'sleep_sacks', 'pajamas',
-  'rain_gear', 'jackets',
-  'socks', 'shoes',
-  'hats', 'mittens', 'bibs', 'burp_cloths',
+  'sleep_sacks', 'footed_pajamas', 'two_piece_pajamas', 'sleep_gowns',
+  'rain_gear', 'light_jackets', 'winter_coats', 'snowsuits',
+  'socks', 'shoes', 'boots',
+  'warm_hats', 'sun_hats', 'mittens', 'bibs', 'burp_cloths', 'hair_accessories',
   'swimwear',
 ] as const
 
@@ -129,9 +134,19 @@ Return ONLY a single JSON object with these keys:
 Descriptor hints for baby clothing terminology (these words are used colloquially in infant apparel, not literally):
 - "ONESIE" or "BODYSUIT" → category "tops_and_bodysuits", item_type "bodysuits". A onesie in baby clothing is a snap-crotch short-sleeve top, not a full-body one-piece.
 - "COVERALL" or "ROMPER" → category "one_pieces", item_type "one_pieces". A baby coverall is a romper-style one-piece garment, not adult workwear or rain-gear.
-- "SLEEPER" or "PAJAMAS" → category "sleepwear", item_type "pajamas".
-- "BOOTIES" → category "footwear", item_type "shoes".
-- "SOCKS" → category "footwear", item_type "socks". Socks belong in footwear in this taxonomy, not accessories — accessories is reserved for hats, mittens, bibs, and burp cloths.
+- "SLEEPER" → category "sleepwear", item_type "footed_pajamas". A sleeper is a one-piece zippered or snapped pajama with built-in feet.
+- "PAJAMAS" → category "sleepwear". Pick the subtype: "footed_pajamas" if it's a one-piece with feet, "two_piece_pajamas" if you can see a separate top + bottom, "sleep_gowns" if the bottom is open (newborn nightgown). Default to "footed_pajamas" when the garment isn't visible enough to tell.
+- "NIGHTGOWN" or "SLEEP GOWN" → category "sleepwear", item_type "sleep_gowns". Open at the bottom for diaper changes.
+- "BOOTIES" → category "footwear", item_type "shoes". Soft-soled pre-walking footwear.
+- "BOOT" or "RAIN BOOT" or "SNOW BOOT" → category "footwear", item_type "boots". Tall hard-soled.
+- "SOCKS" → category "footwear", item_type "socks". Socks belong in footwear in this taxonomy, not accessories — accessories is reserved for hats, mittens, bibs, burp cloths, and hair accessories.
+- "BEANIE" or "KNIT CAP" or "WINTER HAT" → category "accessories", item_type "warm_hats".
+- "SUN HAT" or "BUCKET HAT" or "BASEBALL CAP" → category "accessories", item_type "sun_hats". Baseball caps belong here for babies — they're sun-protection, not fashion.
+- "HEADBAND" or "BOW" or "HAIR CLIP" → category "accessories", item_type "hair_accessories".
+- "JACKET" → category "outerwear". Pick the subtype: "light_jackets" for spring/fall (denim, fleece, windbreaker), "winter_coats" for heavy padded/parka/puffer, "rain_gear" for rain-specific, "snowsuits" for one-piece bunting. Default to "light_jackets" when fabric weight is ambiguous.
+- "SNOWSUIT" or "BUNTING" → category "outerwear", item_type "snowsuits".
+- "SWEATER" or "CARDIGAN" or "HOODIE" or "FLEECE PULLOVER" → category "tops_and_bodysuits", item_type "sweaters". Worn as indoor layers; outerwear-style fleece JACKETS go to "light_jackets".
+- "OVERALLS" or "DUNGAREES" or "BIB PANTS" → category "bottoms", item_type "overalls". Functionally a bottom-with-bib (worn over a top), not a one-piece garment.
 
 Alongside the four field keys, return a fifth key "confidence" — an object with a confidence level per field, used by the client to flag which values the parent should double-check before saving:
 - "high" — clearly printed on the tag and unambiguous (e.g. brand logo visible; size explicitly written as "0-3M").
