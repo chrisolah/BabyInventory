@@ -32,15 +32,22 @@ import styles from './UpgradeAccountModal.module.css'
 // any optimistic UI state.
 export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
   const { upgradeAccount } = useAuth()
+  // Name is the third field on this modal (alongside email + password) so the
+  // trial-path account ends up with the same shape as a Signup-path account:
+  // raw_user_meta_data.name is set before the welcome email fires from the
+  // auth listener. Without this, every greeting in the email program (welcome,
+  // d2_nudge, bag emails) falls through to a blank slot for trial-converted
+  // users. Required to enable submit, matching the Signup form's pattern.
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const emailInputRef = useRef(null)
+  const nameInputRef = useRef(null)
 
   useEffect(() => {
-    if (emailInputRef.current) emailInputRef.current.focus()
+    if (nameInputRef.current) nameInputRef.current.focus()
   }, [])
 
   useEffect(() => {
@@ -49,9 +56,10 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    const trimmedName = name.trim()
     const trimmedEmail = email.trim()
     const trimmedPassword = password.trim()
-    if (!trimmedEmail || trimmedPassword.length < 8 || loading) return
+    if (!trimmedName || !trimmedEmail || trimmedPassword.length < 8 || loading) return
 
     setLoading(true)
     setError(null)
@@ -60,9 +68,11 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
     // Privacy acceptance moment HERE — there's no separate Signup form for
     // them. The notice text below the primary button surfaces what they're
     // agreeing to; the act of clicking Create account is the consent. We
-    // stamp termsAcceptedAt on every conversion so the consent moment is
-    // durably recorded on auth.users.raw_user_meta_data.
+    // stamp termsAcceptedAt + name on every conversion so the consent moment
+    // is durably recorded and the user has a greeting name for downstream
+    // emails on auth.users.raw_user_meta_data.
     const { error: upErr } = await upgradeAccount({
+      name: trimmedName,
       email: trimmedEmail,
       password: trimmedPassword,
       termsAcceptedAt: new Date().toISOString(),
@@ -111,12 +121,27 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
             Create your account to lock in what you&rsquo;ve added so far. You can sign in later with this password or with a 6-digit code emailed to you.
           </p>
 
-          <label className={styles.label} htmlFor="upgrade-email">
+          <label className={styles.label} htmlFor="upgrade-name">
+            Your name
+          </label>
+          <input
+            id="upgrade-name"
+            ref={nameInputRef}
+            type="text"
+            className={styles.input}
+            value={name}
+            onChange={e => setName(e.target.value)}
+            autoComplete="name"
+            placeholder="Sarah Johnson"
+            required
+            disabled={loading}
+          />
+
+          <label className={`${styles.label} ${styles.labelStacked}`} htmlFor="upgrade-email">
             Email
           </label>
           <input
             id="upgrade-email"
-            ref={emailInputRef}
             type="email"
             className={styles.input}
             value={email}
@@ -157,7 +182,7 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
             <button
               type="submit"
               className={styles.primaryBtn}
-              disabled={loading || !email.trim() || password.trim().length < 8}
+              disabled={loading || !name.trim() || !email.trim() || password.trim().length < 8}
             >
               {loading ? 'Saving…' : 'Create account'}
             </button>

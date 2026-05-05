@@ -126,7 +126,8 @@ export function AuthProvider({ children }) {
   // Password is required at conversion (not optional) because OTP-only
   // accounts can't recover if email access is lost; pairing both gives
   // the user redundancy.
-  async function upgradeAccount({ email, password, termsAcceptedAt }) {
+  async function upgradeAccount({ name, email, password, termsAcceptedAt }) {
+    const trimmedName = name?.trim() ?? ''
     const trimmedEmail = email.trim()
     const trimmedPassword = password.trim()
     if (!trimmedEmail) return { error: new Error('Email is required.') }
@@ -136,17 +137,23 @@ export function AuthProvider({ children }) {
 
     // Trial users converted via the upgrade modal go through their first
     // Terms + Privacy acceptance moment HERE — there's no separate Signup
-    // form for them. The caller passes an ISO timestamp captured when the
-    // user checked the consent box; we merge it onto raw_user_meta_data so
-    // the acceptance is durably stamped on the auth row. updateUser({ data })
-    // in supabase-js v2 merges with existing metadata rather than replacing,
-    // so trial-era fields (name, session_id, acquisition_*) are preserved.
+    // form for them. The caller passes an ISO timestamp captured at submit;
+    // we merge it onto raw_user_meta_data so the acceptance is durably
+    // stamped on the auth row. Same goes for the user's name — the trial
+    // flow never asked for it, so the modal collects it now and writes it
+    // here, before the welcome email fires from the auth listener and reads
+    // raw_user_meta_data->>'name' for the greeting. updateUser({ data }) in
+    // supabase-js v2 merges with existing metadata rather than replacing, so
+    // trial-era fields (session_id, acquisition_*) are preserved.
     const updatePayload = {
       email: trimmedEmail,
       password: trimmedPassword,
     }
-    if (termsAcceptedAt) {
-      updatePayload.data = { terms_accepted_at: termsAcceptedAt }
+    const dataMerge = {}
+    if (trimmedName) dataMerge.name = trimmedName
+    if (termsAcceptedAt) dataMerge.terms_accepted_at = termsAcceptedAt
+    if (Object.keys(dataMerge).length > 0) {
+      updatePayload.data = dataMerge
     }
     const { error } = await supabase.auth.updateUser(updatePayload)
     if (error) return { error }
