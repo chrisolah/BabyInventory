@@ -200,23 +200,65 @@ export default function BatchReview({
     // error without leaving a half-finished batch.
     for (let i = 0; i < toSave.length; i++) {
       const it = toSave[i]
+      // Pre-generate the row id client-side so the garment photo can be
+      // uploaded BEFORE the INSERT — the storage path is keyed on the
+      // item id, and the INSERT writes that path back into garment_photo_path.
+      // Doing it in this order means a row never appears with a path
+      // that doesn't yet have an object behind it; the UI's signed-URL
+      // generation either finds a real photo or finds null and renders
+      // the legacy size-only thumb.
+      const itemId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+
+      // Upload the garment photo if we have one. Silent degradation: if
+      // upload fails, the row still saves without a photo path. Photos
+      // are bonus context; losing one shouldn't cost the user the row.
+      let garmentPath = null
+      if (it.garmentThumbnailDataUrl) {
+        try {
+          // Convert the data URL we already have back into a Blob via
+          // fetch — simpler than re-decoding base64 by hand and works in
+          // every browser since the BatchReview surface is post-camera.
+          const blob = await fetch(it.garmentThumbnailDataUrl).then(r => r.blob())
+          const path = `${household.id}/${itemId}.jpg`
+          const { error: upErr } = await supabase.storage
+            .from('garment-photos')
+            .upload(path, blob, {
+              contentType: blob.type || 'image/jpeg',
+              upsert: false,
+            })
+          if (upErr) {
+            // eslint-disable-next-line no-console
+            console.warn('garment upload failed for batch row', { id: it.id, err: upErr })
+          } else {
+            garmentPath = path
+          }
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.warn('garment upload threw for batch row', { id: it.id, err: e })
+        }
+      }
+
       const row = {
+        id: itemId,
         household_id: household.id,
         // Each row carries its own baby_id (set via the per-row chip).
         // If the user never touched the chip the field is undefined, in
         // which case we fall back to defaultBabyId (the active baby).
         baby_id: it.baby_id !== undefined ? it.baby_id : defaultBabyId,
-        category:         it.fields.category,
-        item_type:        it.fields.item_type,
-        size_label:       it.fields.size_label,
-        brand:            it.fields.brand ? String(it.fields.brand).trim().slice(0, 80) || null : null,
-        condition:        null,
-        priority:         null,
-        season:           null,
-        quantity:         1,
-        notes:            null,
-        inventory_status: 'owned',
-        name:             null,
+        category:           it.fields.category,
+        item_type:          it.fields.item_type,
+        size_label:         it.fields.size_label,
+        brand:              it.fields.brand ? String(it.fields.brand).trim().slice(0, 80) || null : null,
+        condition:          null,
+        priority:           null,
+        season:             null,
+        quantity:           1,
+        notes:              null,
+        inventory_status:   'owned',
+        name:               null,
+        garment_photo_path: garmentPath,
       }
       const { error: insertErr } = await supabase
         .schema(currentSchema)

@@ -148,6 +148,16 @@
   flex-shrink: 0;
 }
 
+/* When an item has a stored garment photo, the same thumb slot
+   becomes an <img>. object-fit: cover crops to fit the 52x52 box;
+   border-radius is inherited from .itemThumb but reapplied here
+   because <img> doesn't inherit it on every browser. */
+.itemThumbPhoto {
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+
 .summaryText {
   flex: 1;
   min-width: 0;

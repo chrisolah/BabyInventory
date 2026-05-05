@@ -433,6 +433,43 @@
   font-weight: 500;
 }
 
+/* Photo variant: when the item has a stored garment photo, the thumb
+   becomes a 40x40 image with the size label tucked into a small corner
+   badge. position: relative so the absolute-positioned badge anchors to
+   it; padding cleared because the image fills edge-to-edge; background
+   stays as a fallback color in case the image fails to load. */
+.itemThumbWithPhoto {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  background: var(--gray-100);
+}
+.itemThumbPhoto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.itemThumbSizeBadge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 999px;
+  line-height: 1.2;
+  /* Tabular nums alone aren't enough on iOS Safari; explicit width
+     prevents the badge jumping width between "9-12M" and "12-18M". */
+  min-width: 26px;
+  text-align: center;
+  pointer-events: none;
+}
+
 /* Right cluster: lays the inline action chips out horizontally — Pass on
    then Tuck away, left to right — so the two affordances read as a pair
    rather than a stack. The optional quantity pill sits on top via the

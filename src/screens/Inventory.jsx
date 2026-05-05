@@ -1460,12 +1460,36 @@ function ItemRow({ item, tab, onClick, onPassOn, onTuckAway, working }) {
       onClick={onClick}
       aria-label={`Open ${displayName}`}
     >
-      <div
-        className={`${styles.itemThumb} ${sizeIsEmpty ? styles.itemThumbEmpty : ''}`}
-        aria-hidden="true"
-      >
-        {sizeLabel}
-      </div>
+      {/* Two visual states for the row's leading thumb:
+          1. Garment photo present → render the photo as the thumb
+             background with the size_label tucked into a corner badge
+             so the visual hierarchy stays "what does it look like" first
+             and "what size is it" second.
+          2. No photo → keep the legacy text-only thumb (size centered),
+             which works the same as it always has. */}
+      {item.garment_signed_url ? (
+        <div
+          className={`${styles.itemThumb} ${styles.itemThumbWithPhoto}`}
+          aria-hidden="true"
+        >
+          <img
+            src={item.garment_signed_url}
+            alt=""
+            className={styles.itemThumbPhoto}
+            loading="lazy"
+          />
+          {!sizeIsEmpty && (
+            <span className={styles.itemThumbSizeBadge}>{sizeLabel}</span>
+          )}
+        </div>
+      ) : (
+        <div
+          className={`${styles.itemThumb} ${sizeIsEmpty ? styles.itemThumbEmpty : ''}`}
+          aria-hidden="true"
+        >
+          {sizeLabel}
+        </div>
+      )}
       <div className={styles.itemBody}>
         <div className={styles.itemName}>{displayName}</div>
         {metaText && <div className={styles.itemMeta}>{metaText}</div>}
@@ -1537,12 +1561,36 @@ function SectionItemRow({ item, onClick, onPassOnChip, onMoveBackChip, working }
       onClick={onClick}
       aria-label={`Open ${displayName}`}
     >
-      <div
-        className={`${styles.itemThumb} ${sizeIsEmpty ? styles.itemThumbEmpty : ''}`}
-        aria-hidden="true"
-      >
-        {sizeLabel}
-      </div>
+      {/* Two visual states for the row's leading thumb:
+          1. Garment photo present → render the photo as the thumb
+             background with the size_label tucked into a corner badge
+             so the visual hierarchy stays "what does it look like" first
+             and "what size is it" second.
+          2. No photo → keep the legacy text-only thumb (size centered),
+             which works the same as it always has. */}
+      {item.garment_signed_url ? (
+        <div
+          className={`${styles.itemThumb} ${styles.itemThumbWithPhoto}`}
+          aria-hidden="true"
+        >
+          <img
+            src={item.garment_signed_url}
+            alt=""
+            className={styles.itemThumbPhoto}
+            loading="lazy"
+          />
+          {!sizeIsEmpty && (
+            <span className={styles.itemThumbSizeBadge}>{sizeLabel}</span>
+          )}
+        </div>
+      ) : (
+        <div
+          className={`${styles.itemThumb} ${sizeIsEmpty ? styles.itemThumbEmpty : ''}`}
+          aria-hidden="true"
+        >
+          {sizeLabel}
+        </div>
+      )}
       <div className={styles.itemBody}>
         <div className={styles.itemName}>{displayName}</div>
         {metaText && <div className={styles.itemMeta}>{metaText}</div>}

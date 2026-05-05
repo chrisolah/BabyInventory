@@ -123,7 +123,7 @@ export default function Privacy() {
           <ul className={styles.list}>
             <li>The clothing items you add: brand, size, condition, notes, and similar fields.</li>
             <li>Status changes you make (kept, outgrown, packed in a pass-along bag).</li>
-            <li>If you use the photo-scan feature, the picture is processed in your browser to read the tag. Sprigloop does not upload or store the photo itself. Only the typed-out details are saved.</li>
+            <li>If you use the photo-scan feature, the close-up tag photo is sent to the scanning service to read the brand and size, and is not stored after that. The wider garment photo, if you take one, is saved alongside the item in your inventory so you can recognize it visually later. Garment photos live in a private bucket scoped to your household, are deleted when you delete the item, and can be removed any time by emailing me.</li>
           </ul>
 
           <h3 className={styles.h3}>Pass-along bag information</h3>

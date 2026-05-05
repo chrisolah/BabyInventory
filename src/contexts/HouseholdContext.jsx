@@ -219,7 +219,41 @@ export function HouseholdProvider({ children }) {
         if (isFirstFetch) setItemsLoading(false)
         return
       }
-      setItems(data || [])
+
+      // Resolve garment photo signed URLs for the rows that have one.
+      // We do a single batched call rather than one signing per item —
+      // even on a household with 200 items the latency is one round
+      // trip. URLs expire after 1 hour; users who keep the inventory
+      // open longer will see broken thumbnails until they refresh,
+      // which is acceptable for v1 (a refresh-on-stale could come
+      // later as polish). Failures here don't fail the whole load —
+      // we just skip thumbnail attachment, the UI falls back to the
+      // size-only thumb.
+      const rows = data || []
+      const photoPaths = rows
+        .map(r => r.garment_photo_path)
+        .filter(Boolean)
+      let urlByPath = new Map()
+      if (photoPaths.length > 0) {
+        const { data: signed } = await supabase.storage
+          .from('garment-photos')
+          .createSignedUrls(photoPaths, 60 * 60)
+        if (Array.isArray(signed)) {
+          for (const s of signed) {
+            if (s?.path && s?.signedUrl && !s?.error) {
+              urlByPath.set(s.path, s.signedUrl)
+            }
+          }
+        }
+      }
+      const itemsWithUrls = rows.map(r => (
+        r.garment_photo_path
+          ? { ...r, garment_signed_url: urlByPath.get(r.garment_photo_path) || null }
+          : r
+      ))
+
+      if (cancelled) return
+      setItems(itemsWithUrls)
       setItemsLoadedFor(household.id)
       if (isFirstFetch) setItemsLoading(false)
     }

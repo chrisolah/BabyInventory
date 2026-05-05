@@ -1202,8 +1202,14 @@ export default function TagScanner({
         return
       }
       // Second argument lets the parent flag low-confidence fields for
-      // review. Older callers that only take `fields` stay compatible.
-      onResult?.(fields, confidence)
+      // review. Third argument carries the photo data URLs so the parent
+      // (single-mode AddItem) can upload the garment to storage on save.
+      // Older two-arg callers stay compatible — the third arg is optional
+      // and recipients that don't read it just ignore it.
+      const garmentDataUrl = garmentPayload
+        ? `data:${garmentPayload.mime};base64,${garmentPayload.base64}`
+        : null
+      onResult?.(fields, confidence, { garmentDataUrl })
     } catch (err) {
       // eslint-disable-next-line no-console
       console.warn('TagScanner failed:', err)
