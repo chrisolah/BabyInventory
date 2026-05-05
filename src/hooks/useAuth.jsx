@@ -126,7 +126,7 @@ export function AuthProvider({ children }) {
   // Password is required at conversion (not optional) because OTP-only
   // accounts can't recover if email access is lost; pairing both gives
   // the user redundancy.
-  async function upgradeAccount({ email, password }) {
+  async function upgradeAccount({ email, password, termsAcceptedAt }) {
     const trimmedEmail = email.trim()
     const trimmedPassword = password.trim()
     if (!trimmedEmail) return { error: new Error('Email is required.') }
@@ -134,10 +134,21 @@ export function AuthProvider({ children }) {
       return { error: new Error('Password must be at least 8 characters.') }
     }
 
-    const { error } = await supabase.auth.updateUser({
+    // Trial users converted via the upgrade modal go through their first
+    // Terms + Privacy acceptance moment HERE — there's no separate Signup
+    // form for them. The caller passes an ISO timestamp captured when the
+    // user checked the consent box; we merge it onto raw_user_meta_data so
+    // the acceptance is durably stamped on the auth row. updateUser({ data })
+    // in supabase-js v2 merges with existing metadata rather than replacing,
+    // so trial-era fields (name, session_id, acquisition_*) are preserved.
+    const updatePayload = {
       email: trimmedEmail,
       password: trimmedPassword,
-    })
+    }
+    if (termsAcceptedAt) {
+      updatePayload.data = { terms_accepted_at: termsAcceptedAt }
+    }
+    const { error } = await supabase.auth.updateUser(updatePayload)
     if (error) return { error }
 
     // Pull the freshly-updated user so consumer state reflects

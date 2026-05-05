@@ -10,6 +10,8 @@ import Landing from './screens/Landing'
 import HowItWorks from './screens/HowItWorks'
 import About from './screens/About'
 import Contact from './screens/Contact'
+import Privacy from './screens/Privacy'
+import Terms from './screens/Terms'
 import Signup from './screens/Signup'
 import Login from './screens/Login'
 import ResetPassword from './screens/ResetPassword'
@@ -218,6 +220,11 @@ function AppRoutes() {
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        {/* /privacy and /terms are public legal pages. Same LandingLayout
+            wrapper as /about + /contact so they get the marketing nav and
+            footer (which links back to them, intentionally circular). */}
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
       </Route>
       <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
