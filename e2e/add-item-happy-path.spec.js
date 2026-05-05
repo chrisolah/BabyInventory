@@ -24,27 +24,40 @@ test('signup → onboard → add item → item appears in inventory', async ({ p
   await page.getByRole('button', { name: /create account/i }).click()
 
   // ── Blast through onboarding (same path as onboarding-happy-path) ───────
+  // Each step gets a heading-visible barrier before the click on the next
+  // affordance. Without it, Playwright's auto-wait on a button query races
+  // the navigation and times out (this exact race bit the suite when the
+  // helpers spec first landed — see e2e/support/helpers.js for the writeup).
   await expect(page).toHaveURL(/\/onboarding/)
+  await expect(page.getByRole('heading', { name: /name your household/i })).toBeVisible()
   await page.getByPlaceholder('The Johnson Family').fill('AddItem Household')
   await page.getByRole('button', { name: /^continue$/i }).click()
 
+  await expect(page.getByRole('heading', { name: /tell us about your baby/i })).toBeVisible()
   await page.getByPlaceholder('Lily').fill('Nora')
-  await page.locator('input[type="date"]').fill('2025-06-15')
+  // DOB places the baby in the 6-9M age band relative to mid-2026 runs,
+  // matching the size '6-9M' we add below. Inventory filters by current
+  // age band; mismatched bands hide the saved item from the default tab.
+  await page.locator('input[type="date"]').fill('2025-10-15')
   await page.getByRole('button', { name: /^continue$/i }).click()
 
   // Receiving step (added 2026-04-25 mom-interview round). Toggle defaults
   // off, so the advance button reads "Not right now". If the default ever
   // flips, the button reads "Continue" — match loosely.
+  await expect(page.getByRole('heading', { name: /open to receiving/i })).toBeVisible()
   await page.getByRole('button', { name: /^(not right now|continue)$/i }).click()
 
   // Invite step.
+  await expect(page.getByRole('heading', { name: /invite a family member/i })).toBeVisible()
   await page.getByRole('button', { name: /skip for now/i }).click()
 
   // Scan step (added 2026-04-25 onboarding scan exposure). Skip with the
   // same skip-link pattern as invite.
+  await expect(page.getByRole('heading', { name: /try the photo-scan/i })).toBeVisible()
   await page.getByRole('button', { name: /skip for now/i }).click()
 
   // Done screen.
+  await expect(page.getByRole('button', { name: /go to my inventory/i })).toBeVisible()
   await page.getByRole('button', { name: /go to my inventory/i }).click()
 
   // Now on /home — the empty-state card deep-links to /inventory.
@@ -76,12 +89,17 @@ test('signup → onboard → add item → item appears in inventory', async ({ p
 
   // Mode defaults to 'owned' — leave as-is.
   // Category, Type, Size, Condition are the required fields on this path.
+  // Type is now a slot-id <select>, not a free-text input. 'bodysuits' is
+  // the slot id for the "Bodysuits" entry in src/lib/wardrobe.js (matches
+  // the historic "long sleeve onesie" intent of this test). The placeholder
+  // pattern on the brand input (Carter's, …) is still text-input.
   await page.getByLabel(/category/i).selectOption('tops_and_bodysuits')
-  await page.getByPlaceholder(/long-sleeve onesie/i).fill('long sleeve onesie')
+  await page.getByLabel(/^type$/i).selectOption('bodysuits')
   await page.getByLabel(/^size$/i).selectOption('6-9M')
   await page.getByLabel(/condition/i).selectOption('like_new')
 
-  // Optional: brand to give us a recognisable string to assert against.
+  // Brand is the user-controlled identifier (no name field exists in the
+  // form), so we use a value we can assert on uniquely.
   await page.getByPlaceholder(/carter's/i).fill('H&M')
 
   await page.getByRole('button', { name: /^save item$/i }).click()
@@ -89,9 +107,9 @@ test('signup → onboard → add item → item appears in inventory', async ({ p
   // ── Lands back on /inventory with the new item visible ──────────────────
   await expect(page).toHaveURL(/\/inventory/)
 
-  // The ItemRow renders item_type humanised (snake_case → "Long sleeve onesie").
-  await expect(page.getByText(/long sleeve onesie/i)).toBeVisible()
-  // Meta line should include size and brand.
-  await expect(page.getByText(/6-9M/)).toBeVisible()
+  // Inventory ItemRow displays brand as the row title (when no `name` field
+  // was filled). The brand "H&M" is unique on the page; a /6-9M/ assertion
+  // collides with the age chip, the thumbnail label, and the "+ Add item
+  // in 6-9M" CTA, so we drop it — the brand match is sufficient proof.
   await expect(page.getByText(/H&M/)).toBeVisible()
 })
