@@ -56,20 +56,24 @@ fi
 # ── Required sections — refuse to push if missing ────────────────────────
 # [auth] was upgraded from "warn + confirm" to hard-required on 2026-05-04
 # after a push without [auth] silently reset anonymous sign-ins to off and
-# wiped site_url + additional_redirect_urls on both beta and prod. The
-# warning was bypassable by typing 'yes'; the hard refusal is bypass-proof.
-REQUIRED_SECTIONS=("[api]" "[auth]")
+# wiped site_url + additional_redirect_urls on both beta and prod.
+#
+# The check uses a line-anchored regex (^\s*\[section\]) instead of a
+# substring match, so a section commented out via `# [auth]` does NOT
+# satisfy the requirement — only a real section header does.
+REQUIRED_SECTIONS=("api" "auth")
 for section in "${REQUIRED_SECTIONS[@]}"; do
-  if ! grep -qF "$section" "$CONFIG"; then
+  if ! grep -qE "^[[:space:]]*\[${section}\][[:space:]]*\$" "$CONFIG"; then
     cat <<EOF
-REFUSED: $CONFIG is missing required section: $section
+REFUSED: $CONFIG is missing required section: [${section}]
 
   Pushing without this section would reset that area to CLI defaults.
   Past incidents:
     - missing [api] stripped beta schema from PostgREST → "Invalid schema: beta"
     - missing [auth] reset site_url, redirect URLs, anon sign-ins (2026-05-04)
 
-  Add the section to config.toml before pushing again.
+  Add the section to config.toml before pushing again. Comments
+  (# [${section}]) do NOT satisfy this check.
 EOF
     exit 1
   fi
@@ -104,12 +108,38 @@ WARNING: pushing to a non-standard project ref ($PROJECT_REF).
     SUPABASE_AUTH_PREVIEW_URL_GLOB
 
 EOF
-    if [ -z "${SUPABASE_AUTH_SITE_URL:-}" ]; then
-      echo "REFUSED: SUPABASE_AUTH_SITE_URL is not set."
-      exit 1
-    fi
     ;;
 esac
+
+# ── Validate env() placeholders resolve to non-empty values ──────────────
+# config.toml uses env(VAR) for the per-project URL fields. If any of
+# those env vars is missing or empty, Supabase CLI would push an empty
+# string — silently breaking auth flows on the target project. Refuse
+# the push if any required env is missing/empty, regardless of how we
+# got here (case statement above for beta/prod, or caller's shell for
+# other refs).
+REQUIRED_ENV_VARS=(
+  SUPABASE_AUTH_SITE_URL
+  SUPABASE_AUTH_PRIMARY_URL_GLOB
+  SUPABASE_AUTH_PREVIEW_URL_GLOB
+)
+for var in "${REQUIRED_ENV_VARS[@]}"; do
+  if [ -z "${!var:-}" ]; then
+    cat <<EOF
+REFUSED: required env var $var is empty or unset.
+
+  config.toml uses env($var) to interpolate per-project URL config.
+  If we push with that env unset, Supabase pushes an empty value,
+  which silently breaks redirects / Site URL on the target project.
+
+  If you're pushing 'beta' or 'prod', the wrapper sets these for you —
+  this means something deleted the case branch. Check tools/safe-config-push.sh.
+  If you're pushing a custom ref, export the var before re-running:
+    export $var=...
+EOF
+    exit 1
+  fi
+done
 
 # ── Show what's in config.toml + require explicit confirmation ───────────
 # `supabase config push` does not support --dry-run as of CLI v2.90.x, so
