@@ -528,6 +528,44 @@
   display: block;
 }
 
+/* ── Per-step skip button (right slot of the bottom bar) ─────────────────
+   Visual weight matched to the fallback link on the left so the shutter
+   reads as optically centered. Capital-S "Skip tag" / "Skip garment" is
+   8 chars max which fits the slot width on iPhone SE. min-height = 44px
+   for tap-target compliance. */
+.cameraSkipBtn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+  border: 0.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  -webkit-tap-highlight-color: transparent;
+}
+.cameraSkipBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.cameraSkipBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Batch progress suffix in the top-bar title ──────────────────────────
+   Inline with the title text so the user can read step + batch count in
+   one glance ("Hangtag · 1 of 2 · 3 saved"). Slightly muted vs the title
+   so the step framing stays primary. */
+.cameraTopBatchCount {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+}
+
 /* ─── Stream-error fallback card ─────────────────────────────── */
 .cameraErrorBox {
   position: absolute;

@@ -390,12 +390,20 @@ function computeTextLikeness(imageData) {
 }
 
 // CameraModal props:
-//   onCapture(blob)        — fired every time the shutter fires (auto or manual)
+//   step                   — 'tag' | 'garment'. Tag step uses the tag-shaped
+//                            guide + auto-capture; garment step uses no guide
+//                            and manual shutter only (no clean visual signal
+//                            for "well-framed garment" makes auto fragile).
+//   onCapture(blob, meta)  — fired when the shutter commits a frame; meta
+//                            carries { step, auto }. Parent buffers tag,
+//                            advances step, and aggregates the pair.
+//   onSkipStep(step)       — user tapped Skip. Parent advances state without
+//                            a blob for that step.
 //   onClose()              — user tapped the X or pressed Escape
 //   onFallback()           — user tapped "Upload instead" / the stream errored
 //   batchMode              — boolean: when true, camera stays open after each
-//                            capture and accumulates into a batch via the
-//                            thumbnail strip; onCapture still fires per shot.
+//                            ITEM (i.e. after both tag+garment captures) and
+//                            accumulates into a batch via the thumbnail strip.
 //   onBatchToggle(next)    — user tapped the "Multi" pill. Parent owns state
 //                            (arm/disarm is a parent-level concern).
 //   batchItems             — array of already-scanned batch items to render
@@ -404,7 +412,9 @@ function computeTextLikeness(imageData) {
 //   onReview()             — user tapped the "Review N items" button. Parent
 //                            closes the camera and opens the review surface.
 function CameraModal({
+  step = 'tag',
   onCapture,
+  onSkipStep,
   onClose,
   onFallback,
   batchMode = false,
@@ -412,6 +422,7 @@ function CameraModal({
   batchItems = [],
   onReview,
 }) {
+  const isTagStep = step === 'tag'
   const videoRef = useRef(null)
   const streamRef = useRef(null)
   const sampleCanvasRef = useRef(null)
@@ -557,29 +568,36 @@ function CameraModal({
       const blob = await new Promise((resolve, reject) => {
         canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toblob_failed'))), 'image/jpeg', 0.92)
       })
-      onCapture?.(blob, { auto: viaAuto })
-      // In batch mode the parent keeps the modal mounted and just appends
-      // the scan to the batch — so we have to release `capturing` here or
-      // the shutter stays locked forever. In single mode the parent
-      // unmounts the modal and this setter races that teardown harmlessly.
-      if (batchMode) {
+      onCapture?.(blob, { auto: viaAuto, step })
+      // Two-step capture (tag then garment) reshapes when the modal stays
+      // mounted vs unmounts. The matrix:
+      //   single + tag      → modal stays open (parent flips step to garment)
+      //   single + garment  → modal unmounts (parent commits the pair, closes)
+      //   batch  + tag      → modal stays open (parent flips step to garment)
+      //   batch  + garment  → modal stays open (parent commits, returns step to tag)
+      // For everything except "single + garment" we need to release
+      // `capturing` here or the shutter stays locked forever. The
+      // clear-frame gate (auto-capture suppression after a real "scan next"
+      // moment) only applies at the end of a complete ITEM — i.e. after the
+      // garment step in batch mode. Setting it after the tag step would
+      // pin auto off mid-item, which is wrong: between tag and garment
+      // auto is already off because !isTagStep.
+      const itemEnd = step === 'garment'
+      const modalStaysOpen = batchMode || !itemEnd
+      if (modalStaysOpen) {
         setCapturing(false)
-        // Reset the lock heuristic state so auto-capture is ready for the
-        // next tag instead of carrying stale "locked" history from the item
-        // we just saved.
         scoreHistoryRef.current = []
-        // Arm the clear-frame gate: subsequent auto-fires in this batch are
-        // fully suppressed until the user explicitly taps "Scan next". The
-        // first capture in a batch auto-fires (great for getting started),
-        // but every capture after that requires a deliberate tap. We tried
-        // automatic re-arm via idle-frame detection AND a force-clear timer
-        // and both produced rogue auto-captures in real use — see the
-        // constants block at the top of this file for the post-mortem.
-        needsClearFrameRef.current = true
-        setLockState('needsClear')
-        // Push the warmup clock forward a hair so the next auto-fire
-        // isn't triggered by the same frame that just fired.
-        modalOpenedAtRef.current = Date.now()
+        if (batchMode && itemEnd) {
+          // End of an item in batch mode — gate auto until user taps
+          // "Scan next" so the next item's tag step doesn't auto-fire on
+          // whatever frame happens to be in view as they pivot the phone.
+          // Same anti-rogue-fire rationale as the constants block above.
+          needsClearFrameRef.current = true
+          setLockState('needsClear')
+          // Push the warmup clock forward so the next auto-fire isn't
+          // triggered by the same frame that just fired.
+          modalOpenedAtRef.current = Date.now()
+        }
       }
     } catch (err) {
       // eslint-disable-next-line no-console
@@ -587,17 +605,19 @@ function CameraModal({
       setStreamError('capture_failed')
       setCapturing(false)
     }
-  }, [ready, capturing, onCapture, batchMode])
+  }, [ready, capturing, onCapture, batchMode, step])
 
   // Auto-capture sampling loop. Runs while the stream is ready, auto mode
-  // is enabled, and we haven't already triggered a capture. Every
+  // is enabled, the current step is the tag step (garment shots have no
+  // clean "well-framed" visual signal so auto on that step would misfire),
+  // and we haven't already triggered a capture. Every
   // AUTO_SAMPLE_MS we redraw the full video frame into a tiny offscreen
   // canvas, compute a sharpness score, and check whether the rolling window
   // has been consistently sharp AND stable. Consistently = all samples ≥
   // min threshold; stable = the spread of the window is small relative to
   // its mean (user isn't panning/shaking).
   useEffect(() => {
-    if (!ready || !autoEnabled || capturing || streamError) {
+    if (!ready || !autoEnabled || capturing || streamError || !isTagStep) {
       scoreHistoryRef.current = []
       setLockState('waiting')
       return
@@ -710,7 +730,7 @@ function CameraModal({
       // false right after a batch shutter. Resetting it would defeat the
       // whole gate.
     }
-  }, [ready, autoEnabled, capturing, streamError, handleShutter])
+  }, [ready, autoEnabled, capturing, streamError, isTagStep, handleShutter])
 
   // Stream error state: bail out gracefully and offer the file picker.
   // We don't try to recover in place because most errors (permission denied,
@@ -740,7 +760,7 @@ function CameraModal({
   }
 
   return (
-    <div className={styles.cameraModal} role="dialog" aria-modal="true" aria-label="Scan a clothing tag">
+    <div className={styles.cameraModal} role="dialog" aria-modal="true" aria-label={isTagStep ? 'Scan the hangtag' : 'Take a wider garment shot'}>
       <video
         ref={videoRef}
         className={styles.cameraVideo}
@@ -751,23 +771,25 @@ function CameraModal({
         aria-hidden="true"
       />
 
-      {/* Guide overlay. Four scrim panels form a "picture frame" around a
-          center cutout where the tag should sit. Corner brackets (not a
-          full dashed box) so the user's eye doesn't fight trying to align
-          to a complete rectangle. The cornerLocked modifier turns the
-          brackets teal as a visual confirmation when auto-capture arms. */}
-      <div className={styles.cameraScrim} aria-hidden="true">
-        <div className={`${styles.cameraScrimPanel} ${styles.cameraScrimTop}`} />
-        <div className={`${styles.cameraScrimPanel} ${styles.cameraScrimBottom}`} />
-        <div className={`${styles.cameraScrimPanel} ${styles.cameraScrimLeft}`} />
-        <div className={`${styles.cameraScrimPanel} ${styles.cameraScrimRight}`} />
-        <div className={styles.cameraGuide}>
-          <div className={`${styles.cameraGuideCorner} ${styles.cameraGuideCornerTL} ${lockState === 'locked' ? styles.cameraGuideCornerLocked : ''}`} />
-          <div className={`${styles.cameraGuideCorner} ${styles.cameraGuideCornerTR} ${lockState === 'locked' ? styles.cameraGuideCornerLocked : ''}`} />
-          <div className={`${styles.cameraGuideCorner} ${styles.cameraGuideCornerBL} ${lockState === 'locked' ? styles.cameraGuideCornerLocked : ''}`} />
-          <div className={`${styles.cameraGuideCorner} ${styles.cameraGuideCornerBR} ${lockState === 'locked' ? styles.cameraGuideCornerLocked : ''}`} />
+      {/* Guide overlay. Tag step only — the band-shaped guide and
+          corner brackets coach the user toward the auto-capture sweet
+          spot. On the garment step there's no cleanly-defined "frame
+          this region" target (a garment fills whatever space it fills),
+          so we drop the scrim entirely and show the full video frame. */}
+      {isTagStep && (
+        <div className={styles.cameraScrim} aria-hidden="true">
+          <div className={`${styles.cameraScrimPanel} ${styles.cameraScrimTop}`} />
+          <div className={`${styles.cameraScrimPanel} ${styles.cameraScrimBottom}`} />
+          <div className={`${styles.cameraScrimPanel} ${styles.cameraScrimLeft}`} />
+          <div className={`${styles.cameraScrimPanel} ${styles.cameraScrimRight}`} />
+          <div className={styles.cameraGuide}>
+            <div className={`${styles.cameraGuideCorner} ${styles.cameraGuideCornerTL} ${lockState === 'locked' ? styles.cameraGuideCornerLocked : ''}`} />
+            <div className={`${styles.cameraGuideCorner} ${styles.cameraGuideCornerTR} ${lockState === 'locked' ? styles.cameraGuideCornerLocked : ''}`} />
+            <div className={`${styles.cameraGuideCorner} ${styles.cameraGuideCornerBL} ${lockState === 'locked' ? styles.cameraGuideCornerLocked : ''}`} />
+            <div className={`${styles.cameraGuideCorner} ${styles.cameraGuideCornerBR} ${lockState === 'locked' ? styles.cameraGuideCornerLocked : ''}`} />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Top bar — title left, auto/multi toggles + close on the right.
           Auto pill reads "Auto · On/Off" so state is obvious without a
@@ -777,9 +799,16 @@ function CameraModal({
           than the Close X, which would throw the batch away). */}
       <div className={styles.cameraTopBar}>
         <div className={styles.cameraTopTitle}>
-          {batchMode && batchItems.length > 0
-            ? `${batchItems.length} scanned`
-            : 'Scan a tag'}
+          {/* Title is step-aware. The "X of 2" suffix tells the user where
+              they are in the per-item capture flow. In batch mode we
+              append a "(N saved)" marker so the user can still see how
+              many items they've already captured this session. */}
+          {isTagStep ? 'Hangtag · 1 of 2' : 'Whole garment · 2 of 2'}
+          {batchMode && batchItems.length > 0 && (
+            <span className={styles.cameraTopBatchCount}>
+              {' · '}{batchItems.length} saved
+            </span>
+          )}
         </div>
         <div className={styles.cameraTopRight}>
           <button
@@ -817,22 +846,24 @@ function CameraModal({
         </div>
       </div>
 
-      {/* Framing coach line. Sits just below the guide rect so the eye
-          naturally moves from "what am I aiming at?" (the dashed box) to
-          "how do I aim it?" (this text). Copy changes with auto lock
-          state so the user gets real-time feedback. */}
+      {/* Framing coach line. Sits just below the guide rect (or where it
+          would be on the garment step). Tag-step copy mirrors the auto-
+          capture state machine; garment-step copy is simpler since
+          there's no auto and no lock \u2014 just a plain framing prompt. */}
       <div className={styles.cameraHint} aria-live="polite">
         {!ready
           ? 'Starting camera\u2026'
-          : !autoEnabled
-            ? 'Fit the tag inside the box, then tap to capture'
-            : lockState === 'locked'
-              ? 'Got it\u2026'
-              : lockState === 'needsClear'
-                ? 'Captured. Tap Next when you\u2019re ready for the next one.'
-                : lockState === 'locking'
-                  ? 'Hold steady\u2026'
-                  : 'Fit the tag inside the box'}
+          : !isTagStep
+            ? 'Frame the whole garment, then tap to capture. Skip if you only want the tag.'
+            : !autoEnabled
+              ? 'Fit the tag inside the box, then tap to capture'
+              : lockState === 'locked'
+                ? 'Got it\u2026'
+                : lockState === 'needsClear'
+                  ? 'Captured. Tap Next when you\u2019re ready for the next one.'
+                  : lockState === 'locking'
+                    ? 'Hold steady\u2026'
+                    : 'Fit the tag inside the box'}
       </div>
 
       {/* Manual "Scan next" button — the primary way to advance in batch
@@ -870,8 +901,11 @@ function CameraModal({
       {/* Bottom bar — shutter in the middle. The left slot is context-
           dependent: fallback link when we're in single mode or the batch
           is empty; a prominent "Review N" button once the batch has
-          items. The right slot is a spacer so the shutter stays
-          optically centered. */}
+          items. The right slot now hosts the per-step Skip button —
+          either "Skip tag" (jumps straight to the garment step with no
+          tag photo) or "Skip garment" (commits the tag photo only and
+          advances the item). Single-photo items are valid; only "skip
+          both" is rejected. */}
       <div className={styles.cameraBottomBar}>
         {batchMode && batchItems.length > 0 ? (
           <button
@@ -899,7 +933,15 @@ function CameraModal({
         >
           <span className={styles.cameraShutterInner} />
         </button>
-        <span className={styles.cameraBottomSpacer} aria-hidden="true" />
+        <button
+          type="button"
+          className={styles.cameraSkipBtn}
+          onClick={() => onSkipStep?.(step)}
+          disabled={capturing}
+          aria-label={isTagStep ? 'Skip the tag photo' : 'Skip the garment photo'}
+        >
+          {isTagStep ? 'Skip tag' : 'Skip garment'}
+        </button>
       </div>
 
       {/* Shutter flash — pure CSS fade-out. Rendered conditionally so each
@@ -1018,6 +1060,14 @@ export default function TagScanner({
   // picker funnel through here so error handling — and analytics —
   // stay in one place.
   //
+  // pair:
+  //   { tag?, garment? } where each is a Blob | File | null. At least one
+  //   must be present. The compress-and-base64 step runs once per slot;
+  //   the edge function expects { tag: { image_base64, mime_type }, ... }.
+  //   For the legacy single-blob file-picker path we shim by passing
+  //   { tag: blob, garment: null } since the file picker has always been
+  //   tag-shaped from the user's POV.
+  //
   // opts:
   //   isBatchCapture — append to the in-progress batch instead of calling
   //                    onResult. True only on camera captures while
@@ -1027,7 +1077,7 @@ export default function TagScanner({
   //                    file picker fallback.
   //   auto           — true when the camera shutter fired from auto-lock,
   //                    false on manual taps. Ignored for the file path.
-  const sendForScan = useCallback(async (blobOrFile, opts = {}) => {
+  const sendForScan = useCallback(async (pair, opts = {}) => {
     const { isBatchCapture = false, source = 'file', auto = false } = opts
     // Common shape stamped on every analytics event for this scan attempt
     // so funnel queries can slice by entry point + capture path without
@@ -1045,13 +1095,27 @@ export default function TagScanner({
     setScanning(true)
     setError(null)
     setErrorDebug(null)
-    track.tagScanStarted(trackBase)
+    track.tagScanStarted({ ...trackBase, has_tag_photo: !!pair?.tag, has_garment_photo: !!pair?.garment })
 
     try {
-      const { base64, mime } = await compressToBase64(blobOrFile)
+      // Compress whichever blobs we have. compressToBase64 is the same
+      // pipeline as before (1024px long edge, 0.8 JPEG); running it twice
+      // when both photos are present roughly doubles client-side encoding
+      // cost — still well under a second on a mid-range phone, well worth
+      // the OCR quality lift from a wider garment shot.
+      const tagPayload     = pair?.tag     ? await compressToBase64(pair.tag)     : null
+      const garmentPayload = pair?.garment ? await compressToBase64(pair.garment) : null
+      if (!tagPayload && !garmentPayload) {
+        throw new Error('no_photos')
+      }
       const { data, error: fnErr } = await supabase.functions.invoke(
         'scan-clothing-tag',
-        { body: { image_base64: base64, mime_type: mime } },
+        {
+          body: {
+            tag:     tagPayload     ? { image_base64: tagPayload.base64,     mime_type: tagPayload.mime }     : null,
+            garment: garmentPayload ? { image_base64: garmentPayload.base64, mime_type: garmentPayload.mime } : null,
+          },
+        },
       )
       const duration_ms = Date.now() - startedAt
       if (fnErr) {
@@ -1111,18 +1175,26 @@ export default function TagScanner({
         quota_limit: quota?.limit ?? null,
       })
       if (isBatchCapture) {
-        // Append to the batch — thumbnail reuses the already-compressed
-        // JPEG data URL so we don't re-encode. ID is just a monotonic-ish
-        // random token; the batch is client-only until save, so collision
-        // risk is nil but we want stable list keys in React either way.
+        // Append to the batch — thumbnails reuse the already-compressed
+        // JPEG data URLs so we don't re-encode. The "primary" thumbnail
+        // (used by the in-camera strip and any legacy single-image
+        // surface) prefers the garment shot since it's more visually
+        // recognizable than a tag close-up; falls back to the tag when
+        // garment is missing. BatchReview separately reads the explicit
+        // tag/garment fields and renders both.
         const id = typeof crypto !== 'undefined' && crypto.randomUUID
           ? crypto.randomUUID()
           : `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+        const tagDataUrl     = tagPayload     ? `data:${tagPayload.mime};base64,${tagPayload.base64}`     : null
+        const garmentDataUrl = garmentPayload ? `data:${garmentPayload.mime};base64,${garmentPayload.base64}` : null
+        const primary        = garmentDataUrl || tagDataUrl
         setBatchItems((prev) => [
           ...prev,
           {
             id,
-            thumbnailDataUrl: `data:${mime};base64,${base64}`,
+            thumbnailDataUrl:        primary,
+            tagThumbnailDataUrl:     tagDataUrl,
+            garmentThumbnailDataUrl: garmentDataUrl,
             fields,
             confidence,
           },
@@ -1147,30 +1219,77 @@ export default function TagScanner({
     }
   }, [onResult, from])
 
+  // Two-photo capture state. `currentStep` tells CameraModal which UI to
+  // render and which photo is being captured next; `pendingTagBlob` holds
+  // the tag blob between steps so we can submit both at once on the
+  // garment shutter (or the user's "Skip garment" tap). Reset whenever a
+  // capture session ends — modal close, batch save, file-picker fallback.
+  // Stored as state (not ref) so React drives the UI consistently with
+  // the buffered value, but it isn't read inside render — only on
+  // transitions.
+  const [currentStep, setCurrentStep] = useState('tag')
+  const [pendingTagBlob, setPendingTagBlob] = useState(null)
+
+  const resetCaptureSession = useCallback(() => {
+    setCurrentStep('tag')
+    setPendingTagBlob(null)
+  }, [])
+
   const onPick = useCallback(async (e) => {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    // File picker is always single-shot and never auto — those flags are
-    // only meaningful for the live-camera path. Source 'file' lets the
-    // analytics event distinguish the fallback path from the camera path.
-    await sendForScan(file, { source: 'file', auto: false, isBatchCapture: false })
+    // File picker is always single-shot and never auto. We feed it as
+    // the tag slot (no garment) — the picker has been tag-shaped from
+    // the user's POV since Phase 1, and one-photo OCR via the legacy
+    // single-image path is what this fallback was always doing.
+    await sendForScan({ tag: file, garment: null }, { source: 'file', auto: false, isBatchCapture: false })
   }, [sendForScan])
 
   const onCameraCapture = useCallback(async (blob, meta = {}) => {
-    // In batch mode the modal stays open; we just append to the batch.
-    // In single mode we close first so the user sees the AddItem fields
-    // populate while the scan round-trips. `meta.auto` comes from
-    // CameraModal — true if the shutter fired from the auto-lock timer,
-    // false if the user tapped manually.
-    const opts = { source: 'camera', auto: !!meta.auto, isBatchCapture: batchMode }
-    if (batchMode) {
-      await sendForScan(blob, opts)
+    // Two-step orchestration. Tag capture buffers the blob and advances
+    // to the garment step (camera stays mounted). Garment capture
+    // commits the pair: in single mode we close the modal first so the
+    // form populates while the scan round-trips; in batch mode we stay
+    // open and append to batchItems via sendForScan.
+    if (meta.step === 'tag') {
+      setPendingTagBlob(blob)
+      setCurrentStep('garment')
       return
     }
-    setCameraOpen(false)
-    await sendForScan(blob, opts)
-  }, [sendForScan, batchMode])
+
+    // step === 'garment' — end of an item. Commit both photos.
+    const opts = { source: 'camera', auto: !!meta.auto, isBatchCapture: batchMode }
+    const pair = { tag: pendingTagBlob, garment: blob }
+    setPendingTagBlob(null)
+    setCurrentStep('tag')
+
+    if (!batchMode) setCameraOpen(false)
+    await sendForScan(pair, opts)
+  }, [sendForScan, batchMode, pendingTagBlob])
+
+  const onSkipStep = useCallback(async (step) => {
+    // Two skip behaviors:
+    //   step === 'tag'     → drop the tag; advance to garment with no buffer
+    //   step === 'garment' → commit whatever's buffered (which will be the
+    //                        tag, since the user got here by capturing it).
+    //                        If nothing is buffered, that means they
+    //                        skipped the tag too and now want to skip
+    //                        garment — there's no scan to make. No-op so
+    //                        they have to either capture or close.
+    if (step === 'tag') {
+      setPendingTagBlob(null)
+      setCurrentStep('garment')
+      return
+    }
+    if (!pendingTagBlob) return // nothing to commit; user must capture or close
+    const opts = { source: 'camera', auto: false, isBatchCapture: batchMode }
+    const pair = { tag: pendingTagBlob, garment: null }
+    setPendingTagBlob(null)
+    setCurrentStep('tag')
+    if (!batchMode) setCameraOpen(false)
+    await sendForScan(pair, opts)
+  }, [sendForScan, batchMode, pendingTagBlob])
 
   // "Multi" pill in the top bar toggles batch arming. We don't allow
   // flipping it off once the batch has items — the exit path from a
@@ -1182,15 +1301,22 @@ export default function TagScanner({
   }, [])
 
   const onReview = useCallback(() => {
+    // If the user heads to Review mid-pair (took a tag photo, didn't take
+    // a garment), the buffered tag is abandoned — we don't auto-commit it
+    // without their explicit shutter or skip. Same logic as onCameraClose.
+    resetCaptureSession()
     setCameraOpen(false)
     setReviewOpen(true)
-  }, [])
+  }, [resetCaptureSession])
 
   const onReviewBack = useCallback(() => {
     // "Scan more" from review → re-open the camera with batch preserved.
+    // Capture session was already reset on the Review entry; reset again
+    // defensively so a fresh open is always tag-step + empty buffer.
+    resetCaptureSession()
     setReviewOpen(false)
     setCameraOpen(true)
-  }, [])
+  }, [resetCaptureSession])
 
   const onReviewDiscard = useCallback(() => {
     setReviewOpen(false)
@@ -1217,7 +1343,11 @@ export default function TagScanner({
     // Closing the camera with a batch in flight keeps the batch and
     // shunts the user straight to Review — same semantics as tapping
     // the Review button. Parent's confirm-discard lives on the review
-    // screen, where we have enough real estate for the prompt.
+    // screen, where we have enough real estate for the prompt. Either
+    // way, drop the in-flight per-item pair (a buffered tag photo
+    // without a committed garment is meaningless after the modal
+    // closes).
+    resetCaptureSession()
     if (batchMode && batchItems.length > 0) {
       setCameraOpen(false)
       setReviewOpen(true)
@@ -1227,7 +1357,7 @@ export default function TagScanner({
     // Leaving the camera with no batch resets the arm so the next open
     // starts fresh in single mode.
     setBatchMode(false)
-  }, [batchMode, batchItems.length])
+  }, [batchMode, batchItems.length, resetCaptureSession])
 
   function onTopButton() {
     // Prime audio inside this user gesture so Safari/iOS will actually
@@ -1250,13 +1380,16 @@ export default function TagScanner({
   // Mode picker resolves to either single-shot or batch, then opens the
   // camera with batchMode already set. We always wipe any leftover batch
   // items first because the picker is the canonical "starting a new scan
-  // session" moment — no surprise carry-over from a previous open.
+  // session" moment — no surprise carry-over from a previous open. Same
+  // reset for the per-item step machine: every fresh open starts on the
+  // tag step with no buffered photo.
   const onPickMode = useCallback((wantsBatch) => {
     setModePickerOpen(false)
     setBatchItems([])
     setBatchMode(wantsBatch)
+    resetCaptureSession()
     setCameraOpen(true)
-  }, [])
+  }, [resetCaptureSession])
 
   const onCancelModePicker = useCallback(() => {
     setModePickerOpen(false)
@@ -1264,6 +1397,11 @@ export default function TagScanner({
 
   function onFallbackFromModal() {
     setCameraOpen(false)
+    // Drop any half-completed pair when switching to the file picker —
+    // the picker path is single-photo from the user's POV and a stale
+    // buffered tag would silently get committed alongside the next
+    // file. Reset before the picker opens.
+    resetCaptureSession()
     // A micro-delay so the modal unmount doesn't swallow the synthetic
     // click on some Android WebViews. 0ms via setTimeout is enough —
     // we just need to yield the task queue.
@@ -1320,7 +1458,9 @@ export default function TagScanner({
 
       {cameraOpen && (
         <CameraModal
+          step={currentStep}
           onCapture={onCameraCapture}
+          onSkipStep={onSkipStep}
           onClose={onCameraClose}
           onFallback={onFallbackFromModal}
           batchMode={batchMode}

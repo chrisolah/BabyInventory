@@ -435,7 +435,28 @@ function BatchRow({
   showBabyChip,
   disabled,
 }) {
-  const { fields, confidence = {}, thumbnailDataUrl, insertError, confirmed } = item
+  const {
+    fields,
+    confidence = {},
+    thumbnailDataUrl,
+    // Two-photo thumbnails (Phase 1, May 2026). Both optional.
+    // garmentThumbnailDataUrl is the wider shot — primary visual identifier.
+    // tagThumbnailDataUrl is the close-up tag — auxiliary, tucked next to
+    // the garment for context. When only one is present, just render that
+    // one. When neither is present (e.g. a row created via a code path
+    // that doesn't capture photos at all) we fall back to the legacy
+    // thumbnailDataUrl so older callers and pre-refactor batch entries
+    // still display.
+    garmentThumbnailDataUrl,
+    tagThumbnailDataUrl,
+    insertError,
+    confirmed,
+  } = item
+  // Resolve a primary + secondary for the row. Garment is primary by
+  // intent (more visually recognizable than a tag close-up). If only the
+  // tag is present we promote it to primary and drop the secondary slot.
+  const primaryThumb   = garmentThumbnailDataUrl || tagThumbnailDataUrl || thumbnailDataUrl || null
+  const secondaryThumb = garmentThumbnailDataUrl && tagThumbnailDataUrl ? tagThumbnailDataUrl : null
   const missing = missingFieldsFor(fields)
   const isInvalid = missing.length > 0
 
@@ -483,7 +504,17 @@ function BatchRow({
         </span>
       </label>
       <div className={styles.rowThumbWrap}>
-        <img src={thumbnailDataUrl} alt="" className={styles.rowThumb} />
+        {primaryThumb && (
+          <img src={primaryThumb} alt="" className={styles.rowThumb} />
+        )}
+        {secondaryThumb && (
+          <img
+            src={secondaryThumb}
+            alt=""
+            className={styles.rowThumbSecondary}
+            aria-hidden="true"
+          />
+        )}
       </div>
       <div className={styles.rowFields}>
         {/* Per-row baby assignment chip. Renders only on multi-baby
