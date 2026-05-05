@@ -54,15 +54,20 @@ if [ "$ENV_LABEL" != "beta" ] && [ "$ENV_LABEL" != "prod" ]; then
 fi
 
 # ── Required sections — refuse to push if missing ────────────────────────
-REQUIRED_SECTIONS=("[api]")
+# [auth] was upgraded from "warn + confirm" to hard-required on 2026-05-04
+# after a push without [auth] silently reset anonymous sign-ins to off and
+# wiped site_url + additional_redirect_urls on both beta and prod. The
+# warning was bypassable by typing 'yes'; the hard refusal is bypass-proof.
+REQUIRED_SECTIONS=("[api]" "[auth]")
 for section in "${REQUIRED_SECTIONS[@]}"; do
   if ! grep -qF "$section" "$CONFIG"; then
     cat <<EOF
 REFUSED: $CONFIG is missing required section: $section
 
   Pushing without this section would reset that area to CLI defaults.
-  Last time this happened, beta schema got stripped from PostgREST and
-  every page in the app errored "Invalid schema: beta".
+  Past incidents:
+    - missing [api] stripped beta schema from PostgREST → "Invalid schema: beta"
+    - missing [auth] reset site_url, redirect URLs, anon sign-ins (2026-05-04)
 
   Add the section to config.toml before pushing again.
 EOF
@@ -70,30 +75,41 @@ EOF
   fi
 done
 
-# ── Recommended sections — warn but allow with confirmation ──────────────
-RECOMMENDED_SECTIONS=("[auth]")
-for section in "${RECOMMENDED_SECTIONS[@]}"; do
-  if ! grep -qF "$section" "$CONFIG"; then
+# ── Per-env auth values via env() interpolation ──────────────────────────
+# config.toml uses env(VAR) placeholders for the project-specific bits
+# (site_url, redirect URLs). Set them here so the same config.toml can
+# safely push to both beta and prod — without these exports, env() falls
+# back to empty string and the dashboard ends up with no Site URL.
+case "$1" in
+  beta)
+    export SUPABASE_AUTH_SITE_URL="https://baby-inventory-chrisolah-olahwoven.vercel.app"
+    export SUPABASE_AUTH_PRIMARY_URL_GLOB="https://baby-inventory-chrisolah-olahwoven.vercel.app/**"
+    export SUPABASE_AUTH_PREVIEW_URL_GLOB="https://baby-inventory-*-olahwoven.vercel.app/**"
+    ;;
+  prod)
+    export SUPABASE_AUTH_SITE_URL="https://sprigloop.com"
+    export SUPABASE_AUTH_PRIMARY_URL_GLOB="https://sprigloop.com/**"
+    # Prod has no preview pattern; reuse the primary so the array entry
+    # stays valid (Supabase dedupes identical entries).
+    export SUPABASE_AUTH_PREVIEW_URL_GLOB="https://sprigloop.com/**"
+    ;;
+  *)
     cat <<EOF
+WARNING: pushing to a non-standard project ref ($PROJECT_REF).
 
-WARNING: $CONFIG is missing recommended section: $section
-
-  Push will reset auth.site_url, auth.additional_redirect_urls, signup
-  toggles, OTP expiry, anonymous-trial flag, etc. to CLI defaults if your
-  dashboard has non-default values for any of those.
-
-  If your dashboard auth config matches CLI defaults exactly, this is
-  safe. If not, add an [auth] block to config.toml first (use
-  [remotes.<ref>.auth] for env-specific values).
+  The wrapper only knows site_url + redirect URL globs for 'beta' and
+  'prod'. For any other ref, set these env vars yourself before re-running:
+    SUPABASE_AUTH_SITE_URL
+    SUPABASE_AUTH_PRIMARY_URL_GLOB
+    SUPABASE_AUTH_PREVIEW_URL_GLOB
 
 EOF
-    read -r -p "  Continue without [auth]? (type 'yes' to proceed) " CONFIRM
-    if [ "$CONFIRM" != "yes" ]; then
-      echo "Aborted."
+    if [ -z "${SUPABASE_AUTH_SITE_URL:-}" ]; then
+      echo "REFUSED: SUPABASE_AUTH_SITE_URL is not set."
       exit 1
     fi
-  fi
-done
+    ;;
+esac
 
 # ── Show what's in config.toml + require explicit confirmation ───────────
 # `supabase config push` does not support --dry-run as of CLI v2.90.x, so
