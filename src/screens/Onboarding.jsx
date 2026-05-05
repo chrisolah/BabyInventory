@@ -430,9 +430,34 @@ export default function Onboarding() {
   // on the row. Empty size/gender arrays collapse to NULL so the matching
   // query only needs one branch for "any size/gender."
   async function submitReceiving() {
-    if (!household) return
     setLoading(true)
     setError(null)
+
+    // Local `household` state can transiently be null after StrictMode
+    // remount or auth-refresh resume re-runs. Rather than silently bailing
+    // on the click (which left the page stuck on the receiving step in
+    // e2e — see 2026-05-04 investigation), re-resolve the household via
+    // the membership join before giving up. Same query the resume effect
+    // uses, so the cache shape stays consistent.
+    let activeHousehold = household
+    if (!activeHousehold && user) {
+      const { data: memberships, error: memErr } = await supabase
+        .schema(currentSchema)
+        .from('household_members')
+        .select('household_id, households(id, name)')
+        .eq('user_id', user.id)
+        .order('joined_at', { ascending: false })
+        .limit(1)
+      if (!memErr && memberships?.[0]?.households) {
+        activeHousehold = memberships[0].households
+        setHousehold(activeHousehold)
+      }
+    }
+    if (!activeHousehold) {
+      setLoading(false)
+      setError("We couldn't find your household. Try refreshing the page.")
+      return
+    }
 
     const sizesToWrite   = receivingSizes.length   ? receivingSizes   : null
     const gendersToWrite = receivingGenders.length ? receivingGenders : null
@@ -447,7 +472,7 @@ export default function Onboarding() {
         accepts_genders:        gendersToWrite,
         receiving_notes:        notesToWrite,
       })
-      .eq('id', household.id)
+      .eq('id', activeHousehold.id)
 
     setLoading(false)
 
