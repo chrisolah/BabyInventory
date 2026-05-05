@@ -21,10 +21,12 @@ import { useAuth } from '../hooks/useAuth'
 // when they hit +. Pushing that into a context means we load babies once
 // and the selection survives navigation without a round-trip.
 //
-// The selection is persisted to localStorage under `ll_baby_id_<household_id>`
+// The selection is persisted to localStorage under `sl_baby_id_<household_id>`
 // so it also survives a full page reload. If the stored id doesn't match a
 // baby in the current list (baby removed on another device, household
-// swapped) we fall back to 'all'.
+// swapped) we fall back to 'all'. (Pre-2026-05-05 the prefix was `ll_baby_id_`;
+// renamed for the Sprigloop brand. Existing values under the old prefix get
+// abandoned and the user defaults to 'all' on first visit post-deploy.)
 //
 // Semantics of selectedBabyId:
 //   'all'    — no baby filter; show everything in the household.
@@ -38,7 +40,7 @@ import { useAuth } from '../hooks/useAuth'
 
 const HouseholdContext = createContext(null)
 
-const STORAGE_PREFIX = 'll_baby_id_'
+const STORAGE_PREFIX = 'sl_baby_id_'
 
 function storageKey(householdId) {
   return `${STORAGE_PREFIX}${householdId}`
