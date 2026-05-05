@@ -45,6 +45,15 @@ const CATEGORY_OPTIONS = [
 
 const SIZE_OPTIONS = AGE_RANGES
 
+// Season options match the new warm/cold/all axis (post-migration-035).
+// Five-row layout in the grid stays clean with these three values; their
+// "(optional)" framing matches Brand below.
+const SEASON_OPTIONS = [
+  { value: 'warm_weather', label: 'Warm weather' },
+  { value: 'cold_weather', label: 'Cold weather' },
+  { value: 'all_season',   label: 'All-season' },
+]
+
 // What's missing on a given batch row? Category, Type, and Size are the
 // three hard-required columns (mirrors AddItem.getMissingRequiredFields).
 // Brand is optional. Returns labels in display order so the row caption
@@ -253,7 +262,11 @@ export default function BatchReview({
         brand:              it.fields.brand ? String(it.fields.brand).trim().slice(0, 80) || null : null,
         condition:          null,
         priority:           null,
-        season:             null,
+        // Season comes from either the model's inference (BatchRow surfaces
+        // it as a select pre-filled with that value) or the user's manual
+        // edit. Empty string → null so the DB check constraint is satisfied
+        // (it allows null but rejects '').
+        season:             it.fields.season || null,
         quantity:           1,
         notes:              null,
         inventory_status:   'owned',
@@ -654,6 +667,28 @@ function BatchRow({
               onChange={(e) => onChange(item.id, 'brand', e.target.value)}
               disabled={disabled}
             />
+          </label>
+
+          {/* Season — fifth verifiable field (added 2026-05-05). The
+              scanner's garment shot is the right input for this; tag-only
+              scans usually return null which renders the "Pick one…"
+              placeholder. Empty string maps to null on save. */}
+          <label className={styles.rowLabel}>
+            <span className={styles.rowLabelText}>
+              Season
+              {confidence?.season === 'low' && <span className={styles.verifyBadge}>Verify</span>}
+            </span>
+            <select
+              className={`${styles.rowInput} ${verifyClass('season')}`}
+              value={fields.season || ''}
+              onChange={(e) => onChange(item.id, 'season', e.target.value)}
+              disabled={disabled}
+            >
+              <option value="">Pick one…</option>
+              {SEASON_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
           </label>
         </div>
 

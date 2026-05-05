@@ -53,12 +53,13 @@ const CONDITION_LABEL = {
   worn: 'Worn',
 }
 
+// Season values match the new warm/cold/all-season axis (migration 035,
+// 2026-05-05). Old spring/summer/fall/winter values were backfilled to
+// warm_weather or cold_weather; this map only needs the three keys now.
 const SEASON_LABEL = {
-  spring: 'Spring',
-  summer: 'Summer',
-  fall: 'Fall',
-  winter: 'Winter',
-  all_season: 'All-season',
+  warm_weather: 'Warm weather',
+  cold_weather: 'Cold weather',
+  all_season:   'All-season',
 }
 
 const PRIORITY_LABEL = {

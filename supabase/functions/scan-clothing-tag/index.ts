@@ -28,13 +28,15 @@
 //       "brand":      string | null,
 //       "size_label": "0-3M" | "3-6M" | "6-9M" | "9-12M" | "12-18M" | "18-24M" | null,
 //       "category":   <CATEGORY enum> | null,
-//       "item_type":  <SLOT_ID enum>   | null
+//       "item_type":  <SLOT_ID enum>   | null,
+//       "season":     "warm_weather" | "cold_weather" | "all_season" | null
 //     },
 //     "confidence": {
 //       "brand":      "high" | "medium" | "low" | null,
 //       "size_label": "high" | "medium" | "low" | null,
 //       "category":   "high" | "medium" | "low" | null,
-//       "item_type":  "high" | "medium" | "low" | null
+//       "item_type":  "high" | "medium" | "low" | null,
+//       "season":     "high" | "medium" | "low" | null
 //     },
 //     "raw": <the model's raw JSON, for debugging — may be dropped later>,
 //     "quota": { "used": number, "limit": number }
@@ -82,6 +84,14 @@ const CATEGORIES = [
 
 const SIZES = ['0-3M', '3-6M', '6-9M', '9-12M', '12-18M', '18-24M'] as const
 
+// Season axis matches the frontend post-migration-035: warm/cold/all,
+// not the original spring/summer/fall/winter four-seasons. The garment
+// photo (when present) is the right signal for this — sleeve length,
+// fabric weight, exposure to weather. We deliberately keep this
+// short-list small so the model isn't picking between "early fall" and
+// "late fall" type distinctions that don't matter for parenting.
+const SEASONS = ['warm_weather', 'cold_weather', 'all_season'] as const
+
 const SLOT_IDS = [
   'bodysuits', 'day_tops',
   'one_pieces',
@@ -110,6 +120,11 @@ Return ONLY a single JSON object with these keys:
 - size_label: one of ${SIZES.map(s => `"${s}"`).join(', ')}, mapped from what the tag says (e.g. "3M" or "3 months" → "0-3M"; "6M" or "6 months" → "3-6M"; "9M" or "9 months" → "6-9M"; "12M" or "12 months" → "9-12M"; "18M" → "12-18M"; "24M" or "2T" → "18-24M"). If the tag shows a range that spans two bands, pick the lower one. Use null if no size is readable.
 - category: one of ${CATEGORIES.map(c => `"${c}"`).join(', ')}, inferred from the garment visible in the image. Use null if you can't tell.
 - item_type: one of ${SLOT_IDS.map(s => `"${s}"`).join(', ')}, the most specific slot that fits. Must be consistent with the chosen category. Use null if unsure.
+- season: one of ${SEASONS.map(s => `"${s}"`).join(', ')}, inferred from the visible garment (sleeve length, fabric weight, lining, layering, exposure to weather). Use the wider garment shot for this if it's available; the close-up tag photo usually doesn't give enough garment context. Rules of thumb:
+  - "warm_weather": short sleeves, thin lightweight cotton, shorts, sleeveless, summer hats, swim things, sandals.
+  - "cold_weather": long sleeves with heavy fabric (fleece, sherpa, knit), padded jackets, snowsuits, winter hats and mittens, boots, lined sleepers.
+  - "all_season": items genuinely worn year-round — basic socks, plain bibs, burp cloths, indoor sleep sacks, plain bodysuits worn under or alone depending on season.
+  Use null when you only have a tag photo, when the fabric weight is ambiguous, or when the garment isn't clearly visible. Don't guess between warm and cold from light visual cues alone.
 
 Descriptor hints for baby clothing terminology (these words are used colloquially in infant apparel, not literally):
 - "ONESIE" or "BODYSUIT" → category "tops_and_bodysuits", item_type "bodysuits". A onesie in baby clothing is a snap-crotch short-sleeve top, not a full-body one-piece.
@@ -125,7 +140,7 @@ Alongside the four field keys, return a fifth key "confidence" — an object wit
 - If a field value is null, its confidence must also be null.
 
 Example shape (values are placeholders to show the format — do NOT pattern-match to "ExampleBrand" or assume real responses look like this):
-{"brand":"ExampleBrand","size_label":"0-3M","category":"tops_and_bodysuits","item_type":"bodysuits","confidence":{"brand":"high","size_label":"medium","category":"high","item_type":"high"}}
+{"brand":"ExampleBrand","size_label":"0-3M","category":"tops_and_bodysuits","item_type":"bodysuits","season":"warm_weather","confidence":{"brand":"high","size_label":"medium","category":"high","item_type":"high","season":"medium"}}
 
 Do not include any prose, markdown, or code fences. Return the JSON object and nothing else. Prefer null over a low-confidence guess. For brand specifically: prefer null over a guess at a similar-looking common brand.`
 
@@ -134,6 +149,7 @@ type Fields = {
   size_label: string | null
   category: string | null
   item_type: string | null
+  season: string | null
 }
 
 type Confidence = 'high' | 'medium' | 'low' | null
@@ -143,6 +159,7 @@ type ConfidenceMap = {
   size_label: Confidence
   category:   Confidence
   item_type:  Confidence
+  season:     Confidence
 }
 
 const CONFIDENCE_LEVELS = new Set(['high', 'medium', 'low'])
@@ -159,7 +176,8 @@ function coerceFields(raw: any): Fields {
   const size_label = typeof raw?.size_label === 'string' && (SIZES as readonly string[]).includes(raw.size_label) ? raw.size_label : null
   const category   = typeof raw?.category   === 'string' && (CATEGORIES as readonly string[]).includes(raw.category) ? raw.category : null
   const item_type  = typeof raw?.item_type  === 'string' && (SLOT_IDS as readonly string[]).includes(raw.item_type) ? raw.item_type : null
-  return { brand, size_label, category, item_type }
+  const season     = typeof raw?.season     === 'string' && (SEASONS as readonly string[]).includes(raw.season) ? raw.season : null
+  return { brand, size_label, category, item_type, season }
 }
 
 // Whitelist confidence values and force the "null value ⇒ null confidence"
@@ -178,6 +196,7 @@ function coerceConfidence(rawConfidence: any, fields: Fields): ConfidenceMap {
     size_label: pick(fields.size_label, src.size_label),
     category:   pick(fields.category,   src.category),
     item_type:  pick(fields.item_type,  src.item_type),
+    season:     pick(fields.season,     src.season),
   }
 }
 

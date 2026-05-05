@@ -57,12 +57,13 @@ const CONDITION_LABEL = {
   worn: 'Worn',
 }
 
+// Season values match the new warm/cold/all-season axis (migration 035,
+// 2026-05-05). Old keys backfilled in the migration; this map only carries
+// the three new keys.
 const SEASON_LABEL = {
-  spring: 'Spring',
-  summer: 'Summer',
-  fall: 'Fall',
-  winter: 'Winter',
-  all_season: 'All-season',
+  warm_weather: 'Warm weather',
+  cold_weather: 'Cold weather',
+  all_season:   'All-season',
 }
 
 // Pick the most identifying primary label for a row + the supporting meta
