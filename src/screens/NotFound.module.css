@@ -1,0 +1,149 @@
+/* NotFound shares the visual system with Contact / About / Privacy / Terms.
+   Same nav + article + hero + section pattern. Kept as its own module
+   following the existing convention of one CSS module per screen. */
+
+.page {
+  background: var(--white);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 0.5px solid var(--gray-100);
+  background: var(--white);
+  position: relative;
+  z-index: 2;
+}
+.logo {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--gray-900);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+.loginBtn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  margin-right: -12px;
+  font-size: 13px;
+  color: var(--gray-600);
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+.article {
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 4rem 1.5rem;
+  font-family: var(--font-body);
+  color: var(--gray-900);
+  line-height: 1.6;
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 1.25rem;
+}
+.h1 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5.5vw, 40px);
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--gray-900);
+  margin: 0 0 1rem;
+}
+.h1 em {
+  font-style: italic;
+  color: var(--teal);
+}
+.lede {
+  font-size: 17px;
+  color: var(--gray-700, #3B3B38);
+  margin: 0 0 0.5rem;
+}
+.brokenUrl {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: var(--gray-400);
+  background: var(--gray-50, rgba(31, 36, 33, 0.04));
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-top: 0.5rem;
+  word-break: break-all;
+  max-width: 100%;
+}
+
+.actions {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+.primaryBtn {
+  min-height: 44px;
+  padding: 13px 22px;
+  background: var(--teal);
+  color: var(--teal-light);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.primaryBtn:hover {
+  opacity: 0.92;
+}
+.secondaryLinks {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 6px;
+}
+.secondaryLink {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--gray-600);
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-decoration: none;
+}
+.secondaryLink:hover {
+  color: var(--teal-dark);
+}

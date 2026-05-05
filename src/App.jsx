@@ -12,6 +12,7 @@ import About from './screens/About'
 import Contact from './screens/Contact'
 import Privacy from './screens/Privacy'
 import Terms from './screens/Terms'
+import NotFound from './screens/NotFound'
 import Signup from './screens/Signup'
 import Login from './screens/Login'
 import ResetPassword from './screens/ResetPassword'
@@ -29,6 +30,7 @@ import Admin from './screens/Admin'
 import IvyDecoration from './components/IvyDecoration'
 import LandingLayout from './components/LandingLayout'
 import TrialBanner from './components/TrialBanner'
+import ErrorBoundary from './components/ErrorBoundary'
 
 // Client-side admin allowlist — kept in sync with beta._admin_emails() in the
 // migration. Server is the source of truth; this lives client-side only so the
@@ -264,19 +266,32 @@ function AppRoutes() {
           HouseholdProvider/UpgradeGateProvider/TrialBanner. The Admin screen
           handles its own internal tabbing for visits/funnel/households. */}
       <Route path="/admin/*" element={<AdminGuard><Admin /></AdminGuard>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Catch-all 404. Replaces the previous silent <Navigate to="/">
+          which dropped users on the landing with no explanation. NotFound
+          tracks the bad URL via analytics + offers smart recovery links
+          based on auth state (authed users see /home/inventory/etc;
+          unauthed users see marketing surfaces). */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }
 
 export default function App() {
+  // ErrorBoundary wraps EVERYTHING — including AuthProvider — so a render
+  // throw anywhere in the tree (auth listener side-effects, RouterProvider
+  // internals, deep component bugs) gets caught and shown a graceful
+  // fallback instead of a white page. The boundary uses inline styles +
+  // window.location for navigation so it works even when CSS bundles or
+  // react-router's runtime is what failed.
   return (
-    <AuthProvider>
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <ScrollToTop />
-        <TrackPageViews />
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <ScrollToTop />
+          <TrackPageViews />
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
