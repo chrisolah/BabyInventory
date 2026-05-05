@@ -1,10 +1,15 @@
 import { supabase, currentSchema } from './supabase'
 
 function getSessionId() {
-  let sessionId = sessionStorage.getItem('ll_session_id')
+  // Brand-prefixed storage key. Was `ll_session_id` (Littleloop legacy);
+  // renamed 2026-05-05 ahead of soft launch. The rename costs existing
+  // session continuity (any open tab on the old key gets a new sessionId
+  // on next visit) — acceptable tradeoff post-prod-wipe with effectively
+  // zero real users yet.
+  let sessionId = sessionStorage.getItem('sl_session_id')
   if (!sessionId) {
     sessionId = crypto.randomUUID()
-    sessionStorage.setItem('ll_session_id', sessionId)
+    sessionStorage.setItem('sl_session_id', sessionId)
   }
   return sessionId
 }
