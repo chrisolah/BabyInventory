@@ -91,14 +91,31 @@ export const SLOTS = [
     label: 'Day tops',
     singular: 'Day top',
     category: 'tops_and_bodysuits',
-    keywords: ['t_shirt', 'tshirt', 'top', 'tee', 'shirt', 'sweater', 'cardigan', 'hoodie'],
+    // 'sweater'/'cardigan'/'hoodie' moved to the new sweaters slot below.
+    // day_tops keeps t-shirts, blouses, polos, and anything top-shaped that
+    // isn't a knit layering piece. fallback for the category stays here so
+    // free-text item_types that don't match elsewhere land sensibly.
+    keywords: ['t_shirt', 'tshirt', 'top', 'tee', 'shirt', 'blouse', 'polo'],
     hint: null,
     // Newborns wear bodysuits more than separates; day tops ramp up as
     // bodysuits taper. Aligned with external checklists (Babylist, Mom
     // Money Map, mommylabornurse 2026 audit) suggesting 4-7 in older sizes.
     recommended: 5,
     perAge: { '0-3M': 3, '3-6M': 4, '6-9M': 5, '9-12M': 5, '12-18M': 6, '18-24M': 6 },
-    fallback: true, // anything in tops_and_bodysuits that isn't a bodysuit
+    fallback: true, // anything in tops_and_bodysuits that isn't a bodysuit/sweater
+  },
+  {
+    id: 'sweaters',
+    label: 'Sweaters',
+    singular: 'Sweater',
+    category: 'tops_and_bodysuits',
+    keywords: ['sweater', 'cardigan', 'hoodie', 'pullover', 'fleece'],
+    hint: 'Layering pieces',
+    // Cold-weather skewed; recommended ramps slightly with age as toddlers
+    // start needing more layering options. Newborns mostly use bodysuits +
+    // sleep sacks for warmth, so 1 sweater there.
+    recommended: 2,
+    perAge: { '0-3M': 1, '3-6M': 2, '6-9M': 2, '9-12M': 3, '12-18M': 3, '18-24M': 3 },
   },
 
   // ── One-pieces ────────────────────────────────────────────────────────
@@ -133,6 +150,19 @@ export const SLOTS = [
     recommended: 5,
     fallback: true,
   },
+  {
+    id: 'overalls',
+    label: 'Overalls',
+    singular: 'Overalls', // pluralia tantum
+    category: 'bottoms',
+    keywords: ['overall', 'overalls', 'bib pant', 'dungaree'],
+    hint: 'Bottoms with bib',
+    // Overalls are functionally a bottom-with-bib (worn over a top), so
+    // they live under bottoms — distinct from one_pieces which are
+    // standalone garments. Newborns rarely wear them; toddlers do more.
+    recommended: 1,
+    perAge: { '0-3M': 0, '3-6M': 1, '6-9M': 1, '9-12M': 1, '12-18M': 2, '18-24M': 2 },
+  },
 
   // ── Dresses & skirts ──────────────────────────────────────────────────
   {
@@ -162,19 +192,43 @@ export const SLOTS = [
     perAge: { '0-3M': 5, '3-6M': 3, '6-9M': 2, '9-12M': 2, '12-18M': 1, '18-24M': 1 },
   },
   {
-    id: 'pajamas',
-    label: 'Pajamas',
-    singular: 'Pajamas', // pluralia tantum
+    id: 'footed_pajamas',
+    label: 'Footed pajamas',
+    singular: 'Footed pajamas', // pluralia tantum
     category: 'sleepwear',
-    keywords: ['sleepsuit', 'sleeper', 'pajama', 'pyjama', 'pj', 'nightgown'],
-    hint: 'Sleepsuits & 2-piece',
-    // Newborn need is highest (overnight blowouts cycle through pajamas
-    // fast); curve flattens after 6 months as fewer changes are needed.
-    // External checklists cluster at 4-6 across most ranges; previous 7
-    // for 3-6/6-9/9-12 was higher than consensus.
+    keywords: ['footed', 'sleeper', 'sleepsuit', 'footie', 'one piece pajama', 'one-piece pajama'],
+    hint: 'One-piece zip or snap',
+    // The dominant sleepwear slot for 0-12M. Counts mirror the previous
+    // single 'pajamas' slot's curve since footed PJs are what most parents
+    // were tracking under that label. Slight taper at 12-18M as 2-piece
+    // sets enter rotation. Stays as the category fallback.
     recommended: 5,
-    perAge: { '0-3M': 6, '3-6M': 6, '6-9M': 5, '9-12M': 5, '12-18M': 5, '18-24M': 4 },
+    perAge: { '0-3M': 6, '3-6M': 6, '6-9M': 5, '9-12M': 5, '12-18M': 4, '18-24M': 3 },
     fallback: true,
+  },
+  {
+    id: 'two_piece_pajamas',
+    label: '2-piece pajamas',
+    singular: '2-piece pajamas', // pluralia tantum
+    category: 'sleepwear',
+    keywords: ['two piece pajama', '2 piece', 'pj set', 'pajama set', 'pyjama set'],
+    hint: 'Top + bottom set',
+    // 2-piece sets enter rotation around 9-12M as kids start moving more
+    // and footed PJs get tight. Ramp up through 18-24M.
+    recommended: 2,
+    perAge: { '0-3M': 0, '3-6M': 0, '6-9M': 1, '9-12M': 2, '12-18M': 3, '18-24M': 3 },
+  },
+  {
+    id: 'sleep_gowns',
+    label: 'Sleep gowns',
+    singular: 'Sleep gown',
+    category: 'sleepwear',
+    keywords: ['sleep gown', 'nightgown', 'sleeper gown', 'baby gown'],
+    hint: 'Newborn nightgown',
+    // Newborn-only essentially — bottom-open gowns make diaper changes
+    // easier in the first months. Drops to zero by 6M.
+    recommended: 0,
+    perAge: { '0-3M': 2, '3-6M': 1, '6-9M': 0, '9-12M': 0, '12-18M': 0, '18-24M': 0 },
   },
 
   // ── Outerwear ─────────────────────────────────────────────────────────
@@ -188,14 +242,45 @@ export const SLOTS = [
     recommended: 1,
   },
   {
-    id: 'jackets',
-    label: 'Jackets',
-    singular: 'Jacket',
+    id: 'light_jackets',
+    label: 'Light jackets',
+    singular: 'Light jacket',
     category: 'outerwear',
-    keywords: ['jacket', 'coat', 'snowsuit', 'parka'],
-    hint: null,
-    recommended: 2,
+    keywords: ['jacket', 'fleece jacket', 'denim jacket', 'spring jacket', 'windbreaker'],
+    hint: 'Spring/fall layers',
+    // Replaced the catch-all 'jackets' slot with three more specific
+    // outerwear slots (Tier 1 audit, 2026-05-05). Light jackets are the
+    // most-owned of the three; one is enough for most ages, two for older
+    // toddlers who go through more wear-and-tear.
+    recommended: 1,
+    perAge: { '0-3M': 1, '3-6M': 1, '6-9M': 1, '9-12M': 1, '12-18M': 2, '18-24M': 2 },
     fallback: true,
+  },
+  {
+    id: 'winter_coats',
+    label: 'Winter coats',
+    singular: 'Winter coat',
+    category: 'outerwear',
+    keywords: ['parka', 'winter coat', 'puffer', 'puffy', 'down'],
+    hint: 'Heavy outerwear',
+    // Newborns mostly skip a true winter coat (snowsuits + car-seat covers
+    // do the job); from 3M onward one is the standard recommendation.
+    recommended: 1,
+    perAge: { '0-3M': 0, '3-6M': 1, '6-9M': 1, '9-12M': 1, '12-18M': 1, '18-24M': 1 },
+  },
+  {
+    id: 'snowsuits',
+    label: 'Snowsuits',
+    singular: 'Snowsuit',
+    category: 'outerwear',
+    keywords: ['snowsuit', 'bunting', 'snow suit'],
+    hint: 'One-piece for snow',
+    // Climate-dependent and household-dependent — many parents in mild
+    // climates own zero. We default recommended=0 and let the perAge
+    // express "1 is reasonable for cold-climate kids 3M+" without
+    // pressuring everyone toward owning one.
+    recommended: 0,
+    perAge: { '0-3M': 0, '3-6M': 1, '6-9M': 1, '9-12M': 1, '12-18M': 1, '18-24M': 1 },
   },
 
   // ── Footwear ──────────────────────────────────────────────────────────
@@ -214,7 +299,10 @@ export const SLOTS = [
     label: 'Shoes / booties',
     singular: 'Shoe / bootie',
     category: 'footwear',
-    keywords: ['shoe', 'bootie', 'boot', 'sandal'],
+    // 'boot' moved to the dedicated boots slot. Shoes covers everything
+    // that isn't a boot or a sock — sneakers, sandals, mary janes, dress
+    // shoes, soft-soled booties for pre-walkers.
+    keywords: ['shoe', 'bootie', 'sandal', 'sneaker'],
     hint: null,
     // Pre-walking (typically pre-9 months), babies don't really need shoes;
     // a single pair of soft-soled booties for warmth covers it. Walking
@@ -223,16 +311,44 @@ export const SLOTS = [
     perAge: { '0-3M': 1, '3-6M': 1, '6-9M': 1, '9-12M': 2, '12-18M': 3, '18-24M': 3 },
     fallback: true,
   },
+  {
+    id: 'boots',
+    label: 'Boots',
+    singular: 'Boot',
+    category: 'footwear',
+    keywords: ['boot', 'snow boot', 'rain boot', 'winter boot'],
+    hint: 'Rain & winter',
+    // Boots come into rotation once kids walk regularly (~12M). Pre-
+    // walking babies don't really need them. Two boots in 18-24M covers
+    // separate rain + winter pairs.
+    recommended: 1,
+    perAge: { '0-3M': 0, '3-6M': 0, '6-9M': 0, '9-12M': 1, '12-18M': 1, '18-24M': 2 },
+  },
 
   // ── Accessories ───────────────────────────────────────────────────────
   {
-    id: 'hats',
-    label: 'Hats',
-    singular: 'Hat',
+    id: 'warm_hats',
+    label: 'Warm hats',
+    singular: 'Warm hat',
     category: 'accessories',
-    keywords: ['hat', 'beanie', 'cap', 'bonnet'],
-    hint: 'Sun + warm',
-    recommended: 3,
+    keywords: ['beanie', 'knit cap', 'winter hat', 'fleece hat', 'pom hat'],
+    hint: 'Beanies & knit caps',
+    // Replaces the catch-all 'hats' slot (Tier 1, 2026-05-05). Newborns
+    // need extra warm hats because of head-cooling — one or two come home
+    // from the hospital. Older babies are mostly down to one good beanie.
+    recommended: 1,
+    perAge: { '0-3M': 2, '3-6M': 1, '6-9M': 1, '9-12M': 1, '12-18M': 1, '18-24M': 1 },
+  },
+  {
+    id: 'sun_hats',
+    label: 'Sun hats',
+    singular: 'Sun hat',
+    category: 'accessories',
+    keywords: ['sun hat', 'baseball cap', 'cap', 'bucket hat', 'brimmed', 'bonnet'],
+    hint: 'Brimmed UV protection',
+    // Includes baseball caps — they're functionally sun-protection on
+    // babies, not a fashion item. One sun hat covers most households.
+    recommended: 1,
   },
   {
     id: 'mittens',
@@ -267,6 +383,19 @@ export const SLOTS = [
     hint: null,
     recommended: 6,
     perAge: { '0-3M': 6, '3-6M': 6, '6-9M': 5, '9-12M': 4, '12-18M': 2, '18-24M': 2 },
+  },
+  {
+    id: 'hair_accessories',
+    label: 'Hair accessories',
+    singular: 'Hair accessory',
+    category: 'accessories',
+    keywords: ['headband', 'bow', 'hair tie', 'barrette', 'clip', 'hair clip'],
+    hint: 'Headbands, bows, clips',
+    // Girls-skewed; default recommended is low because boys' households
+    // don't need this slot. Counts bump slightly with age as toddlers
+    // accumulate variety.
+    recommended: 1,
+    perAge: { '0-3M': 1, '3-6M': 1, '6-9M': 1, '9-12M': 1, '12-18M': 2, '18-24M': 2 },
   },
 
   // ── Swimwear ──────────────────────────────────────────────────────────
