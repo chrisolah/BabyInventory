@@ -1,0 +1,161 @@
+/* Terms shares the privacy/about visual system. Kept as a near-duplicate of
+   Privacy.module.css for parity with Contact.module.css /
+   About.module.css — these legal pages stay layout-twins on purpose. */
+
+.page {
+  background: var(--white);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 0.5px solid var(--gray-100);
+  background: var(--white);
+  position: relative;
+  z-index: 2;
+}
+.logo {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--gray-900);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+.loginBtn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  margin-right: -12px;
+  font-size: 13px;
+  color: var(--gray-600);
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+.article {
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 2.5rem 1.5rem 4rem;
+  font-family: var(--font-body);
+  color: var(--gray-900);
+  line-height: 1.6;
+}
+
+.hero {
+  margin-bottom: 2.5rem;
+}
+.eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 1.25rem;
+}
+.h1 {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 6vw, 48px);
+  font-weight: 500;
+  line-height: 1.15;
+  color: var(--gray-900);
+  margin: 0 0 1rem;
+}
+.h1 em {
+  font-style: italic;
+  color: var(--teal);
+}
+.lede {
+  font-size: 18px;
+  color: var(--gray-700, #3B3B38);
+  margin: 0 0 0.75rem;
+}
+.updated {
+  font-size: 13px;
+  color: var(--gray-400);
+  font-style: italic;
+}
+
+.section {
+  margin-bottom: 2.25rem;
+  padding-top: 1.5rem;
+  border-top: 0.5px solid var(--gray-100);
+}
+.section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+.section p {
+  font-size: 16px;
+  color: var(--gray-900);
+  margin: 0 0 1rem;
+}
+.section p:last-child {
+  margin-bottom: 0;
+}
+.section strong {
+  font-weight: 500;
+  color: var(--gray-900);
+}
+.h2 {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 3vw, 24px);
+  font-weight: 500;
+  color: var(--gray-900);
+  margin: 0 0 1rem;
+  letter-spacing: -0.005em;
+}
+.h3 {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 1.25rem 0 0.5rem;
+  letter-spacing: 0;
+}
+
+.list {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0 0 1rem;
+}
+.list li {
+  font-size: 16px;
+  color: var(--gray-900);
+  margin-bottom: 0.5rem;
+  line-height: 1.55;
+}
+.list li:last-child {
+  margin-bottom: 0;
+}
+.list li strong {
+  font-weight: 500;
+}
+
+.inlineLink {
+  color: var(--teal-dark);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.inlineLink:hover {
+  color: var(--teal);
+}

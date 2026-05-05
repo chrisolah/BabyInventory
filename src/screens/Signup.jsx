@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { track, getSessionId } from '../lib/analytics'
 import MarketingFooter from '../components/MarketingFooter'
@@ -67,6 +67,13 @@ export default function Signup() {
       session_id: getSessionId(),
       acquisition_source: new URLSearchParams(window.location.search).get('utm_source') || 'direct',
       acquisition_medium: new URLSearchParams(window.location.search).get('utm_medium') || null,
+      // Terms + Privacy acceptance timestamp. The signup form shows a notice
+      // directly under the submit button ("By creating your account, you
+      // agree to..."), so the act of submitting IS the act of consent. We
+      // stamp the timestamp on every signup as the durable record of when
+      // that consent moment happened. (Browsewrap-with-notice rather than
+      // clickwrap with a checkbox — see Chris's call 2026-05-05.)
+      terms_accepted_at: new Date().toISOString(),
     }
   }
 
@@ -340,6 +347,23 @@ export default function Signup() {
               ? 'Create account'
               : 'Email me a code'}
           </button>
+
+          {/* Terms + Privacy notice. Sits directly under the submit button
+              so the user reads it in the same glance as the action label.
+              The act of submitting IS the act of consent (browsewrap-with-
+              notice pattern). Both links open in a new tab so the in-
+              progress signup form isn't wiped by same-tab navigation. */}
+          <p className={styles.termsNotice}>
+            By creating your account, you agree to the{' '}
+            <Link to="/terms" target="_blank" rel="noopener" className={styles.termsLink}>
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" target="_blank" rel="noopener" className={styles.termsLink}>
+              Privacy Policy
+            </Link>
+            .
+          </p>
         </form>
 
         <div className={styles.footer}>

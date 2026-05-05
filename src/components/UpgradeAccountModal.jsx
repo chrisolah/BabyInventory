@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { track } from '../lib/analytics'
 import styles from './UpgradeAccountModal.module.css'
@@ -55,9 +56,16 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
     setLoading(true)
     setError(null)
 
+    // Trial users converted via this modal go through their first Terms +
+    // Privacy acceptance moment HERE — there's no separate Signup form for
+    // them. The notice text below the primary button surfaces what they're
+    // agreeing to; the act of clicking Create account is the consent. We
+    // stamp termsAcceptedAt on every conversion so the consent moment is
+    // durably recorded on auth.users.raw_user_meta_data.
     const { error: upErr } = await upgradeAccount({
       email: trimmedEmail,
       password: trimmedPassword,
+      termsAcceptedAt: new Date().toISOString(),
     })
     setLoading(false)
 
@@ -154,6 +162,22 @@ export default function UpgradeAccountModal({ onSuccess, onDismiss }) {
               {loading ? 'Saving…' : 'Create account'}
             </button>
           </div>
+
+          {/* Terms + Privacy notice. Browsewrap-with-notice pattern: tapping
+              Create account is the act of consent; this surfaces what the
+              user is agreeing to. Both links open in a new tab so the in-
+              progress upgrade form isn't lost on same-tab navigation. */}
+          <p className={styles.termsNotice}>
+            By creating your account, you agree to the{' '}
+            <Link to="/terms" target="_blank" rel="noopener" className={styles.termsLink}>
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" target="_blank" rel="noopener" className={styles.termsLink}>
+              Privacy Policy
+            </Link>
+            .
+          </p>
         </form>
       </div>
     </div>
