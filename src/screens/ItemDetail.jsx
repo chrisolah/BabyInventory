@@ -93,6 +93,13 @@ export default function ItemDetail() {
   // PostgREST would need an explicit relationship setup for an embed.
   const [batchInfo, setBatchInfo] = useState(null) // { id, reference_code } | null
 
+  // Garment photo signed URL. Resolved alongside the item load when
+  // garment_photo_path is set. URL expires after 1 hour; users who keep
+  // ItemDetail open longer would see a broken image until refresh —
+  // acceptable for v1. Falls back to null when no photo exists or the
+  // signing call fails (UI hides the photo block in either case).
+  const [garmentSignedUrl, setGarmentSignedUrl] = useState(null)
+
   // ── Load the item ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!user || !id) return
@@ -114,6 +121,26 @@ export default function ItemDetail() {
         return
       }
       setItem(data || null)
+
+      // Resolve the garment photo signed URL when the column is set.
+      // Single signing call per item — fast enough that we don't bother
+      // batching with the next fetch. Errors degrade silently to no
+      // photo block (logged so a flaky bucket issue is debuggable).
+      if (data?.garment_photo_path) {
+        const { data: signed, error: signErr } = await supabase.storage
+          .from('garment-photos')
+          .createSignedUrl(data.garment_photo_path, 60 * 60)
+        if (cancelled) return
+        if (signErr) {
+          // eslint-disable-next-line no-console
+          console.warn('garment signed URL failed', signErr)
+          setGarmentSignedUrl(null)
+        } else {
+          setGarmentSignedUrl(signed?.signedUrl || null)
+        }
+      } else {
+        setGarmentSignedUrl(null)
+      }
 
       // If the item is packed in a batch, grab the reference_code so the
       // UI can show it + link to the batch. If the batch has been deleted
@@ -175,6 +202,28 @@ export default function ItemDetail() {
     if (!item || working) return
     setWorking(true)
     setActionError(null)
+
+    // Cascade-delete the garment photo from storage if one exists.
+    // Best-effort: a failure to remove the object doesn't block the
+    // row delete (we'd rather honor the user's "delete this" intent
+    // than refuse because of a storage hiccup), but logged so any
+    // bucket-level issue is debuggable. Done BEFORE the row delete
+    // so we still have the path on hand and the user's session
+    // matches the path's household for the RLS check.
+    if (item.garment_photo_path) {
+      try {
+        const { error: storageErr } = await supabase.storage
+          .from('garment-photos')
+          .remove([item.garment_photo_path])
+        if (storageErr) {
+          // eslint-disable-next-line no-console
+          console.warn('garment photo delete failed', storageErr)
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn('garment photo delete threw', e)
+      }
+    }
 
     const { error: delErr } = await supabase
       .schema(currentSchema)
@@ -435,7 +484,20 @@ export default function ItemDetail() {
                 pill, then a compact grid of every other field. */}
             <section className={styles.summary}>
               <div className={styles.summaryTop}>
-                <div className={styles.itemThumb} aria-hidden="true" />
+                {/* Thumb slot. When the row has a stored garment photo
+                    we render it as the visual identity for the item;
+                    otherwise the slot stays as the empty placeholder
+                    block (which is what shipped pre-Phase-2). */}
+                {garmentSignedUrl ? (
+                  <img
+                    src={garmentSignedUrl}
+                    alt=""
+                    className={`${styles.itemThumb} ${styles.itemThumbPhoto}`}
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <div className={styles.itemThumb} aria-hidden="true" />
+                )}
                 <div className={styles.summaryText}>
                   <div className={styles.summaryName}>{displayName}</div>
                   <div className={styles.summaryMeta}>{typeLabel}</div>

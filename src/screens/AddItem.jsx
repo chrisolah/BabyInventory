@@ -166,6 +166,12 @@ export default function AddItem() {
   // filled in N fields — confirm below and save" banner so the user knows
   // why the form looks different. Reset on mount; not persisted.
   const [scanFilledCount, setScanFilledCount] = useState(0)
+  // Captured garment photo from the most recent scan, as a data URL.
+  // Held here so the create path can upload it on save and write the
+  // resulting bucket path into garment_photo_path. Edit mode doesn't
+  // currently surface a way to update the photo (Phase 3 polish), so
+  // this only matters for new rows. Reset on mount; not persisted.
+  const [pendingGarmentDataUrl, setPendingGarmentDataUrl] = useState(null)
   // Set of field names (one of 'category' | 'item_type' | 'size_label' |
   // 'brand') that the scanner returned with LOW confidence and the user
   // has not yet touched. Each becomes a small "verify" badge next to the
@@ -324,7 +330,14 @@ export default function AddItem() {
   // Second argument `confidence` is per-field "high"|"medium"|"low"|null.
   // Only "low" values get flagged for user review. Medium is quiet —
   // visually crying wolf on every scan erodes trust in the warning.
-  function onScanResult(fields, confidence) {
+  //
+  // Third argument carries the captured photo data URLs. We hold onto
+  // the garment one in state so the create path's INSERT can upload it
+  // and write the resulting bucket path into garment_photo_path. The
+  // tag close-up isn't stored — it was only ever for OCR. Re-scanning
+  // overwrites the buffered garment, which mirrors the rest of the
+  // progressive-refinement semantic (later scans win).
+  function onScanResult(fields, confidence, photos) {
     if (!fields) return
     let filled = 0
     const nextLowConf = new Set()
@@ -360,6 +373,9 @@ export default function AddItem() {
 
     setScanFilledCount(filled)
     setLowConfFields(nextLowConf)
+    if (photos?.garmentDataUrl) {
+      setPendingGarmentDataUrl(photos.garmentDataUrl)
+    }
     // tagScanCompleted is fired by TagScanner itself (with the richer
     // duration/confidence/quota payload). Don't double-fire here.
   }
@@ -437,12 +453,47 @@ export default function AddItem() {
         // The "unassigned / shared" semantic is deliberate — it matches how we
         // filter (null baby_id shows under every specific baby) so there's a
         // single mental model for how null is treated.
+        //
+        // We pre-generate the row id client-side so the garment photo (when
+        // we have one buffered from a recent scan) can upload to a path
+        // keyed on the new id BEFORE the INSERT writes that path back. Same
+        // pattern as BatchReview. Failed photo upload degrades silently —
+        // the row still saves, just without garment_photo_path set.
+        const itemId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+
+        let garmentPath = null
+        if (pendingGarmentDataUrl) {
+          try {
+            const blob = await fetch(pendingGarmentDataUrl).then(r => r.blob())
+            const path = `${household.id}/${itemId}.jpg`
+            const { error: upErr } = await supabase.storage
+              .from('garment-photos')
+              .upload(path, blob, {
+                contentType: blob.type || 'image/jpeg',
+                upsert: false,
+              })
+            if (upErr) {
+              // eslint-disable-next-line no-console
+              console.warn('garment upload failed in single-mode create', upErr)
+            } else {
+              garmentPath = path
+            }
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn('garment upload threw in single-mode create', e)
+          }
+        }
+
         const row = {
+          id: itemId,
           household_id: household.id,
           baby_id: currentBaby?.id ?? null,
           ...fields,
           inventory_status: mode,
           name: null, // Reserved for the parent-supplied nickname; not collected yet.
+          garment_photo_path: garmentPath,
         }
 
         const { error: insertErr } = await supabase
