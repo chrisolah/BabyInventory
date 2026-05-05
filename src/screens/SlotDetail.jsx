@@ -35,6 +35,7 @@ export default function SlotDetail() {
   const { ageRange, slotId } = useParams()
   const {
     household,
+    babies,
     selectedBabyId,
     loading: householdLoading,
     error: householdError,
@@ -96,14 +97,19 @@ export default function SlotDetail() {
     [items, selectedBabyId],
   )
 
+  // "All babies" view scales targets by baby count — same convention as
+  // Inventory's Wish list tab, so the two pages agree about the
+  // recommended number for any selection.
+  const coverageBabyCount = selectedBabyId === 'all' ? Math.max(1, (babies || []).length) : 1
+
   // Reuse computeCoverage and pick out the row for this slot — keeps the
   // mapping logic in one place and ensures the slot detail screen agrees
   // with the main Wish list tab about "how many do I have."
   const row = useMemo(() => {
     if (!slot || !ageRangeValid) return null
-    const all = computeCoverage(babyFilteredItems, ageRange)
+    const all = computeCoverage(babyFilteredItems, ageRange, coverageBabyCount)
     return all.find(r => r.slot.id === slot.id) || null
-  }, [babyFilteredItems, slot, ageRange, ageRangeValid])
+  }, [babyFilteredItems, slot, ageRange, ageRangeValid, coverageBabyCount])
 
   useEffect(() => {
     if (!slot || !ageRangeValid || !row) return
