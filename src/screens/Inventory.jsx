@@ -659,7 +659,22 @@ export default function Inventory() {
 
   useEffect(() => {
     let t = null
+    // Track width across resizes so we can ignore pure-height transitions.
+    // Mobile Chrome and Safari both collapse/expand the URL bar as the user
+    // scrolls, which fires window 'resize' events even though nothing the
+    // user cares about changed. If we let those re-run the auto-fit
+    // measurement, the user's manually-expanded category gets reset every
+    // time the URL bar transitions (the effect resets ownedCollapsed →
+    // measures → re-collapses everything), with a one-frame "everything
+    // expanded" flash in between that reads as the UI shaking. Real layout
+    // changes (orientation flip, desktop window drag) DO change width, so
+    // gating on width preserves the auto-fit semantic for the cases that
+    // actually need it.
+    let lastWidth = typeof window !== 'undefined' ? window.innerWidth : 0
     function onResize() {
+      const nextWidth = window.innerWidth
+      if (nextWidth === lastWidth) return
+      lastWidth = nextWidth
       // Debounce — resize events can fire many times per second on drag.
       clearTimeout(t)
       t = setTimeout(() => {
