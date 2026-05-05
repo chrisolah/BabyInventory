@@ -69,7 +69,7 @@ export default function About() {
           </h1>
           <p className={styles.lede}>
             I'm Chris. I'm building Sprigloop in evenings and on weekends from
-            Detroit, while my partner and I get ready for our first kid. A boy
+            Detroit, while my wife and I get ready for our first kid. A boy
             we're calling Roo.
           </p>
         </header>
