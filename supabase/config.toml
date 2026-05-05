@@ -46,6 +46,51 @@ verify_jwt = false
 [functions.send-email-outbox]
 verify_jwt = false
 
+# ── Auth ────────────────────────────────────────────────────────────────────
+# Project-level auth settings. This block exists primarily so `supabase
+# config push` REAFFIRMS these values rather than resetting them to CLI
+# defaults — if [auth] is missing, anonymous sign-ins flip off, the site
+# URL becomes localhost, and signup may turn off, breaking auth on a real
+# project. (This bit beta + prod on 2026-05-04; tools/safe-config-push.sh
+# now refuses to push when [auth] is missing.)
+#
+# Per-project values (site_url, redirect URLs) come from env vars that
+# the wrapper sets based on the beta/prod arg:
+#   SUPABASE_AUTH_SITE_URL         — origin of the Site URL field
+#   SUPABASE_AUTH_PRIMARY_URL_GLOB — primary redirect glob (e.g. "https://sprigloop.com/**")
+#   SUPABASE_AUTH_PREVIEW_URL_GLOB — preview/wildcard redirect glob, or empty
+# Shared values (anon, password length, OTP, etc.) are committed inline
+# below. Don't push from a shell that doesn't set those env vars; the
+# wrapper handles it for `beta` and `prod`.
+
+[auth]
+enabled = true
+site_url = "env(SUPABASE_AUTH_SITE_URL)"
+additional_redirect_urls = [
+  "http://localhost:5173/**",
+  "env(SUPABASE_AUTH_PRIMARY_URL_GLOB)",
+  "env(SUPABASE_AUTH_PREVIEW_URL_GLOB)",
+]
+jwt_expiry = 3600
+enable_signup = true
+enable_anonymous_sign_ins = true
+enable_manual_linking = false
+minimum_password_length = 8
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+# enable_confirmations MUST stay false — the anon-trial conversion flow
+# in useAuth.upgradeAccount calls supabase.auth.updateUser({ email,
+# password }) and expects the email to flip live without a confirmation
+# round trip. Turning this on would break that flow. See
+# project_anonymous_trial_signup memory.
+enable_confirmations = false
+secure_password_change = false
+otp_length = 6
+otp_expiry = 600
+max_frequency = "1s"
+
 # ── Auth email templates ────────────────────────────────────────────────────
 # Brand-styled HTML for the five Supabase auth emails. Pushed to remote
 # projects via `supabase config push --project-ref <ref>`. Source HTML lives
