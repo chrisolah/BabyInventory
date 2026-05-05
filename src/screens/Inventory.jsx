@@ -717,10 +717,15 @@ export default function Inventory() {
   // Coverage math runs on the baby-filtered set, so switching to Roo shows
   // Roo's coverage (with shared items counted toward him) rather than the
   // whole household's aggregate.
+  // "All babies" view scales targets by baby count — each baby will pass
+  // through the size band, so 2 babies need 2x bodysuits etc. Single-baby
+  // views (or households with one baby) leave it at 1x.
+  const coverageBabyCount = selectedBabyId === 'all' ? Math.max(1, babies.length) : 1
+
   const coverage = useMemo(() => {
     if (!selectedAgeRange) return []
-    return computeCoverage(babyFilteredItems, selectedAgeRange)
-  }, [babyFilteredItems, selectedAgeRange])
+    return computeCoverage(babyFilteredItems, selectedAgeRange, coverageBabyCount)
+  }, [babyFilteredItems, selectedAgeRange, coverageBabyCount])
 
   const otherWishItems = useMemo(() => {
     if (!selectedAgeRange) return []
