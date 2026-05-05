@@ -1,5 +1,5 @@
 import { supabase, currentSchema } from './supabase'
-console.log('Analytics schema:', currentSchema)
+
 function getSessionId() {
   let sessionId = sessionStorage.getItem('ll_session_id')
   if (!sessionId) {
