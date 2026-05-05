@@ -57,12 +57,16 @@ const CONDITIONS = [
   { value: 'worn', label: 'Worn' },
 ]
 
+// Season axis collapsed from four meteorological seasons to the
+// functional warm/cold split parents actually shop on (sleeve length,
+// fabric weight, exposure to weather). 'all_season' kept as a separate
+// option for things genuinely worn year-round (basics, socks, hats).
+// Migration 035 (2026-05-05) backfills any old spring|summer rows to
+// warm_weather and old fall|winter rows to cold_weather.
 const SEASONS = [
-  { value: 'spring', label: 'Spring' },
-  { value: 'summer', label: 'Summer' },
-  { value: 'fall', label: 'Fall' },
-  { value: 'winter', label: 'Winter' },
-  { value: 'all_season', label: 'All-season' },
+  { value: 'warm_weather', label: 'Warm weather' },
+  { value: 'cold_weather', label: 'Cold weather' },
+  { value: 'all_season',   label: 'All-season' },
 ]
 
 const PRIORITIES = [
@@ -369,6 +373,16 @@ export default function AddItem() {
       setBrand(fields.brand.trim().slice(0, 80))
       filled += 1
       flagIfLow('brand', confidence?.brand)
+    }
+
+    // Season is optional but the scanner returns one when the garment
+    // photo gives a confident read. We pre-fill the form select if the
+    // value is in our enum; otherwise leave whatever the user already
+    // had so a re-scan doesn't blank a manually-set season.
+    if (fields.season && SEASONS.some(s => s.value === fields.season)) {
+      setSeason(fields.season)
+      filled += 1
+      flagIfLow('season', confidence?.season)
     }
 
     setScanFilledCount(filled)
@@ -773,12 +787,15 @@ export default function AddItem() {
           <div className={styles.formGroup}>
             <label className={styles.label} htmlFor="ai-season">
               Season <span className={styles.optional}>(optional)</span>
+              {lowConfFields.has('season') && (
+                <span className={styles.verifyBadge}>Verify</span>
+              )}
             </label>
             <select
               id="ai-season"
-              className={styles.input}
+              className={`${styles.input} ${lowConfFields.has('season') ? styles.inputVerify : ''}`}
               value={season}
-              onChange={e => setSeason(e.target.value)}
+              onChange={e => { setSeason(e.target.value); clearLowConfFlag('season') }}
             >
               <option value="">Not set</option>
               {SEASONS.map(s => (
