@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { useUpgradeGate } from '../contexts/UpgradeGateContext'
@@ -147,6 +147,19 @@ export default function BatchReview({
     )))
   }, [setItems])
 
+  // Bulk-confirm toggle. One tap flips every row to the same state — if
+  // anything is currently unconfirmed, confirm them all; if every row is
+  // already confirmed, unconfirm them all. The header checkbox reflects
+  // tri-state visually (all/some/none) via aria-checked + the indeterminate
+  // DOM property, but the click handler is binary because that's what
+  // users want from a "select all" affordance.
+  const toggleConfirmAll = useCallback(() => {
+    setItems((prev) => {
+      const allConfirmed = prev.length > 0 && prev.every((it) => it.confirmed)
+      return prev.map((it) => ({ ...it, confirmed: !allConfirmed }))
+    })
+  }, [setItems])
+
   // If the user trashes every row inline, fall through to the "nothing
   // to review" empty state. The empty-state CTA is "Scan more" because
   // bouncing back to the camera is the obvious next move.
@@ -167,6 +180,18 @@ export default function BatchReview({
     () => confirmedItems.filter((it) => missingFieldsFor(it.fields).length > 0).length,
     [confirmedItems],
   )
+
+  // Tri-state for the "Select all" header checkbox.
+  //   - 'all'   → every row confirmed (toggle will unconfirm all)
+  //   - 'none'  → no rows confirmed (toggle will confirm all)
+  //   - 'some'  → mixed (toggle will confirm all)
+  // Maps to aria-checked and the input's indeterminate DOM prop.
+  const allConfirmedState = useMemo(() => {
+    if (items.length === 0) return 'none'
+    if (items.every((it) => it.confirmed)) return 'all'
+    if (items.some((it) => it.confirmed)) return 'some'
+    return 'none'
+  }, [items])
 
   const canSave =
     !saving &&
@@ -417,22 +442,39 @@ export default function BatchReview({
           </button>
         </div>
       ) : (
-        <ul className={styles.list}>
-          {items.map((it) => (
-            <BatchRow
-              key={it.id}
-              item={it}
-              onChange={updateField}
-              onRemove={removeRow}
-              onConfirm={toggleConfirm}
-              onBabyChange={setBaby}
-              babies={babies}
-              defaultBabyId={defaultBabyId}
-              showBabyChip={showBabyChip}
-              disabled={saving}
-            />
-          ))}
-        </ul>
+        <>
+          {/* Bulk-confirm toggle bar. Single tap confirms or unconfirms
+              every row in the batch — eliminates the "tap 35 checkboxes
+              individually" pain point that surfaced during real catalog
+              testing. Tri-state visual: checked when all rows are
+              confirmed, indeterminate when some are, unchecked when
+              none. The button click delegates to toggleConfirmAll which
+              flips to "all on" unless everything is already confirmed,
+              in which case it flips to "all off". */}
+          <SelectAllBar
+            state={allConfirmedState}
+            count={items.length}
+            confirmedCount={confirmedItems.length}
+            onToggle={toggleConfirmAll}
+            disabled={saving}
+          />
+          <ul className={styles.list}>
+            {items.map((it) => (
+              <BatchRow
+                key={it.id}
+                item={it}
+                onChange={updateField}
+                onRemove={removeRow}
+                onConfirm={toggleConfirm}
+                onBabyChange={setBaby}
+                babies={babies}
+                defaultBabyId={defaultBabyId}
+                showBabyChip={showBabyChip}
+                disabled={saving}
+              />
+            ))}
+          </ul>
+        </>
       )}
 
       {saveError && (
@@ -471,6 +513,57 @@ export default function BatchReview({
         </footer>
       )}
     </div>
+  )
+}
+
+// Bulk-confirm bar above the list. Tri-state checkbox (all/some/none)
+// plus a label that summarises the current confirm count. The native
+// <input type="checkbox" indeterminate> requires DOM manipulation since
+// React doesn't expose `indeterminate` as a prop, hence the ref-driven
+// useEffect. aria-checked carries 'mixed' for the partial state so
+// assistive tech announces it correctly.
+function SelectAllBar({ state, count, confirmedCount, onToggle, disabled }) {
+  const checkboxRef = useRef(null)
+  useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate = state === 'some'
+    }
+  }, [state])
+
+  const labelText =
+    state === 'all'
+      ? `All ${count} confirmed — tap to clear`
+      : confirmedCount > 0
+        ? `${confirmedCount} of ${count} confirmed — tap to confirm all`
+        : `Confirm all ${count}`
+
+  return (
+    <label
+      className={`${styles.selectAllBar} ${disabled ? styles.selectAllBarDisabled : ''}`}
+    >
+      <input
+        ref={checkboxRef}
+        type="checkbox"
+        className={styles.selectAllCheckbox}
+        checked={state === 'all'}
+        aria-checked={state === 'some' ? 'mixed' : state === 'all' ? 'true' : 'false'}
+        onChange={onToggle}
+        disabled={disabled}
+      />
+      <span className={styles.selectAllBox} aria-hidden="true">
+        {state === 'all' && (
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
+            <path d="M3.5 8.5 L6.5 11.5 L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+        {state === 'some' && (
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
+            <path d="M4 8 L12 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        )}
+      </span>
+      <span className={styles.selectAllLabel}>{labelText}</span>
+    </label>
   )
 }
 

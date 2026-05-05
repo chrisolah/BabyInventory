@@ -69,6 +69,84 @@
   cursor: not-allowed;
 }
 
+/* ── Select-all bar (above the list) ─────────────────────────────────
+   Sits flush against the list with the same horizontal padding so the
+   custom checkbox aligns to the per-row checkboxes below. Tap target
+   spans the entire bar (the <label> wraps everything), 44px tall to
+   meet the iOS HIG floor. */
+
+.selectAllBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 12px 0;
+  padding: 10px 12px;
+  min-height: 44px;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--gray-900);
+  font-family: var(--font-body);
+  user-select: none;
+}
+.selectAllBar:hover {
+  border-color: var(--gray-300);
+}
+.selectAllBarDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* The native checkbox is screen-reader-only (visually hidden but still
+   announced) — we render a styled .selectAllBox next to it to match
+   the row-level checkbox visual. */
+.selectAllCheckbox {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.selectAllBox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid var(--gray-300);
+  background: var(--white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+}
+/* When the hidden input is checked → fill the box teal + render the
+   white check inside it. The :checked + label-sibling selector fires
+   because the input is the bar's first child via DOM order. */
+.selectAllCheckbox:checked + .selectAllBox {
+  background: var(--teal);
+  border-color: var(--teal);
+}
+/* Indeterminate state → same fill + dash glyph. React sets the DOM
+   property; we mirror it visually via the [aria-checked="mixed"] sibling
+   selector since CSS has no :indeterminate pseudo for non-input
+   elements. */
+.selectAllCheckbox[aria-checked="mixed"] + .selectAllBox {
+  background: var(--teal);
+  border-color: var(--teal);
+}
+
+.selectAllLabel {
+  flex: 1;
+  font-weight: 500;
+}
+
 /* ── List ───────────────────────────────────────────────────────────── */
 
 .list {
