@@ -1,15 +1,26 @@
 // ============================================================================
 // scan-clothing-tag — Phase 1 photo-scan Edge Function
 // ============================================================================
-// Accepts a base64-encoded image of a clothing tag (or garment with tag in
-// frame), asks Claude Haiku to extract inventory fields, returns them as a
-// JSON payload for the client to drop into the AddItem form.
+// Accepts up to two base64-encoded images per item — a hangtag close-up
+// (best source for brand + size) and a wider garment shot (best source for
+// category + item_type). Either may be missing; at least one is required.
+// Asks Claude Haiku to extract inventory fields and returns them as a JSON
+// payload for the client to drop into the AddItem form.
 //
-// Shape of request body:
+// Shape of request body (current, two-photo):
 //   {
-//     "image_base64": "<raw base64, no data: URL prefix>",
-//     "mime_type":    "image/jpeg" | "image/png" | "image/webp"
+//     "tag":     { "image_base64": "<base64>", "mime_type": "image/jpeg" } | null,
+//     "garment": { "image_base64": "<base64>", "mime_type": "image/jpeg" } | null
 //   }
+//
+// Legacy shape still accepted for back-compat (any cached client tab still
+// in flight when the new edge bundle deploys):
+//   {
+//     "image_base64": "<base64>",
+//     "mime_type":    "image/jpeg"
+//   }
+// Treated as a tag-only payload — the legacy single image had a tag-shaped
+// guide and was tag-focused, so this preserves the prior calibration.
 //
 // Shape of success response (200):
 //   {
@@ -83,11 +94,16 @@ const SLOT_IDS = [
   'swimwear',
 ] as const
 
-// Prompt is tuned for a single image → JSON extraction task. We tell the
-// model exactly which enums are valid and to pick 'null' over guessing.
-// Everything we ask for is present on a typical baby-clothing hangtag or
-// care label: brand, size, and enough visual context to infer category.
-const SYSTEM_PROMPT = `You are extracting structured inventory fields from a photo of a baby clothing item or its tag.
+// Prompt is tuned for a 1-or-2 image → JSON extraction task. The user
+// message will declare which images are present and which role each plays
+// (a hangtag close-up vs. a wider garment shot), so this system prompt
+// stays role-agnostic and focuses on the field rules + enums + null-over-
+// guess discipline. Everything we ask for is present somewhere across the
+// pair: brand and size live on the tag; category and item_type live on
+// the visible garment.
+const SYSTEM_PROMPT = `You are extracting structured inventory fields from one or two photos of a baby clothing item.
+
+When two images are provided, the first is a close-up of the hangtag (use it as the primary source for brand and size_label) and the second is a wider shot of the whole garment (use it as the primary source for category and item_type). Either image may be missing; the user message will tell you which.
 
 Return ONLY a single JSON object with these keys:
 - brand: the brand name EXACTLY as printed on the tag, transcribed letter-by-letter from what you see in the image. CRITICAL: do not "correct" or "normalize" an unfamiliar brand name to a more common one. If the tag says "Pekkle", return "Pekkle" — not "Pampers" or any other similar-looking brand you may know. If the tag says "Gerber" return "Gerber". If you cannot confidently read the brand text from the image, return null. NEVER substitute a brand from your prior knowledge of common baby brands for what is actually printed. The user's small, indie, or store-label brands matter just as much as the big-name ones, and getting them wrong is worse than returning null.
@@ -214,18 +230,50 @@ Deno.serve(async (req) => {
   const userId = userData.user.id
 
   // ── Body ──────────────────────────────────────────────────────────────
+  // Two intake shapes are accepted (see header comment):
+  //   1. Current: { tag?: {image_base64, mime_type}, garment?: {image_base64, mime_type} }
+  //   2. Legacy:  { image_base64, mime_type }   → treated as tag-only
+  // At least one image must be present. Each is validated independently
+  // for mime + size; both are billed as one rate-limit slot since they
+  // map to a single Anthropic call.
   let body: any
   try { body = await req.json() } catch { return json(400, { error: 'invalid_json' }) }
 
-  const imageB64 = typeof body?.image_base64 === 'string' ? body.image_base64 : ''
-  const mime     = typeof body?.mime_type    === 'string' ? body.mime_type    : ''
+  type Photo = { image_base64: string; mime_type: string }
+  function readPhoto(raw: any): Photo | null {
+    if (!raw || typeof raw !== 'object') return null
+    const b64  = typeof raw.image_base64 === 'string' ? raw.image_base64 : ''
+    const m    = typeof raw.mime_type    === 'string' ? raw.mime_type    : ''
+    if (!b64 || !m) return null
+    return { image_base64: b64, mime_type: m }
+  }
 
-  if (!imageB64) return json(400, { error: 'missing_image_base64' })
-  if (!ALLOWED_MIME.has(mime)) return json(415, { error: 'unsupported_mime' })
+  let tag     = readPhoto(body?.tag)
+  let garment = readPhoto(body?.garment)
 
-  // base64 decoded size ≈ length * 3/4. Cheaper than actually decoding.
-  const approxBytes = Math.floor(imageB64.length * 3 / 4)
-  if (approxBytes > MAX_BYTES) return json(413, { error: 'image_too_large', bytes: approxBytes })
+  // Legacy single-image shape — flatten it into the tag slot. The pre-
+  // refactor camera UI was tag-focused, so this matches calibration.
+  if (!tag && !garment && typeof body?.image_base64 === 'string' && typeof body?.mime_type === 'string') {
+    tag = { image_base64: body.image_base64, mime_type: body.mime_type }
+  }
+
+  if (!tag && !garment) return json(400, { error: 'missing_image_base64' })
+
+  // Validate every supplied photo independently. Surface the first
+  // failure rather than batching — the client only needs one signal to
+  // surface a fix-and-retry message, and the user took these photos
+  // sequentially so they know which one they just shot.
+  for (const [label, photo] of [['tag', tag], ['garment', garment]] as const) {
+    if (!photo) continue
+    if (!ALLOWED_MIME.has(photo.mime_type)) {
+      return json(415, { error: 'unsupported_mime', which: label })
+    }
+    // base64 decoded size ≈ length * 3/4. Cheaper than actually decoding.
+    const approxBytes = Math.floor(photo.image_base64.length * 3 / 4)
+    if (approxBytes > MAX_BYTES) {
+      return json(413, { error: 'image_too_large', which: label, bytes: approxBytes })
+    }
+  }
 
   // ── Rate limit (service_role) ─────────────────────────────────────────
   const adminClient = createClient(supabaseUrl, serviceRoleKey, {
@@ -248,20 +296,48 @@ Deno.serve(async (req) => {
   // common ones (a parent reported "Pekkle" coming back as "Pampers").
   // Extraction tasks should be deterministic — we want the same JSON for
   // the same image, every time.
+  //
+  // Build the user-message content array in role order: tag first if
+  // present, garment second if present. The text instruction declares
+  // which images are present so the model can lean on the right source
+  // for each field. If only one is present we say so explicitly rather
+  // than letting the model guess at roles.
+  const content: Array<Record<string, unknown>> = []
+  const presence: string[] = []
+  if (tag) {
+    content.push({
+      type: 'image',
+      source: { type: 'base64', media_type: tag.mime_type, data: tag.image_base64 },
+    })
+    presence.push('a hangtag close-up (image 1) — primary source for brand and size_label')
+  }
+  if (garment) {
+    content.push({
+      type: 'image',
+      source: { type: 'base64', media_type: garment.mime_type, data: garment.image_base64 },
+    })
+    presence.push(
+      `a wider garment shot (image ${tag ? 2 : 1}) — primary source for category and item_type`,
+    )
+  }
+  const presenceLine = presence.length === 2
+    ? `You have ${presence[0]} and ${presence[1]}.`
+    : `You have only ${presence[0]}. Set fields you can't infer to null rather than guessing.`
+
+  content.push({
+    type: 'text',
+    text:
+      `${presenceLine} Extract the fields per the system instructions. Return JSON only. ` +
+      `For the brand, transcribe what you see on the tag literally — do not substitute a ` +
+      `more familiar brand name.`,
+  })
+
   const anthropicBody = {
     model: anthropicModel,
     max_tokens: 400,
     temperature: 0,
     system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mime, data: imageB64 } },
-          { type: 'text',  text: 'Extract the fields per the system instructions. Return JSON only. For the brand, transcribe what you see on the tag literally — do not substitute a more familiar brand name.' },
-        ],
-      },
-    ],
+    messages: [{ role: 'user', content }],
   }
 
   let anthropicResp: Response

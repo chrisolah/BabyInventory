@@ -178,6 +178,11 @@
   background: #FFFCF5;
 }
 
+/* Two-photo review — primary (garment) thumbnail fills the wrap; the
+   secondary (tag) thumbnail tucks into the bottom-right corner at
+   roughly 40% size with a small white border so it reads as overlapping
+   the primary, not abutting it. When only one photo is present the
+   wrap looks identical to the pre-refactor single-thumb layout. */
 .rowThumbWrap {
   flex-shrink: 0;
   width: 56px;
@@ -186,6 +191,7 @@
   overflow: hidden;
   background: var(--gray-100);
   border: 0.5px solid var(--gray-200);
+  position: relative;
 }
 
 .rowThumb {
@@ -193,6 +199,18 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.rowThumbSecondary {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1.5px solid #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
 }
 
 .rowFields {
