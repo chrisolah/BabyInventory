@@ -1,0 +1,8 @@
+{
+  "appId": "com.sprigloop.app",
+  "appName": "Sprigloop",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "always"
+  }
+}
