@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth'
 import { HouseholdProvider } from './contexts/HouseholdContext'
 import { UpgradeGateProvider } from './contexts/UpgradeGateContext'
 import { track } from './lib/analytics'
+import { gaPageView } from './lib/analytics-ga'
 import './styles/globals.css'
 
 import Landing from './screens/Landing'
@@ -119,9 +120,21 @@ function ScrollToTop() {
 function TrackPageViews() {
   const { pathname } = useLocation()
   useEffect(() => {
-    if (pathname === '/' || pathname === '/how-it-works') return
-    if (pathname.startsWith('/admin')) return
-    track.pageViewed({ path: pathname })
+    // Internal Supabase analytics: landing + /how-it-works fire their own
+    // funnel events with funnel_id='acquisition', so we skip them here to
+    // avoid double-counting. /admin is Chris's own dashboard.
+    const skipInternal =
+      pathname === '/' || pathname === '/how-it-works' || pathname.startsWith('/admin')
+    if (!skipInternal) {
+      track.pageViewed({ path: pathname })
+    }
+
+    // Google Analytics page_view: we DO want landing + how-it-works here
+    // since those are the marketing surfaces GA is measuring. Still skip
+    // /admin so Chris reading his own dashboard doesn't pollute the data.
+    if (!pathname.startsWith('/admin')) {
+      gaPageView(pathname)
+    }
   }, [pathname])
   return null
 }
