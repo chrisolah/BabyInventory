@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Capacitor } from '@capacitor/core'
 import styles from './AppSplash.module.css'
+import { setStatusBarForSplash, setStatusBarForApp } from '../lib/nativeUI'
 
 // Native-only animated splash. Bridges the moment between the static iOS
 // launch screen (solid teal) and the app being ready: the sprig draws itself
@@ -34,13 +35,19 @@ export default function AppSplash() {
 
   useEffect(() => {
     if (!visible) return
+    // White status-bar text while the teal splash is up.
+    setStatusBarForSplash()
     const reduced =
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
     // Hold long enough for the grow + wordmark to settle, then fade.
     const holdMs = reduced ? 700 : 1750
     const fadeMs = 380
-    const t1 = setTimeout(() => setLeaving(true), holdMs)
+    const t1 = setTimeout(() => {
+      setLeaving(true)
+      // Hand the status bar back to dark text as the app fades in.
+      setStatusBarForApp()
+    }, holdMs)
     const t2 = setTimeout(() => setVisible(false), holdMs + fadeMs)
     return () => {
       clearTimeout(t1)
