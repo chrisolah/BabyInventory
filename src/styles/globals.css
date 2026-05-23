@@ -53,3 +53,21 @@ body[data-trial-banner="visible"] {
 /* Hide scrollbars globally */
 ::-webkit-scrollbar { display: none; }
 * { scrollbar-width: none; }
+
+/* Native-app feel. Stops the WebView (and mobile web) from behaving like a
+   browser: no long-press callout menu, no double-tap zoom or tap delay, no
+   rubber-band overscroll, and no accidental text selection on controls.
+   Real text content and form fields stay selectable. */
+html, body {
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+* {
+  -webkit-touch-callout: none;
+}
+
+button, a, [role="button"], label, nav {
+  -webkit-user-select: none;
+  user-select: none;
+}
