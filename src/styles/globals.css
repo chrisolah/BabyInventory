@@ -30,6 +30,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* The root element's background fills the whole canvas, including the
+   rubber-band overscroll area at the top/bottom on iOS. White here keeps
+   that overscroll white instead of showing the teal native webview color. */
+html {
+  background-color: var(--white);
+}
+
 body {
   font-family: var(--font-body);
   background: var(--gray-50);
