@@ -32,6 +32,7 @@ import IvyDecoration from './components/IvyDecoration'
 import LandingLayout from './components/LandingLayout'
 import TrialBanner from './components/TrialBanner'
 import ErrorBoundary from './components/ErrorBoundary'
+import AppSplash from './components/AppSplash'
 
 // Client-side admin allowlist — kept in sync with beta._admin_emails() in the
 // migration. Server is the source of truth; this lives client-side only so the
@@ -298,6 +299,7 @@ export default function App() {
   // react-router's runtime is what failed.
   return (
     <ErrorBoundary>
+      <AppSplash />
       <AuthProvider>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <ScrollToTop />

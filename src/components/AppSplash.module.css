@@ -1,0 +1,111 @@
+/* Native-only animated splash. Solid teal to match the iOS launch screen and
+   the app icon; the sprig draws itself in, the leaves unfurl, the wordmark
+   rises, then the whole overlay fades out (.leaving) before unmounting. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #1D9E75;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 360ms ease-out;
+}
+
+.leaving {
+  opacity: 0;
+}
+
+.lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  /* Sit the lockup a little above true center — reads better optically. */
+  margin-bottom: 6vh;
+}
+
+.mark {
+  width: 130px;
+  height: 130px;
+  /* Leaves can extend just past the viewBox during the unfurl; don't clip. */
+  overflow: visible;
+}
+
+/* Stem draws on via stroke-dashoffset. pathLength="1" normalises the dash
+   maths so the same values work regardless of the path's real length. */
+.stem {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 0.85s ease-out forwards;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Leaves unfurl from their base — transform-origin 0 0 is the attach point
+   where each leaf path starts. Delays track the stem's bottom-to-top draw. */
+.leaf {
+  opacity: 0;
+  transform: scale(0.3);
+  transform-origin: 0 0;
+  animation: unfurl 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes unfurl {
+  to {
+    opacity: 1;
+    transform: scale(var(--s, 1));
+  }
+}
+
+.leaf1 {
+  animation-delay: 0.32s;
+}
+
+.leaf2 {
+  animation-delay: 0.6s;
+}
+
+.leaf3 {
+  animation-delay: 0.86s;
+}
+
+.wordmark {
+  font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: #FFFFFF;
+  opacity: 0;
+  transform: translateY(9px);
+  animation: rise 0.55s ease-out 1s forwards;
+}
+
+@keyframes rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stem {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .leaf {
+    animation: none;
+    opacity: 1;
+    transform: scale(var(--s, 1));
+  }
+  .wordmark {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
