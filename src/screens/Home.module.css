@@ -12,7 +12,9 @@
   z-index: 10;
   background: var(--white);
   border-bottom: 0.5px solid var(--gray-200);
-  padding: 14px 20px;
+  /* Top padding carries the iOS status-bar inset so the header content sits
+     below the clock/Dynamic Island; the white background fills behind it. */
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
