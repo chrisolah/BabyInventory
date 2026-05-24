@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -27,12 +28,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        disableWebViewBounce()
+    }
 
-        // Disable the WKWebView rubber-band bounce so overscrolling past the top
-        // or bottom of a page no longer reveals the teal native background.
-        if let bridgeVC = window?.rootViewController as? CAPBridgeViewController {
-            bridgeVC.webView?.scrollView.bounces = false
+    // Disable the WKWebView rubber-band bounce so overscrolling past the top or
+    // bottom of a page no longer reveals the teal native background. Walks the
+    // whole view hierarchy so it does not depend on a specific root controller.
+    private func disableWebViewBounce() {
+        guard let rootView = window?.rootViewController?.view else { return }
+        guard let webView = findWebView(in: rootView) else { return }
+        let scrollView = webView.scrollView
+        scrollView.bounces = false
+        scrollView.alwaysBounceVertical = false
+        scrollView.alwaysBounceHorizontal = false
+    }
+
+    private func findWebView(in view: UIView) -> WKWebView? {
+        if let webView = view as? WKWebView {
+            return webView
         }
+        for subview in view.subviews {
+            if let found = findWebView(in: subview) {
+                return found
+            }
+        }
+        return nil
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
