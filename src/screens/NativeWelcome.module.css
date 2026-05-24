@@ -1,17 +1,26 @@
 /* Native-only get-started screen for logged-out users. Teal to match the
-   launch splash and the app icon, so the splash fades straight into it. */
+   launch splash and the app icon, so the splash fades straight into it.
+   Layout: the lockup centers in the space above the buttons; the two
+   actions are anchored full-width at the bottom of the screen. */
 .page {
   min-height: 100vh;
   background: var(--teal);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 44px;
-  /* Safe-area insets so the lockup and buttons clear the status bar and
-     the home indicator. */
+  /* Safe-area insets so nothing sits under the status bar or the home
+     indicator. */
   padding: calc(2rem + env(safe-area-inset-top, 0px)) 1.5rem
            calc(2rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Takes all the space above the action buttons and centers the lockup
+   within it, so the brand mark sits in the upper-middle of the screen. */
+.lockupArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .lockup {
@@ -51,13 +60,14 @@
   font-style: italic;
 }
 
+/* Anchored at the bottom — the .page's bottom padding holds them clear of
+   the home indicator. Full-width, so the pair reads as an action bar. */
 .actions {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
   width: 100%;
-  max-width: 320px;
 }
 
 .primary,
