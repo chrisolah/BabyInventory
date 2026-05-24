@@ -3,7 +3,7 @@
   "appName": "Sprigloop",
   "webDir": "dist",
   "ios": {
-    "contentInset": "always",
+    "contentInset": "never",
     "backgroundColor": "#1D9E75"
   },
   "plugins": {
