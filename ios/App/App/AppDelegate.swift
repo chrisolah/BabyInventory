@@ -27,6 +27,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+
+        // Disable the WKWebView rubber-band bounce so overscrolling past the top
+        // or bottom of a page no longer reveals the teal native background.
+        if let bridgeVC = window?.rootViewController as? CAPBridgeViewController {
+            bridgeVC.webView?.scrollView.bounces = false
+        }
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
