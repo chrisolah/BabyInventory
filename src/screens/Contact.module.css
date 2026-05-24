@@ -13,7 +13,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.25rem 1.5rem;
+  /* Top padding carries the iOS status-bar inset (see Home.module.css). */
+  padding: calc(1.25rem + env(safe-area-inset-top, 0px)) 1.5rem 1.25rem;
   border-bottom: 0.5px solid var(--gray-100);
   background: var(--white);
   position: relative;

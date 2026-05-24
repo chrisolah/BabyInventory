@@ -4,7 +4,7 @@
   "webDir": "dist",
   "ios": {
     "contentInset": "always",
-    "backgroundColor": "#ffffff"
+    "backgroundColor": "#1D9E75"
   },
   "plugins": {
     "Keyboard": {
