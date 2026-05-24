@@ -1,0 +1,96 @@
+/* Native-only get-started screen for logged-out users. Teal to match the
+   launch splash and the app icon, so the splash fades straight into it. */
+.page {
+  min-height: 100vh;
+  background: var(--teal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 44px;
+  /* Safe-area insets so the lockup and buttons clear the status bar and
+     the home indicator. */
+  padding: calc(2rem + env(safe-area-inset-top, 0px)) 1.5rem
+           calc(2rem + env(safe-area-inset-bottom, 0px));
+}
+
+.lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.mark {
+  width: 96px;
+  height: 96px;
+  overflow: visible;
+}
+
+.wordmark {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--white);
+}
+
+.tagline {
+  margin: 0;
+  max-width: 280px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 300;
+  line-height: 1.45;
+  color: var(--teal-light);
+  text-align: center;
+}
+
+.tagline em {
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.primary,
+.secondary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.primary {
+  min-height: 50px;
+  border: none;
+  border-radius: 12px;
+  background: var(--white);
+  color: var(--teal-dark);
+  font-size: 16px;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+
+.primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.secondary {
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 500;
+}
