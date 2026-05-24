@@ -28,19 +28,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
-        disableWebViewBounce()
+        styleWebViewOverscroll()
     }
 
-    // Disable the WKWebView rubber-band bounce so overscrolling past the top or
-    // bottom of a page no longer reveals the teal native background. Walks the
-    // whole view hierarchy so it does not depend on a specific root controller.
-    private func disableWebViewBounce() {
+    // Keep the WKWebView's natural rubber-band bounce, but paint the web view and
+    // its scroll view white. That way overscrolling past the top or bottom of a
+    // page reveals white instead of the teal native launch background. Runs after
+    // launch (applicationDidBecomeActive), so the teal launch splash is untouched.
+    // Walks the whole view hierarchy so it does not depend on a specific root
+    // controller. This is native, iOS-only code; it never touches the shared web
+    // codebase, so it cannot affect the website.
+    private func styleWebViewOverscroll() {
         guard let rootView = window?.rootViewController?.view else { return }
         guard let webView = findWebView(in: rootView) else { return }
-        let scrollView = webView.scrollView
-        scrollView.bounces = false
-        scrollView.alwaysBounceVertical = false
-        scrollView.alwaysBounceHorizontal = false
+        webView.backgroundColor = .white
+        webView.scrollView.backgroundColor = .white
     }
 
     private func findWebView(in view: UIView) -> WKWebView? {
