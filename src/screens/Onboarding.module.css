@@ -11,7 +11,8 @@
    control lives in the same visual slot as every other logged-in page. */
 .logoutCorner {
   position: absolute;
-  top: 12px;
+  /* Offset by the iOS status-bar inset so the logout control clears it. */
+  top: calc(12px + env(safe-area-inset-top, 0px));
   right: 16px;
   z-index: 2;
 }
@@ -24,7 +25,8 @@
      the logout's bottom edge (y=48) overlapped the progress pips that
      started at y=32 — see the 2026-05-05 user-reported bug. 56px top
      gives the pips a clean 8px breathing room below the logout. */
-  padding: 3.5rem 1.5rem 2rem;
+  /* Top padding also carries the iOS status-bar inset (see Home.module.css). */
+  padding: calc(3.5rem + env(safe-area-inset-top, 0px)) 1.5rem 2rem;
 }
 
 /* ── Back button (steps 2+) ──────────────────────────────

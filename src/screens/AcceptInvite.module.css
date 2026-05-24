@@ -18,7 +18,8 @@
 .wrap {
   width: 100%;
   max-width: 480px;
-  padding: 2rem 1.5rem;
+  /* Top padding carries the iOS status-bar inset (see Home.module.css). */
+  padding: calc(2rem + env(safe-area-inset-top, 0px)) 1.5rem 2rem;
 }
 
 /* Header — matches Landing's lowercase wordmark exactly. */
