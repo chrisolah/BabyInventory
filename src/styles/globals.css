@@ -34,6 +34,7 @@ body {
   font-family: var(--font-body);
   background: var(--gray-50);
   color: var(--gray-900);
+  min-height: 100vh;
 }
 
 /* Trial-banner reserved space — when an anonymous user is signed in,
@@ -44,10 +45,8 @@ body {
    value covers the banner (~52px tall: 11 padding × 2 + 13 font × 1.4
    line-height) plus the 12px bottom offset from the viewport edge plus
    ~20px of breathing room so a button doesn't sit flush against the
-   banner's top edge. Cleared automatically when the banner unmounts.
-   Applied to .app-scroll (the real scroll container) rather than <body>,
-   which no longer scrolls — see the html/body lock below. */
-body[data-trial-banner="visible"] .app-scroll {
+   banner's top edge. Cleared automatically when the banner unmounts. */
+body[data-trial-banner="visible"] {
   padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 }
 
@@ -62,38 +61,6 @@ body[data-trial-banner="visible"] .app-scroll {
 html, body {
   overscroll-behavior: none;
   touch-action: manipulation;
-}
-
-/* Lock the document to the viewport. The page itself never scrolls — every
-   screen scrolls inside the .app-scroll container below instead. This is the
-   real fix for the teal bar on overscroll: the iOS rubber-band can only ever
-   reveal what's BEHIND the scrolling element, and the WebView's native
-   background is teal. By making the document non-scrollable there is no
-   document-level rubber-band at all, so the teal is never exposed. */
-html, body {
-  height: 100%;
-  overflow: hidden;
-}
-
-#root {
-  height: 100%;
-}
-
-/* The single app-wide scroll container. position:fixed + inset:0 sizes it to
-   the viewport regardless of any ancestor layout, so it is bulletproof. All
-   screen content scrolls inside it; sticky screen headers anchor to ITS top
-   edge. overscroll-behavior:contain keeps the natural iOS rubber-band bounce
-   but stops it from chaining to the (locked) document. Because this element's
-   own background is white, the bounce only ever reveals white — never the
-   teal native background that the old document-level overscroll exposed. */
-.app-scroll {
-  position: fixed;
-  inset: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  background: var(--white);
 }
 
 * {
