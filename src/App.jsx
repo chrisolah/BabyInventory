@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { HouseholdProvider } from './contexts/HouseholdContext'
 import { UpgradeGateProvider } from './contexts/UpgradeGateContext'
@@ -8,6 +9,7 @@ import { gaPageView } from './lib/analytics-ga'
 import './styles/globals.css'
 
 import Landing from './screens/Landing'
+import NativeWelcome from './screens/NativeWelcome'
 import HowItWorks from './screens/HowItWorks'
 import About from './screens/About'
 import Contact from './screens/Contact'
@@ -218,6 +220,18 @@ function PublicRoute({ children }) {
   return children
 }
 
+// RootIndex resolves what "/" renders. On the web that's the full marketing
+// Landing page. In the native app the App Store listing already does the
+// landing page's job, so logged-out users get the focused /welcome screen
+// instead. Logged-in users never reach here — PublicRoute redirects them to
+// /home first.
+function RootIndex() {
+  if (Capacitor.isNativePlatform()) {
+    return <Navigate to="/welcome" replace />
+  }
+  return <Landing />
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -228,7 +242,7 @@ function AppRoutes() {
           landing nav. Other public routes (Signup, Login, etc.) are
           intentionally left outside — they don't render ivy. */}
       <Route element={<LandingLayout />}>
-        <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
+        <Route path="/" element={<PublicRoute><RootIndex /></PublicRoute>} />
         {/* /how-it-works, /about, /contact are public marketing/SEO pages.
             Unguarded so authed and unauthed visitors both reach them;
             PublicRoute would bounce authed users to /home and break inbound
@@ -242,6 +256,10 @@ function AppRoutes() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
       </Route>
+      {/* /welcome — the native app's entry for logged-out users: a focused
+          get-started screen instead of the marketing Landing. Outside
+          LandingLayout so it carries no marketing nav, footer, or ivy. */}
+      <Route path="/welcome" element={<PublicRoute><NativeWelcome /></PublicRoute>} />
       <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       {/* /reset-password is unguarded — it needs to render whether the user is signed in (recovery session) or not (expired link), and handles both cases itself. */}
