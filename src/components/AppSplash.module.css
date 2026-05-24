@@ -11,6 +11,18 @@
   justify-content: center;
   opacity: 1;
   transition: opacity 360ms ease-out;
+  /* Fade in over the white launch screen so the teal splash arrives
+     smoothly rather than as a hard cut. */
+  animation: splashIn 280ms ease-out;
+}
+
+@keyframes splashIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .leaving {
@@ -94,6 +106,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .splash {
+    animation: none;
+  }
   .stem {
     animation: none;
     stroke-dashoffset: 0;
