@@ -1173,3 +1173,229 @@
 .wishAddBtn:hover {
   background: var(--gray-50);
 }
+
+/* ── Item card grid (Owned tab + Outgrown section) ────────────────────────
+   auto-fill with 140px min gives:
+     mobile  (343px inner): 2 columns
+     tablet  (~550px inner): 3 columns
+     desktop (688px inner):  4 columns
+   No media queries needed — CSS handles the reflow. */
+.itemCardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  padding: 10px;
+}
+
+.itemCard {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--white);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.itemCard:hover {
+  background: var(--gray-50);
+}
+
+.itemCard:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+
+/* Photo area — square, fills card width. */
+.itemCardPhotoWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.itemCardPhoto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Placeholder shown when no photo exists — teal wash with size centered. */
+.itemCardPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: var(--teal-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.itemCardSizeCentered {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--teal-dark);
+  letter-spacing: 0.2px;
+}
+
+/* Size badge overlaid on bottom-right of photo when a photo exists. */
+.itemCardSizeBadge {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--white);
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 5px;
+  padding: 1px 5px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+/* Text body below the photo. */
+.itemCardBody {
+  padding: 8px 9px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.itemCardName {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.itemCardMeta {
+  font-size: 11px;
+  color: var(--gray-400);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+/* Footer row: size tag (no photo) or qty + action chips. */
+.itemCardFooter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}
+
+/* Small gray size tag — only rendered when no photo (photo uses overlay badge). */
+.itemCardSizeTag {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--gray-600);
+  background: var(--gray-100);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+
+.itemCardQty {
+  font-size: 10px;
+  color: var(--gray-400);
+}
+
+/* Pass on chip — teal filled, matches .itemPassOnBtn intent. */
+.itemCardPassBtn {
+  all: unset;
+  box-sizing: border-box;
+  font-size: 11px;
+  padding: 3px 8px;
+  min-height: 28px;
+  border-radius: 10px;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  border: 0.5px solid var(--teal-mid);
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  transition: background 0.12s;
+}
+
+.itemCardPassBtn:hover {
+  background: var(--teal-mid);
+}
+
+.itemCardPassBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Tuck away chip — neutral gray. */
+.itemCardTuckBtn {
+  all: unset;
+  box-sizing: border-box;
+  font-size: 11px;
+  padding: 3px 8px;
+  min-height: 28px;
+  border-radius: 10px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 0.5px solid var(--gray-200);
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  transition: background 0.12s;
+}
+
+.itemCardTuckBtn:hover {
+  background: var(--gray-200);
+}
+
+.itemCardTuckBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Move back chip (outgrown section). */
+.itemCardMoveBackBtn {
+  all: unset;
+  box-sizing: border-box;
+  font-size: 11px;
+  padding: 3px 8px;
+  min-height: 28px;
+  border-radius: 10px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 0.5px solid var(--gray-200);
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  transition: background 0.12s;
+}
+
+.itemCardMoveBackBtn:hover {
+  background: var(--gray-200);
+}
+
+.itemCardMoveBackBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Outgrown section: category sub-label stays, items go into a card grid. */
+.outgrownCategoryCardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  padding: 0 10px 10px;
+}

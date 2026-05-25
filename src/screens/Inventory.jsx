@@ -943,12 +943,11 @@ export default function Inventory() {
                     contentId={id}
                   />
                   {!collapsed && (
-                    <div className={styles.groupItems} id={id}>
+                    <div className={styles.itemCardGrid} id={id}>
                       {group.items.map(it => (
-                        <ItemRow
+                        <ItemCard
                           key={it.id}
                           item={it}
-                          tab="owned"
                           onClick={() => navigate(`/item/${it.id}`)}
                           onPassOn={handlePassOn}
                           onTuckAway={handleTuckAway}
@@ -1011,7 +1010,7 @@ export default function Inventory() {
                   contentId="outgrown-section"
                 />
                 {!outgrownSectionCollapsed && (
-                  <div className={styles.groupItems} id="outgrown-section">
+                  <div id="outgrown-section">
                     {outgrownSectionGrouped.map(group => (
                       <div className={styles.outgrownCategoryGroup} key={group.category}>
                         <div className={styles.outgrownCategoryLabel}>
@@ -1020,16 +1019,18 @@ export default function Inventory() {
                             {group.items.length}
                           </span>
                         </div>
-                        {group.items.map(it => (
-                          <SectionItemRow
-                            key={it.id}
-                            item={it}
-                            onClick={() => navigate(`/item/${it.id}`)}
-                            onPassOnChip={() => handleSectionChipTap(it)}
-                            onMoveBackChip={() => handleSectionMoveBack(it)}
-                            working={pendingHideIds.has(it.id)}
-                          />
-                        ))}
+                        <div className={styles.outgrownCategoryCardGrid}>
+                          {group.items.map(it => (
+                            <SectionItemCard
+                              key={it.id}
+                              item={it}
+                              onClick={() => navigate(`/item/${it.id}`)}
+                              onPassOnChip={() => handleSectionChipTap(it)}
+                              onMoveBackChip={() => handleSectionMoveBack(it)}
+                              working={pendingHideIds.has(it.id)}
+                            />
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1435,97 +1436,60 @@ function OwnedEmptyState({ ageRange, totalOwnedCount, onAdd }) {
   )
 }
 
-// ── Item row (Owned tab) ───────────────────────────────────────────────────
-// Rendered as a <button> so tapping anywhere on the row opens the item
-// detail page. `all: unset` on .itemRow in the stylesheet strips the
-// default button chrome; we redeclare only the visual bits we want.
-//
-// On the Owned tab the right cluster carries two inline action chips:
-//   - Pass on   → adds the item to a draft bag (pass_along status)
-//   - Tuck away → flips the item to 'kept' status
-// Both chips stop event propagation so tapping them doesn't also fire the
-// row-level onClick (which would navigate to the detail screen mid-flip).
-// On the Wish list tab the right cluster shows the priority badge instead.
-function ItemRow({ item, tab, onClick, onPassOn, onTuckAway, working }) {
-  const isOwnedTab = tab === 'owned'
-  const sizeLabel = item.size_label || '—'
-  const sizeIsEmpty = !item.size_label
-
-  // On Owned tab, lean on buildItemDisplay so two unnamed same-category
-  // rows differ visually when any descriptor (brand, condition, season)
-  // is filled. Wishlist keeps the legacy display since priority is the
-  // information that matters there, not item identity.
-  const display = isOwnedTab
-    ? buildItemDisplay(item)
-    : { primary: item.name || humanizeItemType(item.item_type), meta: '' }
-  const displayName = display.primary
-  const metaText = isOwnedTab
-    ? display.meta
-    : [item.size_label, item.brand, item.quantity > 1 ? `×${item.quantity}` : null]
-        .filter(Boolean)
-        .join(' · ')
-
-  const wishBadge = !isOwnedTab
-    ? (PRIORITY_LABEL[item.priority] ?? 'Needed')
-    : null
+// ── Item card (Owned tab) ──────────────────────────────────────────────────
+// Photo-forward card replacing the old ItemRow. The card's square photo area
+// shows the garment image when available, or a teal placeholder with the size
+// label centered. Action chips (Pass on, Tuck away) sit in the footer row.
+// Tap anywhere except the chips opens ItemDetail.
+function ItemCard({ item, onClick, onPassOn, onTuckAway, working }) {
+  const sizeLabel = item.size_label || ''
+  const display = buildItemDisplay(item)
 
   return (
     <button
       type="button"
-      className={styles.itemRow}
+      className={styles.itemCard}
       onClick={onClick}
-      aria-label={`Open ${displayName}`}
+      aria-label={`Open ${display.primary}`}
     >
-      {/* Two visual states for the row's leading thumb:
-          1. Garment photo present → render the photo as the thumb
-             background with the size_label tucked into a corner badge
-             so the visual hierarchy stays "what does it look like" first
-             and "what size is it" second.
-          2. No photo → keep the legacy text-only thumb (size centered),
-             which works the same as it always has. */}
-      {item.garment_signed_url ? (
-        <div
-          className={`${styles.itemThumb} ${styles.itemThumbWithPhoto}`}
-          aria-hidden="true"
-        >
-          <img
-            src={item.garment_signed_url}
-            alt=""
-            className={styles.itemThumbPhoto}
-            loading="lazy"
-          />
-          {!sizeIsEmpty && (
-            <span className={styles.itemThumbSizeBadge}>{sizeLabel}</span>
-          )}
-        </div>
-      ) : (
-        <div
-          className={`${styles.itemThumb} ${sizeIsEmpty ? styles.itemThumbEmpty : ''}`}
-          aria-hidden="true"
-        >
-          {sizeLabel}
-        </div>
-      )}
-      <div className={styles.itemBody}>
-        <div className={styles.itemName}>{displayName}</div>
-        {metaText && <div className={styles.itemMeta}>{metaText}</div>}
+      <div className={styles.itemCardPhotoWrap} aria-hidden="true">
+        {item.garment_signed_url ? (
+          <>
+            <img
+              src={item.garment_signed_url}
+              alt=""
+              className={styles.itemCardPhoto}
+              loading="lazy"
+            />
+            {sizeLabel && (
+              <span className={styles.itemCardSizeBadge}>{sizeLabel}</span>
+            )}
+          </>
+        ) : (
+          <div className={styles.itemCardPlaceholder}>
+            <span className={styles.itemCardSizeCentered}>
+              {sizeLabel || '—'}
+            </span>
+          </div>
+        )}
       </div>
 
-      {isOwnedTab ? (
-        <div className={styles.itemActions}>
+      <div className={styles.itemCardBody}>
+        <div className={styles.itemCardName}>{display.primary}</div>
+        {display.meta && (
+          <div className={styles.itemCardMeta}>{display.meta}</div>
+        )}
+        <div className={styles.itemCardFooter}>
           {item.quantity > 1 && (
-            <span className={styles.itemQty}>×{item.quantity}</span>
+            <span className={styles.itemCardQty}>×{item.quantity}</span>
           )}
           {onPassOn && (
             <button
               type="button"
-              className={styles.itemPassOnBtn}
-              onClick={e => {
-                e.stopPropagation()
-                onPassOn(item)
-              }}
+              className={styles.itemCardPassBtn}
+              onClick={e => { e.stopPropagation(); onPassOn(item) }}
               disabled={working}
-              aria-label={`Pass on ${displayName}`}
+              aria-label={`Pass on ${display.primary}`}
             >
               Pass on
             </button>
@@ -1533,118 +1497,85 @@ function ItemRow({ item, tab, onClick, onPassOn, onTuckAway, working }) {
           {onTuckAway && (
             <button
               type="button"
-              className={styles.itemTuckAwayBtn}
-              onClick={e => {
-                e.stopPropagation()
-                onTuckAway(item)
-              }}
+              className={styles.itemCardTuckBtn}
+              onClick={e => { e.stopPropagation(); onTuckAway(item) }}
               disabled={working}
-              aria-label={`Tuck away ${displayName}`}
+              aria-label={`Tuck away ${display.primary}`}
             >
               Tuck away
             </button>
           )}
         </div>
-      ) : (
-        <span className={styles.itemBadge}>{wishBadge}</span>
-      )}
+      </div>
     </button>
   )
 }
 
-// ── Section item row (bottom-of-Owned Outgrown section) ───────────────────
-// Renders an item already moved out of active rotation (kept, pass_along,
-// or legacy outgrown). Two chips per row: Pass on (forward an item into a
-// bag) and Move back (restore to Owned). Tuck-away as an inline action was
-// removed 2026-05-01 — it remains available via ItemDetail since it's a
-// less-frequent intent and was crowding the row.
-function SectionItemRow({ item, onClick, onPassOnChip, onMoveBackChip, working }) {
-  // Mirror Owned-tab item display so the bottom-of-Owned section reads
-  // as a continuation of the same table style (per the matching-stylings
-  // requirement) including row content, not just the surrounding card.
+// ── Section item card (bottom-of-Owned Outgrown section) ──────────────────
+// Card version of the outgrown section item. Same photo-forward layout as
+// ItemCard; chips are Pass on + Move back (no Tuck away — kept in ItemDetail).
+function SectionItemCard({ item, onClick, onPassOnChip, onMoveBackChip, working }) {
   const display = buildItemDisplay(item)
-  const displayName = display.primary
-  const metaText = display.meta
-  const sizeLabel = item.size_label || '—'
-  const sizeIsEmpty = !item.size_label
-
+  const sizeLabel = item.size_label || ''
   const isInBag = item.inventory_status === 'pass_along'
 
   return (
     <button
       type="button"
-      className={styles.itemRow}
+      className={styles.itemCard}
       onClick={onClick}
-      aria-label={`Open ${displayName}`}
+      aria-label={`Open ${display.primary}`}
     >
-      {/* Two visual states for the row's leading thumb:
-          1. Garment photo present → render the photo as the thumb
-             background with the size_label tucked into a corner badge
-             so the visual hierarchy stays "what does it look like" first
-             and "what size is it" second.
-          2. No photo → keep the legacy text-only thumb (size centered),
-             which works the same as it always has. */}
-      {item.garment_signed_url ? (
-        <div
-          className={`${styles.itemThumb} ${styles.itemThumbWithPhoto}`}
-          aria-hidden="true"
-        >
-          <img
-            src={item.garment_signed_url}
-            alt=""
-            className={styles.itemThumbPhoto}
-            loading="lazy"
-          />
-          {!sizeIsEmpty && (
-            <span className={styles.itemThumbSizeBadge}>{sizeLabel}</span>
-          )}
-        </div>
-      ) : (
-        <div
-          className={`${styles.itemThumb} ${sizeIsEmpty ? styles.itemThumbEmpty : ''}`}
-          aria-hidden="true"
-        >
-          {sizeLabel}
-        </div>
-      )}
-      <div className={styles.itemBody}>
-        <div className={styles.itemName}>{displayName}</div>
-        {metaText && <div className={styles.itemMeta}>{metaText}</div>}
+      <div className={styles.itemCardPhotoWrap} aria-hidden="true">
+        {item.garment_signed_url ? (
+          <>
+            <img
+              src={item.garment_signed_url}
+              alt=""
+              className={styles.itemCardPhoto}
+              loading="lazy"
+            />
+            {sizeLabel && (
+              <span className={styles.itemCardSizeBadge}>{sizeLabel}</span>
+            )}
+          </>
+        ) : (
+          <div className={styles.itemCardPlaceholder}>
+            <span className={styles.itemCardSizeCentered}>
+              {sizeLabel || '—'}
+            </span>
+          </div>
+        )}
       </div>
 
-      <div className={styles.itemActions}>
-        {item.quantity > 1 && (
-          <span className={styles.itemQty}>×{item.quantity}</span>
+      <div className={styles.itemCardBody}>
+        <div className={styles.itemCardName}>{display.primary}</div>
+        {display.meta && (
+          <div className={styles.itemCardMeta}>{display.meta}</div>
         )}
-        {/* Section chips use the same filled treatment as Owned-row chips
-            so both tables read as one visual system. Pass on stays teal
-            (forward action); Move back is gray (restorative / corrective
-            action). When the item is already in a bag, Pass on flips to
-            "In a bag →" and acts as a navigate-to-bag affordance. */}
-        <button
-          type="button"
-          className={styles.itemPassOnBtn}
-          onClick={e => {
-            e.stopPropagation()
-            onPassOnChip()
-          }}
-          disabled={working}
-          aria-label={isInBag ? `View bag for ${displayName}` : `Pass on ${displayName}`}
-        >
-          {isInBag ? 'In a bag →' : 'Pass on'}
-        </button>
-        <button
-          type="button"
-          className={styles.itemMoveBackBtn}
-          onClick={e => {
-            e.stopPropagation()
-            onMoveBackChip()
-          }}
-          disabled={working}
-          aria-label={`Move ${displayName} back to Owned`}
-        >
-          Move back
-        </button>
+        <div className={styles.itemCardFooter}>
+          {item.quantity > 1 && (
+            <span className={styles.itemCardQty}>×{item.quantity}</span>
+          )}
+          <button
+            type="button"
+            className={styles.itemCardPassBtn}
+            onClick={e => { e.stopPropagation(); onPassOnChip() }}
+            disabled={working}
+            aria-label={isInBag ? `View bag for ${display.primary}` : `Pass on ${display.primary}`}
+          >
+            {isInBag ? 'In bag →' : 'Pass on'}
+          </button>
+          <button
+            type="button"
+            className={styles.itemCardMoveBackBtn}
+            onClick={e => { e.stopPropagation(); onMoveBackChip() }}
+            disabled={working}
+            aria-label={`Move ${display.primary} back to Owned`}
+          >
+            Move back
+          </button>
+        </div>
       </div>
     </button>
   )
