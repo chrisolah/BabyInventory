@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { AuthProvider, useAuth } from './hooks/useAuth'
+import { usePushNotifications } from './hooks/usePushNotifications'
 import { HouseholdProvider } from './contexts/HouseholdContext'
 import { UpgradeGateProvider } from './contexts/UpgradeGateContext'
 import { track } from './lib/analytics'
@@ -174,6 +175,7 @@ function AdminGuard({ children }) {
 // a wrapping layout container. Hidden on narrow viewports via its own CSS.
 function ProtectedLayout() {
   const { user, loading } = useAuth()
+  usePushNotifications()
   if (loading) return <div />
   if (!user) return <Navigate to="/" replace />
   // UpgradeGateProvider sits inside ProtectedLayout so the gate is mounted
