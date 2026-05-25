@@ -8,7 +8,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Paint the window white so no black shows behind the WKWebView
+        // when the keyboard opens and the view resizes.
+        window?.backgroundColor = .white
         return true
     }
 
