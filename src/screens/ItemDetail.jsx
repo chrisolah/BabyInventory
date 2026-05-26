@@ -497,7 +497,11 @@ export default function ItemDetail() {
                     aria-hidden="true"
                   />
                 ) : (
-                  <div className={styles.itemThumb} aria-hidden="true" />
+                  <div className={styles.itemThumb} aria-hidden="true">
+                    {item.size_label && (
+                      <span className={styles.itemThumbSize}>{item.size_label}</span>
+                    )}
+                  </div>
                 )}
                 <div className={styles.summaryText}>
                   <div className={styles.summaryName}>{displayName}</div>

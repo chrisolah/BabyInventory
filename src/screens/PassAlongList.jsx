@@ -256,11 +256,11 @@ export default function PassAlongList() {
           ←
         </button>
         <div className={styles.titleBlock}>
-          <div className={styles.title}>Pass-along</div>
+          <div className={styles.title}>Your bags</div>
           <div className={styles.subtitle}>
             {batches.length > 0
-              ? `${batches.length} bag${batches.length === 1 ? '' : 's'}`
-              : 'Community exchange'}
+              ? `${batches.length} bag${batches.length === 1 ? '' : 's'} passed along`
+              : 'Pass clothes on'}
           </div>
           <IvySprig />
         </div>

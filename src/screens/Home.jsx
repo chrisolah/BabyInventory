@@ -246,9 +246,7 @@ export default function Home() {
             onBatchSaved={onHomeBatchSaved}
           />
           <div className={styles.scanCaption}>
-            Snap a clothing tag and we&rsquo;ll fill in brand, size, and type.
-            Got a stack to add? Tap <strong>Scan many</strong> in the camera to
-            scan several in a row.
+            Snap a clothing tag and we&rsquo;ll fill in brand, size, and type for you.
           </div>
         </div>
 

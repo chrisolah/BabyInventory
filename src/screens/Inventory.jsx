@@ -1110,6 +1110,10 @@ function WishlistView({
   collapsedCategories,
   onToggleCategory,
 }) {
+  // Collapsed by default when empty — keeps the section out of the way
+  // until the user actually has non-canonical wishes to review.
+  const [otherOpen, setOtherOpen] = useState(otherWishItems.length > 0)
+
   return (
     <>
       <AgeNav
@@ -1178,50 +1182,65 @@ function WishlistView({
       })}
 
       {/* Other wishes section (non-canonical wishlist entries) */}
-      <div className={styles.sectionHead} style={{ marginTop: 18 }}>
-        <span className={styles.sectionTitle}>Other wishes</span>
-        <span className={styles.sectionMeta}>
-          {otherWishItems.length} in {ageRange}
+      <button
+        type="button"
+        className={styles.groupHeader}
+        style={{ marginTop: 18, borderRadius: 12, border: '0.5px solid var(--gray-200)' }}
+        onClick={() => setOtherOpen(o => !o)}
+        aria-expanded={otherOpen}
+      >
+        <span className={styles.groupTitle}>Other wishes</span>
+        <span className={styles.groupHeaderRight}>
+          <span className={styles.groupCount}>
+            {otherWishItems.length > 0 ? otherWishItems.length : ''}
+          </span>
+          <svg
+            className={`${styles.groupChev} ${!otherOpen ? styles.groupChevCollapsed : ''}`}
+            viewBox="0 0 10 6" width="10" height="6" aria-hidden="true"
+          >
+            <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </span>
-      </div>
-      <div className={styles.otherWishList}>
-        {otherWishItems.length === 0 && (
-          <div className={styles.otherEmpty}>
-            Anything specific on your list? Add it here — it&rsquo;ll live alongside the
-            recommended wardrobe.
-          </div>
-        )}
-        {otherWishItems.map(item => (
+      </button>
+      {otherOpen && (
+        <div className={styles.otherWishList}>
+          {otherWishItems.length === 0 && (
+            <div className={styles.otherEmpty}>
+              Anything specific on your list? Add it here.
+            </div>
+          )}
+          {otherWishItems.map(item => (
+            <button
+              type="button"
+              className={styles.wish}
+              key={item.id}
+              onClick={() => onItemTap(item.id)}
+              aria-label={`Open ${item.name || humanizeItemType(item.item_type)}`}
+            >
+              <div className={styles.wishName}>
+                {item.name || humanizeItemType(item.item_type)}
+              </div>
+              {item.priority && (
+                <span
+                  className={
+                    `${styles.wishPriority} ` +
+                    (item.priority === 'nice_to_have' ? styles.wishPriorityAmber : '')
+                  }
+                >
+                  {PRIORITY_LABEL[item.priority]}
+                </span>
+              )}
+            </button>
+          ))}
           <button
             type="button"
-            className={styles.wish}
-            key={item.id}
-            onClick={() => onItemTap(item.id)}
-            aria-label={`Open ${item.name || humanizeItemType(item.item_type)}`}
+            className={styles.wishAddBtn}
+            onClick={onAddWish}
           >
-            <div className={styles.wishName}>
-              {item.name || humanizeItemType(item.item_type)}
-            </div>
-            {item.priority && (
-              <span
-                className={
-                  `${styles.wishPriority} ` +
-                  (item.priority === 'nice_to_have' ? styles.wishPriorityAmber : '')
-                }
-              >
-                {PRIORITY_LABEL[item.priority]}
-              </span>
-            )}
+            + Add wish
           </button>
-        ))}
-        <button
-          type="button"
-          className={styles.wishAddBtn}
-          onClick={onAddWish}
-        >
-          + Add wish
-        </button>
-      </div>
+        </div>
+      )}
     </>
   )
 }
