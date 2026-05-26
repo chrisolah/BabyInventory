@@ -1171,9 +1171,9 @@ function WishlistView({
               contentId={id}
             />
             {!collapsed && (
-              <div className={styles.groupItems} id={id}>
+              <div className={styles.slotCardGrid} id={id}>
                 {group.rows.map(row => (
-                  <SlotRow
+                  <SlotCard
                     key={row.slot.id}
                     row={row}
                     onClick={() => onSlotTap(row.slot.id)}
@@ -1398,6 +1398,49 @@ function SlotRow({ row, onClick }) {
       <div className={styles.slotHint}>
         <span className={hintClass}>{hintText}</span>
         {slot.hint && <span>{slot.hint}</span>}
+      </div>
+    </button>
+  )
+}
+
+// ── Slot card (Wishlist tab) ───────────────────────────────────────────────
+// Photo-forward card counterpart to SlotRow. Renders inside a .slotCardGrid
+// so the Wishlist tab mirrors the card-grid look of the Owned tab.
+function SlotCard({ row, onClick }) {
+  const { slot, ownedCount, recommended, needed, status } = row
+  const percent = recommended > 0
+    ? Math.min(100, Math.round((ownedCount / recommended) * 100))
+    : 0
+
+  const countClass =
+    status === 'complete' ? styles.slotCountComplete :
+    status === 'empty'    ? styles.slotCountEmpty    :
+                            styles.slotCountGap
+
+  const barFillClass =
+    status === 'complete' ? styles.slotCardBarComplete :
+    status === 'empty'    ? styles.slotCardBarEmpty    :
+                            ''
+
+  const hintText =
+    status === 'complete' ? 'Complete' :
+    status === 'empty'    ? `need ${recommended}` :
+                            `need ${needed} more`
+
+  return (
+    <button type="button" className={styles.slotCard} onClick={onClick}>
+      <span className={styles.slotCardName}>{slot.label}</span>
+      <div className={styles.slotCardBarTrack}>
+        <div
+          className={`${styles.slotCardBarFill} ${barFillClass}`}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <div className={styles.slotCardFooter}>
+        <span className={`${styles.slotCardCount} ${countClass}`}>
+          {ownedCount} of {recommended}
+        </span>
+        <span className={styles.slotCardHint}>{hintText}</span>
       </div>
     </button>
   )

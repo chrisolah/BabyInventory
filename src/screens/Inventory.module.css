@@ -1399,3 +1399,96 @@
   gap: 10px;
   padding: 0 10px 10px;
 }
+
+/* ── Slot card grid (Wishlist tab) ────────────────────────────────────────
+   Mirrors the .itemCardGrid layout so the Owned and Wishlist tabs share
+   the same visual rhythm. Each card shows slot name, a thin progress bar,
+   coverage count, and a status hint. */
+.slotCardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  padding: 10px;
+}
+
+.slotCard {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--white);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.slotCard:hover {
+  background: var(--gray-50);
+}
+
+.slotCard:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+
+.slotCardName {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-900);
+  line-height: 1.3;
+  /* Allow two lines on very long names before clipping. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.slotCardBarTrack {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--gray-100);
+  overflow: hidden;
+}
+
+.slotCardBarFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--teal);
+  transition: width 0.3s;
+}
+
+.slotCardBarComplete {
+  background: var(--teal-dark);
+}
+
+.slotCardBarEmpty {
+  background: var(--gray-200);
+}
+
+.slotCardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px;
+}
+
+/* Reuses slotCountComplete / slotCountGap / slotCountEmpty from the slot row. */
+.slotCardCount {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.slotCardHint {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--gray-400);
+  white-space: nowrap;
+}
