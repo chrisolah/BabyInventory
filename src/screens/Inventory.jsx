@@ -864,7 +864,7 @@ export default function Inventory() {
           <button
             type="button"
             className={styles.addBtn}
-            onClick={() => navigate('/add-item')}
+            onClick={() => navigate('/add-item?autoScan=1')}
             aria-label="Add item"
           >
             <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
@@ -926,7 +926,7 @@ export default function Inventory() {
                 ageRange={selectedAgeRange}
                 totalOwnedCount={totalOwnedCount}
                 onAdd={() =>
-                  navigate(`/add-item?mode=owned&size=${encodeURIComponent(selectedAgeRange)}`)
+                  navigate(`/add-item?autoScan=1&mode=owned&size=${encodeURIComponent(selectedAgeRange)}`)
                 }
               />
             )}
@@ -969,7 +969,7 @@ export default function Inventory() {
                   type="button"
                   className={styles.addMoreBtn}
                   onClick={() =>
-                    navigate(`/add-item?mode=owned&size=${encodeURIComponent(selectedAgeRange)}`)
+                    navigate(`/add-item?autoScan=1&mode=owned&size=${encodeURIComponent(selectedAgeRange)}`)
                   }
                 >
                   + Add item in {selectedAgeRange}
@@ -1044,7 +1044,7 @@ export default function Inventory() {
             showOutgrow={showOutgrow}
             onOutgrowClick={handleOutgrowClick}
             onSlotTap={handleSlotTap}
-            onAddWish={() => navigate('/add-item?mode=needed')}
+            onAddWish={() => navigate('/add-item?autoScan=1&mode=needed')}
             onItemTap={(itemId) => navigate(`/item/${itemId}`)}
             collapsedCategories={wishCollapsed}
             onToggleCategory={toggleWishGroup}

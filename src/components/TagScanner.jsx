@@ -959,7 +959,7 @@ function CameraModal({
 // time the user can swipe it away, auto-capture has often already fired.
 // Routing through this sheet means batchMode is already the right value
 // when CameraModal mounts.
-function ModePicker({ onPick, onCancel }) {
+function ModePicker({ onPick, onCancel, onManual }) {
   // Escape to dismiss for desktop testing — same pattern as CameraModal.
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onCancel() }
@@ -972,14 +972,11 @@ function ModePicker({ onPick, onCancel }) {
       className={styles.modePickerScrim}
       role="dialog"
       aria-modal="true"
-      aria-label="Choose scan mode"
+      aria-label="How do you want to add?"
       onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}
     >
       <div className={styles.modePickerSheet}>
-        <div className={styles.modePickerTitle}>What are you scanning?</div>
-        <div className={styles.modePickerSub}>
-          Pick one. You can switch from inside the camera too.
-        </div>
+        <div className={styles.modePickerTitle}>How do you want to add?</div>
         <button
           type="button"
           className={styles.modePickerCard}
@@ -992,8 +989,8 @@ function ModePicker({ onPick, onCancel }) {
             </svg>
           </div>
           <div className={styles.modePickerCardText}>
-            <div className={styles.modePickerCardTitle}>Just one item</div>
-            <div className={styles.modePickerCardBody}>Snap one tag. We close the camera and prefill the form.</div>
+            <div className={styles.modePickerCardTitle}>Scan one item</div>
+            <div className={styles.modePickerCardBody}>Snap the tag. We prefill the details for you.</div>
           </div>
         </button>
         <button
@@ -1008,10 +1005,28 @@ function ModePicker({ onPick, onCancel }) {
             </svg>
           </div>
           <div className={styles.modePickerCardText}>
-            <div className={styles.modePickerCardTitle}>A whole stack</div>
-            <div className={styles.modePickerCardBody}>Camera stays open between tags. Review them all at the end.</div>
+            <div className={styles.modePickerCardTitle}>Scan a whole stack</div>
+            <div className={styles.modePickerCardBody}>Camera stays open. Scan as many as you want, then review.</div>
           </div>
         </button>
+        {onManual && (
+          <button
+            type="button"
+            className={styles.modePickerCard}
+            onClick={onManual}
+          >
+            <div className={`${styles.modePickerCardIcon} ${styles.modePickerIconManual}`} aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+                <path d="M12 20h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div className={styles.modePickerCardText}>
+              <div className={styles.modePickerCardTitle}>Type it in</div>
+              <div className={styles.modePickerCardBody}>No tag? Fill in the details yourself.</div>
+            </div>
+          </button>
+        )}
         <button type="button" className={styles.modePickerCancel} onClick={onCancel}>
           Cancel
         </button>
@@ -1026,6 +1041,15 @@ export default function TagScanner({
   variant = 'inline',
   label,
   disabled = false,
+  // When true, open the mode picker immediately on mount. Used when
+  // navigating to /add-item via an "Add item" button — the sheet appears
+  // right away instead of requiring a second tap on "Scan a tag".
+  autoOpen = false,
+  // Called when the user picks "Type it in" from the mode picker. When
+  // provided, a third card appears in the picker. When null/undefined the
+  // card is hidden (preserving the original two-option behaviour for any
+  // surface that embeds TagScanner without a manual-entry path).
+  onManual = null,
   // Where in the app this scanner is mounted. Flows through to every
   // analytics event so we can answer "do scans started from Home convert
   // better than scans started from AddItem?" — and eventually 'onboarding'
@@ -1044,7 +1068,7 @@ export default function TagScanner({
   // camera" toast that covers the in-camera Multi pill long enough for
   // auto-capture to fire on a single item the user actually wanted to
   // batch. Skipped when we're falling back to the file picker.
-  const [modePickerOpen, setModePickerOpen] = useState(false)
+  const [modePickerOpen, setModePickerOpen] = useState(autoOpen)
   // Batch mode state. Set by the pre-camera mode picker (or, after the
   // camera is open, by the in-camera "Multi" toggle for switching modes
   // mid-session). batchItems accumulates { id, thumbnailDataUrl, fields,
@@ -1459,7 +1483,11 @@ export default function TagScanner({
       )}
 
       {modePickerOpen && (
-        <ModePicker onPick={onPickMode} onCancel={onCancelModePicker} />
+        <ModePicker
+          onPick={onPickMode}
+          onCancel={onCancelModePicker}
+          onManual={onManual ? () => { setModePickerOpen(false); onManual() } : null}
+        />
       )}
 
       {cameraOpen && (

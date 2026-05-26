@@ -113,6 +113,12 @@ export default function AddItem() {
   const initialSizeParam = searchParams.get('size')
   const initialSlotParam = searchParams.get('from_slot')
   const initialBrandParam = searchParams.get('brand')
+  // When ?autoScan=1 is in the URL (set by Inventory's add buttons), the
+  // TagScanner mode picker opens immediately so the user doesn't have to
+  // tap "Scan a tag" as a second step. manualMode hides the scanner section
+  // when the user picks "Type it in" from that picker.
+  const autoScan = !isEditMode && searchParams.get('autoScan') === '1'
+  const [manualMode, setManualMode] = useState(false)
 
   // In edit mode, we also need the existing row's fields to prefill. We
   // load it alongside household context so the form isn't partially
@@ -588,11 +594,13 @@ export default function AddItem() {
             existing row shouldn't invite a re-scan (the user is here to
             tweak, not reseed). The component handles its own loading and
             error states; we just get the fields back via onResult. */}
-        {!isEditMode && (
+        {!isEditMode && !manualMode && (
           <div className={styles.scanRow}>
             <TagScanner
               variant="inline"
               from="add_item"
+              autoOpen={autoScan}
+              onManual={() => setManualMode(true)}
               onResult={onScanResult}
               onBatchSaved={(count) => {
                 // Batch flow skipped the AddItem form entirely; each
