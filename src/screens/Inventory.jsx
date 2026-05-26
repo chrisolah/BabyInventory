@@ -974,14 +974,6 @@ export default function Inventory() {
                 >
                   + Add item in {selectedAgeRange}
                 </button>
-                {/* Surfaces batch-scan two screens before users can find it
-                    on their own (Inventory → AddItem → scanner pill →
-                    "Scan many" toggle). Kept to one quiet line so it doesn't
-                    compete with the primary CTA above it. */}
-                <div className={styles.addMoreHint}>
-                  Adding a stack? Tap <strong>Scan a tag</strong> on the next
-                  screen, then turn on <strong>Scan many</strong>.
-                </div>
               </>
             )}
 
