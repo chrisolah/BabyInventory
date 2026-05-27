@@ -12,6 +12,8 @@ import {
   otherWishes,
   inferAgeRange,
   shouldShowOutgrowBanner,
+  shouldShowPredictionCard,
+  formatTransitionEta,
   pluralize,
 } from '../lib/wardrobe'
 import ProfileMenu from '../components/ProfileMenu'
@@ -787,6 +789,42 @@ export default function Inventory() {
   const ageInfo = useMemo(() => inferAgeRange(ageAnchor), [ageAnchor])
   const showOutgrow = shouldShowOutgrowBanner(ageInfo)
 
+  // ── Prediction card state + data ───────────────────────────────────────
+  // Persists open/collapsed across sessions. Defaults open so first-time
+  // users see the full card without having to expand it.
+  const [predictionOpen, setPredictionOpen] = useState(() => {
+    try {
+      const stored = localStorage.getItem('sprigloop_prediction_open')
+      return stored === null ? true : stored === 'true'
+    } catch {
+      return true
+    }
+  })
+
+  function togglePrediction() {
+    setPredictionOpen(prev => {
+      const next = !prev
+      try { localStorage.setItem('sprigloop_prediction_open', String(next)) } catch {}
+      return next
+    })
+  }
+
+  const showPrediction = shouldShowPredictionCard(ageInfo)
+
+  // Coverage for the *next* size band — what the prediction card's progress
+  // bar is tracking. Only computed when we'll actually show the card.
+  const nextSizeCoverage = useMemo(() => {
+    if (!showPrediction || !ageInfo.nextRange) return null
+    const rows = computeCoverage(babyFilteredItems, ageInfo.nextRange, coverageBabyCount)
+    let owned = 0
+    let recommended = 0
+    for (const row of rows) {
+      owned += Math.min(row.ownedCount, row.recommended)
+      recommended += row.recommended
+    }
+    return { owned, recommended }
+  }, [showPrediction, ageInfo.nextRange, babyFilteredItems, coverageBabyCount])
+
   // Title follows the selection. With a specific baby picked, use their
   // name. With 'All' on a multi-baby household, "Your wardrobes" reads more
   // naturally than "Everyone's wardrobe". Zero/single unnamed baby keeps
@@ -819,6 +857,14 @@ export default function Inventory() {
   function handleOutgrowClick() {
     if (!ageInfo.nextRange) return
     track.gapAlertActioned({ from: ageInfo.currentRange, to: ageInfo.nextRange })
+    setSelectedAgeRange(ageInfo.nextRange)
+  }
+
+  // Prediction card CTA — jump to Wish list filtered to the next size.
+  function handlePredictionCta() {
+    if (!ageInfo.nextRange) return
+    track.gapAlertActioned?.({ from: ageInfo.currentRange, to: ageInfo.nextRange, source: 'prediction_card' })
+    setTab('wishlist')
     setSelectedAgeRange(ageInfo.nextRange)
   }
 
@@ -880,6 +926,77 @@ export default function Inventory() {
           between the sticky header and the tabs so it scrolls with the
           rest of the page (header stays fixed, switcher doesn't). */}
       <BabySwitcher from="inventory" />
+
+      {/* ── Prediction card ─────────────────────────────────────────────────
+          Shows when the baby is within 16 weeks of the next size band AND
+          there are gaps to fill. Collapsible so it doesn't crowd the tabs
+          once the user has seen it. Persists open/closed in localStorage. */}
+      {showPrediction && nextSizeCoverage && (
+        <div className={styles.predictionCard}>
+          <button
+            type="button"
+            className={styles.predictionHeader}
+            onClick={togglePrediction}
+            aria-expanded={predictionOpen}
+          >
+            <Eyebrow color="teal">Coming up</Eyebrow>
+            {!predictionOpen && (
+              <span className={styles.predictionCollapsedSummary}>
+                {ageInfo.nextRange} in {formatTransitionEta(ageInfo.daysToNextRange)}
+              </span>
+            )}
+            <svg
+              className={`${styles.predictionChevron} ${predictionOpen ? styles.predictionChevronOpen : ''}`}
+              viewBox="0 0 12 12"
+              width="12"
+              height="12"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          {predictionOpen && (
+            <div className={styles.predictionBody}>
+              <p className={styles.predictionTitle}>
+                {ageAnchor?.name ? `${ageAnchor.name} will likely reach ${ageInfo.nextRange}` : `Next size: ${ageInfo.nextRange}`}
+                {' '}
+                <span className={styles.predictionEta}>
+                  in {formatTransitionEta(ageInfo.daysToNextRange)}
+                </span>
+              </p>
+              <p className={styles.predictionSub}>
+                {nextSizeCoverage.recommended === 0
+                  ? 'No gaps — you\'re all set for that size.'
+                  : nextSizeCoverage.owned === nextSizeCoverage.recommended
+                    ? `You're all set for ${ageInfo.nextRange}.`
+                    : `You have ${nextSizeCoverage.owned} of ${nextSizeCoverage.recommended} recommended items for that size.`
+                }
+              </p>
+
+              {nextSizeCoverage.recommended > 0 && (
+                <div className={styles.predictionProgressWrap} aria-label={`${nextSizeCoverage.owned} of ${nextSizeCoverage.recommended} items for ${ageInfo.nextRange}`}>
+                  <div
+                    className={styles.predictionProgressFill}
+                    style={{ width: `${Math.min(100, Math.round((nextSizeCoverage.owned / nextSizeCoverage.recommended) * 100))}%` }}
+                  />
+                </div>
+              )}
+
+              {nextSizeCoverage.owned < nextSizeCoverage.recommended && (
+                <button
+                  type="button"
+                  className={styles.predictionCta}
+                  onClick={handlePredictionCta}
+                >
+                  See what's missing
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className={styles.tabs}>
         <button

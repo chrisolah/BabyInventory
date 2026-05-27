@@ -132,6 +132,117 @@
   z-index: 1;
 }
 
+/* ── Prediction card ──────────────────────────────────────── */
+/* Sits between BabySwitcher and the Owned/Wishlist tabs. Teal-tinted
+   surface, same 16px side padding + 688px max-width as the tab bar and
+   body below so it lines up cleanly at every viewport width. */
+.predictionCard {
+  max-width: 688px;
+  width: calc(100% - 32px);
+  margin: 12px auto 0;
+  border: 0.5px solid var(--teal-mid);
+  border-radius: 14px;
+  background: var(--teal-light);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.predictionHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.predictionCollapsedSummary {
+  font-size: 13px;
+  color: var(--teal-dark);
+  opacity: 0.8;
+}
+
+/* Chevron rotates to point up when open. */
+.predictionChevron {
+  margin-left: auto;
+  color: var(--teal-dark);
+  opacity: 0.7;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.predictionChevronOpen {
+  transform: rotate(180deg);
+}
+
+.predictionBody {
+  padding: 0 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.predictionTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--teal-dark);
+  line-height: 1.4;
+}
+
+.predictionEta {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.predictionSub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--teal-dark);
+  opacity: 0.75;
+  line-height: 1.4;
+}
+
+.predictionProgressWrap {
+  height: 5px;
+  background: var(--teal-mid);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.predictionProgressFill {
+  height: 100%;
+  background: var(--teal);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.predictionCta {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal-light);
+  background: var(--teal-dark);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.predictionCta:hover {
+  opacity: 0.9;
+}
+
 /* ── Tabs ─────────────────────────────────────────────────── */
 /* Pill tabs — constrained to the same inner width as the body below
    (max-width 720px - 32px side padding = 688px). Modern toggle pattern:

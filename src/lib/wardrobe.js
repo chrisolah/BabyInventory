@@ -644,6 +644,32 @@ export function shouldShowOutgrowBanner({ daysToNextRange, nextRange }) {
   return daysToNextRange <= OUTGROW_WINDOW_DAYS && daysToNextRange >= 0
 }
 
+// ── Prediction card trigger ────────────────────────────────────────────────
+// Returns true when the next size transition is far enough ahead to be worth
+// planning for (but close enough to be actionable). Window is 16 weeks —
+// roughly one season's worth of lead time for sourcing secondhand clothes.
+// The lower bound is 0 so the card stays up until the actual transition
+// (at which point the outgrow banner takes over and the next range becomes
+// current, making nextRange point one further ahead).
+export const PREDICTION_WINDOW_DAYS = 112  // 16 weeks
+export function shouldShowPredictionCard({ daysToNextRange, nextRange, overridden }) {
+  if (!nextRange) return false
+  if (daysToNextRange == null) return false
+  if (overridden) return false
+  return daysToNextRange >= 0 && daysToNextRange <= PREDICTION_WINDOW_DAYS
+}
+
+// Given daysToNextRange, returns a human-readable "~N weeks" / "~N months"
+// string for the prediction card header.
+export function formatTransitionEta(daysToNextRange) {
+  if (daysToNextRange == null) return null
+  const weeks = Math.ceil(daysToNextRange / 7)
+  if (weeks <= 1) return 'this week'
+  if (weeks < 5) return `~${weeks} weeks`
+  const months = Math.round(weeks / 4.33)
+  return `~${months} month${months === 1 ? '' : 's'}`
+}
+
 // ── Pluralize helper for UI copy ───────────────────────────────────────────
 // Tiny helper so UI code doesn't have to sprinkle ternaries everywhere.
 export function pluralize(n, singular, plural) {
