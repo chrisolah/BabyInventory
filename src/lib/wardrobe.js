@@ -674,9 +674,9 @@ export function shouldShowOutgrowBanner({ daysToNextRange, nextRange }) {
 export const PREDICTION_WINDOW_DAYS = 112  // 16 weeks
 export function shouldShowPredictionCard({ daysToNextRange, nextRange, overridden, expecting, daysUntilDue }) {
   if (overridden) return false
-  // Expecting countdown — show whenever due date is within the window.
+  // Expecting countdown — show for the entire pregnancy, no upper bound.
   if (expecting && daysUntilDue != null) {
-    return daysUntilDue >= 0 && daysUntilDue <= PREDICTION_WINDOW_DAYS
+    return daysUntilDue >= 0
   }
   // Normal next-size prediction.
   if (!nextRange) return false
