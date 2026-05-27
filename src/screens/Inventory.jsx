@@ -942,9 +942,7 @@ export default function Inventory() {
             onClick={togglePrediction}
             aria-expanded={predictionOpen}
           >
-            <Eyebrow color="teal">
-              {ageInfo.expecting ? 'Arriving soon' : 'Coming up'}
-            </Eyebrow>
+            <Eyebrow color="teal">Coming up</Eyebrow>
             {!predictionOpen && (
               <span className={styles.predictionCollapsedSummary}>
                 {ageInfo.expecting
