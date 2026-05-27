@@ -243,6 +243,22 @@
   opacity: 0.9;
 }
 
+/* Subtle inline nudge to update DOB once the due date has passed.
+   Sits below the CTA so it doesn't compete with the primary action. */
+.predictionDobNudge {
+  margin-top: 10px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  color: var(--teal-dark);
+  opacity: 0.65;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* ── Tabs ─────────────────────────────────────────────────── */
 /* Pill tabs — constrained to the same inner width as the body below
    (max-width 720px - 32px side padding = 688px). Modern toggle pattern:

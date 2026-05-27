@@ -811,11 +811,14 @@ export default function Inventory() {
 
   const showPrediction = shouldShowPredictionCard(ageInfo)
 
-  // Coverage for the *next* size band — what the prediction card's progress
-  // bar is tracking. Only computed when we'll actually show the card.
+  // Coverage for the prediction card's target size band:
+  //   - Expecting babies:  0-3M (the first size they'll need)
+  //   - Everyone else:     nextRange (the size they're growing into)
+  // Only computed when the card will actually show.
+  const predictionTargetRange = ageInfo.expecting ? AGE_RANGES[0] : ageInfo.nextRange
   const nextSizeCoverage = useMemo(() => {
-    if (!showPrediction || !ageInfo.nextRange) return null
-    const rows = computeCoverage(babyFilteredItems, ageInfo.nextRange, coverageBabyCount)
+    if (!showPrediction || !predictionTargetRange) return null
+    const rows = computeCoverage(babyFilteredItems, predictionTargetRange, coverageBabyCount)
     let owned = 0
     let recommended = 0
     for (const row of rows) {
@@ -823,7 +826,7 @@ export default function Inventory() {
       recommended += row.recommended
     }
     return { owned, recommended }
-  }, [showPrediction, ageInfo.nextRange, babyFilteredItems, coverageBabyCount])
+  }, [showPrediction, predictionTargetRange, babyFilteredItems, coverageBabyCount])
 
   // Title follows the selection. With a specific baby picked, use their
   // name. With 'All' on a multi-baby household, "Your wardrobes" reads more
@@ -931,7 +934,7 @@ export default function Inventory() {
           Shows when the baby is within 16 weeks of the next size band AND
           there are gaps to fill. Collapsible so it doesn't crowd the tabs
           once the user has seen it. Persists open/closed in localStorage. */}
-      {showPrediction && nextSizeCoverage && (
+      {showPrediction && (ageInfo.expecting || nextSizeCoverage) && (
         <div className={styles.predictionCard}>
           <button
             type="button"
@@ -939,10 +942,15 @@ export default function Inventory() {
             onClick={togglePrediction}
             aria-expanded={predictionOpen}
           >
-            <Eyebrow color="teal">Coming up</Eyebrow>
+            <Eyebrow color="teal">
+              {ageInfo.expecting ? 'Arriving soon' : 'Coming up'}
+            </Eyebrow>
             {!predictionOpen && (
               <span className={styles.predictionCollapsedSummary}>
-                {ageInfo.nextRange} in {formatTransitionEta(ageInfo.daysToNextRange)}
+                {ageInfo.expecting
+                  ? `Due in ${formatTransitionEta(ageInfo.daysUntilDue)}`
+                  : `${ageInfo.nextRange} in ${formatTransitionEta(ageInfo.daysToNextRange)}`
+                }
               </span>
             )}
             <svg
@@ -959,39 +967,86 @@ export default function Inventory() {
 
           {predictionOpen && (
             <div className={styles.predictionBody}>
-              <p className={styles.predictionTitle}>
-                {ageAnchor?.name ? `${ageAnchor.name} will likely reach ${ageInfo.nextRange}` : `Next size: ${ageInfo.nextRange}`}
-                {' '}
-                <span className={styles.predictionEta}>
-                  in {formatTransitionEta(ageInfo.daysToNextRange)}
-                </span>
-              </p>
-              <p className={styles.predictionSub}>
-                {nextSizeCoverage.recommended === 0
-                  ? 'No gaps — you\'re all set for that size.'
-                  : nextSizeCoverage.owned === nextSizeCoverage.recommended
-                    ? `You're all set for ${ageInfo.nextRange}.`
-                    : `You have ${nextSizeCoverage.owned} of ${nextSizeCoverage.recommended} recommended items for that size.`
-                }
-              </p>
+              {ageInfo.expecting ? (
+                // ── Expecting countdown mode ──────────────────────────────
+                <>
+                  <p className={styles.predictionTitle}>
+                    {ageAnchor?.name
+                      ? `${ageAnchor.name} arrives in ${formatTransitionEta(ageInfo.daysUntilDue)}!`
+                      : `Your baby arrives in ${formatTransitionEta(ageInfo.daysUntilDue)}!`
+                    }
+                  </p>
+                  <p className={styles.predictionSub}>
+                    {nextSizeCoverage && nextSizeCoverage.owned < nextSizeCoverage.recommended
+                      ? `You have ${nextSizeCoverage.owned} of ${nextSizeCoverage.recommended} recommended 0–3M items — still time to fill the gaps.`
+                      : `Your 0–3M wardrobe is looking good — ready for the big day!`
+                    }
+                  </p>
+                  {nextSizeCoverage && nextSizeCoverage.recommended > 0 && (
+                    <div className={styles.predictionProgressWrap} aria-label={`${nextSizeCoverage.owned} of ${nextSizeCoverage.recommended} items for 0-3M`}>
+                      <div
+                        className={styles.predictionProgressFill}
+                        style={{ width: `${Math.min(100, Math.round((nextSizeCoverage.owned / nextSizeCoverage.recommended) * 100))}%` }}
+                      />
+                    </div>
+                  )}
+                  {nextSizeCoverage && nextSizeCoverage.owned < nextSizeCoverage.recommended && (
+                    <button
+                      type="button"
+                      className={styles.predictionCta}
+                      onClick={handlePredictionCta}
+                    >
+                      See what you still need
+                    </button>
+                  )}
+                </>
+              ) : (
+                // ── Normal next-size prediction mode ─────────────────────
+                <>
+                  <p className={styles.predictionTitle}>
+                    {ageAnchor?.name ? `${ageAnchor.name} will likely reach ${ageInfo.nextRange}` : `Next size: ${ageInfo.nextRange}`}
+                    {' '}
+                    <span className={styles.predictionEta}>
+                      in {formatTransitionEta(ageInfo.daysToNextRange)}
+                    </span>
+                  </p>
+                  <p className={styles.predictionSub}>
+                    {nextSizeCoverage.owned === nextSizeCoverage.recommended
+                      ? `You're all set for ${ageInfo.nextRange}.`
+                      : `You have ${nextSizeCoverage.owned} of ${nextSizeCoverage.recommended} recommended items for that size.`
+                    }
+                  </p>
 
-              {nextSizeCoverage.recommended > 0 && (
-                <div className={styles.predictionProgressWrap} aria-label={`${nextSizeCoverage.owned} of ${nextSizeCoverage.recommended} items for ${ageInfo.nextRange}`}>
-                  <div
-                    className={styles.predictionProgressFill}
-                    style={{ width: `${Math.min(100, Math.round((nextSizeCoverage.owned / nextSizeCoverage.recommended) * 100))}%` }}
-                  />
-                </div>
-              )}
+                  {nextSizeCoverage.recommended > 0 && (
+                    <div className={styles.predictionProgressWrap} aria-label={`${nextSizeCoverage.owned} of ${nextSizeCoverage.recommended} items for ${ageInfo.nextRange}`}>
+                      <div
+                        className={styles.predictionProgressFill}
+                        style={{ width: `${Math.min(100, Math.round((nextSizeCoverage.owned / nextSizeCoverage.recommended) * 100))}%` }}
+                      />
+                    </div>
+                  )}
 
-              {nextSizeCoverage.owned < nextSizeCoverage.recommended && (
-                <button
-                  type="button"
-                  className={styles.predictionCta}
-                  onClick={handlePredictionCta}
-                >
-                  See what's missing
-                </button>
+                  {nextSizeCoverage.owned < nextSizeCoverage.recommended && (
+                    <button
+                      type="button"
+                      className={styles.predictionCta}
+                      onClick={handlePredictionCta}
+                    >
+                      See what's missing
+                    </button>
+                  )}
+
+                  {/* Nudge to record the real DOB once the due date has passed. */}
+                  {ageInfo.usingDueDateAsFallback && (
+                    <button
+                      type="button"
+                      className={styles.predictionDobNudge}
+                      onClick={() => navigate('/profile')}
+                    >
+                      {ageAnchor?.name ? `${ageAnchor.name} here yet?` : 'Baby here yet?'} Update their birthday in Profile →
+                    </button>
+                  )}
+                </>
               )}
             </div>
           )}

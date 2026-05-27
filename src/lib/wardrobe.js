@@ -565,20 +565,25 @@ export function otherWishes(items, ageRange) {
 // We still compute monthsOld for debugging, but daysToNextRange is nulled so
 // the outgrow banner — which is a calendar-age signal — stays quiet.
 //
-// Returns: { currentRange, monthsOld, daysToNextRange, nextRange, overridden }
-// - currentRange: one of AGE_RANGES or null if out of supported range (>24M)
-// - monthsOld: decimal months since birth (negative for expecting)
-// - daysToNextRange: days until the upper boundary of currentRange, or null
-//   if already in the last range / not yet born / override in effect
-// - nextRange: the age range after currentRange, or null if none
-// - overridden: true when the currentRange came from age_range_override
+// Returns:
+//   currentRange          — one of AGE_RANGES or null if >24M
+//   monthsOld             — decimal months since birth (negative for expecting)
+//   daysToNextRange       — days to upper boundary of currentRange, or null
+//   nextRange             — next AGE_RANGE after currentRange, or null
+//   overridden            — true when currentRange came from age_range_override
+//   expecting             — true when due_date is in the future and no DOB recorded
+//   daysUntilDue          — days until due date (only set when expecting, else null)
+//   usingDueDateAsFallback — true when due date has passed but no DOB recorded yet;
+//                            the app treats due_date as effective DOB and should prompt
+//                            the parent to record the real birth date
 export function inferAgeRange(baby, now = new Date()) {
-  if (!baby) return { currentRange: null, monthsOld: null, daysToNextRange: null, nextRange: null, overridden: false }
+  const nil = { currentRange: null, monthsOld: null, daysToNextRange: null, nextRange: null, overridden: false, expecting: false, daysUntilDue: null, usingDueDateAsFallback: false }
+  if (!baby) return nil
 
   const dob = baby.date_of_birth ? new Date(baby.date_of_birth) : null
   const due = baby.due_date ? new Date(baby.due_date) : null
   const effective = dob || due
-  if (!effective) return { currentRange: null, monthsOld: null, daysToNextRange: null, nextRange: null, overridden: false }
+  if (!effective) return nil
 
   const msPerDay = 1000 * 60 * 60 * 24
   const daysOld = (now - effective) / msPerDay
@@ -596,17 +601,24 @@ export function inferAgeRange(baby, now = new Date()) {
       daysToNextRange: null,
       nextRange: AGE_RANGES[idx + 1] ?? null,
       overridden: true,
+      expecting: false,
+      daysUntilDue: null,
+      usingDueDateAsFallback: false,
     }
   }
 
-  // Expecting: baby not yet born. Default to the first age range.
+  // Expecting: baby not yet born. Surface daysUntilDue for the countdown card.
   if (!dob && due && now < due) {
+    const daysUntilDue = (due - now) / msPerDay
     return {
       currentRange: AGE_RANGES[0],
       monthsOld,
       daysToNextRange: null,
       nextRange: AGE_RANGES[1] ?? null,
       overridden: false,
+      expecting: true,
+      daysUntilDue,
+      usingDueDateAsFallback: false,
     }
   }
 
@@ -630,7 +642,12 @@ export function inferAgeRange(baby, now = new Date()) {
     daysToNextRange = Math.round(monthsToNext * 30.4375)
   }
 
-  return { currentRange, monthsOld, daysToNextRange, nextRange, overridden: false }
+  // usingDueDateAsFallback: due date has passed but no DOB recorded.
+  // We're using the due date as the effective birth date, which is a
+  // reasonable approximation but the parent should confirm the real date.
+  const usingDueDateAsFallback = !dob && !!due
+
+  return { currentRange, monthsOld, daysToNextRange, nextRange, overridden: false, expecting: false, daysUntilDue: null, usingDueDateAsFallback }
 }
 
 // ── Outgrow banner trigger ─────────────────────────────────────────────────
@@ -651,11 +668,19 @@ export function shouldShowOutgrowBanner({ daysToNextRange, nextRange }) {
 // The lower bound is 0 so the card stays up until the actual transition
 // (at which point the outgrow banner takes over and the next range becomes
 // current, making nextRange point one further ahead).
+//
+// Also fires for expecting babies within 16 weeks of their due date, showing
+// a countdown card instead of a size-transition card.
 export const PREDICTION_WINDOW_DAYS = 112  // 16 weeks
-export function shouldShowPredictionCard({ daysToNextRange, nextRange, overridden }) {
+export function shouldShowPredictionCard({ daysToNextRange, nextRange, overridden, expecting, daysUntilDue }) {
+  if (overridden) return false
+  // Expecting countdown — show whenever due date is within the window.
+  if (expecting && daysUntilDue != null) {
+    return daysUntilDue >= 0 && daysUntilDue <= PREDICTION_WINDOW_DAYS
+  }
+  // Normal next-size prediction.
   if (!nextRange) return false
   if (daysToNextRange == null) return false
-  if (overridden) return false
   return daysToNextRange >= 0 && daysToNextRange <= PREDICTION_WINDOW_DAYS
 }
 
