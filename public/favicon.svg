@@ -1,4 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <path d="M16 3 Q5 10 6 22 Q9 30 16 30 Q23 30 26 22 Q27 10 16 3 Z" fill="#1D9E75"/>
-  <path d="M16 8 L16 28" stroke="#0F6E56" stroke-width="1" stroke-linecap="round" fill="none"/>
+  <!-- Teal background with iOS-style rounding -->
+  <rect width="32" height="32" rx="7" fill="#1D9E75"/>
+  <!-- Stem: gentle S-curve -->
+  <path d="M16 27 C14 22 14 17 15.5 13 C16.5 10.5 16.5 8 16 5.5"
+        stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <!-- Bud at top -->
+  <ellipse cx="16" cy="4" rx="2.5" ry="3.5" fill="white"/>
+  <!-- Right leaf (upper) -->
+  <ellipse cx="20.5" cy="11.5" rx="5.5" ry="2.5" transform="rotate(-25 20.5 11.5)" fill="white"/>
+  <!-- Left leaf (lower) -->
+  <ellipse cx="11.5" cy="18" rx="5.5" ry="2.5" transform="rotate(25 11.5 18)" fill="white"/>
 </svg>
