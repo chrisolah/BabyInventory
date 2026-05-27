@@ -124,6 +124,14 @@ export default function Landing() {
           </button>
           <button className={styles.heroSecondaryCta} onClick={handleSeeHub}>See how pass-along works</button>
         </div>
+        <a
+          className={styles.appStoreLink}
+          href="https://apps.apple.com/us/app/sprigloop-baby-wardrobe/id6772641313"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Also on the App Store →
+        </a>
       </section>
 
       <section className={styles.features}>
