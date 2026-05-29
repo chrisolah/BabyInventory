@@ -895,11 +895,8 @@ export default function Inventory() {
           rest of the page (header stays fixed, switcher doesn't). */}
       <BabySwitcher from="inventory" />
 
-      {/* ── Prediction card ─────────────────────────────────────────────────
-          Shows when the baby is within 16 weeks of the next size band AND
-          there are gaps to fill. Collapsible so it doesn't crowd the tabs
-          once the user has seen it. Persists open/closed in localStorage. */}
-      {isClothing && showPrediction && (ageInfo.expecting || nextSizeCoverage) && (
+      {/* Prediction card removed — replaced by tracker widget on Home screen. */}
+      {false && isClothing && showPrediction && (ageInfo.expecting || nextSizeCoverage) && (
         <div className={styles.predictionCard}>
           <button
             type="button"

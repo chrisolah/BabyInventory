@@ -933,6 +933,7 @@
     gap: 2px;
     position: sticky;
     top: 0;
+    background: var(--white);
   }
 }
 
