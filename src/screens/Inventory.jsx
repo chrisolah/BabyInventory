@@ -121,7 +121,7 @@ const CATEGORY_ORDER = [
   'swimwear',
 ]
 
-const VALID_TOP_CATEGORIES = ['clothing', 'sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath']
+const VALID_TOP_CATEGORIES = ['clothing', 'sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath', 'wishlist']
 
 export default function Inventory() {
   const navigate = useNavigate()
@@ -1060,7 +1060,15 @@ export default function Inventory() {
         {!loading && !error && (
           <>
 
-            {isClothing && selectedAgeRange && (
+            {selectedTopCategory === 'wishlist' && (
+              <WishlistView
+                items={babyFilteredItems.filter(it => it.inventory_status === 'needed')}
+                onItemTap={(id) => navigate(`/item/${id}`)}
+                onAddWish={() => navigate('/add-item?autoScan=1&mode=needed')}
+              />
+            )}
+
+            {isClothing && selectedTopCategory !== 'wishlist' && selectedAgeRange && (
               <>
             {/* Age-range chip navbar — mirrors the Wish list nav so users can
                 stock forward (12-18M in April when baby is 3-6M) without
@@ -1184,7 +1192,7 @@ export default function Inventory() {
               </>
             )}
 
-            {!isClothing && (
+            {!isClothing && selectedTopCategory !== 'wishlist' && (
               <>
                 {catOwnedGrouped.length === 0 && (
                   <div className={styles.empty}>
@@ -1615,6 +1623,62 @@ function humanizeItemType(s) {
   return s.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())
 }
 
+// ── Wishlist view — all needed items grouped by category ──────────────────────
+const WISHLIST_CAT_ORDER = ['clothing','sleep','feeding','diapering','travel','play','health','bath']
+const WISHLIST_CAT_LABEL = {
+  clothing:'Clothing', sleep:'Sleep', feeding:'Feeding', diapering:'Diapering',
+  travel:'Travel', play:'Play', health:'Health', bath:'Bath',
+}
+
+function WishlistView({ items, onItemTap, onAddWish }) {
+  const grouped = {}
+  for (const item of items) {
+    const cat = item.top_category || 'clothing'
+    if (!grouped[cat]) grouped[cat] = []
+    grouped[cat].push(item)
+  }
+  const usedCats = WISHLIST_CAT_ORDER.filter(c => grouped[c]?.length > 0)
+
+  if (items.length === 0) {
+    return (
+      <div className={styles.emptyState}>
+        <div className={styles.emptyStateTitle}>Wishlist is empty</div>
+        <p className={styles.emptyStateSub}>Add items you still need to track them here.</p>
+        <button type="button" className={styles.addMoreBtn} onClick={onAddWish}>+ Add to wishlist</button>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      {usedCats.map(cat => (
+        <section key={cat} className={styles.group}>
+          <div className={styles.groupHeader}>
+            <span className={styles.groupTitle}>{WISHLIST_CAT_LABEL[cat]}</span>
+            <span className={styles.groupMeta}>{grouped[cat].length}</span>
+          </div>
+          {grouped[cat].map(item => (
+            <button
+              type="button"
+              key={item.id}
+              className={styles.itemRow}
+              onClick={() => onItemTap(item.id)}
+            >
+              <div className={styles.itemMain}>
+                <span className={styles.itemName}>
+                  {item.name || item.brand || humanizeItemType(item.item_type) || 'Item'}
+                </span>
+              </div>
+              <span className={styles.itemBadge}>Needed</span>
+            </button>
+          ))}
+        </section>
+      ))}
+      <button type="button" className={styles.addMoreBtn} onClick={onAddWish}>+ Add to wishlist</button>
+    </div>
+  )
+}
+
 // ── Category nav icons ────────────────────────────────────────────────────
 function ClothingNavIcon() {
   return (
@@ -1682,6 +1746,14 @@ function BathNavIcon() {
     </svg>
   )
 }
+function WishlistNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M5 3h10a1 1 0 011 1v12l-6-3-6 3V4a1 1 0 011-1z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
 
 const INVENTORY_CATEGORIES = [
   { id: 'clothing',  label: 'Clothing',  icon: ClothingNavIcon },
@@ -1692,6 +1764,7 @@ const INVENTORY_CATEGORIES = [
   { id: 'play',      label: 'Play',      icon: PlayNavIcon },
   { id: 'health',    label: 'Health',    icon: HealthNavIcon },
   { id: 'bath',      label: 'Bath',      icon: BathNavIcon },
+  { id: 'wishlist',  label: 'Wishlist',  icon: WishlistNavIcon },
 ]
 
 // ── Non-clothing item card ────────────────────────────────────────────────

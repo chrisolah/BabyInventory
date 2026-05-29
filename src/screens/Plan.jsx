@@ -46,6 +46,7 @@ const PLAN_CATEGORIES = [
   { id: 'play',      label: 'Play',      live: true, icon: PlayNavIcon },
   { id: 'health',    label: 'Health',    live: true, icon: HealthNavIcon },
   { id: 'bath',      label: 'Bath',      live: true, icon: BathNavIcon },
+  { id: 'wishlist',  label: 'Wishlist',  live: true, icon: WishlistNavIcon },
 ]
 
 const CATEGORY_ORDER = [
@@ -302,16 +303,18 @@ export default function Plan() {
               </section>
             ))}
 
-            {/* Other wishes */}
-            <OtherWishesSection
-              items={otherWishItems}
-              onItemTap={(id) => navigate(`/item/${id}`)}
-              onAddWish={() => navigate('/add-item?autoScan=1&mode=needed')}
-            />
           </>
         )}
 
-        {!itemsLoading && !isClothing && (
+        {!itemsLoading && selectedCategory === 'wishlist' && (
+          <WishlistView
+            items={babyFilteredItems.filter(it => it.inventory_status === 'needed')}
+            onItemTap={(id) => navigate(`/item/${id}`)}
+            onAddWish={() => navigate('/add-item?autoScan=1&mode=needed')}
+          />
+        )}
+
+        {!itemsLoading && !isClothing && selectedCategory !== 'wishlist' && (
           <>
             {/* Coverage summary card */}
             <CoverageSummaryCard
@@ -436,6 +439,73 @@ function BathNavIcon() {
       <path d="M3 11h14v1.5a5 5 0 01-10 0" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
       <path d="M5 11V5.5A1.5 1.5 0 017.5 5a1.5 1.5 0 011.5 1.5V7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
     </svg>
+  )
+}
+
+function WishlistNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M5 3h10a1 1 0 011 1v12l-6-3-6 3V4a1 1 0 011-1z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+// ── Wishlist view — all needed items across every category ────────────────────
+const WISHLIST_CATEGORY_ORDER = [
+  'clothing', 'sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath',
+]
+const WISHLIST_CATEGORY_LABEL = {
+  clothing: 'Clothing', sleep: 'Sleep', feeding: 'Feeding', diapering: 'Diapering',
+  travel: 'Travel', play: 'Play', health: 'Health', bath: 'Bath',
+}
+
+function WishlistView({ items, onItemTap, onAddWish }) {
+  // Group by top_category
+  const grouped = {}
+  for (const item of items) {
+    const cat = item.top_category || 'clothing'
+    if (!grouped[cat]) grouped[cat] = []
+    grouped[cat].push(item)
+  }
+  const usedCats = WISHLIST_CATEGORY_ORDER.filter(c => grouped[c]?.length > 0)
+
+  return (
+    <div>
+      {items.length === 0 && (
+        <div className={styles.comingSoonCard}>
+          <div className={styles.comingSoonEmoji}>📋</div>
+          <div className={styles.comingSoonTitle}>Your wishlist is empty</div>
+          <p className={styles.comingSoonBody}>Add items you still need to track them here.</p>
+        </div>
+      )}
+      {usedCats.map(cat => (
+        <section key={cat}>
+          <FlatGroupHeader title={WISHLIST_CATEGORY_LABEL[cat]} owned={0} recommended={grouped[cat].length} />
+          <div className={styles.otherWishList}>
+            {grouped[cat].map(item => (
+              <button
+                type="button"
+                className={styles.wish}
+                key={item.id}
+                onClick={() => onItemTap(item.id)}
+                aria-label={`Open ${item.name || 'item'}`}
+              >
+                <div className={styles.wishName}>{item.name || item.brand || 'Item'}</div>
+                {item.priority && (
+                  <span className={`${styles.wishPriority} ${item.priority === 'nice_to_have' ? styles.wishPriorityAmber : ''}`}>
+                    {PRIORITY_LABEL[item.priority]}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
+      ))}
+      <button type="button" className={styles.wishAddBtn} onClick={onAddWish}>
+        + Add to wishlist
+      </button>
+    </div>
   )
 }
 
