@@ -5,64 +5,63 @@ import { useAuth } from '../hooks/useAuth'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { useUpgradeGate } from '../contexts/UpgradeGateContext'
 import { track } from '../lib/analytics'
-import { SLOTS, SLOT_BY_ID } from '../lib/wardrobe'
+import { SLOTS, SLOT_BY_ID, AGE_RANGES } from '../lib/wardrobe'
+import {
+  ITEMS_BY_SUB_CATEGORY,
+  SUB_CATEGORIES_BY_CATEGORY,
+  SUB_CATEGORY_LABELS,
+} from '../lib/categories'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import TagScanner from '../components/TagScanner'
 import styles from './AddItem.module.css'
 
-// Add / edit item form. Same component serves two routes:
-//   - /add-item           → create mode. INSERT on submit, land on /inventory.
-//   - /item/:id/edit      → edit mode. Loads the row, prefills state, UPDATE
-//                           on submit, navigates back to the item detail page
-//                           so the user sees the saved result.
+// Add / edit item form. Supports all 8 top-level categories:
+//   Clothing → INSERT/UPDATE beta.clothing_items (unchanged)
+//   All others → INSERT/UPDATE beta.items
 //
-// Fields match the check constraints on beta.clothing_items (migration 006):
-//   - category, item_type, size_label, inventory_status: required
-//   - condition: optional (even for owned items — a lot of real inventory
-//     gets added without knowing the item's condition yet, and the photo
-//     scan can't infer it. Keep null-able here and in the DB.)
-//   - priority: only relevant on wishlist items
-//   - brand / season / notes / quantity: always optional (except qty defaults 1)
+// The top-category chip row at the top of the form decides which field set
+// and which table to use. Clothing keeps its existing fields (sub-category,
+// slot type, size, season). Non-clothing gets sub-category + item-type from
+// the categories.js taxonomy + optional age-relevance.
 //
-// Required-field UX contract: canSubmit() reads from getMissingRequiredFields(),
-// which returns a list of { label, domId } entries. The disabled-Save hint
-// below the button reads the same list, so a new required field added to that
-// function is automatically flagged to the user — we never want someone
-// clicking a disabled Save with no explanation.
-//
-// The fuller prototype has photos, colors, weight ranges, fit notes, occasion,
-// exchange toggles. Those come later — this form ships enough to close the
-// inventory loop (add → see).
+// Edit mode: tries clothing_items first, falls back to items.
 
-const CATEGORIES = [
+// ── Top-level category config ─────────────────────────────────────────────────
+const TOP_CATEGORIES = [
+  { value: 'clothing',  label: 'Clothing'  },
+  { value: 'sleep',     label: 'Sleep'     },
+  { value: 'feeding',   label: 'Feeding'   },
+  { value: 'diapering', label: 'Diapering' },
+  { value: 'travel',    label: 'Travel'    },
+  { value: 'play',      label: 'Play'      },
+  { value: 'health',    label: 'Health'    },
+  { value: 'bath',      label: 'Bath'      },
+]
+
+// ── Clothing-specific constants (unchanged) ───────────────────────────────────
+const CLOTHING_CATEGORIES = [
   { value: 'tops_and_bodysuits', label: 'Tops and bodysuits' },
-  { value: 'one_pieces', label: 'One-pieces' },
-  { value: 'bottoms', label: 'Bottoms' },
+  { value: 'one_pieces',         label: 'One-pieces' },
+  { value: 'bottoms',            label: 'Bottoms' },
   { value: 'dresses_and_skirts', label: 'Dresses and skirts' },
-  { value: 'outerwear', label: 'Outerwear' },
-  { value: 'sleepwear', label: 'Sleepwear' },
-  { value: 'footwear', label: 'Footwear' },
-  { value: 'accessories', label: 'Accessories' },
-  { value: 'swimwear', label: 'Swimwear' },
+  { value: 'outerwear',          label: 'Outerwear' },
+  { value: 'sleepwear',          label: 'Sleepwear' },
+  { value: 'footwear',           label: 'Footwear' },
+  { value: 'accessories',        label: 'Accessories' },
+  { value: 'swimwear',           label: 'Swimwear' },
 ]
 
 const SIZES = ['0-3M', '3-6M', '6-9M', '9-12M', '12-18M', '18-24M']
 
 const CONDITIONS = [
-  { value: 'new', label: 'New (with tags)' },
+  { value: 'new',      label: 'New (with tags)' },
   { value: 'like_new', label: 'Like new' },
-  { value: 'good', label: 'Good' },
-  { value: 'fair', label: 'Fair' },
-  { value: 'worn', label: 'Worn' },
+  { value: 'good',     label: 'Good' },
+  { value: 'fair',     label: 'Fair' },
+  { value: 'worn',     label: 'Worn' },
 ]
 
-// Season axis collapsed from four meteorological seasons to the
-// functional warm/cold split parents actually shop on (sleeve length,
-// fabric weight, exposure to weather). 'all_season' kept as a separate
-// option for things genuinely worn year-round (basics, socks, hats).
-// Migration 035 (2026-05-05) backfills any old spring|summer rows to
-// warm_weather and old fall|winter rows to cold_weather.
 const SEASONS = [
   { value: 'warm_weather', label: 'Warm weather' },
   { value: 'cold_weather', label: 'Cold weather' },
@@ -70,19 +69,15 @@ const SEASONS = [
 ]
 
 const PRIORITIES = [
-  { value: 'must_have', label: 'Must have' },
-  { value: 'nice_to_have', label: 'Nice to have' },
-  { value: 'low_priority', label: 'Low priority' },
+  { value: 'must_have',     label: 'Must have' },
+  { value: 'nice_to_have',  label: 'Nice to have' },
+  { value: 'low_priority',  label: 'Low priority' },
 ]
 
 export default function AddItem() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { requireRealAccount } = useUpgradeGate()
-  // Household + currently-selected baby come from context. On create we
-  // pre-attach selectedBabyId as baby_id so items "inherit" the Inventory
-  // view the user was just looking at. On edit we leave baby_id alone —
-  // re-assigning an item across babies is a separate flow (not built yet).
   const {
     household,
     babies,
@@ -92,103 +87,75 @@ export default function AddItem() {
     reloadItems,
   } = useHousehold()
 
-  // Edit vs create is decided by whether the route captured an :id. The
-  // ItemDetail screen links to /item/:id/edit; the Home/Inventory CTAs
-  // link to /add-item (no id). We can't rely on pathname matching here
-  // because react-router handles the matching — we just check `id`.
   const { id: editId } = useParams()
   const isEditMode = Boolean(editId)
 
-  // Optional deep-link pre-fill. Two entry points populate search params:
-  //   1. Slot detail page ("Add one" CTA): mode, category, size, from_slot
-  //   2. Home scan CTA (photo-scan landed here): mode=owned, category,
-  //      size, from_slot (as item_type), brand — all best-effort from the
-  //      model. Users still confirm before save.
-  // Ignore anything that doesn't match the whitelists so malformed URLs
-  // don't put the form into a weird state. Search params are ignored in
-  // edit mode — the loaded row is the source of truth.
   const [searchParams] = useSearchParams()
-  const initialMode = searchParams.get('mode') === 'needed' ? 'needed' : 'owned'
+  const initialMode        = searchParams.get('mode') === 'needed' ? 'needed' : 'owned'
+  const initialTopParam    = searchParams.get('top_category')
   const initialCategoryParam = searchParams.get('category')
-  const initialSizeParam = searchParams.get('size')
-  const initialSlotParam = searchParams.get('from_slot')
-  const initialBrandParam = searchParams.get('brand')
-  // When ?autoScan=1 is in the URL (set by Inventory's add buttons), the
-  // TagScanner mode picker opens immediately so the user doesn't have to
-  // tap "Scan a tag" as a second step. manualMode hides the scanner section
-  // when the user picks "Type it in" from that picker.
+  const initialSizeParam   = searchParams.get('size')
+  const initialSlotParam   = searchParams.get('from_slot')
+  const initialBrandParam  = searchParams.get('brand')
   const autoScan = !isEditMode && searchParams.get('autoScan') === '1'
   const [manualMode, setManualMode] = useState(false)
 
-  // In edit mode, we also need the existing row's fields to prefill. We
-  // load it alongside household context so the form isn't partially
-  // hydrated. Holding the row itself (not just its fields) lets the submit
-  // handler decide UPDATE vs INSERT without re-fetching.
-  const [existingItem, setExistingItem] = useState(null)
-  const [loadingItem, setLoadingItem] = useState(isEditMode)
-
-  // Form state — pre-filled from the URL when possible, otherwise blank.
-  // Whitelist the incoming params against CATEGORIES/SIZES so a stale or
-  // typo'd URL doesn't silently lock the user into an invalid combination.
-  // In edit mode these start blank and get hydrated by the effect below
-  // once the row loads, to avoid a flash of create-mode defaults.
-  const [mode, setMode] = useState(isEditMode ? 'owned' : initialMode)
-  const [category, setCategory] = useState(() => {
-    if (isEditMode) return ''
-    return CATEGORIES.some(c => c.value === initialCategoryParam) ? initialCategoryParam : ''
+  // ── Top category ──────────────────────────────────────────────────────────
+  const [topCategory, setTopCategoryState] = useState(() => {
+    if (isEditMode) return 'clothing'  // overwritten when row loads
+    if (initialTopParam && TOP_CATEGORIES.some(c => c.value === initialTopParam)) {
+      return initialTopParam
+    }
+    return 'clothing'
   })
-  // Item type is now a slot id from the wardrobe taxonomy (e.g. 'bodysuits',
-  // 'pajamas'). Old free-text item_types still work on read paths — the
-  // getSlotForItem() keyword matcher handles them — but new rows are stored
-  // as slot ids so the Wish list tab can route them straight back to a slot
-  // without any guesswork.
-  const [itemType, setItemType] = useState(() => {
+  const isClothing = topCategory === 'clothing'
+
+  // ── Clothing fields ───────────────────────────────────────────────────────
+  const [category, setCategory]   = useState(() => {
+    if (isEditMode) return ''
+    return CLOTHING_CATEGORIES.some(c => c.value === initialCategoryParam) ? initialCategoryParam : ''
+  })
+  const [itemType, setItemType]   = useState(() => {
     if (isEditMode) return ''
     const slot = initialSlotParam ? SLOT_BY_ID[initialSlotParam] : null
-    // Only accept the incoming slot if it actually lives under the incoming
-    // category — otherwise we'd end up with a type that can't be picked from
-    // the filtered dropdown, and canSubmit would fail silently.
-    if (!slot) return ''
-    if (slot.category !== initialCategoryParam) return ''
+    if (!slot || slot.category !== initialCategoryParam) return ''
     return slot.id
   })
   const [sizeLabel, setSizeLabel] = useState(() => {
     if (isEditMode) return ''
     return SIZES.includes(initialSizeParam) ? initialSizeParam : ''
   })
+  const [season, setSeason]       = useState('')
+
+  // ── Non-clothing fields ───────────────────────────────────────────────────
+  const [subCategory, setSubCategoryState]  = useState('')
+  const [catItemType, setCatItemType]       = useState('')   // item slot id from categories.js
+  const [ageRelevance, setAgeRelevance]     = useState('')   // optional
+
+  // ── Shared fields ──────────────────────────────────────────────────────────
+  const [mode, setMode]           = useState(isEditMode ? 'owned' : initialMode)
   const [condition, setCondition] = useState('')
-  const [priority, setPriority] = useState('')
-  const [brand, setBrand] = useState(() => {
+  const [priority, setPriority]   = useState('')
+  const [brand, setBrand]         = useState(() => {
     if (isEditMode) return ''
-    // Brand is free-text so we trim + length-cap rather than whitelist.
-    // Matches the 80-char cap the Edge Function already applies, so a
-    // handcrafted URL can't blow past what photo-scan would send.
     if (typeof initialBrandParam !== 'string') return ''
     return initialBrandParam.trim().slice(0, 80)
   })
-  const [season, setSeason] = useState('')
-  const [quantity, setQuantity] = useState(1)
-  const [notes, setNotes] = useState('')
+  const [quantity, setQuantity]   = useState(1)
+  const [notes, setNotes]         = useState('')
 
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(null)
-  // Count of fields the most recent scan just filled in. Drives the "we
-  // filled in N fields — confirm below and save" banner so the user knows
-  // why the form looks different. Reset on mount; not persisted.
-  const [scanFilledCount, setScanFilledCount] = useState(0)
-  // Captured garment photo from the most recent scan, as a data URL.
-  // Held here so the create path can upload it on save and write the
-  // resulting bucket path into garment_photo_path. Edit mode doesn't
-  // currently surface a way to update the photo (Phase 3 polish), so
-  // this only matters for new rows. Reset on mount; not persisted.
+  // ── Edit mode row ─────────────────────────────────────────────────────────
+  const [existingItem, setExistingItem]     = useState(null)
+  const [existingItemTable, setExistingItemTable] = useState('clothing_items')
+  const [loadingItem, setLoadingItem]       = useState(isEditMode)
+
+  // ── Scan / photo state ────────────────────────────────────────────────────
+  const [saving, setSaving]                         = useState(false)
+  const [error, setError]                           = useState(null)
+  const [scanFilledCount, setScanFilledCount]       = useState(0)
   const [pendingGarmentDataUrl, setPendingGarmentDataUrl] = useState(null)
-  // Set of field names (one of 'category' | 'item_type' | 'size_label' |
-  // 'brand') that the scanner returned with LOW confidence and the user
-  // has not yet touched. Each becomes a small "verify" badge next to the
-  // label. First change to a flagged field clears its flag — interacting
-  // with the input is implicit confirmation that the parent saw the
-  // value. Save also clears the whole set. Not persisted.
-  const [lowConfFields, setLowConfFields] = useState(() => new Set())
+  const [lowConfFields, setLowConfFields]           = useState(() => new Set())
+
   const clearLowConfFlag = useCallback((fieldName) => {
     setLowConfFields((prev) => {
       if (!prev.has(fieldName)) return prev
@@ -198,23 +165,32 @@ export default function AddItem() {
     })
   }, [])
 
-  // Fire add_item_started once per create session. Edit sessions belong to
-  // a different funnel, so we gate it on !isEditMode. Waits on the context
-  // so we don't double-fire if the component re-renders while household is
-  // still loading.
+  // ── Derived lists for non-clothing ────────────────────────────────────────
+  const subCategoryOptions = useMemo(() => {
+    if (isClothing) return []
+    return SUB_CATEGORIES_BY_CATEGORY[topCategory] || []
+  }, [isClothing, topCategory])
+
+  const catItemTypeOptions = useMemo(() => {
+    if (isClothing || !subCategory) return []
+    return ITEMS_BY_SUB_CATEGORY[subCategory] || []
+  }, [isClothing, subCategory])
+
+  // ── Clothing slot options ─────────────────────────────────────────────────
+  const clothingTypeOptions = useMemo(
+    () => (category ? SLOTS.filter(s => s.category === category) : []),
+    [category],
+  )
+
+  // ── Analytics on mount ────────────────────────────────────────────────────
   useEffect(() => {
     if (isEditMode) return
     if (householdLoading) return
     if (!household) return
     track.addItemStarted({ mode })
-    // Fire once on mount per session. Mode changes after mount aren't
-    // "starts" — suppressing exhaustive-deps keeps the single-fire contract.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [householdLoading, household])
 
-  // Surface household-load errors inline. Rare — pre-onboarding users get
-  // redirected before reaching /add-item — but a bad RLS read shouldn't
-  // silently yield an "insert without household" crash later.
   useEffect(() => {
     if (householdError) {
       setError(householdError)
@@ -223,16 +199,18 @@ export default function AddItem() {
     }
   }, [householdError, householdLoading, household])
 
-  // In edit mode, load the existing row and hydrate every form field from
-  // it. Runs in parallel with the household context load; both have to
-  // finish before the form can render (see the combined loading gate below).
+  // ── Edit mode loader ───────────────────────────────────────────────────────
+  // Tries clothing_items first; if not found, tries beta.items.
+  // Sets existingItemTable so the submit handler knows which table to UPDATE.
   useEffect(() => {
     if (!user || !isEditMode || !editId) return
     let cancelled = false
 
     async function loadExisting() {
       setLoadingItem(true)
-      const { data, error: loadErr } = await supabase
+
+      // Try clothing_items first
+      const { data: clothingData, error: clothingErr } = await supabase
         .schema(currentSchema)
         .from('clothing_items')
         .select('*')
@@ -240,35 +218,53 @@ export default function AddItem() {
         .maybeSingle()
 
       if (cancelled) return
-      if (loadErr) {
-        setError(loadErr.message)
-        setLoadingItem(false)
-        return
-      }
-      if (!data) {
-        // Row doesn't exist (or RLS filtered it out — same thing from here).
-        setError('This item isn\u2019t in your wardrobe anymore.')
+
+      if (!clothingErr && clothingData) {
+        setExistingItem(clothingData)
+        setExistingItemTable('clothing_items')
+        setTopCategoryState('clothing')
+        setMode(clothingData.inventory_status === 'needed' ? 'needed' : 'owned')
+        setCategory(clothingData.category || '')
+        setItemType(clothingData.item_type || '')
+        setSizeLabel(clothingData.size_label || '')
+        setCondition(clothingData.condition || '')
+        setPriority(clothingData.priority || '')
+        setBrand(clothingData.brand || '')
+        setSeason(clothingData.season || '')
+        setQuantity(clothingData.quantity || 1)
+        setNotes(clothingData.notes || '')
         setLoadingItem(false)
         return
       }
 
-      setExistingItem(data)
-      // Prefill every field from the row. Fall back to sensible defaults
-      // for null columns so the controlled inputs don't warn. The mode
-      // toggle collapses outgrown/donated/exchanged rows back onto 'owned'
-      // — editing the lifecycle status happens via the detail page's
-      // dedicated actions, not by flipping this segmented control.
-      setMode(data.inventory_status === 'needed' ? 'needed' : 'owned')
-      setCategory(data.category || '')
-      setItemType(data.item_type || '')
-      setSizeLabel(data.size_label || '')
-      setCondition(data.condition || '')
-      setPriority(data.priority || '')
-      setBrand(data.brand || '')
-      setSeason(data.season || '')
-      setQuantity(data.quantity || 1)
-      setNotes(data.notes || '')
+      // Fall back to beta.items
+      const { data: catData, error: catErr } = await supabase
+        .schema(currentSchema)
+        .from('items')
+        .select('*')
+        .eq('id', editId)
+        .maybeSingle()
 
+      if (cancelled) return
+
+      if (catErr || !catData) {
+        setError(catErr?.message || "This item isn’t in your inventory anymore.")
+        setLoadingItem(false)
+        return
+      }
+
+      setExistingItem(catData)
+      setExistingItemTable('items')
+      setTopCategoryState(catData.top_category || 'sleep')
+      setMode(catData.inventory_status === 'needed' ? 'needed' : 'owned')
+      setSubCategoryState(catData.sub_category || '')
+      setCatItemType(catData.item_type || '')
+      setAgeRelevance(catData.age_relevance || '')
+      setCondition(catData.condition || '')
+      setPriority(catData.priority || '')
+      setBrand(catData.brand || '')
+      setQuantity(catData.quantity || 1)
+      setNotes(catData.notes || '')
       setLoadingItem(false)
     }
 
@@ -276,26 +272,27 @@ export default function AddItem() {
     return () => { cancelled = true }
   }, [user, isEditMode, editId])
 
-  // Slots available for the current category, in wardrobe.js order. Keeping
-  // this memo-ed lets the <select> re-render without re-filtering on every
-  // keystroke in unrelated fields.
-  const typeOptions = useMemo(
-    () => (category ? SLOTS.filter(s => s.category === category) : []),
-    [category]
-  )
+  // ── Top-category change handler ────────────────────────────────────────────
+  function onTopCategoryChange(val) {
+    setTopCategoryState(val)
+    // Reset category-specific fields when switching
+    setCategory('')
+    setItemType('')
+    setSizeLabel('')
+    setSeason('')
+    setSubCategoryState('')
+    setCatItemType('')
+    setAgeRelevance('')
+  }
 
-  // Fire analytics when the user narrows down specific fields — helps spot
-  // drop-off points in the funnel. Keep cheap: one event per terminal choice.
+  // ── Clothing change handlers ───────────────────────────────────────────────
   function onCategoryChange(v) {
     setCategory(v)
     clearLowConfFlag('category')
-    // Reset the type if it doesn't belong to the newly chosen category.
-    // Otherwise a stale selection can sneak past canSubmit (value is set,
-    // but not in the visible dropdown).
     const currentSlot = itemType ? SLOT_BY_ID[itemType] : null
     if (!currentSlot || currentSlot.category !== v) {
       setItemType('')
-      clearLowConfFlag('item_type') // reset wipes the inherited flag too
+      clearLowConfFlag('item_type')
     }
     if (v) track.itemCategorySelected(v)
   }
@@ -303,7 +300,7 @@ export default function AddItem() {
   function onTypeChange(v) {
     setItemType(v)
     clearLowConfFlag('item_type')
-    if (v) track.itemCategorySelected(v) // reuse: tracks refinement, not category
+    if (v) track.itemCategorySelected(v)
   }
 
   function onSizeChange(v) {
@@ -312,16 +309,23 @@ export default function AddItem() {
     if (v) track.itemSizeSelected(v)
   }
 
-  // Which required fields are still empty, in the order they appear in the
-  // form. Used in two places: canSubmit() gates the Save button off the
-  // length of this list, and the disabled-Save hint below the button renders
-  // the labels so the user never has to guess why Save is grey. Adding a
-  // new required field? Push it into this function and both places update.
+  // ── Non-clothing change handlers ──────────────────────────────────────────
+  function onSubCategoryChange(v) {
+    setSubCategoryState(v)
+    setCatItemType('')  // reset item type when sub-category changes
+  }
+
+  // ── Required fields validation ────────────────────────────────────────────
   function getMissingRequiredFields() {
     const missing = []
-    if (!category)  missing.push({ label: 'Category', domId: 'ai-category' })
-    if (!itemType)  missing.push({ label: 'Type',     domId: 'ai-type' })
-    if (!sizeLabel) missing.push({ label: 'Size',     domId: 'ai-size' })
+    if (isClothing) {
+      if (!category)  missing.push({ label: 'Category', domId: 'ai-category' })
+      if (!itemType)  missing.push({ label: 'Type',     domId: 'ai-type' })
+      if (!sizeLabel) missing.push({ label: 'Size',     domId: 'ai-size' })
+    } else {
+      if (!subCategory) missing.push({ label: 'Sub-category', domId: 'ai-subcat' })
+      if (!catItemType) missing.push({ label: 'Item type',    domId: 'ai-cattype' })
+    }
     if (!(quantity >= 1)) missing.push({ label: 'Quantity', domId: 'ai-quantity' })
     return missing
   }
@@ -331,34 +335,17 @@ export default function AddItem() {
     return getMissingRequiredFields().length === 0
   }
 
-  // Called by <TagScanner> after a successful scan. Prefills the form
-  // fields we recognize; leaves untouched fields as-is so a second scan
-  // can progressively refine earlier ones. Individual fields may be null
-  // (low confidence or unreadable) — we skip those rather than blanking
-  // out whatever the user already typed. Never auto-saves.
-  //
-  // Second argument `confidence` is per-field "high"|"medium"|"low"|null.
-  // Only "low" values get flagged for user review. Medium is quiet —
-  // visually crying wolf on every scan erodes trust in the warning.
-  //
-  // Third argument carries the captured photo data URLs. We hold onto
-  // the garment one in state so the create path's INSERT can upload it
-  // and write the resulting bucket path into garment_photo_path. The
-  // tag close-up isn't stored — it was only ever for OCR. Re-scanning
-  // overwrites the buffered garment, which mirrors the rest of the
-  // progressive-refinement semantic (later scans win).
+  // ── Scan result handler (clothing only) ───────────────────────────────────
   function onScanResult(fields, confidence, photos) {
     if (!fields) return
     let filled = 0
     const nextLowConf = new Set()
     const flagIfLow = (name, level) => { if (level === 'low') nextLowConf.add(name) }
 
-    if (fields.category && CATEGORIES.some(c => c.value === fields.category)) {
+    if (fields.category && CLOTHING_CATEGORIES.some(c => c.value === fields.category)) {
       setCategory(fields.category)
       filled += 1
       flagIfLow('category', confidence?.category)
-      // If the incoming item_type is valid AND matches the scanned category,
-      // accept it too; otherwise let the user pick from the now-filtered list.
       const slot = fields.item_type ? SLOT_BY_ID[fields.item_type] : null
       if (slot && slot.category === fields.category) {
         setItemType(slot.id)
@@ -368,178 +355,157 @@ export default function AddItem() {
         setItemType('')
       }
     }
-
     if (fields.size_label && SIZES.includes(fields.size_label)) {
       setSizeLabel(fields.size_label)
       filled += 1
       flagIfLow('size_label', confidence?.size_label)
     }
-
     if (fields.brand && typeof fields.brand === 'string') {
       setBrand(fields.brand.trim().slice(0, 80))
       filled += 1
       flagIfLow('brand', confidence?.brand)
     }
-
-    // Season is optional but the scanner returns one when the garment
-    // photo gives a confident read. We pre-fill the form select if the
-    // value is in our enum; otherwise leave whatever the user already
-    // had so a re-scan doesn't blank a manually-set season.
     if (fields.season && SEASONS.some(s => s.value === fields.season)) {
       setSeason(fields.season)
       filled += 1
       flagIfLow('season', confidence?.season)
     }
-
     setScanFilledCount(filled)
     setLowConfFields(nextLowConf)
     if (photos?.garmentDataUrl) {
       setPendingGarmentDataUrl(photos.garmentDataUrl)
     }
-    // tagScanCompleted is fired by TagScanner itself (with the richer
-    // duration/confidence/quota payload). Don't double-fire here.
   }
 
+  // ── Submit ────────────────────────────────────────────────────────────────
   async function submit(e) {
     e.preventDefault()
     if (!canSubmit() || saving) return
-
     setSaving(true)
     setError(null)
 
-    // Common field payload. In edit mode we preserve household_id/baby_id
-    // from the existing row (RLS will reject an attempt to move a row to
-    // another household anyway, but it's cleaner not to try).
-    const fields = {
-      category,
-      // item_type is a slot id from the wardrobe taxonomy. Stored raw (no
-      // casing / whitespace tricks) so it round-trips cleanly through
-      // getSlotForItem on read.
-      item_type: itemType,
-      size_label: sizeLabel,
-      // Coerce '' (user left Condition on "Not set") to null — the DB
-      // check constraint allows null OR one of the enum values, but not
-      // an empty string. Needed order: mode filter first, then null-coerce.
-      condition: mode === 'owned' ? (condition || null) : null,
-      priority: mode === 'needed' && priority ? priority : null,
-      brand: brand.trim() || null,
-      season: season || null,
-      quantity: Number(quantity) || 1,
-      notes: notes.trim() || null,
-    }
-
-    // Both edit and create paths run inside requireRealAccount so an
-    // anonymous trial user gets the upgrade modal before either write
-    // commits. After successful upgrade, the deferred action runs and
-    // the user lands on the appropriate next screen as if nothing
-    // happened. If they dismiss the modal, we throw a cancelled marker
-    // and the catch block rolls saving=false with no error toast.
     try {
       await requireRealAccount(async () => {
-        if (isEditMode && existingItem) {
-          // Edit path: UPDATE only the editable columns. Deliberately don't
-          // touch inventory_status — the detail page's Mark-as-outgrown and
-          // other lifecycle actions own that column. Flipping the owned/needed
-          // toggle in edit mode *does* affect it (you're saying the item is
-          // now wished-for instead of owned), so include that when it changes.
-          const patch = { ...fields }
-          if (mode !== existingItem.inventory_status && (mode === 'owned' || mode === 'needed')) {
-            patch.inventory_status = mode
+
+        if (isClothing) {
+          // ── Clothing path (unchanged) ──────────────────────────────────
+          const fields = {
+            category,
+            item_type: itemType,
+            size_label: sizeLabel,
+            condition: mode === 'owned' ? (condition || null) : null,
+            priority: mode === 'needed' && priority ? priority : null,
+            brand: brand.trim() || null,
+            season: season || null,
+            quantity: Number(quantity) || 1,
+            notes: notes.trim() || null,
           }
 
-          const { error: updErr } = await supabase
+          if (isEditMode && existingItem && existingItemTable === 'clothing_items') {
+            const patch = { ...fields }
+            if (mode !== existingItem.inventory_status && (mode === 'owned' || mode === 'needed')) {
+              patch.inventory_status = mode
+            }
+            const { error: updErr } = await supabase
+              .schema(currentSchema)
+              .from('clothing_items')
+              .update(patch)
+              .eq('id', existingItem.id)
+            if (updErr) throw new Error(updErr.message)
+            track.itemEdited({ mode, category, size_label: sizeLabel })
+            reloadItems()
+            navigate(`/item/${existingItem.id}`)
+            return
+          }
+
+          // Create: upload photo then insert
+          const itemId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+
+          let garmentPath = null
+          if (pendingGarmentDataUrl) {
+            try {
+              const blob = await fetch(pendingGarmentDataUrl).then(r => r.blob())
+              const path = `${household.id}/${itemId}.jpg`
+              const { error: upErr } = await supabase.storage
+                .from('garment-photos')
+                .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false })
+              if (!upErr) garmentPath = path
+            } catch { /* silent — item saves without photo */ }
+          }
+
+          const { error: insertErr } = await supabase
             .schema(currentSchema)
             .from('clothing_items')
-            .update(patch)
-            .eq('id', existingItem.id)
-
-          if (updErr) throw new Error(updErr.message)
-
-          track.itemEdited({ mode, category, size_label: sizeLabel })
-          // Refresh the items list in HouseholdContext so Inventory shows the
-          // edited row next time it renders, without a per-mount refetch.
+            .insert({
+              id: itemId,
+              household_id: household.id,
+              baby_id: currentBaby?.id ?? null,
+              ...fields,
+              inventory_status: mode,
+              name: null,
+              garment_photo_path: garmentPath,
+            })
+          if (insertErr) throw new Error(insertErr.message)
+          track.itemSaved({ mode, category, size_label: sizeLabel })
           reloadItems()
-          // Back to the detail page so the user sees the saved result (and
-          // can dismiss/edit again without another navigation hop).
-          navigate(`/item/${existingItem.id}`)
-          return
-        }
+          navigate('/inventory')
 
-        // Create path. baby_id follows the chip switcher's current selection:
-        //   - specific baby picked → attach their id, the item lives in their wardrobe
-        //   - 'all' picked         → null, the item is shared across babies
-        //   - single-baby household → context forces selectedBabyId to that baby,
-        //                              so currentBaby is populated and we attach it
-        // The "unassigned / shared" semantic is deliberate — it matches how we
-        // filter (null baby_id shows under every specific baby) so there's a
-        // single mental model for how null is treated.
-        //
-        // We pre-generate the row id client-side so the garment photo (when
-        // we have one buffered from a recent scan) can upload to a path
-        // keyed on the new id BEFORE the INSERT writes that path back. Same
-        // pattern as BatchReview. Failed photo upload degrades silently —
-        // the row still saves, just without garment_photo_path set.
-        const itemId = (typeof crypto !== 'undefined' && crypto.randomUUID)
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-
-        let garmentPath = null
-        if (pendingGarmentDataUrl) {
-          try {
-            const blob = await fetch(pendingGarmentDataUrl).then(r => r.blob())
-            const path = `${household.id}/${itemId}.jpg`
-            const { error: upErr } = await supabase.storage
-              .from('garment-photos')
-              .upload(path, blob, {
-                contentType: blob.type || 'image/jpeg',
-                upsert: false,
-              })
-            if (upErr) {
-              // eslint-disable-next-line no-console
-              console.warn('garment upload failed in single-mode create', upErr)
-            } else {
-              garmentPath = path
-            }
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn('garment upload threw in single-mode create', e)
+        } else {
+          // ── Non-clothing path ──────────────────────────────────────────
+          const fields = {
+            top_category: topCategory,
+            sub_category: subCategory,
+            item_type: catItemType,
+            age_relevance: ageRelevance || null,
+            condition: mode === 'owned' ? (condition || null) : null,
+            priority: mode === 'needed' && priority ? priority : null,
+            brand: brand.trim() || null,
+            quantity: Number(quantity) || 1,
+            notes: notes.trim() || null,
           }
+
+          if (isEditMode && existingItem && existingItemTable === 'items') {
+            const patch = { ...fields }
+            if (mode !== existingItem.inventory_status && (mode === 'owned' || mode === 'needed')) {
+              patch.inventory_status = mode
+            }
+            const { error: updErr } = await supabase
+              .schema(currentSchema)
+              .from('items')
+              .update(patch)
+              .eq('id', existingItem.id)
+            if (updErr) throw new Error(updErr.message)
+            reloadItems()
+            navigate(`/item/${existingItem.id}`)
+            return
+          }
+
+          const { error: insertErr } = await supabase
+            .schema(currentSchema)
+            .from('items')
+            .insert({
+              household_id: household.id,
+              baby_id: currentBaby?.id ?? null,
+              ...fields,
+              inventory_status: mode,
+              name: null,
+            })
+          if (insertErr) throw new Error(insertErr.message)
+          reloadItems()
+          navigate('/inventory')
         }
-
-        const row = {
-          id: itemId,
-          household_id: household.id,
-          baby_id: currentBaby?.id ?? null,
-          ...fields,
-          inventory_status: mode,
-          name: null, // Reserved for the parent-supplied nickname; not collected yet.
-          garment_photo_path: garmentPath,
-        }
-
-        const { error: insertErr } = await supabase
-          .schema(currentSchema)
-          .from('clothing_items')
-          .insert(row)
-
-        if (insertErr) throw new Error(insertErr.message)
-
-        track.itemSaved({ mode, category, size_label: sizeLabel })
-        // Refresh the items list in HouseholdContext so Inventory shows the new
-        // row immediately without a per-mount refetch.
-        reloadItems()
-        navigate('/inventory')
       })
       setSaving(false)
     } catch (e) {
       setSaving(false)
-      if (e?.cancelled) return  // user dismissed the upgrade modal; leave form as-is
-      setError(e.message || 'Couldn’t save the item.')
+      if (e?.cancelled) return
+      setError(e.message || "Couldn't save the item.")
     }
   }
 
-  // In edit mode we need both the household context AND the existing row
-  // before we can render meaningful inputs. Single gate keeps the form
-  // from flashing create-mode defaults while the row is in flight.
+  // ── Loading gate ──────────────────────────────────────────────────────────
   if (householdLoading || loadingItem) {
     return (
       <div className={styles.page}>
@@ -548,17 +514,9 @@ export default function AddItem() {
     )
   }
 
-  // Where Back should go: to the detail page if we're editing an existing
-  // item (so Cancel = "discard my changes"), otherwise to the inventory
-  // list where the + Add CTAs live.
   const backDest = isEditMode && existingItem ? `/item/${existingItem.id}` : '/inventory'
   const backLabel = isEditMode ? 'Back to item' : 'Back to inventory'
 
-  // On a multi-baby household, show a subtle subtitle so the user knows who
-  // this item will attach to. Single-baby households don't need the noise —
-  // there's only one possible answer. 'All' selection means the item is
-  // shared (baby_id null), which is worth surfacing since the user probably
-  // switched to 'All' on purpose and wants to know what happens next.
   const subtitle = !isEditMode && babies.length > 1
     ? currentBaby?.name
       ? `For ${currentBaby.name}`
@@ -580,21 +538,32 @@ export default function AddItem() {
           <div className={styles.title}>
             {isEditMode ? 'Edit item' : 'Add an item'}
           </div>
-          {subtitle && (
-            <div className={styles.subtitle}>{subtitle}</div>
-          )}
-          {/* Mobile-only sprig beneath the title. Hidden on desktop. */}
+          {subtitle && <div className={styles.subtitle}>{subtitle}</div>}
           <IvySprig />
         </div>
         <ProfileMenu />
       </header>
 
       <main className={styles.body}>
-        {/* Photo-scan entry point. Only surfaced on create — editing an
-            existing row shouldn't invite a re-scan (the user is here to
-            tweak, not reseed). The component handles its own loading and
-            error states; we just get the fields back via onResult. */}
-        {!isEditMode && !manualMode && (
+
+        {/* ── Top-category picker ───────────────────────────────────────── */}
+        {!isEditMode && (
+          <div className={styles.catPicker}>
+            {TOP_CATEGORIES.map(tc => (
+              <button
+                key={tc.value}
+                type="button"
+                className={`${styles.catChip} ${topCategory === tc.value ? styles.catChipActive : ''}`}
+                onClick={() => onTopCategoryChange(tc.value)}
+              >
+                {tc.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ── TagScanner (clothing only) ────────────────────────────────── */}
+        {!isEditMode && !manualMode && isClothing && (
           <div className={styles.scanRow}>
             <TagScanner
               variant="inline"
@@ -603,15 +572,6 @@ export default function AddItem() {
               onManual={() => setManualMode(true)}
               onResult={onScanResult}
               onBatchSaved={(count) => {
-                // Batch flow skipped the AddItem form entirely; each
-                // scanned item became its own row in clothing_items via
-                // BatchReview's sequential insert. Refresh the context
-                // so Inventory shows them immediately, then land on the
-                // Inventory screen with a toast. Identical navigation
-                // contract to the single-save path (setSavedCount→
-                // navigate to Inventory), but the toast copy calls out
-                // the count so the user can verify "7 added" matched
-                // what they expected.
                 reloadItems()
                 navigate('/inventory', {
                   state: { toast: `Added ${count} item${count === 1 ? '' : 's'}` },
@@ -624,10 +584,6 @@ export default function AddItem() {
                 Autofilled {scanFilledCount} field{scanFilledCount === 1 ? '' : 's'} from your photo. Review below and save.
               </div>
             ) : (
-              // Pre-scan affordance hint. Most users land here via the
-              // Inventory header "+" rather than Home, so this is the first
-              // (and often only) chance to surface batch-scan. Swapped out
-              // for the success scanHint above once they've actually scanned.
               <div className={styles.scanIntroHint}>
                 Adding a stack? Turn on <strong>Scan many</strong> in the camera to add several items in a row.
               </div>
@@ -636,11 +592,12 @@ export default function AddItem() {
         )}
 
         <form onSubmit={submit} className={styles.form}>
-          {/* Mode toggle — decides what status the item gets saved as. */}
+
+          {/* ── Mode toggle ──────────────────────────────────────────────── */}
           <div className={styles.segToggle}>
             <button
               type="button"
-              className={`${styles.segBtn} ${mode === 'owned' ? styles.segActive : ''}`}
+              className={`${styles.segBtn} ${mode === 'owned'  ? styles.segActive : ''}`}
               onClick={() => setMode('owned')}
             >
               Own it
@@ -654,72 +611,125 @@ export default function AddItem() {
             </button>
           </div>
 
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="ai-category">
-              Category
-              {lowConfFields.has('category') && (
-                <span className={styles.verifyBadge}>Verify</span>
-              )}
-            </label>
-            <select
-              id="ai-category"
-              className={`${styles.input} ${lowConfFields.has('category') ? styles.inputVerify : ''}`}
-              value={category}
-              onChange={e => onCategoryChange(e.target.value)}
-              required
-            >
-              <option value="">Pick one…</option>
-              {CATEGORIES.map(c => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-          </div>
+          {/* ── Clothing-specific fields ──────────────────────────────────── */}
+          {isClothing && (
+            <>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="ai-category">
+                  Category
+                  {lowConfFields.has('category') && <span className={styles.verifyBadge}>Verify</span>}
+                </label>
+                <select
+                  id="ai-category"
+                  className={`${styles.input} ${lowConfFields.has('category') ? styles.inputVerify : ''}`}
+                  value={category}
+                  onChange={e => onCategoryChange(e.target.value)}
+                  required
+                >
+                  <option value="">Pick one…</option>
+                  {CLOTHING_CATEGORIES.map(c => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
 
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="ai-type">
-              Type
-              {lowConfFields.has('item_type') && (
-                <span className={styles.verifyBadge}>Verify</span>
-              )}
-            </label>
-            <select
-              id="ai-type"
-              className={`${styles.input} ${lowConfFields.has('item_type') ? styles.inputVerify : ''}`}
-              value={itemType}
-              onChange={e => onTypeChange(e.target.value)}
-              required
-              disabled={!category}
-            >
-              <option value="">
-                {category ? 'Pick one…' : 'Choose a category first'}
-              </option>
-              {typeOptions.map(s => (
-                <option key={s.id} value={s.id}>{s.label}</option>
-              ))}
-            </select>
-          </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="ai-type">
+                  Type
+                  {lowConfFields.has('item_type') && <span className={styles.verifyBadge}>Verify</span>}
+                </label>
+                <select
+                  id="ai-type"
+                  className={`${styles.input} ${lowConfFields.has('item_type') ? styles.inputVerify : ''}`}
+                  value={itemType}
+                  onChange={e => onTypeChange(e.target.value)}
+                  required
+                  disabled={!category}
+                >
+                  <option value="">{category ? 'Pick one…' : 'Choose a category first'}</option>
+                  {clothingTypeOptions.map(s => (
+                    <option key={s.id} value={s.id}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
 
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="ai-size">
-              Size
-              {lowConfFields.has('size_label') && (
-                <span className={styles.verifyBadge}>Verify</span>
-              )}
-            </label>
-            <select
-              id="ai-size"
-              className={`${styles.input} ${lowConfFields.has('size_label') ? styles.inputVerify : ''}`}
-              value={sizeLabel}
-              onChange={e => onSizeChange(e.target.value)}
-              required
-            >
-              <option value="">Pick one…</option>
-              {SIZES.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="ai-size">
+                  Size
+                  {lowConfFields.has('size_label') && <span className={styles.verifyBadge}>Verify</span>}
+                </label>
+                <select
+                  id="ai-size"
+                  className={`${styles.input} ${lowConfFields.has('size_label') ? styles.inputVerify : ''}`}
+                  value={sizeLabel}
+                  onChange={e => onSizeChange(e.target.value)}
+                  required
+                >
+                  <option value="">Pick one…</option>
+                  {SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </>
+          )}
 
+          {/* ── Non-clothing fields ───────────────────────────────────────── */}
+          {!isClothing && (
+            <>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="ai-subcat">
+                  Sub-category
+                </label>
+                <select
+                  id="ai-subcat"
+                  className={styles.input}
+                  value={subCategory}
+                  onChange={e => onSubCategoryChange(e.target.value)}
+                  required
+                >
+                  <option value="">Pick one…</option>
+                  {subCategoryOptions.map(sc => (
+                    <option key={sc} value={sc}>{SUB_CATEGORY_LABELS[sc] || sc}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="ai-cattype">
+                  Item type
+                </label>
+                <select
+                  id="ai-cattype"
+                  className={styles.input}
+                  value={catItemType}
+                  onChange={e => setCatItemType(e.target.value)}
+                  required
+                  disabled={!subCategory}
+                >
+                  <option value="">{subCategory ? 'Pick one…' : 'Choose sub-category first'}</option>
+                  {catItemTypeOptions.map(it => (
+                    <option key={it.id} value={it.id}>{it.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="ai-agerelevance">
+                  Age range <span className={styles.optional}>(optional)</span>
+                </label>
+                <select
+                  id="ai-agerelevance"
+                  className={styles.input}
+                  value={ageRelevance}
+                  onChange={e => setAgeRelevance(e.target.value)}
+                >
+                  <option value="">All ages</option>
+                  {AGE_RANGES.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+            </>
+          )}
+
+          {/* ── Shared optional fields ────────────────────────────────────── */}
           {mode === 'owned' && (
             <div className={styles.formGroup}>
               <label className={styles.label} htmlFor="ai-condition">
@@ -732,9 +742,7 @@ export default function AddItem() {
                 onChange={e => setCondition(e.target.value)}
               >
                 <option value="">Not set</option>
-                {CONDITIONS.map(c => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
+                {CONDITIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
           )}
@@ -751,18 +759,14 @@ export default function AddItem() {
                 onChange={e => setPriority(e.target.value)}
               >
                 <option value="">Not set</option>
-                {PRIORITIES.map(p => (
-                  <option key={p.value} value={p.value}>{p.label}</option>
-                ))}
+                {PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
               </select>
             </div>
           )}
 
           <div className={styles.row}>
             <div className={styles.formGroup}>
-              <label className={styles.label} htmlFor="ai-quantity">
-                Quantity
-              </label>
+              <label className={styles.label} htmlFor="ai-quantity">Quantity</label>
               <input
                 id="ai-quantity"
                 className={styles.input}
@@ -777,9 +781,7 @@ export default function AddItem() {
             <div className={styles.formGroup}>
               <label className={styles.label} htmlFor="ai-brand">
                 Brand <span className={styles.optional}>(optional)</span>
-                {lowConfFields.has('brand') && (
-                  <span className={styles.verifyBadge}>Verify</span>
-                )}
+                {lowConfFields.has('brand') && <span className={styles.verifyBadge}>Verify</span>}
               </label>
               <input
                 id="ai-brand"
@@ -792,25 +794,23 @@ export default function AddItem() {
             </div>
           </div>
 
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="ai-season">
-              Season <span className={styles.optional}>(optional)</span>
-              {lowConfFields.has('season') && (
-                <span className={styles.verifyBadge}>Verify</span>
-              )}
-            </label>
-            <select
-              id="ai-season"
-              className={`${styles.input} ${lowConfFields.has('season') ? styles.inputVerify : ''}`}
-              value={season}
-              onChange={e => { setSeason(e.target.value); clearLowConfFlag('season') }}
-            >
-              <option value="">Not set</option>
-              {SEASONS.map(s => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
+          {isClothing && (
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="ai-season">
+                Season <span className={styles.optional}>(optional)</span>
+                {lowConfFields.has('season') && <span className={styles.verifyBadge}>Verify</span>}
+              </label>
+              <select
+                id="ai-season"
+                className={`${styles.input} ${lowConfFields.has('season') ? styles.inputVerify : ''}`}
+                value={season}
+                onChange={e => { setSeason(e.target.value); clearLowConfFlag('season') }}
+              >
+                <option value="">Not set</option>
+                {SEASONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+          )}
 
           <div className={styles.formGroup}>
             <label className={styles.label} htmlFor="ai-notes">
@@ -819,7 +819,7 @@ export default function AddItem() {
             <textarea
               id="ai-notes"
               className={styles.textarea}
-              placeholder="Anything worth remembering — stain on hem, a gift from grandma, etc."
+              placeholder="Anything worth remembering…"
               value={notes}
               onChange={e => setNotes(e.target.value)}
               rows="3"
@@ -829,11 +829,6 @@ export default function AddItem() {
           {error && <div className={styles.error}>{error}</div>}
 
           {(() => {
-            // Compute once per render — used both to disable Save and to
-            // render the "what's missing?" hint below. We only surface the
-            // hint when there's an actionable list (household loaded, not
-            // mid-save); otherwise the button is disabled for a reason the
-            // user can't fix by clicking fields.
             const missing = getMissingRequiredFields()
             const disabled = !canSubmit() || saving
             return (
@@ -843,11 +838,7 @@ export default function AddItem() {
                   className={styles.submitBtn}
                   disabled={disabled}
                 >
-                  {saving
-                    ? 'Saving…'
-                    : isEditMode
-                      ? 'Save changes'
-                      : 'Save item'}
+                  {saving ? 'Saving…' : isEditMode ? 'Save changes' : 'Save item'}
                 </button>
                 {disabled && !saving && household && missing.length > 0 && (
                   <div className={styles.saveHint} role="status">
@@ -857,14 +848,9 @@ export default function AddItem() {
                         <a
                           href={`#${m.domId}`}
                           onClick={e => {
-                            // Smooth-focus the field so the user can act on
-                            // the hint without hunting for it on long forms.
                             e.preventDefault()
                             const el = document.getElementById(m.domId)
-                            if (el) {
-                              el.focus()
-                              el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                            }
+                            if (el) { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }) }
                           }}
                         >
                           {m.label}
