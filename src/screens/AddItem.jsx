@@ -11,7 +11,7 @@ import {
   SUB_CATEGORIES_BY_CATEGORY,
   SUB_CATEGORY_LABELS,
 } from '../lib/categories'
-import ProfileMenu from '../components/ProfileMenu'
+import HeaderActions from '../components/HeaderActions'
 import IvySprig from '../components/IvySprig'
 import TagScanner from '../components/TagScanner'
 import styles from './AddItem.module.css'
@@ -609,7 +609,7 @@ export default function AddItem() {
           {subtitle && <div className={styles.subtitle}>{subtitle}</div>}
           <IvySprig />
         </div>
-        <ProfileMenu />
+        <HeaderActions />
       </header>
 
       <main className={styles.body}>

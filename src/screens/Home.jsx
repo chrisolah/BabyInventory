@@ -10,10 +10,9 @@ import {
   AGE_RANGES,
 } from '../lib/wardrobe'
 import { getCategorySummary } from '../lib/categories'
-import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import BabySwitcher from '../components/BabySwitcher'
-import InviteMemberModal from '../components/InviteMemberModal'
+import HeaderActions from '../components/HeaderActions'
 import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
 import styles from './Home.module.css'
@@ -48,7 +47,6 @@ export default function Home() {
     items,
     itemsLoading,
   } = useHousehold()
-  const [showInvite, setShowInvite] = useState(false)
   const [status, setStatus] = useState('checking')
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] ?? ''
@@ -191,11 +189,6 @@ export default function Home() {
     return { owned, recommended: Math.max(recommended, 1) }
   }, [currentRangeCoverage, items])
 
-  function openInvite() {
-    track.householdInviteOpened('home_header')
-    setShowInvite(true)
-  }
-
   if (status === 'checking') return <div className={styles.page} />
 
   return (
@@ -206,18 +199,7 @@ export default function Home() {
           <IvySprig />
         </div>
         <div className={styles.headerActions}>
-          <button
-            type="button"
-            className={styles.inviteBtn}
-            onClick={openInvite}
-            aria-label="Invite household member"
-          >
-            <svg className={styles.inviteIcon} viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M8 3.5v9M3.5 8h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            Invite
-          </button>
-          <ProfileMenu />
+          <HeaderActions />
         </div>
       </header>
 
@@ -347,9 +329,6 @@ export default function Home() {
 
       <BottomNav />
 
-      {showInvite && (
-        <InviteMemberModal from="home_header" onClose={() => setShowInvite(false)} />
-      )}
     </div>
   )
 }

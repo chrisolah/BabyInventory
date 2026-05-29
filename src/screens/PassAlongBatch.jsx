@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useHousehold, matchesBabyFilter } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import { SLOT_BY_ID, CATEGORY_LABELS } from '../lib/wardrobe'
-import ProfileMenu from '../components/ProfileMenu'
+import HeaderActions from '../components/HeaderActions'
 import IvySprig from '../components/IvySprig'
 import styles from './PassAlongBatch.module.css'
 
@@ -889,7 +889,7 @@ export default function PassAlongBatch() {
             <div className={styles.title}>Not found</div>
             <IvySprig />
           </div>
-          <ProfileMenu />
+          <HeaderActions />
         </header>
         <main className={styles.body}>
           <div className={styles.errorBanner}>
@@ -941,7 +941,7 @@ export default function PassAlongBatch() {
           )}
           <IvySprig />
         </div>
-        <ProfileMenu />
+        <HeaderActions />
       </header>
 
       <main className={styles.body}>

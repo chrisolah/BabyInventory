@@ -11,7 +11,7 @@ import {
   computeCoverage,
   pluralize,
 } from '../lib/wardrobe'
-import ProfileMenu from '../components/ProfileMenu'
+import HeaderActions from '../components/HeaderActions'
 import IvySprig from '../components/IvySprig'
 import BabySwitcher from '../components/BabySwitcher'
 import styles from './SlotDetail.module.css'
@@ -138,7 +138,7 @@ export default function SlotDetail() {
             <div className={styles.title}>Not found</div>
             <IvySprig />
           </div>
-          <ProfileMenu />
+          <HeaderActions />
         </header>
         <main className={styles.body}>
           <div className={styles.error}>
@@ -204,7 +204,7 @@ export default function SlotDetail() {
           {/* Mobile-only sprig beneath the subtitle. Hidden on desktop. */}
           <IvySprig />
         </div>
-        <ProfileMenu />
+        <HeaderActions />
       </header>
 
       {/* Chip switcher — self-hides for single-baby households. Sits under
