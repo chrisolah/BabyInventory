@@ -13,8 +13,10 @@
 /* Loading / not-found shared center */
 .centered {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 16px;
   min-height: 100vh;
 }
 
@@ -23,10 +25,10 @@
 }
 
 .spinner {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: 3px solid #e5e7eb;
-  border-top-color: #2D8C6E;
+  border-top-color: #1D9E75;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -40,11 +42,7 @@
   min-height: 100vh;
   text-align: center;
   padding: 24px;
-}
-
-.notFoundEmoji {
-  font-size: 40px;
-  margin-bottom: 16px;
+  gap: 12px;
 }
 
 .notFoundTitle {
@@ -52,7 +50,7 @@
   font-size: 22px;
   font-weight: 500;
   color: #111827;
-  margin: 0 0 10px;
+  margin: 0;
 }
 
 .notFoundSub {
@@ -63,9 +61,16 @@
   margin: 0;
 }
 
+.notFoundLink {
+  font-size: 13px;
+  color: #1D9E75;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* ── Hero ──────────────────────────────────────────────────── */
 .hero {
-  background: #2D8C6E;
+  background: #1D9E75;
   padding: 32px 20px 28px;
   display: flex;
   flex-direction: column;
@@ -76,16 +81,17 @@
 .heroBrand {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   margin-bottom: 16px;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .heroBrandName {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255,255,255,0.9);
-  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.92);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .heroTitle {
@@ -116,7 +122,7 @@
 
 .targetDate {
   font-size: 13px;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255,255,255,0.72);
   margin-top: 4px;
 }
 
@@ -158,15 +164,6 @@
   display: flex;
   gap: 10px;
   align-items: flex-start;
-}
-
-.skipIcon {
-  font-size: 18px;
-  flex-shrink: 0;
-  line-height: 1.3;
-}
-
-.skipBody {
   font-size: 13px;
   color: #78350f;
   line-height: 1.5;
@@ -187,24 +184,59 @@
 
 /* ── Section ───────────────────────────────────────────────── */
 .section {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 0.5px solid #e5e7eb;
+  background: #fff;
   margin-bottom: 8px;
 }
 
-.sectionHead {
-  padding: 14px 2px 8px;
-}
-
-.sectionHeadPriority {
-  padding: 14px 2px 8px;
+/* Non-collapsible heading (Clothing has a static header then per-size toggles) */
+.sectionStaticHead {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 0.5px solid #f3f4f6;
 }
 
-.priorityStar {
-  color: #d97706;
-  font-size: 14px;
-  line-height: 1;
+.sectionHint {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* ── Collapsible section toggle ────────────────────────────── */
+.sectionToggle {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  cursor: pointer;
+  border-bottom: 0.5px solid transparent;
+  transition: background 0.12s;
+}
+
+.sectionToggle[aria-expanded="true"] {
+  border-bottom-color: #f3f4f6;
+}
+
+.sectionToggle:hover { background: #fafafa; }
+
+.sectionTogglePriority {
+  background: #fffbf0;
+}
+
+.sectionTogglePriority:hover {
+  background: #fef9e7;
+}
+
+.sectionToggleLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .sectionTitle {
@@ -216,17 +248,57 @@
   margin: 0;
 }
 
-/* ── Size group (within Clothing) ──────────────────────────── */
-.sizeGroup {
-  margin-bottom: 12px;
+.priorityStar {
+  color: #d97706;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Needed / covered badges */
+.badge {
+  font-size: 11px;
+  font-weight: 500;
+  background: #fff3cd;
+  color: #78350f;
+  border: 0.5px solid #fde68a;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.badgeDone {
+  font-size: 11px;
+  font-weight: 500;
+  background: #f0fdf4;
+  color: #166534;
+  border: 0.5px solid #bbf7d0;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* Chevron */
+.chevron {
+  color: #9ca3af;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Size group (within Clothing section) ──────────────────── */
+.sizeGroupCollapse {
+  border-top: 0.5px solid #f3f4f6;
+}
+
+.sizeGroupCollapse:first-of-type {
+  border-top: none;
 }
 
 .sizeLabel {
   font-size: 12px;
   font-weight: 600;
-  color: #9ca3af;
-  letter-spacing: 0.05em;
-  padding: 0 2px 6px;
+  color: #374151;
 }
 
 /* ── Card grid ─────────────────────────────────────────────── */
@@ -234,13 +306,14 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
   gap: 10px;
+  padding: 12px 12px 14px;
 }
 
 /* ── Slot card ─────────────────────────────────────────────── */
 .card {
-  background: #fff;
+  background: #f9fafb;
   border: 0.5px solid #e5e7eb;
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 12px 12px 10px;
   display: flex;
   flex-direction: column;
@@ -249,7 +322,7 @@
 
 .cardCovered {
   background: #f9fafb;
-  opacity: 0.65;
+  opacity: 0.6;
 }
 
 .cardTop {
@@ -280,7 +353,7 @@
 }
 
 .cardCheck {
-  color: #2D8C6E;
+  color: #1D9E75;
   font-size: 13px;
   font-weight: 600;
   flex-shrink: 0;
@@ -301,7 +374,7 @@
 
 .cardCoveredLabel {
   font-size: 12px;
-  color: #2D8C6E;
+  color: #1D9E75;
   font-weight: 500;
 }
 
@@ -326,7 +399,8 @@
   margin-top: 6px;
   width: 100%;
   padding: 8px 0;
-  background: #2D8C6E;
+  min-height: 36px;
+  background: #1D9E75;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -443,7 +517,7 @@
 .sheetItem {
   font-size: 14px;
   font-weight: 500;
-  color: #2D8C6E;
+  color: #1D9E75;
   margin-bottom: 20px;
   text-transform: capitalize;
 }
@@ -475,7 +549,7 @@
   transition: border-color 0.15s;
 }
 
-.sheetInput:focus { border-color: #2D8C6E; }
+.sheetInput:focus { border-color: #1D9E75; }
 
 /* Quantity stepper */
 .qtyStepper {
@@ -486,12 +560,12 @@
 }
 
 .qtyBtn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   border: 0.5px solid #d1d5db;
   background: #fff;
-  font-size: 18px;
+  font-size: 20px;
   color: #374151;
   cursor: pointer;
   display: flex;
@@ -522,7 +596,7 @@
 
 .sheetSubmit {
   padding: 14px;
-  background: #2D8C6E;
+  background: #1D9E75;
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -577,7 +651,8 @@
 
 .sheetCloseBtn {
   padding: 13px 40px;
-  background: #2D8C6E;
+  min-height: 44px;
+  background: #1D9E75;
   color: #fff;
   border: none;
   border-radius: 12px;

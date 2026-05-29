@@ -15,7 +15,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
-import { SLOTS, AGE_RANGES, CATEGORY_LABELS, recommendedQty } from '../lib/wardrobe'
+import { SLOTS, AGE_RANGES, recommendedQty } from '../lib/wardrobe'
 import { ITEMS, CATEGORY_META } from '../lib/categories'
 import styles from './WishlistPublic.module.css'
 
@@ -32,9 +32,8 @@ export default function WishlistPublic() {
   const [pageData, setPageData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  // Claims are kept in local state so they update optimistically after submission
   const [claims, setClaims] = useState([])
-  // { slotId, slotType, sizeLabel, label, maxQty } — null means sheet is closed
+  // { slotId, slotType, sizeLabel, label, maxQty } — null = sheet closed
   const [claimTarget, setClaimTarget] = useState(null)
 
   useEffect(() => {
@@ -48,10 +47,7 @@ export default function WishlistPublic() {
       .schema(currentSchema)
       .rpc('get_wishlist_for_share', { p_token: token })
     setLoading(false)
-    if (error || data?.error) {
-      setNotFound(true)
-      return
-    }
+    if (error || data?.error) { setNotFound(true); return }
     setPageData(data)
     setClaims(data.claims || [])
   }
@@ -83,7 +79,6 @@ export default function WishlistPublic() {
     if (error || data?.error) {
       return { ok: false, error: data?.error || 'Something went wrong. Try again.' }
     }
-    // Merge returned claims into local state
     const fresh = (data.claims || []).map(c => ({
       slot_id: target.slotId,
       slot_type: target.slotType,
@@ -93,7 +88,6 @@ export default function WishlistPublic() {
       claimed_at: c.claimed_at,
     }))
     setClaims(prev => {
-      // Remove old claims for this slot + add fresh ones
       const filtered = prev.filter(c =>
         claimKey(c.slot_type, c.slot_id, c.size_label) !==
         claimKey(target.slotType, target.slotId, target.sizeLabel)
@@ -106,6 +100,7 @@ export default function WishlistPublic() {
   if (loading) {
     return (
       <div className={styles.centered}>
+        <SprigMark size={36} />
         <div className={styles.spinner} aria-label="Loading" />
       </div>
     )
@@ -114,31 +109,30 @@ export default function WishlistPublic() {
   if (notFound || !pageData) {
     return (
       <div className={styles.notFound}>
-        <div className={styles.notFoundEmoji}>🍃</div>
+        <SprigMark size={48} />
         <h1 className={styles.notFoundTitle}>This wishlist isn&rsquo;t available</h1>
         <p className={styles.notFoundSub}>
           The link may have expired or been deactivated by the family.
         </p>
+        <a href="https://sprigloop.com" className={styles.notFoundLink}>Learn about Sprigloop</a>
       </div>
     )
   }
 
   const { share, household, babies, clothing, items } = pageData
-  const skipCats   = new Set(share.skip_categories || [])
+  const skipCats    = new Set(share.skip_categories || [])
   const showPriority = share.show_priority !== false
 
   return (
     <div className={styles.page}>
-      {/* ── Hero ─────────────────────────────────────────────────── */}
+      {/* ── Header / hero ────────────────────────────────────── */}
       <header className={styles.hero}>
         <div className={styles.heroBrand}>
-          <SprigloopMark />
+          <SprigMark size={22} />
           <span className={styles.heroBrandName}>Sprigloop</span>
         </div>
         <h1 className={styles.heroTitle}>
-          {household?.name
-            ? `${household.name}'s Wishlist`
-            : 'Baby Wishlist'}
+          {household?.name ? `${household.name}'s Wishlist` : 'Baby Wishlist'}
         </h1>
         {babies?.length > 0 && (
           <div className={styles.babyPills}>
@@ -154,7 +148,7 @@ export default function WishlistPublic() {
         )}
       </header>
 
-      {/* ── Message from the family ───────────────────────────────── */}
+      {/* ── Message from the family ───────────────────────────── */}
       {share.message && (
         <div className={styles.messageCard}>
           <span className={styles.messageQuote}>&ldquo;</span>
@@ -162,26 +156,28 @@ export default function WishlistPublic() {
         </div>
       )}
 
-      {/* ── Skip-categories notice ────────────────────────────────── */}
+      {/* ── Skip-categories notice ────────────────────────────── */}
       {skipCats.size > 0 && (
         <div className={styles.skipBanner}>
-          <span className={styles.skipIcon} aria-hidden="true">🙏</span>
-          <div className={styles.skipBody}>
-            <strong>They&rsquo;re well stocked on:</strong>{' '}
-            {[...skipCats].map(c => CAT_LABEL[c] || c).join(', ')} — no need to buy these!
+          <span aria-hidden="true">🙏</span>
+          <div>
+            <strong>Well stocked on:</strong>{' '}
+            {[...skipCats].map(c => CAT_LABEL[c] || c).join(', ')} — no gifts needed here!
           </div>
         </div>
       )}
 
       <div className={styles.body}>
-        {/* ── Priority section ──────────────────────────────────────── */}
-        {showPriority && <PrioritySection
-          clothing={clothing} items={items}
-          claimsMap={claimsMap}
-          onClaim={setClaimTarget}
-        />}
+        {/* ── Priority section ──────────────────────────────────── */}
+        {showPriority && (
+          <PrioritySection
+            clothing={clothing} items={items}
+            claimsMap={claimsMap}
+            onClaim={setClaimTarget}
+          />
+        )}
 
-        {/* ── Clothing by age range ─────────────────────────────────── */}
+        {/* ── Clothing by age-range groups ─────────────────────── */}
         {clothing?.length > 0 && (
           <ClothingSection
             clothing={clothing}
@@ -190,7 +186,7 @@ export default function WishlistPublic() {
           />
         )}
 
-        {/* ── Non-clothing items by category ───────────────────────── */}
+        {/* ── Non-clothing by category ──────────────────────────── */}
         {items?.length > 0 && (
           <NonClothingSection
             items={items}
@@ -199,8 +195,7 @@ export default function WishlistPublic() {
           />
         )}
 
-        {/* Empty state */}
-        {(!clothing?.length && !items?.length) && (
+        {!clothing?.length && !items?.length && (
           <div className={styles.emptyState}>
             <div className={styles.emptyEmoji}>🌱</div>
             <p className={styles.emptyText}>Nothing on the wishlist yet.</p>
@@ -209,11 +204,10 @@ export default function WishlistPublic() {
       </div>
 
       <footer className={styles.footer}>
-        <SprigloopMark size={14} />
+        <SprigMark size={14} />
         <span>Powered by <strong>Sprigloop</strong> — baby inventory &amp; community exchange</span>
       </footer>
 
-      {/* ── Claim sheet ───────────────────────────────────────────── */}
       {claimTarget && (
         <ClaimSheet
           target={claimTarget}
@@ -225,46 +219,74 @@ export default function WishlistPublic() {
   )
 }
 
-// ── Priority section ─────────────────────────────────────────────────────────
+// ── Priority section ──────────────────────────────────────────────────────────
 
 function PrioritySection({ clothing, items, claimsMap, onClaim }) {
+  const [open, setOpen] = useState(false)
   const priorityClothing = (clothing || []).filter(r => r.is_priority)
   const priorityItems    = (items || []).filter(r => r.is_priority)
   const total = priorityClothing.length + priorityItems.length
   if (total === 0) return null
 
+  const unclaimed = [...priorityClothing, ...priorityItems].filter(r => {
+    const k = claimKey(
+      priorityClothing.includes(r) ? 'clothing' : 'item',
+      r.slot_id,
+      r.size_label || null
+    )
+    const slot = priorityClothing.includes(r) ? CLOTHING_SLOT[r.slot_id] : ITEM_SLOT[r.slot_id]
+    const rec  = priorityClothing.includes(r)
+      ? recommendedQty(slot, r.size_label)
+      : (slot?.recommended ?? 1)
+    const claimed = claimsMap[k]?.total || 0
+    return (r.owned_count || 0) + claimed < rec
+  }).length
+
   return (
     <section className={styles.section}>
-      <div className={styles.sectionHeadPriority}>
-        <span className={styles.priorityStar} aria-hidden="true">★</span>
-        <span className={styles.sectionTitle}>Most needed</span>
-      </div>
-      <div className={styles.cardGrid}>
-        {priorityClothing.map(row => (
-          <SlotCard
-            key={`c-${row.id}`}
-            slotType="clothing"
-            slotId={row.slot_id}
-            sizeLabel={row.size_label}
-            ownedCount={row.owned_count || 0}
-            claimsMap={claimsMap}
-            isPriority
-            onClaim={onClaim}
-          />
-        ))}
-        {priorityItems.map(row => (
-          <SlotCard
-            key={`i-${row.id}`}
-            slotType="item"
-            slotId={row.slot_id}
-            sizeLabel={null}
-            ownedCount={row.owned_count || 0}
-            claimsMap={claimsMap}
-            isPriority
-            onClaim={onClaim}
-          />
-        ))}
-      </div>
+      <button
+        type="button"
+        className={`${styles.sectionToggle} ${styles.sectionTogglePriority}`}
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+      >
+        <div className={styles.sectionToggleLeft}>
+          <span className={styles.priorityStar} aria-hidden="true">★</span>
+          <span className={styles.sectionTitle}>Most needed</span>
+          {unclaimed > 0 && (
+            <span className={styles.badge}>{unclaimed} still needed</span>
+          )}
+        </div>
+        <ChevronIcon open={open} />
+      </button>
+      {open && (
+        <div className={styles.cardGrid}>
+          {priorityClothing.map(row => (
+            <SlotCard
+              key={`c-${row.id}`}
+              slotType="clothing"
+              slotId={row.slot_id}
+              sizeLabel={row.size_label}
+              ownedCount={row.owned_count || 0}
+              claimsMap={claimsMap}
+              isPriority
+              onClaim={onClaim}
+            />
+          ))}
+          {priorityItems.map(row => (
+            <SlotCard
+              key={`i-${row.id}`}
+              slotType="item"
+              slotId={row.slot_id}
+              sizeLabel={null}
+              ownedCount={row.owned_count || 0}
+              claimsMap={claimsMap}
+              isPriority
+              onClaim={onClaim}
+            />
+          ))}
+        </div>
+      )}
     </section>
   )
 }
@@ -272,7 +294,6 @@ function PrioritySection({ clothing, items, claimsMap, onClaim }) {
 // ── Clothing section ──────────────────────────────────────────────────────────
 
 function ClothingSection({ clothing, claimsMap, onClaim }) {
-  // Group by size_label, in AGE_RANGES order
   const bySize = {}
   for (const r of clothing) {
     if (!bySize[r.size_label]) bySize[r.size_label] = []
@@ -283,29 +304,69 @@ function ClothingSection({ clothing, claimsMap, onClaim }) {
 
   return (
     <section className={styles.section}>
-      <div className={styles.sectionHead}>
+      <div className={styles.sectionStaticHead}>
         <h2 className={styles.sectionTitle}>Clothing</h2>
+        <span className={styles.sectionHint}>Tap a size to expand</span>
       </div>
       {sizes.map(size => (
-        <div key={size} className={styles.sizeGroup}>
-          <div className={styles.sizeLabel}>{size}</div>
-          <div className={styles.cardGrid}>
-            {bySize[size].map(row => (
-              <SlotCard
-                key={row.id}
-                slotType="clothing"
-                slotId={row.slot_id}
-                sizeLabel={row.size_label}
-                ownedCount={row.owned_count || 0}
-                claimsMap={claimsMap}
-                isPriority={row.is_priority}
-                onClaim={onClaim}
-              />
-            ))}
-          </div>
-        </div>
+        <SizeGroup
+          key={size}
+          size={size}
+          rows={bySize[size]}
+          claimsMap={claimsMap}
+          onClaim={onClaim}
+        />
       ))}
     </section>
+  )
+}
+
+function SizeGroup({ size, rows, claimsMap, onClaim }) {
+  const [open, setOpen] = useState(false)
+
+  const unclaimedCount = rows.filter(row => {
+    const slot = CLOTHING_SLOT[row.slot_id]
+    const rec  = recommendedQty(slot, row.size_label)
+    const k    = claimKey('clothing', row.slot_id, row.size_label)
+    return (row.owned_count || 0) + (claimsMap[k]?.total || 0) < rec
+  }).length
+
+  return (
+    <div className={styles.sizeGroupCollapse}>
+      <button
+        type="button"
+        className={styles.sectionToggle}
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+      >
+        <div className={styles.sectionToggleLeft}>
+          <span className={styles.sizeLabel}>{size}</span>
+          {unclaimedCount > 0 && (
+            <span className={styles.badge}>{unclaimedCount} needed</span>
+          )}
+          {unclaimedCount === 0 && (
+            <span className={styles.badgeDone}>All covered</span>
+          )}
+        </div>
+        <ChevronIcon open={open} />
+      </button>
+      {open && (
+        <div className={styles.cardGrid}>
+          {rows.map(row => (
+            <SlotCard
+              key={row.id}
+              slotType="clothing"
+              slotId={row.slot_id}
+              sizeLabel={row.size_label}
+              ownedCount={row.owned_count || 0}
+              claimsMap={claimsMap}
+              isPriority={row.is_priority}
+              onClaim={onClaim}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -325,37 +386,76 @@ function NonClothingSection({ items, claimsMap, onClaim }) {
   return (
     <>
       {cats.map(cat => (
-        <section key={cat} className={styles.section}>
-          <div className={styles.sectionHead}>
-            <h2 className={styles.sectionTitle}>{CATEGORY_META[cat]?.label || cat}</h2>
-          </div>
-          <div className={styles.cardGrid}>
-            {byCat[cat].map(row => (
-              <SlotCard
-                key={row.id}
-                slotType="item"
-                slotId={row.slot_id}
-                sizeLabel={null}
-                ownedCount={row.owned_count || 0}
-                claimsMap={claimsMap}
-                isPriority={row.is_priority}
-                onClaim={onClaim}
-              />
-            ))}
-          </div>
-        </section>
+        <CategoryGroup
+          key={cat}
+          cat={cat}
+          rows={byCat[cat]}
+          claimsMap={claimsMap}
+          onClaim={onClaim}
+        />
       ))}
     </>
+  )
+}
+
+function CategoryGroup({ cat, rows, claimsMap, onClaim }) {
+  const [open, setOpen] = useState(false)
+
+  const unclaimedCount = rows.filter(row => {
+    const slot = ITEM_SLOT[row.slot_id]
+    const rec  = slot?.recommended ?? 1
+    const k    = claimKey('item', row.slot_id, null)
+    return (row.owned_count || 0) + (claimsMap[k]?.total || 0) < rec
+  }).length
+
+  return (
+    <section className={styles.section}>
+      <button
+        type="button"
+        className={styles.sectionToggle}
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+      >
+        <div className={styles.sectionToggleLeft}>
+          <span className={styles.sectionTitle}>
+            {CATEGORY_META[cat]?.label || cat}
+          </span>
+          {unclaimedCount > 0 && (
+            <span className={styles.badge}>{unclaimedCount} needed</span>
+          )}
+          {unclaimedCount === 0 && (
+            <span className={styles.badgeDone}>All covered</span>
+          )}
+        </div>
+        <ChevronIcon open={open} />
+      </button>
+      {open && (
+        <div className={styles.cardGrid}>
+          {rows.map(row => (
+            <SlotCard
+              key={row.id}
+              slotType="item"
+              slotId={row.slot_id}
+              sizeLabel={null}
+              ownedCount={row.owned_count || 0}
+              claimsMap={claimsMap}
+              isPriority={row.is_priority}
+              onClaim={onClaim}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   )
 }
 
 // ── Slot card ─────────────────────────────────────────────────────────────────
 
 function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriority, onClaim }) {
-  const isClothing = slotType === 'clothing'
-  const slot     = isClothing ? CLOTHING_SLOT[slotId] : ITEM_SLOT[slotId]
-  const label    = slot?.label || slotId.replace(/_/g, ' ')
-  const recommended = isClothing
+  const isClothing   = slotType === 'clothing'
+  const slot         = isClothing ? CLOTHING_SLOT[slotId] : ITEM_SLOT[slotId]
+  const label        = slot?.label || slotId.replace(/_/g, ' ')
+  const recommended  = isClothing
     ? recommendedQty(slot, sizeLabel)
     : (slot?.recommended ?? 1)
 
@@ -390,9 +490,7 @@ function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriori
       )}
 
       {!isCovered ? (
-        <div className={styles.cardNeed}>
-          Need {stillNeeded} more
-        </div>
+        <div className={styles.cardNeed}>Need {stillNeeded} more</div>
       ) : (
         <div className={styles.cardCoveredLabel}>Covered</div>
       )}
@@ -456,10 +554,10 @@ function ClaimSheet({ target, onSubmit, onClose }) {
           <div className={styles.sheetDone}>
             <div className={styles.sheetDoneEmoji}>🎁</div>
             <div className={styles.sheetDoneTitle}>Thanks, {name.trim()}!</div>
-            <p className={styles.sheetDoneSub}>You claimed {quantity > 1 ? `${quantity}× ` : ''}{target.label}. The family will see your name.</p>
-            <button type="button" className={styles.sheetCloseBtn} onClick={onClose}>
-              Done
-            </button>
+            <p className={styles.sheetDoneSub}>
+              You claimed {quantity > 1 ? `${quantity}× ` : ''}{target.label}. The family will see your name.
+            </p>
+            <button type="button" className={styles.sheetCloseBtn} onClick={onClose}>Done</button>
           </div>
         ) : (
           <>
@@ -482,6 +580,7 @@ function ClaimSheet({ target, onSubmit, onClose }) {
                   autoFocus
                   required
                   disabled={submitting}
+                  style={{ fontSize: '16px' }}
                 />
               </div>
 
@@ -489,21 +588,13 @@ function ClaimSheet({ target, onSubmit, onClose }) {
                 <div className={styles.sheetField}>
                   <label className={styles.sheetLabel}>How many?</label>
                   <div className={styles.qtyStepper}>
-                    <button
-                      type="button"
-                      className={styles.qtyBtn}
+                    <button type="button" className={styles.qtyBtn}
                       onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                      disabled={quantity <= 1}
-                      aria-label="Decrease"
-                    >−</button>
+                      disabled={quantity <= 1} aria-label="Decrease">−</button>
                     <span className={styles.qtyValue}>{quantity}</span>
-                    <button
-                      type="button"
-                      className={styles.qtyBtn}
+                    <button type="button" className={styles.qtyBtn}
                       onClick={() => setQuantity(q => Math.min(maxQty, q + 1))}
-                      disabled={quantity >= maxQty}
-                      aria-label="Increase"
-                    >+</button>
+                      disabled={quantity >= maxQty} aria-label="Increase">+</button>
                   </div>
                 </div>
               )}
@@ -528,7 +619,7 @@ function ClaimSheet({ target, onSubmit, onClose }) {
   )
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers + shared components ───────────────────────────────────────────────
 
 const CAT_LABEL = {
   clothing: 'Clothing', sleep: 'Sleep', feeding: 'Feeding', diapering: 'Diapering',
@@ -540,17 +631,45 @@ function formatDate(dateStr) {
   try {
     const d = new Date(dateStr + 'T00:00:00')
     return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-  } catch {
-    return dateStr
-  }
+  } catch { return dateStr }
 }
 
-function SprigloopMark({ size = 18 }) {
+// Three-leafed sprig — matches favicon.svg exactly (stem + bud + 2 offset leaves)
+function SprigMark({ size = 20 }) {
+  const r = Math.round(size * 0.2)
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" fill="#2D8C6E" />
-      <path d="M12 18V10M12 14Q8 12 8 8Q12 8 12 12M12 12Q16 10 16 6Q12 6 12 10"
-        stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      viewBox="0 0 32 32"
+      width={size}
+      height={size}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      style={{ display: 'inline-block', flexShrink: 0 }}
+    >
+      <rect width="32" height="32" rx={r} fill="#1D9E75" />
+      <path
+        d="M15.5 27 C14.5 22 14 18 15 14 C15.5 11 15.5 9 15.5 7"
+        stroke="white" strokeWidth="2.8" strokeLinecap="round"
+      />
+      <ellipse cx="15.5" cy="5" rx="2.2" ry="3" fill="white" />
+      <ellipse cx="20" cy="12" rx="5" ry="2.2"
+        transform="rotate(-30 20 12)" fill="white" />
+      <ellipse cx="11" cy="18" rx="5" ry="2.2"
+        transform="rotate(30 11 18)" fill="white" />
+    </svg>
+  )
+}
+
+function ChevronIcon({ open }) {
+  return (
+    <svg
+      viewBox="0 0 16 16" width="16" height="16" fill="none"
+      className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`}
+      aria-hidden="true"
+    >
+      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5"
+        strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }

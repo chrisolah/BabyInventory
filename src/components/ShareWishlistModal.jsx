@@ -11,7 +11,7 @@ const CAT_LABEL = {
 
 export default function ShareWishlistModal({ onClose }) {
   const { household } = useHousehold()
-  const [phase, setPhase] = useState('loading') // 'loading' | 'setup' | 'active'
+  const [phase, setPhase] = useState('loading') // 'loading' | 'setup' | 'active' | 'editing'
   const [share, setShare] = useState(null)
   const [claims, setClaims] = useState([])
   const [saving, setSaving] = useState(false)
@@ -19,7 +19,7 @@ export default function ShareWishlistModal({ onClose }) {
   const [copied, setCopied] = useState(false)
   const [confirmDeactivate, setConfirmDeactivate] = useState(false)
 
-  // Setup form state
+  // Form state — used for both setup and editing
   const [message, setMessage] = useState('')
   const [targetDate, setTargetDate] = useState('')
   const [showPriority, setShowPriority] = useState(true)
@@ -46,6 +46,7 @@ export default function ShareWishlistModal({ onClose }) {
     const active = data?.[0] ?? null
     if (active) {
       setShare(active)
+      populateFormFromShare(active)
       const { data: claimsData } = await supabase
         .schema(currentSchema)
         .from('wishlist_claims')
@@ -57,6 +58,14 @@ export default function ShareWishlistModal({ onClose }) {
     } else {
       setPhase('setup')
     }
+  }
+
+  function populateFormFromShare(s) {
+    setMessage(s.message || '')
+    setTargetDate(s.target_date || '')
+    setShowPriority(s.show_priority !== false)
+    setIncludedCats(new Set(s.included_categories || ALL_CATS))
+    setSkipCats(new Set(s.skip_categories || []))
   }
 
   function toggleIncluded(cat) {
@@ -99,6 +108,29 @@ export default function ShareWishlistModal({ onClose }) {
     setPhase('active')
   }
 
+  async function saveEdits() {
+    if (!share) return
+    setSaving(true)
+    setError(null)
+    const { data, error: err } = await supabase
+      .schema(currentSchema)
+      .from('wishlist_shares')
+      .update({
+        message: message.trim() || null,
+        target_date: targetDate || null,
+        show_priority: showPriority,
+        included_categories: includedCats.size < ALL_CATS.length ? [...includedCats] : null,
+        skip_categories: skipCats.size > 0 ? [...skipCats] : null,
+      })
+      .eq('id', share.id)
+      .select()
+      .single()
+    setSaving(false)
+    if (err) { setError('Something went wrong. Try again.'); return }
+    setShare(data)
+    setPhase('active')
+  }
+
   async function confirmAndDeactivate() {
     if (!share) return
     await supabase
@@ -109,7 +141,6 @@ export default function ShareWishlistModal({ onClose }) {
     setShare(null)
     setClaims([])
     setConfirmDeactivate(false)
-    // Reset form to defaults
     setMessage('')
     setTargetDate('')
     setShowPriority(true)
@@ -126,20 +157,37 @@ export default function ShareWishlistModal({ onClose }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Fallback: focus the input so the user can copy manually
+      // fallback: user can copy from the input manually
     }
+  }
+
+  function startEditing() {
+    // populateFormFromShare was already called when we loaded; just switch phase
+    setError(null)
+    setPhase('editing')
+  }
+
+  function cancelEditing() {
+    // Restore form to match current saved share before returning
+    if (share) populateFormFromShare(share)
+    setError(null)
+    setPhase('active')
   }
 
   function onBackdropClick(e) {
     if (e.target === e.currentTarget) onClose()
   }
 
+  const isFormPhase = phase === 'setup' || phase === 'editing'
+
   return (
     <div className={styles.overlay} onClick={onBackdropClick}>
       <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="swm-title">
         <div className={styles.modalHead}>
           <div className={styles.modalTitle} id="swm-title">
-            {phase === 'active' ? 'Wishlist link' : 'Share your wishlist'}
+            {phase === 'active'  ? 'Wishlist link'        :
+             phase === 'editing' ? 'Edit wishlist link'   :
+                                   'Share your wishlist'}
           </div>
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
             ×
@@ -150,14 +198,17 @@ export default function ShareWishlistModal({ onClose }) {
           <div className={styles.loading}>Loading…</div>
         )}
 
-        {phase === 'setup' && (
-          <SetupForm
+        {isFormPhase && (
+          <SharedForm
+            isEditing={phase === 'editing'}
             message={message} setMessage={setMessage}
             targetDate={targetDate} setTargetDate={setTargetDate}
             showPriority={showPriority} setShowPriority={setShowPriority}
             includedCats={includedCats} onToggleIncluded={toggleIncluded}
             skipCats={skipCats} onToggleSkip={toggleSkip}
-            saving={saving} error={error} onSubmit={createShare}
+            saving={saving} error={error}
+            onSubmit={phase === 'editing' ? saveEdits : createShare}
+            onCancel={phase === 'editing' ? cancelEditing : null}
           />
         )}
 
@@ -167,7 +218,9 @@ export default function ShareWishlistModal({ onClose }) {
             copied={copied}
             onCopy={copyLink}
             claims={claims}
+            share={share}
             confirmDeactivate={confirmDeactivate}
+            onEdit={startEditing}
             onDeactivate={() => setConfirmDeactivate(true)}
             onDeactivateConfirm={confirmAndDeactivate}
             onDeactivateCancel={() => setConfirmDeactivate(false)}
@@ -178,21 +231,25 @@ export default function ShareWishlistModal({ onClose }) {
   )
 }
 
-// ── Setup form ────────────────────────────────────────────────────────────────
+// ── Shared form (used for both setup and editing) ─────────────────────────────
 
-function SetupForm({
+function SharedForm({
+  isEditing,
   message, setMessage,
   targetDate, setTargetDate,
   showPriority, setShowPriority,
   includedCats, onToggleIncluded,
   skipCats, onToggleSkip,
-  saving, error, onSubmit,
+  saving, error,
+  onSubmit, onCancel,
 }) {
   return (
     <div className={styles.setupForm}>
-      <p className={styles.sub}>
-        Create a link to share with family and friends. They can see what you still need and claim items directly — no account required.
-      </p>
+      {!isEditing && (
+        <p className={styles.sub}>
+          Create a link to share with family and friends. They can see what you still need and claim items directly — no account required.
+        </p>
+      )}
 
       <div className={styles.field}>
         <label className={styles.label} htmlFor="swm-message">Message (optional)</label>
@@ -265,14 +322,23 @@ function SetupForm({
 
       {error && <div className={styles.error}>{error}</div>}
 
-      <button
-        type="button"
-        className={styles.primaryBtn}
-        onClick={onSubmit}
-        disabled={saving || includedCats.size === 0}
-      >
-        {saving ? 'Creating…' : 'Create wishlist link'}
-      </button>
+      <div className={styles.formBtns}>
+        <button
+          type="button"
+          className={styles.primaryBtn}
+          onClick={onSubmit}
+          disabled={saving || includedCats.size === 0}
+        >
+          {saving
+            ? (isEditing ? 'Saving…' : 'Creating…')
+            : (isEditing ? 'Save changes' : 'Create wishlist link')}
+        </button>
+        {onCancel && (
+          <button type="button" className={styles.cancelBtn} onClick={onCancel} disabled={saving}>
+            Cancel
+          </button>
+        )}
+      </div>
       {includedCats.size === 0 && (
         <p className={styles.disabledNote}>Select at least one category to include.</p>
       )}
@@ -283,8 +349,8 @@ function SetupForm({
 // ── Active view ───────────────────────────────────────────────────────────────
 
 function ActiveView({
-  shareUrl, copied, onCopy, claims,
-  confirmDeactivate, onDeactivate, onDeactivateConfirm, onDeactivateCancel,
+  shareUrl, copied, onCopy, claims, share,
+  confirmDeactivate, onEdit, onDeactivate, onDeactivateConfirm, onDeactivateCancel,
 }) {
   // Group claims by slot_id + slot_type + size_label
   const claimGroups = []
@@ -302,6 +368,19 @@ function ActiveView({
     const label = group.slot_id.replace(/_/g, ' ')
     return group.size_label ? `${label} · ${group.size_label}` : label
   }
+
+  const CAT_LABEL = {
+    clothing: 'Clothing', sleep: 'Sleep', feeding: 'Feeding', diapering: 'Diapering',
+    travel: 'Travel', play: 'Play', health: 'Health', bath: 'Bath',
+  }
+
+  const includedList = share.included_categories
+    ? share.included_categories.map(c => CAT_LABEL[c] || c).join(', ')
+    : 'All categories'
+
+  const skipList = share.skip_categories?.length
+    ? share.skip_categories.map(c => CAT_LABEL[c] || c).join(', ')
+    : null
 
   return (
     <div className={styles.activeView}>
@@ -323,6 +402,35 @@ function ActiveView({
           onClick={onCopy}
         >
           {copied ? '✓ Copied' : 'Copy link'}
+        </button>
+      </div>
+
+      {/* ── Current settings summary ── */}
+      <div className={styles.settingsSummary}>
+        <div className={styles.settingsRow}>
+          <span className={styles.settingsKey}>Includes</span>
+          <span className={styles.settingsVal}>{includedList}</span>
+        </div>
+        {skipList && (
+          <div className={styles.settingsRow}>
+            <span className={styles.settingsKey}>Skip notice</span>
+            <span className={styles.settingsVal}>{skipList}</span>
+          </div>
+        )}
+        {share.target_date && (
+          <div className={styles.settingsRow}>
+            <span className={styles.settingsKey}>Target date</span>
+            <span className={styles.settingsVal}>{formatDate(share.target_date)}</span>
+          </div>
+        )}
+        {share.message && (
+          <div className={styles.settingsRow}>
+            <span className={styles.settingsKey}>Message</span>
+            <span className={styles.settingsVal}>&ldquo;{share.message.length > 60 ? share.message.slice(0, 60) + '…' : share.message}&rdquo;</span>
+          </div>
+        )}
+        <button type="button" className={styles.editSettingsBtn} onClick={onEdit}>
+          Edit settings
         </button>
       </div>
 
@@ -381,4 +489,16 @@ function ActiveView({
       </div>
     </div>
   )
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  try {
+    const d = new Date(dateStr + 'T00:00:00')
+    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  } catch {
+    return dateStr
+  }
 }
