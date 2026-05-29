@@ -121,6 +121,7 @@ export default function WishlistPublic() {
 
   const { share, household, babies, clothing, items } = pageData
   const skipCats    = new Set(share.skip_categories || [])
+  const skipSizes   = share.skip_sizes || []
   const showPriority = share.show_priority !== false
 
   return (
@@ -156,13 +157,23 @@ export default function WishlistPublic() {
         </div>
       )}
 
-      {/* ── Skip-categories notice ────────────────────────────── */}
-      {skipCats.size > 0 && (
+      {/* ── Skip notice ───────────────────────────────────────── */}
+      {(skipCats.size > 0 || skipSizes.length > 0) && (
         <div className={styles.skipBanner}>
           <span aria-hidden="true">🙏</span>
           <div>
-            <strong>Well stocked on:</strong>{' '}
-            {[...skipCats].map(c => CAT_LABEL[c] || c).join(', ')} — no gifts needed here!
+            {skipCats.size > 0 && (
+              <div>
+                <strong>Well stocked on:</strong>{' '}
+                {[...skipCats].map(c => CAT_LABEL[c] || c).join(', ')} — no gifts needed here!
+              </div>
+            )}
+            {skipSizes.length > 0 && (
+              <div className={skipCats.size > 0 ? styles.skipLine : ''}>
+                <strong>Clothing sizes covered:</strong>{' '}
+                {skipSizes.join(', ')} — these won&rsquo;t appear in the list below.
+              </div>
+            )}
           </div>
         </div>
       )}

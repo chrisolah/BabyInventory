@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
+import { AGE_RANGES } from '../lib/wardrobe'
 import styles from './ShareWishlistModal.module.css'
 
 const ALL_CATS = ['clothing', 'sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath']
+const NON_CLOTHING_CATS = ALL_CATS.filter(c => c !== 'clothing')
 const CAT_LABEL = {
   clothing: 'Clothing', sleep: 'Sleep', feeding: 'Feeding', diapering: 'Diapering',
   travel: 'Travel', play: 'Play', health: 'Health', bath: 'Bath',
@@ -25,6 +27,7 @@ export default function ShareWishlistModal({ onClose }) {
   const [showPriority, setShowPriority] = useState(true)
   const [includedCats, setIncludedCats] = useState(new Set(ALL_CATS))
   const [skipCats, setSkipCats] = useState(new Set())
+  const [skipSizes, setSkipSizes] = useState(new Set())
 
   useEffect(() => {
     if (!household?.id) return
@@ -66,6 +69,7 @@ export default function ShareWishlistModal({ onClose }) {
     setShowPriority(s.show_priority !== false)
     setIncludedCats(new Set(s.included_categories || ALL_CATS))
     setSkipCats(new Set(s.skip_categories || []))
+    setSkipSizes(new Set(s.skip_sizes || []))
   }
 
   function toggleIncluded(cat) {
@@ -84,6 +88,14 @@ export default function ShareWishlistModal({ onClose }) {
     })
   }
 
+  function toggleSkipSize(size) {
+    setSkipSizes(prev => {
+      const next = new Set(prev)
+      next.has(size) ? next.delete(size) : next.add(size)
+      return next
+    })
+  }
+
   async function createShare() {
     if (!household?.id) return
     setSaving(true)
@@ -98,6 +110,7 @@ export default function ShareWishlistModal({ onClose }) {
         show_priority: showPriority,
         included_categories: includedCats.size < ALL_CATS.length ? [...includedCats] : null,
         skip_categories: skipCats.size > 0 ? [...skipCats] : null,
+        skip_sizes: skipSizes.size > 0 ? [...skipSizes] : null,
       })
       .select()
       .single()
@@ -121,6 +134,7 @@ export default function ShareWishlistModal({ onClose }) {
         show_priority: showPriority,
         included_categories: includedCats.size < ALL_CATS.length ? [...includedCats] : null,
         skip_categories: skipCats.size > 0 ? [...skipCats] : null,
+        skip_sizes: skipSizes.size > 0 ? [...skipSizes] : null,
       })
       .eq('id', share.id)
       .select()
@@ -146,6 +160,7 @@ export default function ShareWishlistModal({ onClose }) {
     setShowPriority(true)
     setIncludedCats(new Set(ALL_CATS))
     setSkipCats(new Set())
+    setSkipSizes(new Set())
     setPhase('setup')
   }
 
@@ -206,6 +221,7 @@ export default function ShareWishlistModal({ onClose }) {
             showPriority={showPriority} setShowPriority={setShowPriority}
             includedCats={includedCats} onToggleIncluded={toggleIncluded}
             skipCats={skipCats} onToggleSkip={toggleSkip}
+            skipSizes={skipSizes} onToggleSkipSize={toggleSkipSize}
             saving={saving} error={error}
             onSubmit={phase === 'editing' ? saveEdits : createShare}
             onCancel={phase === 'editing' ? cancelEditing : null}
@@ -240,9 +256,12 @@ function SharedForm({
   showPriority, setShowPriority,
   includedCats, onToggleIncluded,
   skipCats, onToggleSkip,
+  skipSizes, onToggleSkipSize,
   saving, error,
   onSubmit, onCancel,
 }) {
+  const clothingIncluded = includedCats.has('clothing')
+
   return (
     <div className={styles.setupForm}>
       {!isEditing && (
@@ -264,7 +283,7 @@ function SharedForm({
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="swm-date">Target date (optional)</label>
+        <label className={styles.label} htmlFor="swm-date">Shower or due date (optional)</label>
         <input
           id="swm-date"
           type="date"
@@ -291,12 +310,14 @@ function SharedForm({
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label}>We already have enough of…</label>
+        <label className={styles.label}>We&rsquo;re well stocked on…</label>
         <p className={styles.fieldNote}>
-          Recipients will see a "please skip this" note for anything you select here.
+          Recipients see a note to skip these. Select categories and/or specific clothing sizes you already have covered.
         </p>
+
+        {/* Non-clothing category skip chips */}
         <div className={styles.chipRow}>
-          {ALL_CATS.map(cat => (
+          {NON_CLOTHING_CATS.map(cat => (
             <button
               key={cat}
               type="button"
@@ -307,6 +328,25 @@ function SharedForm({
             </button>
           ))}
         </div>
+
+        {/* Clothing size skip chips — only shown if clothing is included */}
+        {clothingIncluded && (
+          <div className={styles.sizeSkipBlock}>
+            <span className={styles.sizeSkipLabel}>Clothing sizes</span>
+            <div className={styles.chipRow}>
+              {AGE_RANGES.map(size => (
+                <button
+                  key={size}
+                  type="button"
+                  className={`${styles.chip} ${skipSizes.has(size) ? styles.chipSkipActive : ''}`}
+                  onClick={() => onToggleSkipSize(size)}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className={styles.toggleRow}>
@@ -378,9 +418,14 @@ function ActiveView({
     ? share.included_categories.map(c => CAT_LABEL[c] || c).join(', ')
     : 'All categories'
 
-  const skipList = share.skip_categories?.length
-    ? share.skip_categories.map(c => CAT_LABEL[c] || c).join(', ')
-    : null
+  const skipParts = []
+  if (share.skip_categories?.length) {
+    skipParts.push(...share.skip_categories.map(c => CAT_LABEL[c] || c))
+  }
+  if (share.skip_sizes?.length) {
+    skipParts.push(`Clothing ${share.skip_sizes.join(', ')}`)
+  }
+  const skipList = skipParts.length ? skipParts.join('; ') : null
 
   return (
     <div className={styles.activeView}>
@@ -419,7 +464,7 @@ function ActiveView({
         )}
         {share.target_date && (
           <div className={styles.settingsRow}>
-            <span className={styles.settingsKey}>Target date</span>
+            <span className={styles.settingsKey}>Date</span>
             <span className={styles.settingsVal}>{formatDate(share.target_date)}</span>
           </div>
         )}

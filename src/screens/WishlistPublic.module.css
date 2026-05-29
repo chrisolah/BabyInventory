@@ -169,6 +169,10 @@
   line-height: 1.5;
 }
 
+.skipLine {
+  margin-top: 4px;
+}
+
 /* ── Main body ─────────────────────────────────────────────── */
 .body {
   flex: 1;
