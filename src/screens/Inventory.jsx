@@ -14,6 +14,12 @@ import {
   formatTransitionEta,
   pluralize,
 } from '../lib/wardrobe'
+import {
+  CATEGORY_META,
+  SUB_CATEGORY_LABELS,
+  SUB_CATEGORIES_BY_CATEGORY,
+  ITEM_BY_ID,
+} from '../lib/categories'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import BabySwitcher from '../components/BabySwitcher'
@@ -137,6 +143,11 @@ export default function Inventory() {
   } = useHousehold()
 
   const [error, setError] = useState(null)
+
+  // Top-level category selection — decides which table's items to show and
+  // which UI (clothing-specific age nav vs simple sub-category grouping).
+  const [selectedTopCategory, setSelectedTopCategory] = useState('clothing')
+  const isClothing = selectedTopCategory === 'clothing'
 
   // ── Inline action handlers (Owned tab) ─────────────────────────────────
   // Two paths from each Owned row's inline chips:
@@ -297,11 +308,12 @@ export default function Inventory() {
     })
 
     const prevStatus = item.inventory_status
+    const itemTable = item.top_category === ‘clothing’ ? ‘clothing_items’ : ‘items’
     const { error: updErr } = await supabase
       .schema(currentSchema)
-      .from('clothing_items')
-      .update({ inventory_status: 'kept' })
-      .eq('id', item.id)
+      .from(itemTable)
+      .update({ inventory_status: ‘kept’ })
+      .eq(‘id’, item.id)
 
     if (updErr) {
       setPendingHideIds(prev => {
@@ -317,10 +329,11 @@ export default function Inventory() {
     track.itemTuckedAway?.({ id: item.id, from })
 
     setActionToast({
-      kind: 'tuck_away',
+      kind: ‘tuck_away’,
       id: item.id,
       name: item.name || humanizeItemType(item.item_type),
       prevStatus,
+      itemTable,
     })
 
     reloadItems()
@@ -334,7 +347,7 @@ export default function Inventory() {
   // bag, and a future re-attach should record fresh origin).
   async function handleUndoToast() {
     if (!actionToast) return
-    const { kind, id, name, prevStatus } = actionToast
+    const { kind, id, name, prevStatus, itemTable = 'clothing_items' } = actionToast
     const restoreStatus = prevStatus || 'owned'
 
     setPendingHideIds(prev => {
@@ -344,7 +357,8 @@ export default function Inventory() {
     })
     setActionToast(null)
 
-    const update = kind === 'pass_on'
+    // Non-clothing items don't have pass_along_batch_id
+    const update = kind === 'pass_on' && itemTable === 'clothing_items'
       ? {
           inventory_status: restoreStatus,
           pass_along_batch_id: null,
@@ -354,7 +368,7 @@ export default function Inventory() {
 
     const { error: updErr } = await supabase
       .schema(currentSchema)
-      .from('clothing_items')
+      .from(itemTable)
       .update(update)
       .eq('id', id)
 
@@ -422,15 +436,15 @@ export default function Inventory() {
       return next
     })
 
+    const sectionItemTable = item.top_category === ‘clothing’ ? ‘clothing_items’ : ‘items’
+    const sectionTuckUpdate = sectionItemTable === ‘clothing_items’
+      ? { inventory_status: ‘kept’, pass_along_batch_id: null, pre_bag_inventory_status: null }
+      : { inventory_status: ‘kept’ }
     const { error: updErr } = await supabase
       .schema(currentSchema)
-      .from('clothing_items')
-      .update({
-        inventory_status: 'kept',
-        pass_along_batch_id: null,
-        pre_bag_inventory_status: null,
-      })
-      .eq('id', item.id)
+      .from(sectionItemTable)
+      .update(sectionTuckUpdate)
+      .eq(‘id’, item.id)
 
     if (updErr) {
       setPendingHideIds(prev => {
@@ -470,14 +484,14 @@ export default function Inventory() {
       return next
     })
 
+    const moveBackTable = item.top_category === 'clothing' ? 'clothing_items' : 'items'
+    const moveBackUpdate = moveBackTable === 'clothing_items'
+      ? { inventory_status: 'owned', pass_along_batch_id: null, pre_bag_inventory_status: null }
+      : { inventory_status: 'owned' }
     const { error: updErr } = await supabase
       .schema(currentSchema)
-      .from('clothing_items')
-      .update({
-        inventory_status: 'owned',
-        pass_along_batch_id: null,
-        pre_bag_inventory_status: null,
-      })
+      .from(moveBackTable)
+      .update(moveBackUpdate)
       .eq('id', item.id)
 
     if (updErr) {
@@ -511,6 +525,18 @@ export default function Inventory() {
   // inventory until the user opts in. Header surfaces the count so the
   // user knows there's stuff there even when the body is hidden.
   const [outgrownSectionCollapsed, setOutgrownSectionCollapsed] = useState(true)
+
+  // Non-clothing sub-category collapse state (separate from clothing's
+  // ownedCollapsed so switching categories doesn't share collapse memory).
+  const [catCollapsed, setCatCollapsed] = useState(() => new Set())
+
+  function toggleCatGroup(subCat) {
+    setCatCollapsed(prev => {
+      const next = new Set(prev)
+      if (next.has(subCat)) next.delete(subCat); else next.add(subCat)
+      return next
+    })
+  }
 
   function toggleOwnedGroup(cat) {
     setOwnedCollapsed(prev => {
@@ -553,25 +579,54 @@ export default function Inventory() {
   // inventory (outgrown clothes from family or friends, pre-arrival gifts) and semantically available
   // to any baby in the household. Every downstream view derives from this.
   const babyFilteredItems = useMemo(
-    () => items.filter(it => matchesBabyFilter(it, selectedBabyId)),
-    [items, selectedBabyId],
+    () => items.filter(it =>
+      matchesBabyFilter(it, selectedBabyId) &&
+      it.top_category === selectedTopCategory
+    ),
+    [items, selectedBabyId, selectedTopCategory],
   )
 
-  // Outgrown section pool — items the household has moved out of active
-  // rotation, regardless of intent: 'kept' (tucked away), 'pass_along'
-  // (in a bag), or legacy 'outgrown' (pre-redesign transient state).
-  // Filtered through the baby selector so the section header count
-  // reflects what the user is currently scoping to. Excludes items in
-  // pendingHideIds so an optimistic flip doesn't briefly show the same
-  // row in both Owned and the Outgrown section while the DB resolves.
+  // Outgrown section pool — clothing-only. Items the household has moved out
+  // of active rotation: 'kept', 'pass_along', or legacy 'outgrown'.
+  // Non-clothing has its own catOutgrownItems below.
   const outgrownSectionItems = useMemo(
-    () => babyFilteredItems.filter(i =>
-      (i.inventory_status === 'kept' ||
-        i.inventory_status === 'pass_along' ||
-        i.inventory_status === 'outgrown') &&
+    () => isClothing
+      ? babyFilteredItems.filter(i =>
+          (i.inventory_status === 'kept' ||
+            i.inventory_status === 'pass_along' ||
+            i.inventory_status === 'outgrown') &&
+          !pendingHideIds.has(i.id)
+        )
+      : [],
+    [isClothing, babyFilteredItems, pendingHideIds],
+  )
+
+  // ── Non-clothing owned items, grouped by sub_category ──────────────────
+  const catOwnedGrouped = useMemo(() => {
+    if (isClothing) return []
+    const filtered = babyFilteredItems.filter(i =>
+      i.inventory_status === 'owned' &&
       !pendingHideIds.has(i.id)
-    ),
-    [babyFilteredItems, pendingHideIds],
+    )
+    const subCats = SUB_CATEGORIES_BY_CATEGORY[selectedTopCategory] || []
+    const groups = Object.fromEntries(subCats.map(s => [s, []]))
+    for (const it of filtered) {
+      if (groups[it.sub_category] !== undefined) groups[it.sub_category].push(it)
+    }
+    return subCats
+      .filter(s => groups[s].length > 0)
+      .map(s => ({ subCat: s, items: groups[s] }))
+  }, [isClothing, babyFilteredItems, selectedTopCategory, pendingHideIds])
+
+  // Non-clothing tucked-away items (status='kept').
+  const catOutgrownItems = useMemo(
+    () => isClothing
+      ? []
+      : babyFilteredItems.filter(i =>
+          i.inventory_status === 'kept' &&
+          !pendingHideIds.has(i.id)
+        ),
+    [isClothing, babyFilteredItems, pendingHideIds],
   )
 
   // Group section items by category for the same .group/.GroupHeader
@@ -829,7 +884,7 @@ export default function Inventory() {
           Shows when the baby is within 16 weeks of the next size band AND
           there are gaps to fill. Collapsible so it doesn't crowd the tabs
           once the user has seen it. Persists open/closed in localStorage. */}
-      {showPrediction && (ageInfo.expecting || nextSizeCoverage) && (
+      {isClothing && showPrediction && (ageInfo.expecting || nextSizeCoverage) && (
         <div className={styles.predictionCard}>
           <button
             type="button"
@@ -956,8 +1011,12 @@ export default function Inventory() {
         )}
 
         {/* ── Owned tab ─────────────────────────────────────────── */}
-        {!loading && !error && selectedAgeRange && (
+        {!loading && !error && (
           <>
+            <CategoryNav selected={selectedTopCategory} onChange={setSelectedTopCategory} />
+
+            {isClothing && selectedAgeRange && (
+              <>
             {/* Age-range chip navbar — mirrors the Wish list nav so users can
                 stock forward (12-18M in April when baby is 3-6M) without
                 switching tabs. The baby's current band gets a teal dot so
@@ -1076,6 +1135,92 @@ export default function Inventory() {
                   </div>
                 )}
               </section>
+            )}
+              </>
+            )}
+
+            {!isClothing && (
+              <>
+                {catOwnedGrouped.length === 0 && (
+                  <div className={styles.empty}>
+                    <div className={styles.emptyTitle}>Nothing here yet</div>
+                    <div className={styles.emptyBody}>
+                      Start by adding something you already have for this category.
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.emptyCta}
+                      onClick={() => navigate(`/add-item?category=${selectedTopCategory}`)}
+                    >
+                      Add first item
+                    </button>
+                  </div>
+                )}
+                {catOwnedGrouped.map(group => {
+                  const catGroupCollapsed = catCollapsed.has(group.subCat)
+                  const catGroupId = `cat-${group.subCat}`
+                  return (
+                    <section className={styles.group} key={group.subCat}>
+                      <GroupHeader
+                        title={SUB_CATEGORY_LABELS[group.subCat] || group.subCat}
+                        meta={`${group.items.length} ${pluralize(group.items.length, 'item')}`}
+                        collapsed={catGroupCollapsed}
+                        onToggle={() => toggleCatGroup(group.subCat)}
+                        contentId={catGroupId}
+                      />
+                      {!catGroupCollapsed && (
+                        <div className={styles.itemCardGrid} id={catGroupId}>
+                          {group.items.map(it => (
+                            <CatItemCard
+                              key={it.id}
+                              item={it}
+                              onClick={() => navigate(`/item/${it.id}`)}
+                              onTuckAway={handleTuckAway}
+                              working={pendingHideIds.has(it.id)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  )
+                })}
+                {catOwnedGrouped.length > 0 && (
+                  <button
+                    type="button"
+                    className={styles.addMoreBtn}
+                    onClick={() => navigate(`/add-item?category=${selectedTopCategory}`)}
+                  >
+                    + Add item
+                  </button>
+                )}
+                {catOutgrownItems.length > 0 && (
+                  <section
+                    className={`${styles.group} ${styles.outgrownSection}`}
+                    aria-label="Tucked away"
+                  >
+                    <GroupHeader
+                      title="Tucked away"
+                      meta={`${catOutgrownItems.length} ${pluralize(catOutgrownItems.length, 'item')}`}
+                      collapsed={outgrownSectionCollapsed}
+                      onToggle={() => setOutgrownSectionCollapsed(s => !s)}
+                      contentId="cat-outgrown-section"
+                    />
+                    {!outgrownSectionCollapsed && (
+                      <div id="cat-outgrown-section" className={styles.itemCardGrid}>
+                        {catOutgrownItems.map(it => (
+                          <CatItemCard
+                            key={it.id}
+                            item={it}
+                            onClick={() => navigate(`/item/${it.id}`)}
+                            onMoveBack={handleSectionMoveBack}
+                            working={pendingHideIds.has(it.id)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                )}
+              </>
             )}
           </>
         )}
@@ -1422,4 +1567,99 @@ function SectionItemCard({ item, onClick, onPassOnChip, onMoveBackChip, working 
 function humanizeItemType(s) {
   if (!s) return 'Item'
   return s.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())
+}
+
+// ── Category tab bar ──────────────────────────────────────────────────────
+// Horizontally scrollable chip row that switches between the 8 top-level
+// categories (Clothing, Sleep, Feeding, …). Sits at the top of the content
+// area, below BabySwitcher, above the age nav / item list.
+const TOP_CATEGORIES_NAV = [
+  { id: 'clothing',   label: 'Clothing',   emoji: '👕' },
+  { id: 'sleep',      label: 'Sleep',      emoji: '😴' },
+  { id: 'feeding',    label: 'Feeding',    emoji: '🍼' },
+  { id: 'diapering',  label: 'Diapering',  emoji: '🧷' },
+  { id: 'travel',     label: 'Travel',     emoji: '🚗' },
+  { id: 'play',       label: 'Play',       emoji: '🎈' },
+  { id: 'health',     label: 'Health',     emoji: '💊' },
+  { id: 'bath',       label: 'Bath',       emoji: '🛁' },
+]
+
+function CategoryNav({ selected, onChange }) {
+  return (
+    <div className={styles.catNav}>
+      {TOP_CATEGORIES_NAV.map(cat => (
+        <button
+          key={cat.id}
+          type="button"
+          className={`${styles.catNavChip} ${selected === cat.id ? styles.catNavChipActive : ''}`}
+          onClick={() => onChange(cat.id)}
+          aria-pressed={selected === cat.id}
+        >
+          <span className={styles.catNavEmoji} aria-hidden="true">{cat.emoji}</span>
+          {cat.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── Non-clothing item card ────────────────────────────────────────────────
+// Simpler card for beta.items rows — no garment photo, no Pass on action
+// (pass-along is clothing-only for now). Tuck away moves to 'kept'; Move
+// back restores to 'owned' (used in the Tucked away section).
+function CatItemCard({ item, onClick, onTuckAway, onMoveBack, working }) {
+  const slot = ITEM_BY_ID[item.item_type]
+  const primary = item.name || item.brand || slot?.singular || slot?.label || humanizeItemType(item.item_type)
+  const metaParts = []
+  if (item.name && item.brand) metaParts.push(item.brand)
+  if (item.condition) metaParts.push(CONDITION_LABEL[item.condition] || item.condition)
+  const meta = metaParts.slice(0, 2).join(' · ')
+
+  return (
+    <button
+      type="button"
+      className={styles.itemCard}
+      onClick={onClick}
+      aria-label={`Open ${primary}`}
+    >
+      <div className={styles.itemCardPhotoWrap} aria-hidden="true">
+        <div className={styles.itemCardPlaceholder}>
+          <span className={styles.itemCardSizeCentered}>
+            {item.quantity > 1 ? `×${item.quantity}` : '—'}
+          </span>
+        </div>
+      </div>
+      <div className={styles.itemCardBody}>
+        <div className={styles.itemCardName}>{primary}</div>
+        {meta && <div className={styles.itemCardMeta}>{meta}</div>}
+        <div className={styles.itemCardFooter}>
+          {item.quantity > 1 && (
+            <span className={styles.itemCardQty}>×{item.quantity}</span>
+          )}
+          {onTuckAway && (
+            <button
+              type="button"
+              className={styles.itemCardTuckBtn}
+              onClick={e => { e.stopPropagation(); onTuckAway(item) }}
+              disabled={working}
+              aria-label={`Tuck away ${primary}`}
+            >
+              Tuck away
+            </button>
+          )}
+          {onMoveBack && (
+            <button
+              type="button"
+              className={styles.itemCardMoveBackBtn}
+              onClick={e => { e.stopPropagation(); onMoveBack(item) }}
+              disabled={working}
+              aria-label={`Move ${primary} back to Owned`}
+            >
+              Move back
+            </button>
+          )}
+        </div>
+      </div>
+    </button>
+  )
 }
