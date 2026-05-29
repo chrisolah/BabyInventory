@@ -1,63 +1,113 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
+import {
+  computeCoverage,
+  inferAgeRange,
+  AGE_RANGES,
+} from '../lib/wardrobe'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import BabySwitcher from '../components/BabySwitcher'
 import InviteMemberModal from '../components/InviteMemberModal'
-import TagScanner from '../components/TagScanner'
-import Eyebrow from '../components/Eyebrow'
+import BottomNav from '../components/BottomNav'
 import styles from './Home.module.css'
 
-// Home is the signed-in landing page for the inventory app. For now it's a
-// shell: a persistent header (brand + "Invite member" button) and an empty-
-// state card inviting the user to start their inventory.
+// Category hub configuration — defines the 8 category cards shown on the
+// home screen. Clothing is the only "live" category with real DB data;
+// the others show placeholder state until their inventory tables are built.
+const CATEGORIES = [
+  {
+    id: 'clothing',
+    label: 'Clothing',
+    icon: ClothingIcon,
+    color: 'teal',
+    passAlong: true,
+    totalItems: 64, // target from taxonomy
+  },
+  {
+    id: 'sleep',
+    label: 'Sleep',
+    icon: SleepIcon,
+    color: 'blue',
+    totalItems: 12,
+  },
+  {
+    id: 'feeding',
+    label: 'Feeding',
+    icon: FeedingIcon,
+    color: 'amber',
+    totalItems: 22,
+  },
+  {
+    id: 'diapering',
+    label: 'Diapering',
+    icon: DiaperIcon,
+    color: 'gray',
+    totalItems: 10,
+  },
+  {
+    id: 'travel',
+    label: 'Travel',
+    icon: TravelIcon,
+    color: 'purple',
+    totalItems: 9,
+  },
+  {
+    id: 'play',
+    label: 'Play',
+    icon: PlayIcon,
+    color: 'coral',
+    totalItems: 14,
+  },
+  {
+    id: 'health',
+    label: 'Health',
+    icon: HealthIcon,
+    color: 'red',
+    totalItems: 11,
+  },
+  {
+    id: 'bath',
+    label: 'Bath',
+    icon: BathIcon,
+    color: 'green',
+    totalItems: 8,
+  },
+]
+
+// Home is the main hub screen. Shows a category grid with per-category
+// readiness — clothing uses live wardrobe data, other categories show
+// placeholder state until their tracking tables are built.
 //
-// Home ALSO acts as the onboarding + "already-started" gate. PublicRoute's
-// declarative redirect beats Signup/Login's imperative `navigate(...)` when
-// the auth state flips, so any post-auth path funnels through /home first.
-// From here we do two checks in order:
-//   1. onboarding_step < 4 → /onboarding (incomplete profile)
-//   2. any clothing_items exist → /inventory (they've started; the empty-
-//      state card on Home is the wrong frame once the inventory isn't empty)
-// Everyone else stays on Home and sees the "Start your inventory" card.
-//
-// The "Invite household member" button lives in the header so it's accessible
-// from any scroll position and survives as we build out more body content.
-// Invite plumbing (pending_invites + email delivery) isn't wired yet, so the
-// modal currently just collects the email and fires an analytics event — we
-// say so in the helper note to set expectations honestly.
+// Unlike the old Home, this screen does NOT redirect to /inventory when
+// items exist. The Category Hub IS the home screen regardless of inventory
+// state. Onboarding redirect is preserved (step < 5 → /onboarding).
 export default function Home() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { reloadItems } = useHousehold()
+  const {
+    household,
+    babies,
+    currentBaby,
+    items,
+    itemsLoading,
+  } = useHousehold()
   const [showInvite, setShowInvite] = useState(false)
-  // 'checking' until we know onboarding is complete; 'ready' once we do.
-  // We never transition to an "incomplete" state because we just redirect.
   const [status, setStatus] = useState('checking')
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] ?? ''
 
-  // Onboarding gate. Runs once per mounted user. If the summary query fails
-  // (e.g. migration 003 hasn't been applied in this env), we log and let the
-  // user stay on Home rather than trapping them in a redirect loop.
+  // Onboarding gate — redirect to /onboarding if setup is incomplete.
+  // Invite-joiners (role='member') skip the step check entirely.
   useEffect(() => {
     if (!user) return
     let cancelled = false
 
     async function check() {
-      // Invite-joiner short-circuit. If the user is a member (role='member',
-      // i.e. joined an existing household via invite — not the creator),
-      // they don't need onboarding at all: the household exists, the babies
-      // exist, the receiving prefs are set. The per-user onboarding_step
-      // counter is irrelevant for them — it stays at 0 unless something
-      // bumps it, but they're functionally complete the moment they accept.
-      // Without this branch, brand-new invite-joiners get dumped into
-      // /onboarding the first time they hit /home (named household, add
-      // baby, etc. — all data that already exists).
       const { data: memberRow, error: memberErr } = await supabase
         .schema(currentSchema)
         .from('household_members')
@@ -69,64 +119,29 @@ export default function Home() {
 
       if (cancelled) return
 
-      // memberErr is non-fatal: fall through to the step-based gate so a
-      // transient query failure doesn't strand the user. Real members will
-      // still land on /home on the next visit when the query succeeds.
       if (!memberErr && memberRow) {
-        // Continue to the items-vs-empty-state check below.
-      } else {
-        const { data, error } = await supabase
-          .schema(currentSchema)
-          .from('user_activity_summary')
-          .select('onboarding_step')
-          .eq('user_id', user.id)
-          .maybeSingle()
-
-        if (cancelled) return
-
-        if (error) {
-          // eslint-disable-next-line no-console
-          console.warn('Onboarding gate: user_activity_summary query failed —', error.message)
-          setStatus('ready')
-          return
-        }
-
-        // ONBOARDING_COMPLETE is 5 (migration 015 remapped from 6 after the
-        // sizemode step was cut). Anything below complete means the user
-        // still has a step to handle — receiving, invite, or scan — and
-        // belongs on the /onboarding flow, not here. Hard-coded to keep
-        // this gate self-contained, but keep in sync with Onboarding.jsx
-        // if the flow grows or shrinks again.
-        const step = data?.onboarding_step ?? 0
-        if (step < 5) {
-          navigate('/onboarding', { replace: true })
-          return
-        }
-      }
-
-      // Onboarding done — if they've already added anything, skip the empty
-      // "Start your inventory" framing and drop them straight on /inventory.
-      // RLS scopes this to households the user belongs to, so a single-row
-      // head-count query is enough; no need to resolve the household first.
-      const { count, error: countErr } = await supabase
-        .schema(currentSchema)
-        .from('clothing_items')
-        .select('id', { count: 'exact', head: true })
-        .limit(1)
-
-      if (cancelled) return
-
-      if (countErr) {
-        // Don't trap the user if the count query fails (e.g. migration 006
-        // hasn't landed in this env). Fall back to the empty-state Home.
-        // eslint-disable-next-line no-console
-        console.warn('Home: clothing_items count failed —', countErr.message)
         setStatus('ready')
         return
       }
 
-      if ((count ?? 0) > 0) {
-        navigate('/inventory', { replace: true })
+      const { data, error } = await supabase
+        .schema(currentSchema)
+        .from('user_activity_summary')
+        .select('onboarding_step')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (cancelled) return
+
+      if (error) {
+        console.warn('Onboarding gate failed —', error.message)
+        setStatus('ready')
+        return
+      }
+
+      const step = data?.onboarding_step ?? 0
+      if (step < 5) {
+        navigate('/onboarding', { replace: true })
         return
       }
 
@@ -137,56 +152,56 @@ export default function Home() {
     return () => { cancelled = true }
   }, [user, navigate])
 
+  // Clothing coverage — computed across all age ranges for the current baby.
+  // Shows total owned vs total recommended across the whole wardrobe.
+  const ageAnchor = currentBaby ?? babies[0] ?? null
+  const ageInfo = useMemo(() => inferAgeRange(ageAnchor), [ageAnchor])
+  const activeRange = ageInfo.currentRange || AGE_RANGES[0]
+
+  const clothingItems = useMemo(
+    () => items.filter(i => i.inventory_status === 'owned'),
+    [items],
+  )
+
+  // Aggregate coverage across all age ranges for the overall count
+  const clothingCoverage = useMemo(() => {
+    if (!clothingItems.length && !itemsLoading) return { owned: 0, recommended: 64 }
+    let owned = 0
+    let recommended = 0
+    for (const range of AGE_RANGES) {
+      const rows = computeCoverage(clothingItems, range, 1)
+      for (const row of rows) {
+        owned += Math.min(row.ownedCount, row.recommended)
+        recommended += row.recommended
+      }
+    }
+    return { owned, recommended: Math.max(recommended, 1) }
+  }, [clothingItems, itemsLoading])
+
+  // Current-range coverage for the clothing card subtitle
+  const currentRangeCoverage = useMemo(() => {
+    if (!activeRange) return null
+    const rows = computeCoverage(clothingItems, activeRange, 1)
+    let owned = 0; let recommended = 0
+    for (const row of rows) {
+      owned += Math.min(row.ownedCount, row.recommended)
+      recommended += row.recommended
+    }
+    return { owned, recommended, range: activeRange }
+  }, [clothingItems, activeRange])
+
   function openInvite() {
     track.householdInviteOpened('home_header')
     setShowInvite(true)
   }
 
-  function closeInvite() {
-    setShowInvite(false)
-  }
-
-  // Home's scan entry point hands off to /add-item with the scanned fields
-  // on the URL. We funnel everything through the same AddItem screen so
-  // there's one confirm surface to maintain, and so a user who scans and
-  // then edits an existing field still lands in the same familiar form.
-  // Fields the model returned as null are just omitted from the URL.
-  function onHomeScanResult(fields) {
-    if (!fields) return
-    const params = new URLSearchParams({ mode: 'owned' })
-    if (fields.category)   params.set('category',  fields.category)
-    if (fields.item_type)  params.set('from_slot', fields.item_type)
-    if (fields.size_label) params.set('size',      fields.size_label)
-    if (fields.brand)      params.set('brand',     fields.brand.slice(0, 80))
-    // tagScanCompleted is fired by TagScanner itself (with the richer
-    // duration/confidence/quota payload). Don't double-fire here.
-    navigate(`/add-item?${params.toString()}`)
-  }
-
-  // Batch save path. The single-scan path (onHomeScanResult) routes through
-  // /add-item so the user confirms the prefilled form. Batch mode skips that
-  // confirm step — BatchReview saves N rows directly into clothing_items —
-  // so we just refresh the household items cache and drop the user on
-  // /inventory with a toast that calls out the count.
-  function onHomeBatchSaved(count) {
-    reloadItems()
-    navigate('/inventory', {
-      state: { toast: `Added ${count} item${count === 1 ? '' : 's'}` },
-    })
-  }
-
-  if (status === 'checking') {
-    // Brief blank screen while we resolve the gate. Keeps the page from
-    // flashing "Welcome" at users we're about to redirect.
-    return <div className={styles.page} />
-  }
+  if (status === 'checking') return <div className={styles.page} />
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.brandWrap}>
           <div className={styles.brand}>Sprigloop</div>
-          {/* Mobile-only sprig beneath the brand. Hidden on desktop. */}
           <IvySprig />
         </div>
         <div className={styles.headerActions}>
@@ -196,79 +211,168 @@ export default function Home() {
             onClick={openInvite}
             aria-label="Invite household member"
           >
-            <svg
-              className={styles.inviteIcon}
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M8 3.5v9M3.5 8h9"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
+            <svg className={styles.inviteIcon} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 3.5v9M3.5 8h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
-            Invite member
+            Invite
           </button>
           <ProfileMenu />
         </div>
       </header>
 
-      {/* Chip switcher — self-hides for single-baby households. Lets a
-          multi-baby parent pre-scope from the landing page, though the
-          actual filtering happens once they hit /inventory. */}
       <BabySwitcher from="home" />
 
       <main className={styles.body}>
-        <h1 className={styles.greeting}>
-          {firstName ? `Hi, ${firstName}` : 'Welcome'}
-        </h1>
-        <p className={styles.sub}>
-          Your inventory lives here. Add what you have, and we'll help you keep
-          track of sizes, gaps, and outgrown items.
-        </p>
-
-        {/* Scan-a-tag is the headline CTA. "Start your inventory" remains
-            beneath it for users who prefer to go straight to manual entry
-            or for cases where the camera hand-off fails.
-
-            Eyebrow pills above each block carry the landing's section-opener
-            motif into Home (added 2026-05-01). One per top-level section,
-            colored semantically — teal for the active CTA, gray for the
-            neutral/secondary path. */}
-        <div className={styles.scanBlock}>
-          <Eyebrow color="teal">Quick start</Eyebrow>
-          <TagScanner
-            variant="primary"
-            from="home"
-            onResult={onHomeScanResult}
-            onBatchSaved={onHomeBatchSaved}
-          />
-          <div className={styles.scanCaption}>
-            Snap a clothing tag and we&rsquo;ll fill in brand, size, and type for you.
-          </div>
+        {/* Greeting */}
+        <div className={styles.greetingRow}>
+          <h1 className={styles.greeting}>
+            {firstName ? `Hi, ${firstName}` : 'Welcome'}
+          </h1>
+          <p className={styles.sub}>
+            {ageAnchor?.name
+              ? `${ageAnchor.name}'s readiness at a glance.`
+              : 'Your household readiness at a glance.'}
+          </p>
         </div>
 
-        <div className={styles.startSection}>
-          <Eyebrow color="gray">Your inventory</Eyebrow>
-          <button
-            type="button"
-            className={styles.emptyCard}
-            onClick={() => navigate('/inventory')}
-          >
-            <div className={styles.emptyTitle}>Start your inventory</div>
-            <div className={styles.emptySub}>
-              Tap here to see your wardrobe and add your first item — a onesie,
-              sleepsuit, anything you already have.
-            </div>
-          </button>
+        {/* Category grid */}
+        <div className={styles.grid}>
+          {CATEGORIES.map(cat => {
+            if (cat.id === 'clothing') {
+              const pct = Math.round((clothingCoverage.owned / clothingCoverage.recommended) * 100)
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`${styles.card} ${styles.cardTeal}`}
+                  onClick={() => navigate('/inventory')}
+                  aria-label="Clothing"
+                >
+                  <div className={styles.cardTop}>
+                    <div className={`${styles.iconWrap} ${styles.iconTeal}`}>
+                      <cat.icon />
+                    </div>
+                    <span className={styles.cardLabel}>Clothing</span>
+                  </div>
+                  <div className={styles.passAlongBadge}>Pass Along</div>
+                  <p className={styles.cardMeta}>
+                    {itemsLoading
+                      ? 'Loading…'
+                      : currentRangeCoverage
+                        ? `${currentRangeCoverage.range}: ${currentRangeCoverage.owned} of ${currentRangeCoverage.recommended}`
+                        : `${clothingCoverage.owned} of ${clothingCoverage.recommended} items`
+                    }
+                  </p>
+                  <div className={styles.progressTrack}>
+                    <div
+                      className={`${styles.progressFill} ${styles.progressTeal}`}
+                      style={{ width: `${Math.min(100, pct)}%` }}
+                    />
+                  </div>
+                </button>
+              )
+            }
+
+            // Placeholder cards for categories not yet tracked
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                className={`${styles.card} ${styles[`card_${cat.color}`] || styles.cardGray}`}
+                onClick={() => navigate('/plan')}
+                aria-label={cat.label}
+              >
+                <div className={styles.cardTop}>
+                  <div className={`${styles.iconWrap} ${styles[`icon_${cat.color}`] || styles.iconGray}`}>
+                    <cat.icon />
+                  </div>
+                  <span className={styles.cardLabel}>{cat.label}</span>
+                </div>
+                <p className={styles.cardMeta} style={{ color: 'var(--gray-400)' }}>
+                  0 of {cat.totalItems} items
+                </p>
+                <div className={styles.progressTrack}>
+                  <div className={styles.progressFill} style={{ width: '0%' }} />
+                </div>
+              </button>
+            )
+          })}
         </div>
       </main>
 
+      <BottomNav />
+
       {showInvite && (
-        <InviteMemberModal from="home_header" onClose={closeInvite} />
+        <InviteMemberModal from="home_header" onClose={() => setShowInvite(false)} />
       )}
     </div>
+  )
+}
+
+// ── Category icons (inline SVG) ───────────────────────────────────────────
+function ClothingIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true">
+      <path d="M7 2L4 5l2.5 1.5V17h7V6.5L16 5l-3-3-2 2-2-2z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function SleepIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true">
+      <path d="M3 10.5A7.5 7.5 0 0013.5 3a7.5 7.5 0 100 15A7.5 7.5 0 003 10.5z"
+        stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+function FeedingIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true">
+      <path d="M8 2v3a4 4 0 004 4v9a1 1 0 01-2 0v-5H8v5a1 1 0 01-2 0V2h2z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function DiaperIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true">
+      <rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M2 9h16" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="10" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  )
+}
+function TravelIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true">
+      <path d="M2 14h16M5 14V9l5-4 5 4v5" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <circle cx="6" cy="15.5" r="1.5" stroke="currentColor" strokeWidth="1.1" />
+      <circle cx="14" cy="15.5" r="1.5" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  )
+}
+function PlayIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M7.5 7.5l5 2.5-5 2.5V7.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function HealthIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true">
+      <path d="M10 17S3 12.5 3 7.5A4 4 0 0110 5a4 4 0 017 2.5C17 12.5 10 17 10 17z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function BathIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true">
+      <path d="M3 11h14v1.5a5 5 0 01-10 0" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <path d="M5 11V5.5A1.5 1.5 0 017.5 5a1.5 1.5 0 011.5 1.5V7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
   )
 }

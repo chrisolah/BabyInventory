@@ -311,7 +311,7 @@
 /* ── Body ─────────────────────────────────────────────────── */
 .body {
   flex: 1;
-  padding: 16px;
+  padding: 16px 16px 6rem;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -768,7 +768,7 @@
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 72px);
   transform: translateX(-50%);
   display: flex;
   align-items: center;

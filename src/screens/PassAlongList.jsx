@@ -7,6 +7,7 @@ import { track } from '../lib/analytics'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import Eyebrow from '../components/Eyebrow'
+import BottomNav from '../components/BottomNav'
 import styles from './PassAlongList.module.css'
 
 // Eyebrow color mapping per bucket — semantic, not decorative:
@@ -368,6 +369,7 @@ export default function PassAlongList() {
           </>
         )}
       </main>
+      <BottomNav />
     </div>
   )
 }

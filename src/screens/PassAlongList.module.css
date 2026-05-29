@@ -72,7 +72,7 @@
 
 .body {
   flex: 1;
-  padding: 16px;
+  padding: 16px 16px 6rem;
   display: flex;
   flex-direction: column;
   gap: 14px;

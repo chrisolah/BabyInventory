@@ -84,23 +84,135 @@
   max-width: 480px;
   width: 100%;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 1.25rem 1rem 6rem;
+}
+
+.greetingRow {
+  margin-bottom: 1rem;
 }
 
 .greeting {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 500;
   color: var(--gray-900);
-  margin-bottom: 6px;
+  margin-bottom: 3px;
   line-height: 1.2;
 }
 
 .sub {
-  font-size: 14px;
-  color: var(--gray-600);
-  margin-bottom: 1.25rem;
+  font-size: 13.5px;
+  color: var(--gray-500);
   line-height: 1.5;
+}
+
+/* ── Category Grid ─────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: var(--gray-50);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  transition: opacity 0.15s, transform 0.1s;
+  position: relative;
+  min-height: 110px;
+}
+
+.card:active {
+  opacity: 0.85;
+  transform: scale(0.98);
+}
+
+/* Color variants */
+.cardTeal   { background: var(--teal-light); }
+.card_blue  { background: #E8F3FE; }
+.card_amber { background: var(--amber-light); }
+.card_gray  { background: var(--gray-100); }
+.card_purple { background: var(--purple-light); }
+.card_coral { background: #FEECE8; }
+.card_red   { background: #FEECEC; }
+.card_green { background: #E6F7EE; }
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+
+.iconTeal    { background: var(--teal); color: #fff; }
+.icon_blue   { background: #3B82F6; color: #fff; }
+.icon_amber  { background: var(--amber); color: #fff; }
+.icon_gray   { background: var(--gray-400); color: #fff; }
+.icon_purple { background: var(--purple); color: #fff; }
+.icon_coral  { background: #E05C3A; color: #fff; }
+.icon_red    { background: #DC3030; color: #fff; }
+.icon_green  { background: #1A9E5A; color: #fff; }
+
+.cardLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+  line-height: 1.2;
+}
+
+.passAlongBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: var(--teal);
+  color: #fff;
+  border-radius: 5px;
+  padding: 2px 6px;
+  align-self: flex-start;
+}
+
+.cardMeta {
+  font-size: 12px;
+  color: var(--gray-600);
+  line-height: 1.4;
+  margin-top: auto;
+}
+
+.progressTrack {
+  height: 3px;
+  background: rgba(0,0,0,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--gray-300);
+  transition: width 0.4s ease;
+}
+
+.progressTeal {
+  background: var(--teal);
 }
 
 /* Scan-a-tag block — the headline CTA on Home's empty state. Sits between

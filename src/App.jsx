@@ -28,6 +28,7 @@ import AddItem from './screens/AddItem'
 import ItemDetail from './screens/ItemDetail'
 import PassAlongBatch from './screens/PassAlongBatch'
 import PassAlongList from './screens/PassAlongList'
+import Plan from './screens/Plan'
 import Profile from './screens/Profile'
 import AcceptInvite from './screens/AcceptInvite'
 import Admin from './screens/Admin'
@@ -293,6 +294,7 @@ function AppRoutes() {
             list, not a batch with id "/pass-along". */}
         <Route path="/pass-along" element={<PassAlongList />} />
         <Route path="/pass-along/:id" element={<PassAlongBatch />} />
+        <Route path="/plan" element={<Plan />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
       {/* /admin is gated by AdminGuard (email allowlist) and lives outside

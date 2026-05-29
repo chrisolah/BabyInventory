@@ -8,11 +8,9 @@ import {
   AGE_RANGES,
   CATEGORY_LABELS,
   SLOT_BY_ID,
-  computeCoverage,
-  otherWishes,
   inferAgeRange,
-  shouldShowOutgrowBanner,
   shouldShowPredictionCard,
+  computeCoverage,
   formatTransitionEta,
   pluralize,
 } from '../lib/wardrobe'
@@ -20,6 +18,7 @@ import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import BabySwitcher from '../components/BabySwitcher'
 import Eyebrow from '../components/Eyebrow'
+import BottomNav from '../components/BottomNav'
 import styles from './Inventory.module.css'
 
 // Inventory has two tabs:
@@ -43,12 +42,6 @@ const STATUS_LABEL = {
   kept: 'Tucked away',
   donated: 'Donated',
   exchanged: 'Exchanged',
-}
-
-const PRIORITY_LABEL = {
-  must_have: 'Must have',
-  nice_to_have: 'Nice to have',
-  low_priority: 'Low priority',
 }
 
 const CONDITION_LABEL = {
@@ -143,7 +136,6 @@ export default function Inventory() {
     reloadItems,
   } = useHousehold()
 
-  const [tab, setTab] = useState('owned') // 'owned' | 'wishlist'
   const [error, setError] = useState(null)
 
   // ── Inline action handlers (Owned tab) ─────────────────────────────────
@@ -508,23 +500,11 @@ export default function Inventory() {
   // middle-of-the-road default if we have no baby data.
   const [selectedAgeRange, setSelectedAgeRange] = useState(null)
 
-  // Per-tab collapsed category state. Seeds differ by tab:
-  //   - Owned starts ALL-EXPANDED; a layout-effect pass below measures the
-  //     fully-expanded page and collapses everything only if it would
-  //     overflow the viewport. Small inventories stay fully visible; large
-  //     ones land on a compact header stack. See the auto-fit effect below
-  //     for the full contract.
-  //   - Wish list stays ALL-COLLAPSED by default — the recommended-wardrobe
-  //     view is dense even with zero items (every slot shows a progress bar),
-  //     so a compact stack of headers is the right starting point regardless
-  //     of viewport size.
-  // Tapping a header removes the category from the set (expands), tapping
-  // again re-adds (collapses). Kept per-tab so expanding Sleepwear on Owned
-  // doesn't also expand it on Wish list (different intent, same categories).
-  // Categories not in CATEGORY_ORDER get filtered out upstream, so the
-  // Wish-list seed is exhaustive.
+  // Owned starts ALL-EXPANDED; a layout-effect pass below measures the
+  // fully-expanded page and collapses everything only if it would overflow
+  // the viewport. Small inventories stay fully visible; large ones land on
+  // a compact header stack. See the auto-fit effect below for the full contract.
   const [ownedCollapsed, setOwnedCollapsed] = useState(() => new Set())
-  const [wishCollapsed, setWishCollapsed] = useState(() => new Set(CATEGORY_ORDER))
 
   // Outgrown section (bottom of Owned tab). Default-collapsed: the
   // section's whole point is to stay out of the way of the active
@@ -534,13 +514,6 @@ export default function Inventory() {
 
   function toggleOwnedGroup(cat) {
     setOwnedCollapsed(prev => {
-      const next = new Set(prev)
-      if (next.has(cat)) next.delete(cat); else next.add(cat)
-      return next
-    })
-  }
-  function toggleWishGroup(cat) {
-    setWishCollapsed(prev => {
       const next = new Set(prev)
       if (next.has(cat)) next.delete(cat); else next.add(cat)
       return next
@@ -731,63 +704,10 @@ export default function Inventory() {
     [babyFilteredItems],
   )
 
-  // ── Wish list tab: slot coverage + other wishes for selected age range ──
-  // Coverage math runs on the baby-filtered set, so switching to Roo shows
-  // Roo's coverage (with shared items counted toward him) rather than the
-  // whole household's aggregate.
-  // "All babies" view scales targets by baby count — each baby will pass
-  // through the size band, so 2 babies need 2x bodysuits etc. Single-baby
-  // views (or households with one baby) leave it at 1x.
+  // "All babies" view scales targets by baby count.
   const coverageBabyCount = selectedBabyId === 'all' ? Math.max(1, babies.length) : 1
 
-  const coverage = useMemo(() => {
-    if (!selectedAgeRange) return []
-    return computeCoverage(babyFilteredItems, selectedAgeRange, coverageBabyCount)
-  }, [babyFilteredItems, selectedAgeRange, coverageBabyCount])
-
-  const otherWishItems = useMemo(() => {
-    if (!selectedAgeRange) return []
-    return otherWishes(babyFilteredItems, selectedAgeRange)
-  }, [babyFilteredItems, selectedAgeRange])
-
-  // Overall coverage summary for the section meta ("27 of 64"). Clamp each
-  // slot's contribution to recommended so over-stocked slots don't push the
-  // summary past 100%.
-  const coverageSummary = useMemo(() => {
-    let owned = 0
-    let recommended = 0
-    for (const row of coverage) {
-      owned += Math.min(row.ownedCount, row.recommended)
-      recommended += row.recommended
-    }
-    return { owned, recommended }
-  }, [coverage])
-
-  // Coverage rows grouped by top-level category, preserving CATEGORY_ORDER so
-  // the Wish list tab stacks cards in the same order as the Owned tab. Each
-  // group carries its own clamped owned/recommended totals so the group
-  // header can show "X of Y" the same way the macro summary does.
-  const coverageByCategory = useMemo(() => {
-    const buckets = Object.fromEntries(CATEGORY_ORDER.map(c => [c, []]))
-    for (const row of coverage) {
-      const c = row.slot.category
-      if (buckets[c]) buckets[c].push(row)
-    }
-    return CATEGORY_ORDER
-      .filter(c => buckets[c].length > 0)
-      .map(c => {
-        let owned = 0
-        let recommended = 0
-        for (const row of buckets[c]) {
-          owned += Math.min(row.ownedCount, row.recommended)
-          recommended += row.recommended
-        }
-        return { category: c, rows: buckets[c], owned, recommended }
-      })
-  }, [coverage])
-
   const ageInfo = useMemo(() => inferAgeRange(ageAnchor), [ageAnchor])
-  const showOutgrow = shouldShowOutgrowBanner(ageInfo)
 
   // ── Prediction card state + data ───────────────────────────────────────
   // Persists open/collapsed across sessions. Defaults open so first-time
@@ -840,35 +760,11 @@ export default function Inventory() {
         ? `${babies[0].name}'s wardrobe`
         : 'Your wardrobe'
 
-  // Fire analytics once per (tab, age range) visit — low-volume event that
-  // tells us how often users actually engage with recommendations.
-  useEffect(() => {
-    if (tab !== 'wishlist' || !selectedAgeRange) return
-    track.gapAlertViewed({
-      age_range: selectedAgeRange,
-      owned: coverageSummary.owned,
-      recommended: coverageSummary.recommended,
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, selectedAgeRange])
-
-  function handleSlotTap(slotId) {
-    track.recommendationClicked({ age_range: selectedAgeRange, slot: slotId })
-    navigate(`/inventory/slot/${selectedAgeRange}/${slotId}`)
-  }
-
-  function handleOutgrowClick() {
-    if (!ageInfo.nextRange) return
-    track.gapAlertActioned({ from: ageInfo.currentRange, to: ageInfo.nextRange })
-    setSelectedAgeRange(ageInfo.nextRange)
-  }
-
-  // Prediction card CTA — jump to Wish list filtered to the next size.
+  // Prediction card CTA — navigate to Plan filtered to the next size.
   function handlePredictionCta() {
     if (!ageInfo.nextRange) return
     track.gapAlertActioned?.({ from: ageInfo.currentRange, to: ageInfo.nextRange, source: 'prediction_card' })
-    setTab('wishlist')
-    setSelectedAgeRange(ageInfo.nextRange)
+    navigate(`/plan?size=${encodeURIComponent(ageInfo.nextRange)}`)
   }
 
   // ── Render ───────────────────────────────────────────────────────────
@@ -1051,23 +947,6 @@ export default function Inventory() {
         </div>
       )}
 
-      <div className={styles.tabs}>
-        <button
-          type="button"
-          className={`${styles.tab} ${tab === 'owned' ? styles.tabActive : ''}`}
-          onClick={() => setTab('owned')}
-        >
-          Owned
-        </button>
-        <button
-          type="button"
-          className={`${styles.tab} ${tab === 'wishlist' ? styles.tabActive : ''}`}
-          onClick={() => setTab('wishlist')}
-        >
-          Wish list
-        </button>
-      </div>
-
       <main className={styles.body}>
         {loading && <div className={styles.loading}>Loading…</div>}
 
@@ -1078,7 +957,7 @@ export default function Inventory() {
         )}
 
         {/* ── Owned tab ─────────────────────────────────────────── */}
-        {!loading && !error && tab === 'owned' && selectedAgeRange && (
+        {!loading && !error && selectedAgeRange && (
           <>
             {/* Age-range chip navbar — mirrors the Wish list nav so users can
                 stock forward (12-18M in April when baby is 3-6M) without
@@ -1202,25 +1081,9 @@ export default function Inventory() {
           </>
         )}
 
-        {/* ── Wish list tab ─────────────────────────────────────── */}
-        {!loading && !error && tab === 'wishlist' && selectedAgeRange && (
-          <WishlistView
-            ageRange={selectedAgeRange}
-            onAgeChange={setSelectedAgeRange}
-            coverageByCategory={coverageByCategory}
-            coverageSummary={coverageSummary}
-            otherWishItems={otherWishItems}
-            ageInfo={ageInfo}
-            showOutgrow={showOutgrow}
-            onOutgrowClick={handleOutgrowClick}
-            onSlotTap={handleSlotTap}
-            onAddWish={() => navigate('/add-item?autoScan=1&mode=needed')}
-            onItemTap={(itemId) => navigate(`/item/${itemId}`)}
-            collapsedCategories={wishCollapsed}
-            onToggleCategory={toggleWishGroup}
-          />
-        )}
       </main>
+
+      <BottomNav />
 
       {/* Action toast — fixed-positioned at the bottom of the viewport,
           auto-dismisses after 5s (handled by the effect on actionToast).
@@ -1262,158 +1125,6 @@ export default function Inventory() {
   )
 }
 
-// ── Wish list view ──────────────────────────────────────────────────────────
-// Kept as a separate component so Inventory's main function stays scannable.
-// Pure presentational — all state + callbacks come from the parent.
-function WishlistView({
-  ageRange,
-  onAgeChange,
-  coverageByCategory,
-  coverageSummary,
-  otherWishItems,
-  ageInfo,
-  showOutgrow,
-  onOutgrowClick,
-  onSlotTap,
-  onAddWish,
-  onItemTap,
-  collapsedCategories,
-  onToggleCategory,
-}) {
-  // Collapsed by default when empty — keeps the section out of the way
-  // until the user actually has non-canonical wishes to review.
-  const [otherOpen, setOtherOpen] = useState(otherWishItems.length > 0)
-
-  return (
-    <>
-      <AgeNav
-        ageRange={ageRange}
-        onAgeChange={onAgeChange}
-        ageInfo={ageInfo}
-      />
-
-      {/* Outgrow banner — amber, only when baby is ~3 weeks from the next range */}
-      {showOutgrow && (
-        <button
-          type="button"
-          className={styles.banner}
-          onClick={onOutgrowClick}
-        >
-          <span className={styles.bannerIcon} aria-hidden="true">⏰</span>
-          <span className={styles.bannerBody}>
-            <strong>
-              Rolling into {ageInfo.nextRange} in ~{Math.max(ageInfo.daysToNextRange, 1)}{' '}
-              {pluralize(Math.max(ageInfo.daysToNextRange, 1), 'day')}.
-            </strong>{' '}
-            Start planning ahead →
-          </span>
-        </button>
-      )}
-
-      {/* Coverage summary header — eyebrow pill replaces the DM Sans title
-          to mirror the section-opener motif from the landing (added
-          2026-05-01). */}
-      <div className={styles.sectionHead}>
-        <Eyebrow color="teal">Recommended wardrobe</Eyebrow>
-        <span className={styles.sectionMeta}>
-          {coverageSummary.owned} of {coverageSummary.recommended}
-        </span>
-      </div>
-
-      {/* Category-stacked slot groups — same .group card shape as the Owned
-          tab, so the two tabs share a visual rhythm. Each group header shows
-          category label + clamped X-of-Y for this category at this age and
-          is clickable to collapse the slot rows below it. */}
-      {coverageByCategory.map(group => {
-        const collapsed = collapsedCategories.has(group.category)
-        const id = `wish-${group.category}`
-        return (
-          <section className={styles.group} key={group.category}>
-            <GroupHeader
-              title={CATEGORY_LABELS[group.category] || group.category}
-              meta={`${group.owned} of ${group.recommended}`}
-              collapsed={collapsed}
-              onToggle={() => onToggleCategory(group.category)}
-              contentId={id}
-            />
-            {!collapsed && (
-              <div className={styles.slotCardGrid} id={id}>
-                {group.rows.map(row => (
-                  <SlotCard
-                    key={row.slot.id}
-                    row={row}
-                    onClick={() => onSlotTap(row.slot.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        )
-      })}
-
-      {/* Other wishes section (non-canonical wishlist entries) */}
-      <button
-        type="button"
-        className={styles.groupHeader}
-        style={{ marginTop: 18, borderRadius: 12, border: '0.5px solid var(--gray-200)' }}
-        onClick={() => setOtherOpen(o => !o)}
-        aria-expanded={otherOpen}
-      >
-        <span className={styles.groupTitle}>Other wishes</span>
-        <span className={styles.groupHeaderRight}>
-          <span className={styles.groupCount}>
-            {otherWishItems.length > 0 ? otherWishItems.length : ''}
-          </span>
-          <svg
-            className={`${styles.groupChev} ${!otherOpen ? styles.groupChevCollapsed : ''}`}
-            viewBox="0 0 10 6" width="10" height="6" aria-hidden="true"
-          >
-            <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
-      </button>
-      {otherOpen && (
-        <div className={styles.otherWishList}>
-          {otherWishItems.length === 0 && (
-            <div className={styles.otherEmpty}>
-              Anything specific on your list? Add it here.
-            </div>
-          )}
-          {otherWishItems.map(item => (
-            <button
-              type="button"
-              className={styles.wish}
-              key={item.id}
-              onClick={() => onItemTap(item.id)}
-              aria-label={`Open ${item.name || humanizeItemType(item.item_type)}`}
-            >
-              <div className={styles.wishName}>
-                {item.name || humanizeItemType(item.item_type)}
-              </div>
-              {item.priority && (
-                <span
-                  className={
-                    `${styles.wishPriority} ` +
-                    (item.priority === 'nice_to_have' ? styles.wishPriorityAmber : '')
-                  }
-                >
-                  {PRIORITY_LABEL[item.priority]}
-                </span>
-              )}
-            </button>
-          ))}
-          <button
-            type="button"
-            className={styles.wishAddBtn}
-            onClick={onAddWish}
-          >
-            + Add wish
-          </button>
-        </div>
-      )}
-    </>
-  )
-}
 
 // ── Age-range chip navbar ──────────────────────────────────────────────────
 // Shared between the Owned and Wish list tabs. The chip matching the baby's
@@ -1530,102 +1241,6 @@ function GroupHeader({ title, meta, collapsed, onToggle, contentId }) {
   )
 }
 
-// ── Slot row ────────────────────────────────────────────────────────────────
-function SlotRow({ row, onClick }) {
-  const { slot, ownedCount, recommended, needed, status } = row
-  const percent = recommended > 0
-    ? Math.min(100, Math.round((ownedCount / recommended) * 100))
-    : 0
-
-  let hintText = null
-  let hintClass = null
-  if (status === 'complete') {
-    hintText = '✓ Complete'
-    hintClass = styles.slotHintDone
-  } else if (status === 'empty') {
-    hintText = 'None yet'
-    hintClass = styles.slotHintNeed
-  } else {
-    hintText = `Need ${needed} more`
-    hintClass = styles.slotHintNeed
-  }
-
-  const countClass =
-    status === 'complete' ? styles.slotCountComplete :
-    status === 'empty'    ? styles.slotCountEmpty   :
-                            styles.slotCountGap
-  const barFillClass =
-    status === 'complete' ? styles.barFillComplete :
-    status === 'empty'    ? styles.barFillEmpty   :
-                            ''
-
-  return (
-    <button type="button" className={styles.slot} onClick={onClick}>
-      <div className={styles.slotRow1}>
-        <span className={styles.slotName}>{slot.label}</span>
-        <span className={styles.slotStatus}>
-          <span className={`${styles.slotCount} ${countClass}`}>
-            {ownedCount} of {recommended}
-          </span>
-          <span className={styles.slotChev} aria-hidden="true">›</span>
-        </span>
-      </div>
-      <div className={styles.barTrack}>
-        <div
-          className={`${styles.barFill} ${barFillClass}`}
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-      <div className={styles.slotHint}>
-        <span className={hintClass}>{hintText}</span>
-        {slot.hint && <span>{slot.hint}</span>}
-      </div>
-    </button>
-  )
-}
-
-// ── Slot card (Wishlist tab) ───────────────────────────────────────────────
-// Photo-forward card counterpart to SlotRow. Renders inside a .slotCardGrid
-// so the Wishlist tab mirrors the card-grid look of the Owned tab.
-function SlotCard({ row, onClick }) {
-  const { slot, ownedCount, recommended, needed, status } = row
-  const percent = recommended > 0
-    ? Math.min(100, Math.round((ownedCount / recommended) * 100))
-    : 0
-
-  const countClass =
-    status === 'complete' ? styles.slotCountComplete :
-    status === 'empty'    ? styles.slotCountEmpty    :
-                            styles.slotCountGap
-
-  const barFillClass =
-    status === 'complete' ? styles.slotCardBarComplete :
-    status === 'empty'    ? styles.slotCardBarEmpty    :
-                            ''
-
-  const hintText =
-    status === 'complete' ? 'Complete' :
-    status === 'empty'    ? `need ${recommended}` :
-                            `need ${needed} more`
-
-  return (
-    <button type="button" className={styles.slotCard} onClick={onClick}>
-      <span className={styles.slotCardName}>{slot.label}</span>
-      <div className={styles.slotCardBarTrack}>
-        <div
-          className={`${styles.slotCardBarFill} ${barFillClass}`}
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-      <div className={styles.slotCardFooter}>
-        <span className={`${styles.slotCardCount} ${countClass}`}>
-          {ownedCount} of {recommended}
-        </span>
-        <span className={styles.slotCardHint}>{hintText}</span>
-      </div>
-    </button>
-  )
-}
 
 // ── Owned-tab empty state ──────────────────────────────────────────────────
 // Two flavors depending on whether the user has any items at all.
