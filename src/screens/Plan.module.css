@@ -277,6 +277,28 @@
   margin: 0 auto;
 }
 
+/* Bottom-of-list add CTA for non-clothing categories. Matches the
+   quieter teal-outline treatment from Inventory.module.css. */
+.addMoreBtn {
+  margin-top: 4px;
+  padding: 13px 16px;
+  width: 100%;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  border: 1px solid var(--teal);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.addMoreBtn:hover {
+  background: #c8edd8;
+  border-color: var(--teal-dark);
+}
+
 /* ── Age-range chip navbar ─────────────────────────────────── */
 .ageNav {
   display: flex;

@@ -11,6 +11,12 @@ import {
   shouldShowOutgrowBanner,
   pluralize,
 } from '../lib/wardrobe'
+import {
+  SUB_CATEGORY_LABELS,
+  SUB_CATEGORIES_BY_CATEGORY,
+  computeCategorycoverage,
+  getCategorySummary,
+} from '../lib/categories'
 import BabySwitcher from '../components/BabySwitcher'
 import Eyebrow from '../components/Eyebrow'
 import BottomNav from '../components/BottomNav'
@@ -31,14 +37,14 @@ const PRIORITY_LABEL = {
 // Category selector shown at the top. "clothing" is live; others are
 // coming soon and show a disabled/greyed treatment when tapped.
 const PLAN_CATEGORIES = [
-  { id: 'clothing',  label: 'Clothing',  live: true,  icon: ClothingNavIcon },
-  { id: 'sleep',     label: 'Sleep',     live: false, icon: SleepNavIcon },
-  { id: 'feeding',   label: 'Feeding',   live: false, icon: FeedingNavIcon },
-  { id: 'diapering', label: 'Diapering', live: false, icon: DiaperNavIcon },
-  { id: 'travel',    label: 'Travel',    live: false, icon: TravelNavIcon },
-  { id: 'play',      label: 'Play',      live: false, icon: PlayNavIcon },
-  { id: 'health',    label: 'Health',    live: false, icon: HealthNavIcon },
-  { id: 'bath',      label: 'Bath',      live: false, icon: BathNavIcon },
+  { id: 'clothing',  label: 'Clothing',  live: true, icon: ClothingNavIcon },
+  { id: 'sleep',     label: 'Sleep',     live: true, icon: SleepNavIcon },
+  { id: 'feeding',   label: 'Feeding',   live: true, icon: FeedingNavIcon },
+  { id: 'diapering', label: 'Diapering', live: true, icon: DiaperNavIcon },
+  { id: 'travel',    label: 'Travel',    live: true, icon: TravelNavIcon },
+  { id: 'play',      label: 'Play',      live: true, icon: PlayNavIcon },
+  { id: 'health',    label: 'Health',    live: true, icon: HealthNavIcon },
+  { id: 'bath',      label: 'Bath',      live: true, icon: BathNavIcon },
 ]
 
 const CATEGORY_ORDER = [
@@ -66,6 +72,8 @@ export default function Plan() {
   const [selectedCategory, setSelectedCategory] = useState('clothing')
   const [selectedAgeRange, setSelectedAgeRange] = useState(null)
   const [wishCollapsed, setWishCollapsed] = useState(() => new Set(CATEGORY_ORDER))
+  // Non-clothing sub-category collapse state.
+  const [catSubCollapsed, setCatSubCollapsed] = useState(() => new Set())
 
   // Initialize age range from baby's DOB. Read ?size= query param to
   // support jump-in from the prediction card in Inventory.
@@ -139,6 +147,55 @@ export default function Plan() {
       })
   }, [coverage])
 
+  // ── Non-clothing coverage ─────────────────────────────────────────────
+  const isClothing = selectedCategory === 'clothing'
+
+  const catCoverage = useMemo(() => {
+    if (isClothing) return []
+    return computeCategorycoverage(
+      babyFilteredItems.filter(it => it.top_category === selectedCategory),
+      selectedCategory,
+    )
+  }, [isClothing, babyFilteredItems, selectedCategory])
+
+  const catCoverageSummary = useMemo(() => {
+    if (isClothing) return { owned: 0, recommended: 0 }
+    return getCategorySummary(
+      babyFilteredItems.filter(it => it.top_category === selectedCategory),
+      selectedCategory,
+    )
+  }, [isClothing, babyFilteredItems, selectedCategory])
+
+  // Group coverage rows by sub_category, preserving taxonomy order.
+  const catCoverageBySubCat = useMemo(() => {
+    if (isClothing) return []
+    const subCats = SUB_CATEGORIES_BY_CATEGORY[selectedCategory] || []
+    const buckets = Object.fromEntries(subCats.map(s => [s, []]))
+    for (const row of catCoverage) {
+      const s = row.slot.sub_category
+      if (buckets[s]) buckets[s].push(row)
+    }
+    return subCats
+      .filter(s => buckets[s].length > 0)
+      .map(s => {
+        let owned = 0
+        let recommended = 0
+        for (const r of buckets[s]) {
+          owned += Math.min(r.ownedCount, r.recommended)
+          recommended += r.recommended
+        }
+        return { subCat: s, rows: buckets[s], owned, recommended }
+      })
+  }, [isClothing, catCoverage, selectedCategory])
+
+  function toggleCatSubGroup(subCat) {
+    setCatSubCollapsed(prev => {
+      const next = new Set(prev)
+      if (next.has(subCat)) next.delete(subCat); else next.add(subCat)
+      return next
+    })
+  }
+
   const showOutgrow = shouldShowOutgrowBanner(ageInfo)
 
   function handleOutgrowClick() {
@@ -179,14 +236,11 @@ export default function Plan() {
           <button
             key={cat.id}
             type="button"
-            className={`${styles.catChip} ${selectedCategory === cat.id ? styles.catChipActive : ''} ${!cat.live ? styles.catChipSoon : ''}`}
-            onClick={() => {
-              if (cat.live) setSelectedCategory(cat.id)
-            }}
-            aria-label={cat.live ? cat.label : `${cat.label} — coming soon`}
+            className={`${styles.catChip} ${selectedCategory === cat.id ? styles.catChipActive : ''}`}
+            onClick={() => setSelectedCategory(cat.id)}
+            aria-label={cat.label}
           >
             {cat.label}
-            {!cat.live && <span className={styles.soonDot} aria-hidden="true" />}
           </button>
         ))}
       </div>
@@ -200,15 +254,12 @@ export default function Plan() {
             <button
               key={cat.id}
               type="button"
-              className={`${styles.catSidebarItem} ${selectedCategory === cat.id ? styles.catSidebarItemActive : ''} ${!cat.live ? styles.catSidebarItemSoon : ''}`}
-              onClick={() => {
-                if (cat.live) setSelectedCategory(cat.id)
-              }}
-              aria-label={cat.live ? cat.label : `${cat.label} — coming soon`}
+              className={`${styles.catSidebarItem} ${selectedCategory === cat.id ? styles.catSidebarItemActive : ''}`}
+              onClick={() => setSelectedCategory(cat.id)}
+              aria-label={cat.label}
             >
               <span className={styles.catSidebarIcon}><cat.icon /></span>
               <span className={styles.catSidebarText}>{cat.label}</span>
-              {!cat.live && <span className={styles.catSidebarSoon}>soon</span>}
             </button>
           ))}
         </aside>
@@ -287,15 +338,62 @@ export default function Plan() {
           </>
         )}
 
-        {!itemsLoading && selectedCategory !== 'clothing' && (
-          <div className={styles.comingSoonCard}>
-            <div className={styles.comingSoonEmoji}>🛠</div>
-            <div className={styles.comingSoonTitle}>Coming soon</div>
-            <p className={styles.comingSoonBody}>
-              We're building out the {PLAN_CATEGORIES.find(c => c.id === selectedCategory)?.label.toLowerCase()} checklist.
-              {' '}Clothing is fully live — tap it to plan your wardrobe.
-            </p>
-          </div>
+        {!itemsLoading && !isClothing && (
+          <>
+            <div className={styles.sectionHead}>
+              <Eyebrow color="teal">
+                {PLAN_CATEGORIES.find(c => c.id === selectedCategory)?.label} checklist
+              </Eyebrow>
+              <span className={styles.sectionMeta}>
+                {catCoverageSummary.owned} of {catCoverageSummary.recommended}
+              </span>
+            </div>
+
+            {catCoverageBySubCat.length === 0 && (
+              <div className={styles.comingSoonCard}>
+                <div className={styles.comingSoonEmoji}>📋</div>
+                <div className={styles.comingSoonTitle}>Nothing tracked yet</div>
+                <p className={styles.comingSoonBody}>
+                  Add items in this category to start tracking your coverage.
+                </p>
+              </div>
+            )}
+
+            {catCoverageBySubCat.map(group => {
+              const collapsed = catSubCollapsed.has(group.subCat)
+              const id = `cat-plan-${group.subCat}`
+              return (
+                <section className={styles.group} key={group.subCat}>
+                  <GroupHeader
+                    title={SUB_CATEGORY_LABELS[group.subCat] || group.subCat}
+                    meta={`${group.owned} of ${group.recommended}`}
+                    collapsed={collapsed}
+                    onToggle={() => toggleCatSubGroup(group.subCat)}
+                    contentId={id}
+                  />
+                  {!collapsed && (
+                    <div className={styles.slotCardGrid} id={id}>
+                      {group.rows.map(row => (
+                        <SlotCard
+                          key={row.slot.id}
+                          row={row}
+                          onClick={() => navigate(`/add-item?category=${selectedCategory}`)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )
+            })}
+
+            <button
+              type="button"
+              className={styles.addMoreBtn}
+              onClick={() => navigate(`/add-item?category=${selectedCategory}`)}
+            >
+              + Add item
+            </button>
+          </>
         )}
 
         {itemsLoading && (
