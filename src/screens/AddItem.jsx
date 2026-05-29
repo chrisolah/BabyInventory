@@ -382,6 +382,50 @@ export default function AddItem() {
     }
   }
 
+  // ── Scan result handler (non-clothing) ───────────────────────────────────
+  // Mirrors onScanResult but populates the non-clothing field set from the
+  // scan-item edge function response. Also stores the photo as the
+  // pending display image for upload on save.
+  function onItemScanResult(fields, confidence, photos) {
+    if (!fields) return
+    let filled = 0
+    const nextLowConf = new Set()
+    const flagIfLow = (name, level) => { if (level === 'low') nextLowConf.add(name) }
+
+    // If the model identified a different top category, reset sub-fields first
+    if (fields.top_category && TOP_CATEGORIES.some(c => c.value === fields.top_category)) {
+      if (fields.top_category !== topCategory) {
+        onTopCategoryChange(fields.top_category)
+      }
+      filled += 1
+      flagIfLow('top_category', confidence?.top_category)
+    }
+    if (fields.sub_category) {
+      setSubCategoryState(fields.sub_category)
+      filled += 1
+    }
+    if (fields.item_type) {
+      setCatItemType(fields.item_type)
+      filled += 1
+      flagIfLow('item_type', confidence?.item_type)
+    }
+    if (fields.brand && typeof fields.brand === 'string') {
+      setBrand(fields.brand.trim().slice(0, 80))
+      filled += 1
+      flagIfLow('brand', confidence?.brand)
+    }
+    if (fields.condition && CONDITIONS.some(c => c.value === fields.condition)) {
+      setCondition(fields.condition)
+      filled += 1
+      flagIfLow('condition', confidence?.condition)
+    }
+    setScanFilledCount(filled)
+    setLowConfFields(nextLowConf)
+    if (photos?.itemDataUrl) {
+      setPendingGarmentDataUrl(photos.itemDataUrl)
+    }
+  }
+
   // ── Submit ────────────────────────────────────────────────────────────────
   async function submit(e) {
     e.preventDefault()
@@ -487,17 +531,36 @@ export default function AddItem() {
             return
           }
 
+          const itemId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+
+          let itemPhotoPath = null
+          if (pendingGarmentDataUrl) {
+            try {
+              const blob = await fetch(pendingGarmentDataUrl).then(r => r.blob())
+              const path = `${household.id}/${itemId}.jpg`
+              const { error: upErr } = await supabase.storage
+                .from('garment-photos')
+                .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false })
+              if (!upErr) itemPhotoPath = path
+            } catch { /* silent — item saves without photo */ }
+          }
+
           const { error: insertErr } = await supabase
             .schema(currentSchema)
             .from('items')
             .insert({
+              id: itemId,
               household_id: household.id,
               baby_id: currentBaby?.id ?? null,
               ...fields,
               inventory_status: mode,
               name: null,
+              item_photo_path: itemPhotoPath,
             })
           if (insertErr) throw new Error(insertErr.message)
+          track.itemSaved({ mode, category: fields.top_category, size_label: null })
           reloadItems()
           navigate('/inventory')
         }
@@ -567,15 +630,17 @@ export default function AddItem() {
           </div>
         )}
 
-        {/* ── TagScanner (clothing only) ────────────────────────────────── */}
-        {!isEditMode && !manualMode && isClothing && (
+        {/* ── TagScanner ───────────────────────────────────────────────── */}
+        {!isEditMode && !manualMode && (
           <div className={styles.scanRow}>
             <TagScanner
               variant="inline"
               from="add_item"
-              autoOpen={autoScan}
+              autoOpen={autoScan && isClothing}
               onManual={() => setManualMode(true)}
-              onResult={onScanResult}
+              mode={isClothing ? 'tag' : 'item'}
+              topCategory={isClothing ? null : topCategory}
+              onResult={isClothing ? onScanResult : onItemScanResult}
               onBatchSaved={(count) => {
                 reloadItems()
                 navigate('/inventory', {
@@ -590,7 +655,9 @@ export default function AddItem() {
               </div>
             ) : (
               <div className={styles.scanIntroHint}>
-                Adding a stack? Turn on <strong>Scan many</strong> in the camera to add several items in a row.
+                {isClothing
+                  ? <>Adding a stack? Turn on <strong>Scan many</strong> in the camera to add several items in a row.</>
+                  : 'Snap a photo and we\'ll identify the item for you.'}
               </div>
             )}
           </div>

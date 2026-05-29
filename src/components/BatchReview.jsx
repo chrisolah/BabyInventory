@@ -3,6 +3,7 @@ import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { useUpgradeGate } from '../contexts/UpgradeGateContext'
 import { SLOTS, SLOT_BY_ID, AGE_RANGES, CATEGORY_LABELS } from '../lib/wardrobe'
+import { CATEGORY_META, SUB_CATEGORY_LABELS, ITEMS } from '../lib/categories'
 import { track } from '../lib/analytics'
 import styles from './BatchReview.module.css'
 
@@ -54,16 +55,24 @@ const SEASON_OPTIONS = [
   { value: 'all_season',   label: 'All-season' },
 ]
 
-// What's missing on a given batch row? Category, Type, and Size are the
-// three hard-required columns (mirrors AddItem.getMissingRequiredFields).
-// Brand is optional. Returns labels in display order so the row caption
-// reads naturally.
+// What's missing on a given batch row? Returns labels in display order.
+// Clothing (mode='tag'): category + item_type + size_label required.
+// Item (mode='item'): top_category + item_type required.
 function missingFieldsFor(fields) {
   const missing = []
   if (!fields.category)   missing.push('Category')
   if (!fields.item_type)  missing.push('Type')
   if (!fields.size_label) missing.push('Size')
   return missing
+}
+function missingItemFieldsFor(fields) {
+  const missing = []
+  if (!fields.top_category) missing.push('Category')
+  if (!fields.item_type)    missing.push('Type')
+  return missing
+}
+function getMissingFields(fields, mode) {
+  return mode === 'item' ? missingItemFieldsFor(fields) : missingFieldsFor(fields)
 }
 
 export default function BatchReview({
@@ -76,6 +85,9 @@ export default function BatchReview({
   // unconfirmed rows remain. Lets the parent fire its "saved N" toast
   // without tearing down the review surface (which onComplete does).
   onPartialSave,
+  // 'tag'  = clothing scan (default / existing behaviour)
+  // 'item' = non-clothing visual item scan
+  mode = 'tag',
 }) {
   const { household, currentBaby, babies, reloadItems } = useHousehold()
   const { requireRealAccount } = useUpgradeGate()
@@ -109,17 +121,41 @@ export default function BatchReview({
     setItems((prev) => prev.map((it) => {
       if (it.id !== itemId) return it
       const nextFields = { ...it.fields, [fieldName]: value }
-      // If category changed, clear item_type if it no longer belongs to
-      // the new category. Otherwise validation sees a "valid" type that
-      // isn't in the visible dropdown.
-      if (fieldName === 'category') {
-        const slot = nextFields.item_type ? SLOT_BY_ID[nextFields.item_type] : null
-        if (!slot || slot.category !== value) nextFields.item_type = ''
+      if (mode === 'item') {
+        if (fieldName === 'top_category') {
+          // Clear sub_category if it no longer belongs to this top_category
+          if (nextFields.sub_category) {
+            const validSubs = new Set(
+              ITEMS.filter(i => i.top_category === value).map(i => i.sub_category)
+            )
+            if (!validSubs.has(nextFields.sub_category)) {
+              nextFields.sub_category = ''
+              nextFields.item_type = ''
+            }
+          }
+          // Clear item_type if it doesn't belong to the new top_category
+          if (nextFields.item_type && !ITEMS.some(i => i.id === nextFields.item_type && i.top_category === value)) {
+            nextFields.item_type = ''
+          }
+        }
+        if (fieldName === 'sub_category' && nextFields.item_type) {
+          // Clear item_type if it doesn't belong to the new sub_category
+          if (!ITEMS.some(i => i.id === nextFields.item_type && i.sub_category === value)) {
+            nextFields.item_type = ''
+          }
+        }
+      } else {
+        // Clothing: if category changed, clear item_type if it no longer
+        // belongs to the new category.
+        if (fieldName === 'category') {
+          const slot = nextFields.item_type ? SLOT_BY_ID[nextFields.item_type] : null
+          if (!slot || slot.category !== value) nextFields.item_type = ''
+        }
       }
       const nextConfidence = { ...(it.confidence || {}), [fieldName]: 'high' }
       return { ...it, fields: nextFields, confidence: nextConfidence }
     }))
-  }, [setItems])
+  }, [setItems, mode])
 
   const removeRow = useCallback((itemId) => {
     setItems((prev) => prev.filter((it) => it.id !== itemId))
@@ -177,8 +213,8 @@ export default function BatchReview({
   // count among the confirmed set because nagging the user about a row
   // they've explicitly set aside (unconfirmed) is just noise.
   const confirmedInvalidCount = useMemo(
-    () => confirmedItems.filter((it) => missingFieldsFor(it.fields).length > 0).length,
-    [confirmedItems],
+    () => confirmedItems.filter((it) => getMissingFields(it.fields, mode).length > 0).length,
+    [confirmedItems, mode],
   )
 
   // Tri-state for the "Select all" header checkbox.
@@ -245,62 +281,78 @@ export default function BatchReview({
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 
-      // Upload the garment photo if we have one. Silent degradation: if
-      // upload fails, the row still saves without a photo path. Photos
-      // are bonus context; losing one shouldn't cost the user the row.
-      let garmentPath = null
-      if (it.garmentThumbnailDataUrl) {
+      // Upload the photo if we have one. Silent degradation: if upload
+      // fails, the row still saves without a photo path.
+      let photoPath = null
+      const photoDataUrl = mode === 'item'
+        ? (it.itemDataUrl || null)
+        : (it.garmentThumbnailDataUrl || null)
+
+      if (photoDataUrl) {
         try {
-          // Convert the data URL we already have back into a Blob via
-          // fetch — simpler than re-decoding base64 by hand and works in
-          // every browser since the BatchReview surface is post-camera.
-          const blob = await fetch(it.garmentThumbnailDataUrl).then(r => r.blob())
+          const blob = await fetch(photoDataUrl).then(r => r.blob())
           const path = `${household.id}/${itemId}.jpg`
           const { error: upErr } = await supabase.storage
             .from('garment-photos')
-            .upload(path, blob, {
-              contentType: blob.type || 'image/jpeg',
-              upsert: false,
-            })
+            .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false })
           if (upErr) {
             // eslint-disable-next-line no-console
-            console.warn('garment upload failed for batch row', { id: it.id, err: upErr })
+            console.warn('photo upload failed for batch row', { id: it.id, err: upErr })
           } else {
-            garmentPath = path
+            photoPath = path
           }
         } catch (e) {
           // eslint-disable-next-line no-console
-          console.warn('garment upload threw for batch row', { id: it.id, err: e })
+          console.warn('photo upload threw for batch row', { id: it.id, err: e })
         }
       }
 
-      const row = {
-        id: itemId,
-        household_id: household.id,
-        // Each row carries its own baby_id (set via the per-row chip).
-        // If the user never touched the chip the field is undefined, in
-        // which case we fall back to defaultBabyId (the active baby).
-        baby_id: it.baby_id !== undefined ? it.baby_id : defaultBabyId,
-        category:           it.fields.category,
-        item_type:          it.fields.item_type,
-        size_label:         it.fields.size_label,
-        brand:              it.fields.brand ? String(it.fields.brand).trim().slice(0, 80) || null : null,
-        condition:          null,
-        priority:           null,
-        // Season comes from either the model's inference (BatchRow surfaces
-        // it as a select pre-filled with that value) or the user's manual
-        // edit. Empty string → null so the DB check constraint is satisfied
-        // (it allows null but rejects '').
-        season:             it.fields.season || null,
-        quantity:           1,
-        notes:              null,
-        inventory_status:   'owned',
-        name:               null,
-        garment_photo_path: garmentPath,
+      const babyId = it.baby_id !== undefined ? it.baby_id : defaultBabyId
+      const brand  = it.fields.brand ? String(it.fields.brand).trim().slice(0, 80) || null : null
+
+      let row, table
+      if (mode === 'item') {
+        table = 'items'
+        row = {
+          id:               itemId,
+          household_id:     household.id,
+          baby_id:          babyId,
+          top_category:     it.fields.top_category,
+          sub_category:     it.fields.sub_category || null,
+          item_type:        it.fields.item_type,
+          brand,
+          condition:        it.fields.condition || null,
+          priority:         null,
+          quantity:         1,
+          notes:            null,
+          inventory_status: 'owned',
+          name:             null,
+          item_photo_path:  photoPath,
+        }
+      } else {
+        table = 'clothing_items'
+        row = {
+          id:                 itemId,
+          household_id:       household.id,
+          baby_id:            babyId,
+          category:           it.fields.category,
+          item_type:          it.fields.item_type,
+          size_label:         it.fields.size_label,
+          brand,
+          condition:          null,
+          priority:           null,
+          season:             it.fields.season || null,
+          quantity:           1,
+          notes:              null,
+          inventory_status:   'owned',
+          name:               null,
+          garment_photo_path: photoPath,
+        }
       }
+
       const { error: insertErr } = await supabase
         .schema(currentSchema)
-        .from('clothing_items')
+        .from(table)
         .insert(row)
 
       if (insertErr) {
@@ -329,8 +381,8 @@ export default function BatchReview({
       // to count saved items.
       track.itemSaved({
         mode: 'owned',
-        category: row.category,
-        size_label: row.size_label,
+        category: mode === 'item' ? row.top_category : row.category,
+        size_label: mode === 'item' ? null : row.size_label,
         source: 'batch',
       })
     }
@@ -471,6 +523,7 @@ export default function BatchReview({
                 defaultBabyId={defaultBabyId}
                 showBabyChip={showBabyChip}
                 disabled={saving}
+                mode={mode}
               />
             ))}
           </ul>
@@ -582,36 +635,59 @@ function BatchRow({
   defaultBabyId,
   showBabyChip,
   disabled,
+  mode = 'tag',
 }) {
   const {
     fields,
     confidence = {},
     thumbnailDataUrl,
-    // Two-photo thumbnails (Phase 1, May 2026). Both optional.
-    // garmentThumbnailDataUrl is the wider shot — primary visual identifier.
-    // tagThumbnailDataUrl is the close-up tag — auxiliary, tucked next to
-    // the garment for context. When only one is present, just render that
-    // one. When neither is present (e.g. a row created via a code path
-    // that doesn't capture photos at all) we fall back to the legacy
-    // thumbnailDataUrl so older callers and pre-refactor batch entries
-    // still display.
     garmentThumbnailDataUrl,
     tagThumbnailDataUrl,
+    itemDataUrl,
     insertError,
     confirmed,
   } = item
-  // Resolve a primary + secondary for the row. Garment is primary by
-  // intent (more visually recognizable than a tag close-up). If only the
-  // tag is present we promote it to primary and drop the secondary slot.
-  const primaryThumb   = garmentThumbnailDataUrl || tagThumbnailDataUrl || thumbnailDataUrl || null
-  const secondaryThumb = garmentThumbnailDataUrl && tagThumbnailDataUrl ? tagThumbnailDataUrl : null
-  const missing = missingFieldsFor(fields)
+
+  // Resolve thumbnails. Item mode has a single photo (itemDataUrl).
+  // Clothing mode has garment (primary) + optional tag (secondary).
+  const primaryThumb = mode === 'item'
+    ? (itemDataUrl || thumbnailDataUrl || null)
+    : (garmentThumbnailDataUrl || tagThumbnailDataUrl || thumbnailDataUrl || null)
+  const secondaryThumb = mode === 'item'
+    ? null
+    : (garmentThumbnailDataUrl && tagThumbnailDataUrl ? tagThumbnailDataUrl : null)
+
+  const missing = getMissingFields(fields, mode)
   const isInvalid = missing.length > 0
 
-  const typeOptions = useMemo(
+  // Clothing mode: slot options filtered by clothing category
+  const clothingTypeOptions = useMemo(
     () => (fields.category ? SLOTS.filter((s) => s.category === fields.category) : []),
     [fields.category],
   )
+  // Item mode: top-category options
+  const topCategoryOptions = useMemo(
+    () => Object.entries(CATEGORY_META).map(([value, meta]) => ({ value, label: meta.label })),
+    [],
+  )
+  // Item mode: sub-category options filtered by top_category
+  const subCategoryOptions = useMemo(() => {
+    if (!fields.top_category) return []
+    const subs = [...new Set(
+      ITEMS.filter(i => i.top_category === fields.top_category).map(i => i.sub_category)
+    )]
+    return subs.map(v => ({ value: v, label: SUB_CATEGORY_LABELS[v] || v }))
+  }, [fields.top_category])
+  // Item mode: item-type options filtered by top_category (+sub_category if set)
+  const itemTypeOptions = useMemo(() => {
+    if (!fields.top_category) return []
+    return ITEMS
+      .filter(i =>
+        i.top_category === fields.top_category &&
+        (!fields.sub_category || i.sub_category === fields.sub_category)
+      )
+      .map(i => ({ value: i.id, label: i.singular || i.label }))
+  }, [fields.top_category, fields.sub_category])
 
   function verifyClass(name) {
     return confidence?.[name] === 'low' ? styles.fieldVerify : ''
@@ -693,96 +769,185 @@ function BatchRow({
           </label>
         )}
         <div className={styles.rowGrid}>
-          <label className={styles.rowLabel}>
-            <span className={styles.rowLabelText}>
-              Category
-              {confidence?.category === 'low' && <span className={styles.verifyBadge}>Verify</span>}
-            </span>
-            <select
-              className={`${styles.rowInput} ${verifyClass('category')}`}
-              value={fields.category || ''}
-              onChange={(e) => onChange(item.id, 'category', e.target.value)}
-              disabled={disabled}
-            >
-              <option value="">Pick one…</option>
-              {CATEGORY_OPTIONS.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-          </label>
+          {mode === 'item' ? (
+            // ── Item (non-clothing) field set ───────────────────────────
+            <>
+              <label className={styles.rowLabel}>
+                <span className={styles.rowLabelText}>
+                  Category
+                  {confidence?.top_category === 'low' && <span className={styles.verifyBadge}>Verify</span>}
+                </span>
+                <select
+                  className={`${styles.rowInput} ${verifyClass('top_category')}`}
+                  value={fields.top_category || ''}
+                  onChange={(e) => onChange(item.id, 'top_category', e.target.value)}
+                  disabled={disabled}
+                >
+                  <option value="">Pick one…</option>
+                  {topCategoryOptions.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+              </label>
 
-          <label className={styles.rowLabel}>
-            <span className={styles.rowLabelText}>
-              Type
-              {confidence?.item_type === 'low' && <span className={styles.verifyBadge}>Verify</span>}
-            </span>
-            <select
-              className={`${styles.rowInput} ${verifyClass('item_type')}`}
-              value={fields.item_type || ''}
-              onChange={(e) => onChange(item.id, 'item_type', e.target.value)}
-              disabled={disabled || !fields.category}
-            >
-              <option value="">{fields.category ? 'Pick one…' : 'Pick category first'}</option>
-              {typeOptions.map((s) => (
-                <option key={s.id} value={s.id}>{s.label}</option>
-              ))}
-            </select>
-          </label>
+              <label className={styles.rowLabel}>
+                <span className={styles.rowLabelText}>Sub-category</span>
+                <select
+                  className={styles.rowInput}
+                  value={fields.sub_category || ''}
+                  onChange={(e) => onChange(item.id, 'sub_category', e.target.value)}
+                  disabled={disabled || !fields.top_category}
+                >
+                  <option value="">{fields.top_category ? 'All types' : 'Pick category first'}</option>
+                  {subCategoryOptions.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </label>
 
-          <label className={styles.rowLabel}>
-            <span className={styles.rowLabelText}>
-              Size
-              {confidence?.size_label === 'low' && <span className={styles.verifyBadge}>Verify</span>}
-            </span>
-            <select
-              className={`${styles.rowInput} ${verifyClass('size_label')}`}
-              value={fields.size_label || ''}
-              onChange={(e) => onChange(item.id, 'size_label', e.target.value)}
-              disabled={disabled}
-            >
-              <option value="">Pick one…</option>
-              {SIZE_OPTIONS.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </label>
+              <label className={styles.rowLabel}>
+                <span className={styles.rowLabelText}>
+                  Type
+                  {confidence?.item_type === 'low' && <span className={styles.verifyBadge}>Verify</span>}
+                </span>
+                <select
+                  className={`${styles.rowInput} ${verifyClass('item_type')}`}
+                  value={fields.item_type || ''}
+                  onChange={(e) => onChange(item.id, 'item_type', e.target.value)}
+                  disabled={disabled || !fields.top_category}
+                >
+                  <option value="">{fields.top_category ? 'Pick one…' : 'Pick category first'}</option>
+                  {itemTypeOptions.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </label>
 
-          <label className={styles.rowLabel}>
-            <span className={styles.rowLabelText}>
-              Brand
-              {confidence?.brand === 'low' && <span className={styles.verifyBadge}>Verify</span>}
-            </span>
-            <input
-              type="text"
-              className={`${styles.rowInput} ${verifyClass('brand')}`}
-              value={fields.brand || ''}
-              placeholder="optional"
-              onChange={(e) => onChange(item.id, 'brand', e.target.value)}
-              disabled={disabled}
-            />
-          </label>
+              <label className={styles.rowLabel}>
+                <span className={styles.rowLabelText}>
+                  Brand
+                  {confidence?.brand === 'low' && <span className={styles.verifyBadge}>Verify</span>}
+                </span>
+                <input
+                  type="text"
+                  className={`${styles.rowInput} ${verifyClass('brand')}`}
+                  value={fields.brand || ''}
+                  placeholder="optional"
+                  onChange={(e) => onChange(item.id, 'brand', e.target.value)}
+                  disabled={disabled}
+                />
+              </label>
 
-          {/* Season — fifth verifiable field (added 2026-05-05). The
-              scanner's garment shot is the right input for this; tag-only
-              scans usually return null which renders the "Pick one…"
-              placeholder. Empty string maps to null on save. */}
-          <label className={styles.rowLabel}>
-            <span className={styles.rowLabelText}>
-              Season
-              {confidence?.season === 'low' && <span className={styles.verifyBadge}>Verify</span>}
-            </span>
-            <select
-              className={`${styles.rowInput} ${verifyClass('season')}`}
-              value={fields.season || ''}
-              onChange={(e) => onChange(item.id, 'season', e.target.value)}
-              disabled={disabled}
-            >
-              <option value="">Pick one…</option>
-              {SEASON_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </label>
+              <label className={styles.rowLabel}>
+                <span className={styles.rowLabelText}>
+                  Condition
+                  {confidence?.condition === 'low' && <span className={styles.verifyBadge}>Verify</span>}
+                </span>
+                <select
+                  className={`${styles.rowInput} ${verifyClass('condition')}`}
+                  value={fields.condition || ''}
+                  onChange={(e) => onChange(item.id, 'condition', e.target.value)}
+                  disabled={disabled}
+                >
+                  <option value="">optional</option>
+                  <option value="new">New</option>
+                  <option value="excellent">Excellent</option>
+                  <option value="good">Good</option>
+                  <option value="fair">Fair</option>
+                </select>
+              </label>
+            </>
+          ) : (
+            // ── Clothing field set (existing) ────────────────────────────
+            <>
+              <label className={styles.rowLabel}>
+                <span className={styles.rowLabelText}>
+                  Category
+                  {confidence?.category === 'low' && <span className={styles.verifyBadge}>Verify</span>}
+                </span>
+                <select
+                  className={`${styles.rowInput} ${verifyClass('category')}`}
+                  value={fields.category || ''}
+                  onChange={(e) => onChange(item.id, 'category', e.target.value)}
+                  disabled={disabled}
+                >
+                  <option value="">Pick one…</option>
+                  {CATEGORY_OPTIONS.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className={styles.rowLabel}>
+                <span className={styles.rowLabelText}>
+                  Type
+                  {confidence?.item_type === 'low' && <span className={styles.verifyBadge}>Verify</span>}
+                </span>
+                <select
+                  className={`${styles.rowInput} ${verifyClass('item_type')}`}
+                  value={fields.item_type || ''}
+                  onChange={(e) => onChange(item.id, 'item_type', e.target.value)}
+                  disabled={disabled || !fields.category}
+                >
+                  <option value="">{fields.category ? 'Pick one…' : 'Pick category first'}</option>
+                  {clothingTypeOptions.map((s) => (
+                    <option key={s.id} value={s.id}>{s.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className={styles.rowLabel}>
+                <span className={styles.rowLabelText}>
+                  Size
+                  {confidence?.size_label === 'low' && <span className={styles.verifyBadge}>Verify</span>}
+                </span>
+                <select
+                  className={`${styles.rowInput} ${verifyClass('size_label')}`}
+                  value={fields.size_label || ''}
+                  onChange={(e) => onChange(item.id, 'size_label', e.target.value)}
+                  disabled={disabled}
+                >
+                  <option value="">Pick one…</option>
+                  {SIZE_OPTIONS.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className={styles.rowLabel}>
+                <span className={styles.rowLabelText}>
+                  Brand
+                  {confidence?.brand === 'low' && <span className={styles.verifyBadge}>Verify</span>}
+                </span>
+                <input
+                  type="text"
+                  className={`${styles.rowInput} ${verifyClass('brand')}`}
+                  value={fields.brand || ''}
+                  placeholder="optional"
+                  onChange={(e) => onChange(item.id, 'brand', e.target.value)}
+                  disabled={disabled}
+                />
+              </label>
+
+              <label className={styles.rowLabel}>
+                <span className={styles.rowLabelText}>
+                  Season
+                  {confidence?.season === 'low' && <span className={styles.verifyBadge}>Verify</span>}
+                </span>
+                <select
+                  className={`${styles.rowInput} ${verifyClass('season')}`}
+                  value={fields.season || ''}
+                  onChange={(e) => onChange(item.id, 'season', e.target.value)}
+                  disabled={disabled}
+                >
+                  <option value="">Pick one…</option>
+                  {SEASON_OPTIONS.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
         </div>
 
         {isInvalid && (
