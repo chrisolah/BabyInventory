@@ -225,7 +225,7 @@ export default function PassAlongList() {
 
     setCreating(false)
     if (insErr || !data) {
-      setCreateError(insErr?.message || 'Couldn’t start a new bag.')
+      setCreateError(insErr?.message || 'Couldn't start a new bag.')
       return
     }
 
@@ -271,12 +271,12 @@ export default function PassAlongList() {
       <main className={styles.body}>
         {householdError && (
           <div className={styles.errorBanner}>
-            Couldn’t load household: {householdError}
+            Couldn't load household: {householdError}
           </div>
         )}
         {error && !householdError && (
           <div className={styles.errorBanner}>
-            Couldn’t load bags: {error}
+            Couldn't load bags: {error}
           </div>
         )}
 
@@ -307,23 +307,23 @@ export default function PassAlongList() {
               disabled={creating}
             >
               {creating
-                ? ‘Opening…’
+                ? 'Opening…'
                 : buckets.drafts.length > 0
-                  ? ‘Continue your bag’
-                  : ‘Start a bag’}
+                  ? 'Continue your bag'
+                  : 'Start a bag'}
             </button>
 
             {/* Left column: error + batch list */}
             <div className={styles.bodyLeft}>
               {createError && (
                 <div className={styles.errorBanner}>
-                  Couldn’t open your bag: {createError}
+                  Couldn't open your bag: {createError}
                 </div>
               )}
               {batches.length === 0 ? (
                 <div className={styles.emptyCard}>
-                  No bags yet. When you’ve got a pile of outgrown clothes,
-                  start one here — we’ll walk you through packing and shipping.
+                  No bags yet. When you've got a pile of outgrown clothes,
+                  start one here — we'll walk you through packing and shipping.
                 </div>
               ) : (
                 BUCKET_ORDER.map(key => {
@@ -332,7 +332,7 @@ export default function PassAlongList() {
                   return (
                     <section key={key} className={styles.group}>
                       <div className={styles.groupHeader}>
-                        <Eyebrow color={BUCKET_EYEBROW_COLOR[key] ?? ‘gray’}>
+                        <Eyebrow color={BUCKET_EYEBROW_COLOR[key] ?? 'gray'}>
                           {BUCKET_LABEL[key]}
                         </Eyebrow>
                         <span className={styles.groupCount}>
@@ -372,10 +372,10 @@ export default function PassAlongList() {
                 disabled={creating}
               >
                 {creating
-                  ? ‘Opening…’
+                  ? 'Opening…'
                   : buckets.drafts.length > 0
-                    ? ‘Continue your bag’
-                    : ‘Start a bag’}
+                    ? 'Continue your bag'
+                    : 'Start a bag'}
               </button>
               {batches.length > 0 && (
                 <div className={styles.statsCard}>
@@ -391,7 +391,7 @@ export default function PassAlongList() {
                   <div className={styles.statsRowItem}>
                     <span>Fulfilled</span>
                     <span className={styles.statsValue}>
-                      {batches.filter(b => b.status === ‘fulfilled’).length}
+                      {batches.filter(b => b.status === 'fulfilled').length}
                     </span>
                   </div>
                 </div>
