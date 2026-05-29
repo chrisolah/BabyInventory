@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useHousehold, matchesBabyFilter } from '../contexts/HouseholdContext'
@@ -121,8 +121,11 @@ const CATEGORY_ORDER = [
   'swimwear',
 ]
 
+const VALID_TOP_CATEGORIES = ['clothing', 'sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath']
+
 export default function Inventory() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user } = useAuth()
   // Household + babies + selection + items all come from context now. Items
   // used to be a local useState + per-mount fetch here, but that caused a
@@ -146,7 +149,11 @@ export default function Inventory() {
 
   // Top-level category selection — decides which table's items to show and
   // which UI (clothing-specific age nav vs simple sub-category grouping).
-  const [selectedTopCategory, setSelectedTopCategory] = useState('clothing')
+  // Initialized from ?category= param so Home card taps land on the right tab.
+  const [selectedTopCategory, setSelectedTopCategory] = useState(() => {
+    const param = searchParams.get('category')
+    return param && VALID_TOP_CATEGORIES.includes(param) ? param : 'clothing'
+  })
   const isClothing = selectedTopCategory === 'clothing'
 
   // ── Inline action handlers (Owned tab) ─────────────────────────────────

@@ -101,10 +101,15 @@ export default function AddItem() {
   const [manualMode, setManualMode] = useState(false)
 
   // ── Top category ──────────────────────────────────────────────────────────
+  // Priority: ?top_category > ?category (when it's a top-level non-clothing value) > default
   const [topCategory, setTopCategoryState] = useState(() => {
     if (isEditMode) return 'clothing'  // overwritten when row loads
     if (initialTopParam && TOP_CATEGORIES.some(c => c.value === initialTopParam)) {
       return initialTopParam
+    }
+    // ?category=sleep (etc.) doubles as a top-category selector for non-clothing
+    if (initialCategoryParam && TOP_CATEGORIES.some(c => c.value === initialCategoryParam && c.value !== 'clothing')) {
+      return initialCategoryParam
     }
     return 'clothing'
   })

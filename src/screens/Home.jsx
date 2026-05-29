@@ -244,7 +244,7 @@ export default function Home() {
                   key={cat.id}
                   type="button"
                   className={`${styles.card} ${styles.cardTeal}`}
-                  onClick={() => navigate('/inventory')}
+                  onClick={() => navigate('/inventory?category=clothing')}
                   aria-label="Clothing"
                 >
                   <div className={styles.cardTop}>
@@ -286,7 +286,7 @@ export default function Home() {
                 key={cat.id}
                 type="button"
                 className={`${styles.card} ${styles[`card_${cat.color}`] || styles.cardGray}`}
-                onClick={() => navigate('/inventory')}
+                onClick={() => navigate(`/inventory?category=${cat.id}`)}
                 aria-label={cat.label}
               >
                 <div className={styles.cardTop}>
