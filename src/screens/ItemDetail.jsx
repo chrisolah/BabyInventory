@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import { SLOT_BY_ID, CATEGORY_LABELS } from '../lib/wardrobe'
+import { ITEM_BY_ID, SUB_CATEGORY_LABELS, CATEGORY_META } from '../lib/categories'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import Eyebrow from '../components/Eyebrow'
@@ -76,6 +77,7 @@ export default function ItemDetail() {
 
   const [loading, setLoading] = useState(true)
   const [item, setItem] = useState(null)
+  const [itemTable, setItemTable] = useState('clothing_items') // 'clothing_items' | 'items'
   const [error, setError] = useState(null)
 
   // Destructive-action state. `pendingAction` drives the confirm modal
@@ -108,7 +110,15 @@ export default function ItemDetail() {
 
     async function load() {
       setLoading(true)
-      const { data, error: loadErr } = await supabase
+
+      // Try clothing_items first; if no row, fall back to beta.items.
+      // This keeps the load path simple — we don't need to know up front
+      // which table the id belongs to, and both tables use the same UUID
+      // namespace so there's no collision risk.
+      let data = null
+      let table = 'clothing_items'
+
+      const { data: clothingRow, error: clothingErr } = await supabase
         .schema(currentSchema)
         .from('clothing_items')
         .select('*')
@@ -116,12 +126,34 @@ export default function ItemDetail() {
         .maybeSingle()
 
       if (cancelled) return
-      if (loadErr) {
-        setError(loadErr.message)
+      if (clothingErr) {
+        setError(clothingErr.message)
         setLoading(false)
         return
       }
+
+      if (clothingRow) {
+        data = clothingRow
+      } else {
+        // Not in clothing_items — try the general items table.
+        const { data: catRow, error: catErr } = await supabase
+          .schema(currentSchema)
+          .from('items')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle()
+        if (cancelled) return
+        if (catErr) {
+          setError(catErr.message)
+          setLoading(false)
+          return
+        }
+        data = catRow
+        table = 'items'
+      }
+
       setItem(data || null)
+      setItemTable(table)
 
       // Resolve the garment photo signed URL when the column is set.
       // Single signing call per item — fast enough that we don't bother
@@ -166,13 +198,27 @@ export default function ItemDetail() {
     return () => { cancelled = true }
   }, [user, id])
 
+  const isClothing = itemTable === 'clothing_items'
+
   // ── Derived labels ─────────────────────────────────────────────────────
-  const slot = item?.item_type ? SLOT_BY_ID[item.item_type] : null
-  // ItemDetail describes a single item, so prefer the singular form
-  // ("One-piece") over the category-level slot.label ("One-pieces").
-  const typeLabel = slot?.singular || slot?.label || humanizeItemType(item?.item_type)
-  const categoryLabel =
-    CATEGORY_LABELS[item?.category] || humanizeItemType(item?.category)
+  // Clothing: look up from wardrobe.js slot taxonomy.
+  // Non-clothing: look up from categories.js item taxonomy.
+  const slot = isClothing && item?.item_type ? SLOT_BY_ID[item.item_type] : null
+  const catSlot = !isClothing && item?.item_type ? ITEM_BY_ID[item.item_type] : null
+
+  // Individual-item context: prefer singular ("One-piece") over label ("One-pieces").
+  const typeLabel = slot?.singular || slot?.label
+    || catSlot?.singular || catSlot?.label
+    || humanizeItemType(item?.item_type)
+
+  // Clothing uses the clothing category label; non-clothing uses CATEGORY_META.
+  const categoryLabel = isClothing
+    ? (CATEGORY_LABELS[item?.category] || humanizeItemType(item?.category))
+    : (CATEGORY_META[item?.top_category]?.label || humanizeItemType(item?.top_category))
+
+  const subCategoryLabel = !isClothing && item?.sub_category
+    ? (SUB_CATEGORY_LABELS[item.sub_category] || humanizeItemType(item.sub_category))
+    : null
 
   // Tuck-away is the alternative path for items the family is keeping for
   // sibling/keepsake/etc. — it flips inventory_status to 'kept'. Available
@@ -228,7 +274,7 @@ export default function ItemDetail() {
 
     const { error: delErr } = await supabase
       .schema(currentSchema)
-      .from('clothing_items')
+      .from(itemTable)
       .delete()
       .eq('id', item.id)
 
@@ -356,7 +402,7 @@ export default function ItemDetail() {
 
     const { error: updErr } = await supabase
       .schema(currentSchema)
-      .from('clothing_items')
+      .from(itemTable)
       .update({ inventory_status: 'kept' })
       .eq('id', item.id)
 
@@ -380,7 +426,7 @@ export default function ItemDetail() {
 
     const { error: updErr } = await supabase
       .schema(currentSchema)
-      .from('clothing_items')
+      .from(itemTable)
       .update({ inventory_status: 'owned' })
       .eq('id', item.id)
 
@@ -467,7 +513,10 @@ export default function ItemDetail() {
           <div className={styles.title}>{loading ? 'Item' : displayName}</div>
           {!loading && item && (
             <div className={styles.subtitle}>
-              {[item.size_label, categoryLabel].filter(Boolean).join(' · ')}
+              {isClothing
+                ? [item.size_label, categoryLabel].filter(Boolean).join(' · ')
+                : [categoryLabel, subCategoryLabel].filter(Boolean).join(' · ')
+              }
             </div>
           )}
           {/* Mobile-only sprig beneath the subtitle. Hidden on desktop. */}
@@ -498,9 +547,12 @@ export default function ItemDetail() {
                   />
                 ) : (
                   <div className={styles.itemThumb} aria-hidden="true">
-                    {item.size_label && (
-                      <span className={styles.itemThumbSize}>{item.size_label}</span>
-                    )}
+                    {isClothing
+                      ? item.size_label && (
+                          <span className={styles.itemThumbSize}>{item.size_label}</span>
+                        )
+                      : <span className={styles.itemThumbSize}>{categoryLabel?.[0] || '—'}</span>
+                    }
                   </div>
                 )}
                 <div className={styles.summaryText}>
@@ -530,8 +582,13 @@ export default function ItemDetail() {
               <Eyebrow color="teal">Details</Eyebrow>
               <dl className={styles.detailList}>
                 <DetailRow label="Category" value={categoryLabel} />
+                {!isClothing && subCategoryLabel && (
+                  <DetailRow label="Subcategory" value={subCategoryLabel} />
+                )}
                 <DetailRow label="Type" value={typeLabel} />
-                <DetailRow label="Size" value={item.size_label} />
+                {isClothing && (
+                  <DetailRow label="Size" value={item.size_label} />
+                )}
                 {item.quantity > 1 && (
                   <DetailRow label="Quantity" value={`×${item.quantity}`} />
                 )}
@@ -548,11 +605,14 @@ export default function ItemDetail() {
                   />
                 )}
                 {item.brand && <DetailRow label="Brand" value={item.brand} />}
-                {item.season && (
+                {isClothing && item.season && (
                   <DetailRow
                     label="Season"
                     value={SEASON_LABEL[item.season] || item.season}
                   />
+                )}
+                {!isClothing && item.age_relevance && (
+                  <DetailRow label="Age range" value={item.age_relevance} />
                 )}
               </dl>
             </section>
@@ -612,7 +672,7 @@ export default function ItemDetail() {
                 Edit item
               </button>
 
-              {canSendOn && !inBatch && (
+              {isClothing && canSendOn && !inBatch && (
                 <button
                   type="button"
                   className={styles.secondaryBtn}

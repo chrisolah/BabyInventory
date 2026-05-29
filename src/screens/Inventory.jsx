@@ -187,7 +187,7 @@ export default function Inventory() {
   // a pile to send" rather than spawning a fresh bag for every item.
   async function ensureDraftBatch() {
     if (!household?.id || !user?.id) {
-      return { error: 'Couldn't start a bag — household not loaded.' }
+      return { error: "Couldn't start a bag — household not loaded." }
     }
 
     const { data: existingDraft, error: findErr } = await supabase
