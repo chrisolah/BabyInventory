@@ -150,10 +150,18 @@ export default function Inventory() {
   // Top-level category selection — decides which table's items to show and
   // which UI (clothing-specific age nav vs simple sub-category grouping).
   // Initialized from ?category= param so Home card taps land on the right tab.
+  // The useEffect syncs it when the param changes without a remount (e.g.
+  // navigating from Home while Inventory is already mounted in the shell).
   const [selectedTopCategory, setSelectedTopCategory] = useState(() => {
     const param = searchParams.get('category')
     return param && VALID_TOP_CATEGORIES.includes(param) ? param : 'clothing'
   })
+  useEffect(() => {
+    const param = searchParams.get('category')
+    if (param && VALID_TOP_CATEGORIES.includes(param)) {
+      setSelectedTopCategory(param)
+    }
+  }, [searchParams])
   const isClothing = selectedTopCategory === 'clothing'
 
   // ── Inline action handlers (Owned tab) ─────────────────────────────────
