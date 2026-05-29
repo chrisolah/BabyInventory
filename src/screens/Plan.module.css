@@ -543,6 +543,10 @@
   padding: 10px;
 }
 
+.slotCardWrapper {
+  position: relative;
+}
+
 .slotCard {
   all: unset;
   box-sizing: border-box;
@@ -561,6 +565,35 @@
 
 .slotCard:hover { background: var(--gray-50); }
 .slotCard:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }
+
+/* ── Priority star button ──────────────────────────────────── */
+.starBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 0;
+  cursor: pointer;
+  color: var(--gray-300);
+  transition: color 0.15s, background 0.15s;
+  z-index: 1;
+}
+
+.starBtn:hover {
+  color: #d97706;
+  background: var(--amber-light);
+}
+
+.starBtnActive {
+  color: #d97706;
+}
 
 .slotCardName {
   font-family: var(--font-body);
