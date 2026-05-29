@@ -49,3 +49,9 @@
   letter-spacing: 0.01em;
   white-space: nowrap;
 }
+
+@media (min-width: 768px) {
+  .nav {
+    display: none;
+  }
+}

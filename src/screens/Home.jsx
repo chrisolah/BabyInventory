@@ -163,6 +163,15 @@ export default function Home() {
     [items],
   )
 
+  const outgrownCount = useMemo(
+    () => items.filter(i =>
+      i.inventory_status === 'outgrown' ||
+      i.inventory_status === 'kept' ||
+      i.inventory_status === 'pass_along'
+    ).length,
+    [items],
+  )
+
   // Aggregate coverage across all age ranges for the overall count
   const clothingCoverage = useMemo(() => {
     if (!clothingItems.length && !itemsLoading) return { owned: 0, recommended: 64 }
@@ -233,6 +242,24 @@ export default function Home() {
               ? `${ageAnchor.name}'s readiness at a glance.`
               : 'Your household readiness at a glance.'}
           </p>
+        </div>
+
+        {/* Stat cards — desktop only, hidden on mobile via CSS */}
+        <div className={styles.statsRow}>
+          <div className={styles.statCard}>
+            <div className={styles.statValue}>{itemsLoading ? '—' : clothingItems.length}</div>
+            <div className={styles.statLabel}>items tracked</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statValue}>
+              {itemsLoading ? '—' : `${Math.round((clothingCoverage.owned / clothingCoverage.recommended) * 100)}%`}
+            </div>
+            <div className={styles.statLabel}>clothing coverage</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statValue}>{itemsLoading ? '—' : outgrownCount}</div>
+            <div className={styles.statLabel}>outgrown</div>
+          </div>
         </div>
 
         {/* Category grid */}

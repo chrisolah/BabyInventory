@@ -666,7 +666,6 @@ export default function Inventory() {
   }, [])
 
   useLayoutEffect(() => {
-    if (tab !== 'owned') return
     if (itemsLoading) return
     if (!selectedAgeRange) return
     if (ownedGrouped.length === 0) return
@@ -693,7 +692,7 @@ export default function Inventory() {
     // once the first batch of items lands (length goes 0 → N). resizeTick
     // lets the resize handler force a re-measure under a new viewport size.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, itemsLoading, selectedAgeRange, ownedGrouped, ownedCollapsed, resizeTick])
+  }, [itemsLoading, selectedAgeRange, ownedGrouped, ownedCollapsed, resizeTick])
 
   // Total owned-item count for the whole household (across all age ranges)
   // for this baby — used to decide which empty state to show on the Owned

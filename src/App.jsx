@@ -37,6 +37,7 @@ import LandingLayout from './components/LandingLayout'
 import TrialBanner from './components/TrialBanner'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppSplash from './components/AppSplash'
+import AppShell from './components/AppShell'
 
 // Client-side admin allowlist — kept in sync with beta._admin_emails() in the
 // migration. Server is the source of truth; this lives client-side only so the
@@ -187,7 +188,9 @@ function ProtectedLayout() {
   return (
     <HouseholdProvider>
       <UpgradeGateProvider>
-        <Outlet />
+        <AppShell>
+          <Outlet />
+        </AppShell>
         <IvyDecoration />
         {/* TrialBanner self-gates on isAnonymous and renders nothing for
             permanent users. Mounted here (not per-screen) so the
@@ -198,6 +201,7 @@ function ProtectedLayout() {
       </UpgradeGateProvider>
     </HouseholdProvider>
   )
+
 }
 
 // PublicRoute redirects already-signed-in visitors away from /, /signup, and

@@ -32,6 +32,123 @@
   color: var(--gray-900);
 }
 
+/* ── Desktop two-column wrapper ───────────────────────────── */
+.desktopLayout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .desktopLayout {
+    flex-direction: row;
+    align-items: flex-start;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 24px;
+    gap: 24px;
+  }
+}
+
+/* ── Category sidebar (desktop only) ─────────────────────── */
+.catSidebar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .catSidebar {
+    display: flex;
+    flex-direction: column;
+    width: 140px;
+    flex-shrink: 0;
+    padding-top: 12px;
+    gap: 2px;
+    position: sticky;
+    top: 0;
+  }
+}
+
+.catSidebarLabel {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gray-400);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 2px 10px 8px;
+}
+
+.catSidebarItem {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  width: 100%;
+}
+
+.catSidebarItem:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.catSidebarItemActive {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+}
+
+.catSidebarItemActive:hover {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+}
+
+.catSidebarItemSoon {
+  color: var(--gray-400);
+  cursor: default;
+}
+
+.catSidebarItemSoon:hover {
+  background: none;
+  color: var(--gray-400);
+}
+
+.catSidebarIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.catSidebarText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catSidebarSoon {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+  background: var(--gray-100);
+  padding: 2px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
 /* ── Category selector ────────────────────────────────────── */
 .catRow {
   display: flex;
@@ -44,6 +161,12 @@
 }
 
 .catRow::-webkit-scrollbar { display: none; }
+
+@media (min-width: 768px) {
+  .catRow {
+    display: none;
+  }
+}
 
 .catChip {
   display: inline-flex;
@@ -105,6 +228,15 @@
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .body {
+    flex: 1;
+    max-width: 100%;
+    margin: 0;
+    padding: 12px 0 2rem;
+  }
 }
 
 .loading {

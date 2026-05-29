@@ -320,6 +320,17 @@
   margin: 0 auto;
 }
 
+@media (min-width: 768px) {
+  .body {
+    max-width: 960px;
+    padding: 16px 24px 2rem;
+  }
+  .predictionCard {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
 .loading {
   text-align: center;
   color: var(--gray-400);

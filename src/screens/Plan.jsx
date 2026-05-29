@@ -31,14 +31,14 @@ const PRIORITY_LABEL = {
 // Category selector shown at the top. "clothing" is live; others are
 // coming soon and show a disabled/greyed treatment when tapped.
 const PLAN_CATEGORIES = [
-  { id: 'clothing', label: 'Clothing', live: true },
-  { id: 'sleep',    label: 'Sleep',    live: false },
-  { id: 'feeding',  label: 'Feeding',  live: false },
-  { id: 'diapering',label: 'Diapering',live: false },
-  { id: 'travel',   label: 'Travel',   live: false },
-  { id: 'play',     label: 'Play',     live: false },
-  { id: 'health',   label: 'Health',   live: false },
-  { id: 'bath',     label: 'Bath',     live: false },
+  { id: 'clothing',  label: 'Clothing',  live: true,  icon: ClothingNavIcon },
+  { id: 'sleep',     label: 'Sleep',     live: false, icon: SleepNavIcon },
+  { id: 'feeding',   label: 'Feeding',   live: false, icon: FeedingNavIcon },
+  { id: 'diapering', label: 'Diapering', live: false, icon: DiaperNavIcon },
+  { id: 'travel',    label: 'Travel',    live: false, icon: TravelNavIcon },
+  { id: 'play',      label: 'Play',      live: false, icon: PlayNavIcon },
+  { id: 'health',    label: 'Health',    live: false, icon: HealthNavIcon },
+  { id: 'bath',      label: 'Bath',      live: false, icon: BathNavIcon },
 ]
 
 const CATEGORY_ORDER = [
@@ -173,7 +173,7 @@ export default function Plan() {
 
       <BabySwitcher from="plan" />
 
-      {/* Category selector — horizontal scroll row */}
+      {/* Category selector — horizontal scroll row (mobile) */}
       <div className={styles.catRow}>
         {PLAN_CATEGORIES.map(cat => (
           <button
@@ -191,6 +191,29 @@ export default function Plan() {
         ))}
       </div>
 
+      {/* Desktop two-column layout */}
+      <div className={styles.desktopLayout}>
+        {/* Left: persistent category sidebar (desktop only) */}
+        <aside className={styles.catSidebar} aria-label="Category">
+          <div className={styles.catSidebarLabel}>Category</div>
+          {PLAN_CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              type="button"
+              className={`${styles.catSidebarItem} ${selectedCategory === cat.id ? styles.catSidebarItemActive : ''} ${!cat.live ? styles.catSidebarItemSoon : ''}`}
+              onClick={() => {
+                if (cat.live) setSelectedCategory(cat.id)
+              }}
+              aria-label={cat.live ? cat.label : `${cat.label} — coming soon`}
+            >
+              <span className={styles.catSidebarIcon}><cat.icon /></span>
+              <span className={styles.catSidebarText}>{cat.label}</span>
+              {!cat.live && <span className={styles.catSidebarSoon}>soon</span>}
+            </button>
+          ))}
+        </aside>
+
+        {/* Right: main content */}
       <main className={styles.body}>
         {!itemsLoading && selectedAgeRange && selectedCategory === 'clothing' && (
           <>
@@ -280,8 +303,79 @@ export default function Plan() {
         )}
       </main>
 
+      </main>
+      </div>
+
       <BottomNav />
     </div>
+  )
+}
+
+// ── Category nav icons ────────────────────────────────────────────────────────
+function ClothingNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M7 2L4 5l2.5 1.5V17h7V6.5L16 5l-3-3-2 2-2-2z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function SleepNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M3 10.5A7.5 7.5 0 0013.5 3a7.5 7.5 0 100 15A7.5 7.5 0 003 10.5z"
+        stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+function FeedingNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M8 2v3a4 4 0 004 4v9a1 1 0 01-2 0v-5H8v5a1 1 0 01-2 0V2h2z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function DiaperNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M2 9h16" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="10" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  )
+}
+function TravelNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M2 14h16M5 14V9l5-4 5 4v5" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <circle cx="6" cy="15.5" r="1.5" stroke="currentColor" strokeWidth="1.1" />
+      <circle cx="14" cy="15.5" r="1.5" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  )
+}
+function PlayNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M7.5 7.5l5 2.5-5 2.5V7.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function HealthNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M10 17S3 12.5 3 7.5A4 4 0 0110 5a4 4 0 017 2.5C17 12.5 10 17 10 17z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function BathNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M3 11h14v1.5a5 5 0 01-10 0" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <path d="M5 11V5.5A1.5 1.5 0 017.5 5a1.5 1.5 0 011.5 1.5V7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
   )
 }
 
