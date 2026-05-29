@@ -310,7 +310,7 @@ export default function Plan() {
           <WishlistView
             items={babyFilteredItems.filter(it => it.inventory_status === 'needed')}
             onItemTap={(id) => navigate(`/item/${id}`)}
-            onAddWish={() => navigate('/add-item?autoScan=1&mode=needed')}
+            onAddWish={() => navigate('/add-item?mode=needed')}
           />
         )}
 
