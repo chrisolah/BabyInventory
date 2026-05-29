@@ -131,23 +131,6 @@ export default function Home() {
     [items],
   )
 
-  // Overall coverage — aggregate clothing (current range) + all non-clothing
-  // categories. Used by the tracker card at the bottom of the screen.
-  const overallCoverage = useMemo(() => {
-    const cBase = currentRangeCoverage ?? { owned: 0, recommended: 0 }
-    let owned = cBase.owned
-    let recommended = cBase.recommended
-    // catCoverages hasn't been computed yet here — we sum directly from items.
-    // This memo runs after items is stable so this is fine.
-    const cats = ['sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath']
-    for (const cat of cats) {
-      const cov = getCategorySummary(items.filter(i => i.top_category === cat), cat)
-      owned += cov.owned
-      recommended += cov.recommended
-    }
-    return { owned, recommended: Math.max(recommended, 1) }
-  }, [currentRangeCoverage, items])
-
   // Coverage for each of the 7 non-clothing categories.
   const catCoverages = useMemo(() => {
     const cats = ['sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath']
@@ -187,6 +170,21 @@ export default function Home() {
     }
     return { owned, recommended, range: activeRange }
   }, [clothingItems, activeRange])
+
+  // Overall coverage — aggregate clothing (current range) + all non-clothing.
+  // Must be declared AFTER currentRangeCoverage to avoid temporal dead zone.
+  const overallCoverage = useMemo(() => {
+    const cBase = currentRangeCoverage ?? { owned: 0, recommended: 0 }
+    let owned = cBase.owned
+    let recommended = cBase.recommended
+    const cats = ['sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath']
+    for (const cat of cats) {
+      const cov = getCategorySummary(items.filter(i => i.top_category === cat), cat)
+      owned += cov.owned
+      recommended += cov.recommended
+    }
+    return { owned, recommended: Math.max(recommended, 1) }
+  }, [currentRangeCoverage, items])
 
   function openInvite() {
     track.householdInviteOpened('home_header')
