@@ -225,7 +225,7 @@ export default function PassAlongList() {
 
     setCreating(false)
     if (insErr || !data) {
-      setCreateError(insErr?.message || 'Couldn't start a new bag.')
+      setCreateError(insErr?.message || "Couldn't start a new bag.")
       return
     }
 
