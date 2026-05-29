@@ -322,8 +322,10 @@
 
 @media (min-width: 768px) {
   .body {
-    max-width: 960px;
-    padding: 16px 24px 2rem;
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+    padding: 16px 0 2rem;
   }
   .predictionCard {
     max-width: 100%;
@@ -897,57 +899,147 @@
   flex-shrink: 0;
 }
 
-/* ── Category tab bar ─────────────────────────────────────────────────────
-   Horizontally scrollable chip row below BabySwitcher. Hides the scrollbar
-   on all browsers — the chips are reachable by swipe on touch devices and
-   the active chip auto-reveals via scrollIntoView if we add that later. */
-.catNav {
+/* ── Desktop two-column wrapper ───────────────────────────── */
+.desktopLayout {
+  flex: 1;
   display: flex;
-  gap: 6px;
-  padding: 10px 16px 4px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  flex-direction: column;
 }
 
-.catNav::-webkit-scrollbar {
+@media (min-width: 768px) {
+  .desktopLayout {
+    flex-direction: row;
+    align-items: flex-start;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 24px;
+    gap: 24px;
+  }
+}
+
+/* ── Category sidebar (desktop only) ─────────────────────── */
+.catSidebar {
   display: none;
 }
 
-.catNavChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  min-height: 36px;
-  padding: 0 12px;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: var(--font-body);
-  color: var(--gray-600);
-  background: var(--gray-100);
-  border: 0.5px solid var(--gray-200);
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
+@media (min-width: 768px) {
+  .catSidebar {
+    display: flex;
+    flex-direction: column;
+    width: 140px;
+    flex-shrink: 0;
+    padding-top: 12px;
+    gap: 2px;
+    position: sticky;
+    top: 0;
+  }
 }
 
-.catNavChip:hover {
-  background: var(--gray-200);
+.catSidebarLabel {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gray-400);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 2px 10px 8px;
+}
+
+.catSidebarItem {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  width: 100%;
+}
+
+.catSidebarItem:hover {
+  background: var(--gray-100);
   color: var(--gray-900);
 }
 
-.catNavChipActive {
+.catSidebarItemActive {
   background: var(--teal-light);
   color: var(--teal-dark);
-  border-color: var(--teal);
-  font-weight: 600;
 }
 
-.catNavEmoji {
-  font-size: 14px;
-  line-height: 1;
+.catSidebarItemActive:hover {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+}
+
+.catSidebarIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.catSidebarText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Category chip strip (mobile only) ───────────────────── */
+.catRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 10px 16px 10px;
+  border-bottom: 0.5px solid var(--gray-100);
+}
+
+.catRow::-webkit-scrollbar { display: none; }
+
+@media (min-width: 768px) {
+  .catRow {
+    display: none;
+  }
+}
+
+.catChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  min-height: 36px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  color: var(--gray-600);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.catChip:hover {
+  background: var(--gray-50);
+}
+
+.catChipActive {
+  background: var(--teal-dark);
+  border-color: var(--teal-dark);
+  color: var(--white);
 }
 
 /* ── Wish list tab ────────────────────────────────────────── */

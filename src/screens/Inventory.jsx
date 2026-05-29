@@ -1016,6 +1016,40 @@ export default function Inventory() {
         </div>
       )}
 
+      {/* Category selector — horizontal scroll row (mobile) */}
+      <div className={styles.catRow}>
+        {INVENTORY_CATEGORIES.map(cat => (
+          <button
+            key={cat.id}
+            type="button"
+            className={`${styles.catChip} ${selectedTopCategory === cat.id ? styles.catChipActive : ''}`}
+            onClick={() => setSelectedTopCategory(cat.id)}
+            aria-label={cat.label}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Desktop two-column layout */}
+      <div className={styles.desktopLayout}>
+        {/* Left: persistent category sidebar (desktop only) */}
+        <aside className={styles.catSidebar} aria-label="Category">
+          <div className={styles.catSidebarLabel}>Category</div>
+          {INVENTORY_CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              type="button"
+              className={`${styles.catSidebarItem} ${selectedTopCategory === cat.id ? styles.catSidebarItemActive : ''}`}
+              onClick={() => setSelectedTopCategory(cat.id)}
+              aria-label={cat.label}
+            >
+              <span className={styles.catSidebarIcon}><cat.icon /></span>
+              <span className={styles.catSidebarText}>{cat.label}</span>
+            </button>
+          ))}
+        </aside>
+
       <main className={styles.body}>
         {loading && <div className={styles.loading}>Loading…</div>}
 
@@ -1028,7 +1062,6 @@ export default function Inventory() {
         {/* ── Owned tab ─────────────────────────────────────────── */}
         {!loading && !error && (
           <>
-            <CategoryNav selected={selectedTopCategory} onChange={setSelectedTopCategory} />
 
             {isClothing && selectedAgeRange && (
               <>
@@ -1241,6 +1274,7 @@ export default function Inventory() {
         )}
 
       </main>
+      </div>{/* end desktopLayout */}
 
       <BottomNav />
 
@@ -1584,39 +1618,84 @@ function humanizeItemType(s) {
   return s.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())
 }
 
-// ── Category tab bar ──────────────────────────────────────────────────────
-// Horizontally scrollable chip row that switches between the 8 top-level
-// categories (Clothing, Sleep, Feeding, …). Sits at the top of the content
-// area, below BabySwitcher, above the age nav / item list.
-const TOP_CATEGORIES_NAV = [
-  { id: 'clothing',   label: 'Clothing',   emoji: '👕' },
-  { id: 'sleep',      label: 'Sleep',      emoji: '😴' },
-  { id: 'feeding',    label: 'Feeding',    emoji: '🍼' },
-  { id: 'diapering',  label: 'Diapering',  emoji: '🧷' },
-  { id: 'travel',     label: 'Travel',     emoji: '🚗' },
-  { id: 'play',       label: 'Play',       emoji: '🎈' },
-  { id: 'health',     label: 'Health',     emoji: '💊' },
-  { id: 'bath',       label: 'Bath',       emoji: '🛁' },
-]
-
-function CategoryNav({ selected, onChange }) {
+// ── Category nav icons ────────────────────────────────────────────────────
+function ClothingNavIcon() {
   return (
-    <div className={styles.catNav}>
-      {TOP_CATEGORIES_NAV.map(cat => (
-        <button
-          key={cat.id}
-          type="button"
-          className={`${styles.catNavChip} ${selected === cat.id ? styles.catNavChipActive : ''}`}
-          onClick={() => onChange(cat.id)}
-          aria-pressed={selected === cat.id}
-        >
-          <span className={styles.catNavEmoji} aria-hidden="true">{cat.emoji}</span>
-          {cat.label}
-        </button>
-      ))}
-    </div>
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M7 2L4 5l2.5 1.5V17h7V6.5L16 5l-3-3-2 2-2-2z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
   )
 }
+function SleepNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M3 10.5A7.5 7.5 0 0013.5 3a7.5 7.5 0 100 15A7.5 7.5 0 003 10.5z"
+        stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+function FeedingNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M8 2v3a4 4 0 004 4v9a1 1 0 01-2 0v-5H8v5a1 1 0 01-2 0V2h2z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function DiaperNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M2 9h16" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="10" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  )
+}
+function TravelNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M2 14h16M5 14V9l5-4 5 4v5" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <circle cx="6" cy="15.5" r="1.5" stroke="currentColor" strokeWidth="1.1" />
+      <circle cx="14" cy="15.5" r="1.5" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  )
+}
+function PlayNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M7.5 7.5l5 2.5-5 2.5V7.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function HealthNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M10 17S3 12.5 3 7.5A4 4 0 0110 5a4 4 0 017 2.5C17 12.5 10 17 10 17z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function BathNavIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+      <path d="M3 11h14v1.5a5 5 0 01-10 0" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <path d="M5 11V5.5A1.5 1.5 0 017.5 5a1.5 1.5 0 011.5 1.5V7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+const INVENTORY_CATEGORIES = [
+  { id: 'clothing',  label: 'Clothing',  icon: ClothingNavIcon },
+  { id: 'sleep',     label: 'Sleep',     icon: SleepNavIcon },
+  { id: 'feeding',   label: 'Feeding',   icon: FeedingNavIcon },
+  { id: 'diapering', label: 'Diapering', icon: DiaperNavIcon },
+  { id: 'travel',    label: 'Travel',    icon: TravelNavIcon },
+  { id: 'play',      label: 'Play',      icon: PlayNavIcon },
+  { id: 'health',    label: 'Health',    icon: HealthNavIcon },
+  { id: 'bath',      label: 'Bath',      icon: BathNavIcon },
+]
 
 // ── Non-clothing item card ────────────────────────────────────────────────
 // Simpler card for beta.items rows — no garment photo, no Pass on action
