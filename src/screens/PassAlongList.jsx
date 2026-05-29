@@ -291,11 +291,8 @@ export default function PassAlongList() {
 
         {!pageLoading && !householdError && !noHousehold && (
           <>
-            {/* Intro blurb — useful for first-time visitors and a gentle
-                reminder for returning users of what the three destinations
-                mean. Kept brief; the full explainer lives on the detail
-                screen + landing page. */}
-            <section className={styles.intro}>
+            {/* Mobile-only: intro + CTA above the list */}
+            <section className={`${styles.intro} ${styles.mobileOnly}`}>
               <div className={styles.introTitle}>Send clothes on to their next home</div>
               <div className={styles.introBody}>
                 Bundle outgrown items into a bag and pass them along to
@@ -303,69 +300,103 @@ export default function PassAlongList() {
                 a charity.
               </div>
             </section>
-
-            {createError && (
-              <div className={styles.errorBanner}>
-                Couldn’t open your bag: {createError}
-              </div>
-            )}
-
-            {/* Single-bag-at-a-time: when a draft exists this CTA opens
-                it; when no draft exists, it creates one. The label adapts
-                so users with an in-progress bag see "Continue your bag"
-                rather than being prompted to start a second one. */}
             <button
               type="button"
-              className={styles.primaryBtn}
+              className={`${styles.primaryBtn} ${styles.mobileOnly}`}
               onClick={handleCreate}
               disabled={creating}
             >
               {creating
-                ? 'Opening…'
+                ? ‘Opening…’
                 : buckets.drafts.length > 0
-                  ? 'Continue your bag'
-                  : 'Start a bag'}
+                  ? ‘Continue your bag’
+                  : ‘Start a bag’}
             </button>
 
-            {batches.length === 0 ? (
-              <div className={styles.emptyCard}>
-                No bags yet. When you’ve got a pile of outgrown clothes,
-                start one here — we’ll walk you through packing and shipping.
-              </div>
-            ) : (
-              BUCKET_ORDER.map(key => {
-                const rows = buckets[key]
-                if (rows.length === 0) return null
-                return (
-                  <section key={key} className={styles.group}>
-                    {/* Eyebrow pill replaces the DM Sans groupLabel (added
-                        2026-05-01 with the design-unification pass). Mirrors
-                        the landing's section-opener motif; color is semantic
-                        per BUCKET_EYEBROW_COLOR. The count stays alongside
-                        as a separate span so the existing alignment + style
-                        of the count don't change. */}
-                    <div className={styles.groupHeader}>
-                      <Eyebrow color={BUCKET_EYEBROW_COLOR[key] ?? 'gray'}>
-                        {BUCKET_LABEL[key]}
-                      </Eyebrow>
-                      <span className={styles.groupCount}>
-                        {rows.length}
-                      </span>
-                    </div>
-                    <ul className={styles.cardList}>
-                      {rows.map(row => (
-                        <BatchCard
-                          key={row.id}
-                          batch={row}
-                          itemCount={counts[row.id] || 0}
-                          onClick={() => navigate(`/pass-along/${row.id}`)}
-                        />
-                      ))}
-                    </ul>
-                  </section>
-                )
-              })
-            )}
+            {/* Left column: error + batch list */}
+            <div className={styles.bodyLeft}>
+              {createError && (
+                <div className={styles.errorBanner}>
+                  Couldn’t open your bag: {createError}
+                </div>
+              )}
+              {batches.length === 0 ? (
+                <div className={styles.emptyCard}>
+                  No bags yet. When you’ve got a pile of outgrown clothes,
+                  start one here — we’ll walk you through packing and shipping.
+                </div>
+              ) : (
+                BUCKET_ORDER.map(key => {
+                  const rows = buckets[key]
+                  if (rows.length === 0) return null
+                  return (
+                    <section key={key} className={styles.group}>
+                      <div className={styles.groupHeader}>
+                        <Eyebrow color={BUCKET_EYEBROW_COLOR[key] ?? ‘gray’}>
+                          {BUCKET_LABEL[key]}
+                        </Eyebrow>
+                        <span className={styles.groupCount}>
+                          {rows.length}
+                        </span>
+                      </div>
+                      <ul className={styles.cardList}>
+                        {rows.map(row => (
+                          <BatchCard
+                            key={row.id}
+                            batch={row}
+                            itemCount={counts[row.id] || 0}
+                            onClick={() => navigate(`/pass-along/${row.id}`)}
+                          />
+                        ))}
+                      </ul>
+                    </section>
+                  )
+                })
+              )}
+            </div>
+
+            {/* Right column (desktop only): intro + CTA + stats */}
+            <div className={styles.bodyRight}>
+              <section className={styles.intro}>
+                <div className={styles.introTitle}>Send clothes on to their next home</div>
+                <div className={styles.introBody}>
+                  Bundle outgrown items into a bag and pass them along to
+                  another Sprigloop family, a friend or family member, or
+                  a charity.
+                </div>
+              </section>
+              <button
+                type="button"
+                className={styles.primaryBtn}
+                onClick={handleCreate}
+                disabled={creating}
+              >
+                {creating
+                  ? ‘Opening…’
+                  : buckets.drafts.length > 0
+                    ? ‘Continue your bag’
+                    : ‘Start a bag’}
+              </button>
+              {batches.length > 0 && (
+                <div className={styles.statsCard}>
+                  <div className={styles.statsCardTitle}>Your stats</div>
+                  <div className={styles.statsRowItem}>
+                    <span>Total bags</span>
+                    <span className={styles.statsValue}>{batches.length}</span>
+                  </div>
+                  <div className={styles.statsRowItem}>
+                    <span>In flight</span>
+                    <span className={styles.statsValue}>{buckets.inFlight.length}</span>
+                  </div>
+                  <div className={styles.statsRowItem}>
+                    <span>Fulfilled</span>
+                    <span className={styles.statsValue}>
+                      {batches.filter(b => b.status === ‘fulfilled’).length}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </>
         )}
       </main>
