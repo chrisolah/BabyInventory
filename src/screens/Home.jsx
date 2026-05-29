@@ -131,6 +131,11 @@ export default function Home() {
     [items],
   )
 
+  const wishlistCount = useMemo(
+    () => items.filter(i => i.inventory_status === 'needed').length,
+    [items],
+  )
+
   // Coverage for each of the 7 non-clothing categories.
   const catCoverages = useMemo(() => {
     const cats = ['sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath']
@@ -231,23 +236,17 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Stat cards — desktop only, hidden on mobile via CSS */}
-        <div className={styles.statsRow}>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>{itemsLoading ? '—' : totalOwnedCount}</div>
-            <div className={styles.statLabel}>items tracked</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>
-              {itemsLoading ? '—' : `${Math.round((clothingCoverage.owned / clothingCoverage.recommended) * 100)}%`}
-            </div>
-            <div className={styles.statLabel}>clothing coverage</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>{itemsLoading ? '—' : outgrownCount}</div>
-            <div className={styles.statLabel}>outgrown</div>
-          </div>
-        </div>
+        {/* Overall tracker card */}
+        {!itemsLoading && (
+          <OverallTrackerCard
+            pct={Math.min(100, Math.round((overallCoverage.owned / overallCoverage.recommended) * 100))}
+            owned={overallCoverage.owned}
+            recommended={overallCoverage.recommended}
+            range={ageInfo.currentRange}
+            ageInfo={ageInfo}
+            babyName={ageAnchor?.name ?? null}
+          />
+        )}
 
         {/* Category grid */}
         <div className={styles.grid}>
@@ -329,17 +328,21 @@ export default function Home() {
             )
           })}
         </div>
-        {/* Overall tracker card */}
-        {!itemsLoading && (
-          <OverallTrackerCard
-            pct={Math.min(100, Math.round((overallCoverage.owned / overallCoverage.recommended) * 100))}
-            owned={overallCoverage.owned}
-            recommended={overallCoverage.recommended}
-            range={ageInfo.currentRange}
-            ageInfo={ageInfo}
-            babyName={ageAnchor?.name ?? null}
-          />
-        )}
+        {/* Stat cards */}
+        <div className={styles.statsRow}>
+          <div className={styles.statCard}>
+            <div className={styles.statValue}>{itemsLoading ? '—' : totalOwnedCount}</div>
+            <div className={styles.statLabel}>items tracked</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statValue}>{itemsLoading ? '—' : wishlistCount}</div>
+            <div className={styles.statLabel}>on wishlist</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statValue}>{itemsLoading ? '—' : outgrownCount}</div>
+            <div className={styles.statLabel}>outgrown</div>
+          </div>
+        </div>
       </main>
 
       <BottomNav />

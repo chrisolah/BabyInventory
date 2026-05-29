@@ -113,18 +113,12 @@
   line-height: 1.5;
 }
 
-/* ── Stat cards (desktop only) ─────────────────────────────── */
+/* ── Stat cards — now at bottom, visible on all screen sizes ── */
 .statsRow {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .statsRow {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 1.25rem;
-  }
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .statCard {
@@ -457,7 +451,7 @@
   background: var(--teal-dark);
   border-radius: 16px;
   padding: 18px 20px;
-  margin-top: 18px;
+  margin-bottom: 18px;
 }
 
 .trackerTop {
