@@ -1,0 +1,99 @@
+.sidebar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 68px;
+    min-height: 100vh;
+    background: var(--white);
+    border-right: 0.5px solid var(--gray-200);
+    padding: 16px 0 20px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    flex-shrink: 0;
+    gap: 4px;
+    z-index: 30;
+  }
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  background: var(--teal);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  border: none;
+  cursor: pointer;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.logo:hover {
+  opacity: 0.88;
+}
+
+.navItems {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  flex: 1;
+}
+
+.navTab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 52px;
+  min-height: 56px;
+  border-radius: 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  transition: background 0.15s, color 0.15s;
+  padding: 6px 4px;
+}
+
+.navTab:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.navTabActive {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+}
+
+.navTabActive:hover {
+  background: var(--teal-light);
+  color: var(--teal-dark);
+}
+
+.tabIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.tabLabel {
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.2;
+}
