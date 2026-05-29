@@ -131,6 +131,23 @@ export default function Home() {
     [items],
   )
 
+  // Overall coverage — aggregate clothing (current range) + all non-clothing
+  // categories. Used by the tracker card at the bottom of the screen.
+  const overallCoverage = useMemo(() => {
+    const cBase = currentRangeCoverage ?? { owned: 0, recommended: 0 }
+    let owned = cBase.owned
+    let recommended = cBase.recommended
+    // catCoverages hasn't been computed yet here — we sum directly from items.
+    // This memo runs after items is stable so this is fine.
+    const cats = ['sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath']
+    for (const cat of cats) {
+      const cov = getCategorySummary(items.filter(i => i.top_category === cat), cat)
+      owned += cov.owned
+      recommended += cov.recommended
+    }
+    return { owned, recommended: Math.max(recommended, 1) }
+  }, [currentRangeCoverage, items])
+
   // Coverage for each of the 7 non-clothing categories.
   const catCoverages = useMemo(() => {
     const cats = ['sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath']
@@ -314,6 +331,17 @@ export default function Home() {
             )
           })}
         </div>
+        {/* Overall tracker card */}
+        {!itemsLoading && (
+          <OverallTrackerCard
+            pct={Math.min(100, Math.round((overallCoverage.owned / overallCoverage.recommended) * 100))}
+            owned={overallCoverage.owned}
+            recommended={overallCoverage.recommended}
+            range={ageInfo.currentRange}
+            ageInfo={ageInfo}
+            babyName={ageAnchor?.name ?? null}
+          />
+        )}
       </main>
 
       <BottomNav />
@@ -322,6 +350,78 @@ export default function Home() {
         <InviteMemberModal from="home_header" onClose={() => setShowInvite(false)} />
       )}
     </div>
+  )
+}
+
+// ── Overall tracker card ──────────────────────────────────────────────────
+function OverallTrackerCard({ pct, owned, recommended, range, ageInfo, babyName }) {
+  // Build the countdown line based on ageInfo state.
+  let countdown = null
+  if (ageInfo?.expecting && ageInfo.daysUntilDue != null) {
+    const days = Math.ceil(ageInfo.daysUntilDue)
+    if (days > 0) {
+      const who = babyName ? `${babyName} arrives` : 'Baby arrives'
+      countdown = { text: `${who} in ${days} day${days === 1 ? '' : 's'}`, type: 'due' }
+    }
+  } else if (ageInfo?.nextRange && ageInfo.daysToNextRange != null) {
+    const days = Math.ceil(ageInfo.daysToNextRange)
+    if (days > 0) {
+      const who = babyName ? `${babyName} moves to` : 'Next size'
+      countdown = { text: `${who} ${ageInfo.nextRange} in ${days} day${days === 1 ? '' : 's'}`, type: 'size' }
+    }
+  }
+
+  return (
+    <div className={styles.trackerCard}>
+      <div className={styles.trackerTop}>
+        <div className={styles.trackerLeft}>
+          <div className={styles.trackerPct}>{pct}%</div>
+          <div className={styles.trackerTitle}>Overall readiness</div>
+          <div className={styles.trackerSub}>
+            {owned} of {recommended} items{range ? ` · ${range}` : ''}
+          </div>
+        </div>
+        <div className={styles.trackerRight}>
+          <DonutChart
+            size={88}
+            strokeWidth={9}
+            pct={pct}
+            color="rgba(255,255,255,0.9)"
+            trackColor="rgba(255,255,255,0.18)"
+            textColor="#fff"
+          />
+        </div>
+      </div>
+      {countdown && (
+        <div className={styles.trackerCountdown}>
+          <CountdownIcon type={countdown.type} />
+          <span>{countdown.text}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CountdownIcon({ type }) {
+  if (type === 'due') {
+    // Calendar icon
+    return (
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+        <rect x="1.5" y="3" width="13" height="11.5" rx="2" stroke="rgba(255,255,255,0.7)" strokeWidth="1.3" />
+        <path d="M5 1.5V4M11 1.5V4" stroke="rgba(255,255,255,0.7)" strokeWidth="1.3" strokeLinecap="round" />
+        <path d="M1.5 6.5H14.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.3" />
+        <circle cx="5.5" cy="10" r="0.9" fill="rgba(255,255,255,0.7)" />
+        <circle cx="8" cy="10" r="0.9" fill="rgba(255,255,255,0.7)" />
+        <circle cx="10.5" cy="10" r="0.9" fill="rgba(255,255,255,0.7)" />
+      </svg>
+    )
+  }
+  // Ruler/size icon
+  return (
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <rect x="1" y="5.5" width="14" height="5" rx="1.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.3" />
+      <path d="M4 5.5V7.5M7 5.5V8.5M10 5.5V7.5M13 5.5V8.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
   )
 }
 
