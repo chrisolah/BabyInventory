@@ -14,6 +14,7 @@ import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import BabySwitcher from '../components/BabySwitcher'
 import InviteMemberModal from '../components/InviteMemberModal'
+import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
 import styles from './Home.module.css'
 
@@ -253,19 +254,25 @@ export default function Home() {
                     <span className={styles.cardLabel}>Clothing</span>
                   </div>
                   <div className={styles.passAlongBadge}>Pass Along</div>
-                  <p className={styles.cardMeta}>
-                    {itemsLoading
-                      ? 'Loading…'
-                      : currentRangeCoverage
-                        ? `${currentRangeCoverage.range}: ${currentRangeCoverage.owned} of ${currentRangeCoverage.recommended}`
-                        : `${clothingCoverage.owned} of ${clothingCoverage.recommended} items`
-                    }
-                  </p>
-                  <div className={styles.progressTrack}>
-                    <div
-                      className={`${styles.progressFill} ${styles.progressTeal}`}
-                      style={{ width: `${Math.min(100, pct)}%` }}
-                    />
+                  <div className={styles.cardBottom}>
+                    <p className={styles.cardMeta}>
+                      {itemsLoading
+                        ? 'Loading…'
+                        : currentRangeCoverage
+                          ? `${currentRangeCoverage.range}: ${currentRangeCoverage.owned} of ${currentRangeCoverage.recommended}`
+                          : `${clothingCoverage.owned} of ${clothingCoverage.recommended} items`
+                      }
+                    </p>
+                    {!itemsLoading && (
+                      <DonutChart
+                        size={52}
+                        strokeWidth={5}
+                        pct={Math.min(100, pct)}
+                        color="var(--teal)"
+                        trackColor="rgba(0,0,0,0.1)"
+                        textColor="var(--teal-dark)"
+                      />
+                    )}
                   </div>
                 </button>
               )
@@ -288,14 +295,20 @@ export default function Home() {
                   </div>
                   <span className={styles.cardLabel}>{cat.label}</span>
                 </div>
-                <p className={styles.cardMeta}>
-                  {itemsLoading ? 'Loading…' : `${cov.owned} of ${cov.recommended} items`}
-                </p>
-                <div className={styles.progressTrack}>
-                  <div
-                    className={styles.progressFill}
-                    style={{ width: `${Math.min(100, catPct)}%` }}
-                  />
+                <div className={styles.cardBottom}>
+                  <p className={styles.cardMeta}>
+                    {itemsLoading ? 'Loading…' : `${cov.owned} of ${cov.recommended} items`}
+                  </p>
+                  {!itemsLoading && (
+                    <DonutChart
+                      size={52}
+                      strokeWidth={5}
+                      pct={Math.min(100, catPct)}
+                      color="var(--teal)"
+                      trackColor="rgba(0,0,0,0.1)"
+                      textColor="var(--teal-dark)"
+                    />
+                  )}
                 </div>
               </button>
             )

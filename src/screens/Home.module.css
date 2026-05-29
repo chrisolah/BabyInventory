@@ -173,7 +173,7 @@
   font-family: var(--font-body);
   transition: opacity 0.15s, transform 0.1s;
   position: relative;
-  min-height: 110px;
+  min-height: 130px;
 }
 
 .card:active {
@@ -237,29 +237,20 @@
   align-self: flex-start;
 }
 
+.cardBottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+
 .cardMeta {
   font-size: 12px;
   color: var(--gray-600);
   line-height: 1.4;
-  margin-top: auto;
-}
-
-.progressTrack {
-  height: 3px;
-  background: rgba(0,0,0,0.08);
-  border-radius: 99px;
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  border-radius: 99px;
-  background: var(--gray-300);
-  transition: width 0.4s ease;
-}
-
-.progressTeal {
-  background: var(--teal);
+  flex: 1;
+  min-width: 0;
 }
 
 /* Scan-a-tag block — the headline CTA on Home's empty state. Sits between

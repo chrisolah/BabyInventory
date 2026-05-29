@@ -384,7 +384,76 @@
   .sprout, .sproutStem { animation: none; }
 }
 
-/* ── Coverage summary header ───────────────────────────────── */
+/* ── Coverage summary card ─────────────────────────────────── */
+.summaryCard {
+  background: var(--teal-dark);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.summaryLeft {
+  flex: 1;
+  min-width: 0;
+}
+
+.summaryPct {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.summaryTitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 3px;
+}
+
+.summarySub {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+}
+
+.summaryRight {
+  flex-shrink: 0;
+}
+
+/* ── Flat group header ─────────────────────────────────────── */
+.flatGroupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 2px 8px;
+  margin-top: 2px;
+}
+
+.flatGroupTitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+
+.flatGroupCount {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-400);
+  letter-spacing: 0.03em;
+}
+
+/* ── Legacy coverage summary header (kept for fallback) ───── */
 .sectionHead {
   display: flex;
   justify-content: space-between;
@@ -477,10 +546,10 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   border: 0.5px solid var(--gray-200);
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 11px 12px;
   background: var(--white);
   cursor: pointer;
   text-align: left;
@@ -503,28 +572,13 @@
   overflow: hidden;
 }
 
-.slotCardBarTrack {
-  height: 4px;
-  border-radius: 999px;
-  background: var(--gray-100);
-  overflow: hidden;
-}
-
-.slotCardBarFill {
-  height: 100%;
-  border-radius: 999px;
-  background: var(--teal);
-  transition: width 0.3s;
-}
-
-.slotCardBarComplete { background: var(--teal-dark); }
-.slotCardBarEmpty    { background: var(--gray-200); }
-
-.slotCardFooter {
+/* Inline count + hint row */
+.slotCardMeta {
   display: flex;
-  justify-content: space-between;
   align-items: baseline;
-  gap: 4px;
+  gap: 0;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .slotCardCount {
@@ -532,6 +586,7 @@
   font-size: 12px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 
 .slotCountComplete { color: var(--teal-dark); }
@@ -542,6 +597,8 @@
   font-family: var(--font-body);
   font-size: 11px;
   color: var(--gray-400);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

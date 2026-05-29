@@ -19,6 +19,7 @@ import {
 } from '../lib/categories'
 import BabySwitcher from '../components/BabySwitcher'
 import Eyebrow from '../components/Eyebrow'
+import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
 import styles from './Plan.module.css'
 
@@ -71,9 +72,6 @@ export default function Plan() {
 
   const [selectedCategory, setSelectedCategory] = useState('clothing')
   const [selectedAgeRange, setSelectedAgeRange] = useState(null)
-  const [wishCollapsed, setWishCollapsed] = useState(() => new Set(CATEGORY_ORDER))
-  // Non-clothing sub-category collapse state.
-  const [catSubCollapsed, setCatSubCollapsed] = useState(() => new Set())
 
   // Initialize age range from baby's DOB. Read ?size= query param to
   // support jump-in from the prediction card in Inventory.
@@ -91,14 +89,6 @@ export default function Plan() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ageAnchor?.id])
-
-  function toggleWishGroup(cat) {
-    setWishCollapsed(prev => {
-      const next = new Set(prev)
-      if (next.has(cat)) next.delete(cat); else next.add(cat)
-      return next
-    })
-  }
 
   // Baby-filtered clothing items
   const babyFilteredItems = useMemo(
@@ -187,14 +177,6 @@ export default function Plan() {
         return { subCat: s, rows: buckets[s], owned, recommended }
       })
   }, [isClothing, catCoverage, selectedCategory])
-
-  function toggleCatSubGroup(subCat) {
-    setCatSubCollapsed(prev => {
-      const next = new Set(prev)
-      if (next.has(subCat)) next.delete(subCat); else next.add(subCat)
-      return next
-    })
-  }
 
   const showOutgrow = shouldShowOutgrowBanner(ageInfo)
 
@@ -293,41 +275,32 @@ export default function Plan() {
               </button>
             )}
 
-            {/* Coverage summary */}
-            <div className={styles.sectionHead}>
-              <Eyebrow color="teal">Clothing wardrobe</Eyebrow>
-              <span className={styles.sectionMeta}>
-                {coverageSummary.owned} of {coverageSummary.recommended}
-              </span>
-            </div>
+            {/* Coverage summary card */}
+            <CoverageSummaryCard
+              pct={Math.round((coverageSummary.owned / Math.max(1, coverageSummary.recommended)) * 100)}
+              title="Clothing wardrobe"
+              subtitle={`${coverageSummary.owned} of ${coverageSummary.recommended} items · ${selectedAgeRange}`}
+            />
 
-            {/* Category groups */}
-            {coverageByCategory.map(group => {
-              const collapsed = wishCollapsed.has(group.category)
-              const id = `plan-${group.category}`
-              return (
-                <section className={styles.group} key={group.category}>
-                  <GroupHeader
-                    title={CATEGORY_LABELS[group.category] || group.category}
-                    meta={`${group.owned} of ${group.recommended}`}
-                    collapsed={collapsed}
-                    onToggle={() => toggleWishGroup(group.category)}
-                    contentId={id}
-                  />
-                  {!collapsed && (
-                    <div className={styles.slotCardGrid} id={id}>
-                      {group.rows.map(row => (
-                        <SlotCard
-                          key={row.slot.id}
-                          row={row}
-                          onClick={() => handleSlotTap(row.slot.id)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </section>
-              )
-            })}
+            {/* Category groups — flat, non-collapsible */}
+            {coverageByCategory.map(group => (
+              <section key={group.category}>
+                <FlatGroupHeader
+                  title={CATEGORY_LABELS[group.category] || group.category}
+                  owned={group.owned}
+                  recommended={group.recommended}
+                />
+                <div className={styles.slotCardGrid}>
+                  {group.rows.map(row => (
+                    <SlotCard
+                      key={row.slot.id}
+                      row={row}
+                      onClick={() => handleSlotTap(row.slot.id)}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
 
             {/* Other wishes */}
             <OtherWishesSection
@@ -340,14 +313,12 @@ export default function Plan() {
 
         {!itemsLoading && !isClothing && (
           <>
-            <div className={styles.sectionHead}>
-              <Eyebrow color="teal">
-                {PLAN_CATEGORIES.find(c => c.id === selectedCategory)?.label} checklist
-              </Eyebrow>
-              <span className={styles.sectionMeta}>
-                {catCoverageSummary.owned} of {catCoverageSummary.recommended}
-              </span>
-            </div>
+            {/* Coverage summary card */}
+            <CoverageSummaryCard
+              pct={Math.round((catCoverageSummary.owned / Math.max(1, catCoverageSummary.recommended)) * 100)}
+              title={`${PLAN_CATEGORIES.find(c => c.id === selectedCategory)?.label || ''} checklist`}
+              subtitle={`${catCoverageSummary.owned} of ${catCoverageSummary.recommended} items`}
+            />
 
             {catCoverageBySubCat.length === 0 && (
               <div className={styles.comingSoonCard}>
@@ -359,32 +330,25 @@ export default function Plan() {
               </div>
             )}
 
-            {catCoverageBySubCat.map(group => {
-              const collapsed = catSubCollapsed.has(group.subCat)
-              const id = `cat-plan-${group.subCat}`
-              return (
-                <section className={styles.group} key={group.subCat}>
-                  <GroupHeader
-                    title={SUB_CATEGORY_LABELS[group.subCat] || group.subCat}
-                    meta={`${group.owned} of ${group.recommended}`}
-                    collapsed={collapsed}
-                    onToggle={() => toggleCatSubGroup(group.subCat)}
-                    contentId={id}
-                  />
-                  {!collapsed && (
-                    <div className={styles.slotCardGrid} id={id}>
-                      {group.rows.map(row => (
-                        <SlotCard
-                          key={row.slot.id}
-                          row={row}
-                          onClick={() => navigate(`/add-item?category=${selectedCategory}`)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </section>
-              )
-            })}
+            {/* Sub-category groups — flat, non-collapsible */}
+            {catCoverageBySubCat.map(group => (
+              <section key={group.subCat}>
+                <FlatGroupHeader
+                  title={SUB_CATEGORY_LABELS[group.subCat] || group.subCat}
+                  owned={group.owned}
+                  recommended={group.recommended}
+                />
+                <div className={styles.slotCardGrid}>
+                  {group.rows.map(row => (
+                    <SlotCard
+                      key={row.slot.id}
+                      row={row}
+                      onClick={() => navigate(`/add-item?category=${selectedCategory}`)}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
 
             <button
               type="button"
@@ -522,66 +486,58 @@ function Sprout() {
   )
 }
 
-// ── Collapsible group header ──────────────────────────────────────────────────
-function GroupHeader({ title, meta, collapsed, onToggle, contentId }) {
+// ── Coverage summary card ─────────────────────────────────────────────────────
+function CoverageSummaryCard({ pct, title, subtitle }) {
   return (
-    <button
-      type="button"
-      className={styles.groupHeader}
-      onClick={onToggle}
-      aria-expanded={!collapsed}
-      aria-controls={contentId}
-    >
-      <span className={styles.groupTitle}>{title}</span>
-      <span className={styles.groupHeaderRight}>
-        <span className={styles.groupCount}>{meta}</span>
-        <svg
-          className={`${styles.groupChev} ${collapsed ? styles.groupChevCollapsed : ''}`}
-          viewBox="0 0 10 6" width="10" height="6" aria-hidden="true"
-        >
-          <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </span>
-    </button>
+    <div className={styles.summaryCard}>
+      <div className={styles.summaryLeft}>
+        <div className={styles.summaryPct}>{pct}%</div>
+        <div className={styles.summaryTitle}>{title}</div>
+        <div className={styles.summarySub}>{subtitle}</div>
+      </div>
+      <div className={styles.summaryRight}>
+        <DonutChart
+          size={80}
+          strokeWidth={8}
+          pct={pct}
+          color="rgba(255,255,255,0.9)"
+          trackColor="rgba(255,255,255,0.18)"
+          textColor="#fff"
+        />
+      </div>
+    </div>
+  )
+}
+
+// ── Flat group header ─────────────────────────────────────────────────────────
+function FlatGroupHeader({ title, owned, recommended }) {
+  return (
+    <div className={styles.flatGroupHeader}>
+      <span className={styles.flatGroupTitle}>{title}</span>
+      <span className={styles.flatGroupCount}>{owned} of {recommended}</span>
+    </div>
   )
 }
 
 // ── Slot card ─────────────────────────────────────────────────────────────────
 function SlotCard({ row, onClick }) {
-  const { slot, ownedCount, recommended, needed, status } = row
-  const percent = recommended > 0
-    ? Math.min(100, Math.round((ownedCount / recommended) * 100))
-    : 0
+  const { slot, ownedCount, recommended, status } = row
 
   const countClass =
     status === 'complete' ? styles.slotCountComplete :
     status === 'empty'    ? styles.slotCountEmpty    :
                             styles.slotCountGap
 
-  const barFillClass =
-    status === 'complete' ? styles.slotCardBarComplete :
-    status === 'empty'    ? styles.slotCardBarEmpty    :
-                            ''
-
-  const hintText =
-    status === 'complete' ? 'Complete' :
-    status === 'empty'    ? `need ${recommended}` :
-                            `need ${needed} more`
-
   return (
     <button type="button" className={styles.slotCard} onClick={onClick}>
       <span className={styles.slotCardName}>{slot.label}</span>
-      <div className={styles.slotCardBarTrack}>
-        <div
-          className={`${styles.slotCardBarFill} ${barFillClass}`}
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-      <div className={styles.slotCardFooter}>
+      <div className={styles.slotCardMeta}>
         <span className={`${styles.slotCardCount} ${countClass}`}>
           {ownedCount} of {recommended}
         </span>
-        <span className={styles.slotCardHint}>{hintText}</span>
+        {slot.hint && (
+          <span className={styles.slotCardHint}>{' · '}{slot.hint}</span>
+        )}
       </div>
     </button>
   )
