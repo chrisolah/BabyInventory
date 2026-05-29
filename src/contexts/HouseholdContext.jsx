@@ -181,10 +181,16 @@ export function HouseholdProvider({ children }) {
   }, [load])
 
   // ── Items loader ───────────────────────────────────────────────────────
-  // Fetches the full clothing_items set for the current household. Keyed off
-  // household.id so it runs once when the household first lands and again
-  // whenever a write site triggers reloadItems() (which increments
-  // refreshCounter to force a re-run).
+  // Fetches BOTH clothing_items and beta.items for the household in parallel,
+  // stamps top_category='clothing' on clothing rows, then merges into a single
+  // items array sorted by created_at descending.
+  //
+  // Consumers use item.top_category to distinguish clothing from other
+  // categories. All existing code that reads category/size_label/etc. still
+  // works — those fields only exist on clothing rows, which is correct.
+  //
+  // Signed photo URLs are resolved for clothing items only (beta.items has no
+  // photo column yet).
   const [refreshCounter, setRefreshCounter] = useState(0)
 
   useEffect(() => {
@@ -198,41 +204,43 @@ export function HouseholdProvider({ children }) {
     let cancelled = false
 
     async function loadItems() {
-      // Only show the gated loading spinner on the *first* fetch for this
-      // household. Subsequent refreshes (reloadItems after a write, or
-      // household staying the same with refreshCounter bumping) keep the
-      // stale list visible so there's no flash.
       const isFirstFetch = itemsLoadedFor !== household.id
       if (isFirstFetch) setItemsLoading(true)
       setItemsError(null)
 
-      const { data, error: itemsErr } = await supabase
-        .schema(currentSchema)
-        .from('clothing_items')
-        .select('*')
-        .eq('household_id', household.id)
-        .order('created_at', { ascending: false })
+      // Fetch both tables in parallel
+      const [clothingResult, categoryResult] = await Promise.all([
+        supabase
+          .schema(currentSchema)
+          .from('clothing_items')
+          .select('*')
+          .eq('household_id', household.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .schema(currentSchema)
+          .from('items')
+          .select('*')
+          .eq('household_id', household.id)
+          .order('created_at', { ascending: false }),
+      ])
 
       if (cancelled) return
-      if (itemsErr) {
-        setItemsError(itemsErr.message)
+
+      if (clothingResult.error) {
+        setItemsError(clothingResult.error.message)
+        if (isFirstFetch) setItemsLoading(false)
+        return
+      }
+      if (categoryResult.error) {
+        setItemsError(categoryResult.error.message)
         if (isFirstFetch) setItemsLoading(false)
         return
       }
 
-      // Resolve garment photo signed URLs for the rows that have one.
-      // We do a single batched call rather than one signing per item —
-      // even on a household with 200 items the latency is one round
-      // trip. URLs expire after 1 hour; users who keep the inventory
-      // open longer will see broken thumbnails until they refresh,
-      // which is acceptable for v1 (a refresh-on-stale could come
-      // later as polish). Failures here don't fail the whole load —
-      // we just skip thumbnail attachment, the UI falls back to the
-      // size-only thumb.
-      const rows = data || []
-      const photoPaths = rows
-        .map(r => r.garment_photo_path)
-        .filter(Boolean)
+      // Resolve signed photo URLs for clothing items that have a garment photo.
+      // URLs expire after 1 hour; acceptable for v1.
+      const clothingRows = clothingResult.data || []
+      const photoPaths = clothingRows.map(r => r.garment_photo_path).filter(Boolean)
       let urlByPath = new Map()
       if (photoPaths.length > 0) {
         const { data: signed } = await supabase.storage
@@ -246,24 +254,34 @@ export function HouseholdProvider({ children }) {
           }
         }
       }
-      const itemsWithUrls = rows.map(r => (
-        r.garment_photo_path
-          ? { ...r, garment_signed_url: urlByPath.get(r.garment_photo_path) || null }
-          : r
-      ))
+
+      // Stamp top_category='clothing' on all clothing rows so downstream
+      // consumers can tell them apart from category items without table-name
+      // knowledge. Also attach signed URLs where available.
+      const clothingWithMeta = clothingRows.map(r => ({
+        ...r,
+        top_category: 'clothing',
+        ...(r.garment_photo_path
+          ? { garment_signed_url: urlByPath.get(r.garment_photo_path) || null }
+          : {}),
+      }))
+
+      // Category items (beta.items) already have top_category set
+      const categoryRows = categoryResult.data || []
+
+      // Merge and sort by created_at descending
+      const merged = [...clothingWithMeta, ...categoryRows].sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at),
+      )
 
       if (cancelled) return
-      setItems(itemsWithUrls)
+      setItems(merged)
       setItemsLoadedFor(household.id)
       if (isFirstFetch) setItemsLoading(false)
     }
 
     loadItems()
     return () => { cancelled = true }
-    // itemsLoadedFor is intentionally omitted from deps — it's set inside
-    // the effect, and re-running on its change would cause a loop. The
-    // first-fetch check reads it via closure, which is fine because we
-    // care about the value at effect-start.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, household?.id, refreshCounter])
 
