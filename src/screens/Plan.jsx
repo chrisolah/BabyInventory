@@ -22,6 +22,7 @@ import BabySwitcher from '../components/BabySwitcher'
 import Eyebrow from '../components/Eyebrow'
 import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
+import ShareWishlistModal from '../components/ShareWishlistModal'
 import styles from './Plan.module.css'
 
 // Plan — the "wish list + guide" hub. Route: /plan
@@ -76,6 +77,7 @@ export default function Plan() {
 
   const [selectedCategory, setSelectedCategory] = useState('clothing')
   const [selectedAgeRange, setSelectedAgeRange] = useState(null)
+  const [showShareModal, setShowShareModal] = useState(false)
 
   // Initialize age range from baby's DOB. Read ?size= query param to
   // support jump-in from the prediction card in Inventory.
@@ -242,8 +244,19 @@ export default function Plan() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
+        <div className={styles.headerLeft} />
         <div className={styles.titleCell}>
           <span className={styles.title}>Plan</span>
+        </div>
+        <div className={styles.headerRight}>
+          <button
+            type="button"
+            className={styles.shareBtn}
+            onClick={() => setShowShareModal(true)}
+            aria-label="Share wishlist"
+          >
+            <ShareIcon />
+          </button>
         </div>
       </header>
 
@@ -410,7 +423,23 @@ export default function Plan() {
       </div>
 
       <BottomNav />
+
+      {showShareModal && (
+        <ShareWishlistModal onClose={() => setShowShareModal(false)} />
+      )}
     </div>
+  )
+}
+
+// ── Share icon ────────────────────────────────────────────────────────────────
+function ShareIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true">
+      <circle cx="15" cy="5"  r="2" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="5"  cy="10" r="2" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="15" cy="15" r="2" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M7 9l6-3M7 11l6 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
   )
 }
 
