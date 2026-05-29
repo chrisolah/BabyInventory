@@ -187,7 +187,7 @@ export default function Inventory() {
   // a pile to send" rather than spawning a fresh bag for every item.
   async function ensureDraftBatch() {
     if (!household?.id || !user?.id) {
-      return { error: 'Couldn’t start a bag — household not loaded.' }
+      return { error: 'Couldn't start a bag — household not loaded.' }
     }
 
     const { data: existingDraft, error: findErr } = await supabase
@@ -201,7 +201,7 @@ export default function Inventory() {
       .maybeSingle()
 
     if (findErr) {
-      return { error: `Couldn’t find a draft bag: ${findErr.message}` }
+      return { error: `Couldn't find a draft bag: ${findErr.message}` }
     }
 
     if (existingDraft) {
@@ -221,7 +221,7 @@ export default function Inventory() {
       .maybeSingle()
 
     if (insErr || !newBatch) {
-      return { error: `Couldn’t start a bag: ${insErr?.message ?? 'unknown'}` }
+      return { error: `Couldn't start a bag: ${insErr?.message ?? 'unknown'}` }
     }
 
     track.passAlongBatchCreated?.({ id: newBatch.id, from: 'inventory_inline' })
@@ -275,7 +275,7 @@ export default function Inventory() {
         return next
       })
       const name = item.name || humanizeItemType(item.item_type)
-      setError(`Couldn’t add ${name} to the bag: ${attachErr.message}`)
+      setError(`Couldn't add ${name} to the bag: ${attachErr.message}`)
       return
     }
 
@@ -308,12 +308,12 @@ export default function Inventory() {
     })
 
     const prevStatus = item.inventory_status
-    const itemTable = item.top_category === ‘clothing’ ? ‘clothing_items’ : ‘items’
+    const itemTable = item.top_category === 'clothing' ? 'clothing_items' : 'items'
     const { error: updErr } = await supabase
       .schema(currentSchema)
       .from(itemTable)
-      .update({ inventory_status: ‘kept’ })
-      .eq(‘id’, item.id)
+      .update({ inventory_status: 'kept' })
+      .eq('id', item.id)
 
     if (updErr) {
       setPendingHideIds(prev => {
@@ -322,14 +322,14 @@ export default function Inventory() {
         return next
       })
       const name = item.name || humanizeItemType(item.item_type)
-      setError(`Couldn’t tuck away ${name}: ${updErr.message}`)
+      setError(`Couldn't tuck away ${name}: ${updErr.message}`)
       return
     }
 
     track.itemTuckedAway?.({ id: item.id, from })
 
     setActionToast({
-      kind: ‘tuck_away’,
+      kind: 'tuck_away',
       id: item.id,
       name: item.name || humanizeItemType(item.item_type),
       prevStatus,
@@ -373,7 +373,7 @@ export default function Inventory() {
       .eq('id', id)
 
     if (updErr) {
-      setError(`Couldn’t undo for ${name}: ${updErr.message}`)
+      setError(`Couldn't undo for ${name}: ${updErr.message}`)
       return
     }
 
@@ -436,15 +436,15 @@ export default function Inventory() {
       return next
     })
 
-    const sectionItemTable = item.top_category === ‘clothing’ ? ‘clothing_items’ : ‘items’
-    const sectionTuckUpdate = sectionItemTable === ‘clothing_items’
-      ? { inventory_status: ‘kept’, pass_along_batch_id: null, pre_bag_inventory_status: null }
-      : { inventory_status: ‘kept’ }
+    const sectionItemTable = item.top_category === 'clothing' ? 'clothing_items' : 'items'
+    const sectionTuckUpdate = sectionItemTable === 'clothing_items'
+      ? { inventory_status: 'kept', pass_along_batch_id: null, pre_bag_inventory_status: null }
+      : { inventory_status: 'kept' }
     const { error: updErr } = await supabase
       .schema(currentSchema)
       .from(sectionItemTable)
       .update(sectionTuckUpdate)
-      .eq(‘id’, item.id)
+      .eq('id', item.id)
 
     if (updErr) {
       setPendingHideIds(prev => {
@@ -453,7 +453,7 @@ export default function Inventory() {
         return next
       })
       const name = item.name || humanizeItemType(item.item_type)
-      setError(`Couldn’t tuck away ${name}: ${updErr.message}`)
+      setError(`Couldn't tuck away ${name}: ${updErr.message}`)
       return
     }
 

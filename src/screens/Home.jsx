@@ -9,6 +9,7 @@ import {
   inferAgeRange,
   AGE_RANGES,
 } from '../lib/wardrobe'
+import { getCategorySummary } from '../lib/categories'
 import ProfileMenu from '../components/ProfileMenu'
 import IvySprig from '../components/IvySprig'
 import BabySwitcher from '../components/BabySwitcher'
@@ -16,67 +17,17 @@ import InviteMemberModal from '../components/InviteMemberModal'
 import BottomNav from '../components/BottomNav'
 import styles from './Home.module.css'
 
-// Category hub configuration — defines the 8 category cards shown on the
-// home screen. Clothing is the only "live" category with real DB data;
-// the others show placeholder state until their inventory tables are built.
+// Category hub configuration — all 8 categories are now live with real
+// coverage data from wardrobe.js (clothing) and categories.js (everything else).
 const CATEGORIES = [
-  {
-    id: 'clothing',
-    label: 'Clothing',
-    icon: ClothingIcon,
-    color: 'teal',
-    passAlong: true,
-    totalItems: 64, // target from taxonomy
-  },
-  {
-    id: 'sleep',
-    label: 'Sleep',
-    icon: SleepIcon,
-    color: 'blue',
-    totalItems: 12,
-  },
-  {
-    id: 'feeding',
-    label: 'Feeding',
-    icon: FeedingIcon,
-    color: 'amber',
-    totalItems: 22,
-  },
-  {
-    id: 'diapering',
-    label: 'Diapering',
-    icon: DiaperIcon,
-    color: 'gray',
-    totalItems: 10,
-  },
-  {
-    id: 'travel',
-    label: 'Travel',
-    icon: TravelIcon,
-    color: 'purple',
-    totalItems: 9,
-  },
-  {
-    id: 'play',
-    label: 'Play',
-    icon: PlayIcon,
-    color: 'coral',
-    totalItems: 14,
-  },
-  {
-    id: 'health',
-    label: 'Health',
-    icon: HealthIcon,
-    color: 'red',
-    totalItems: 11,
-  },
-  {
-    id: 'bath',
-    label: 'Bath',
-    icon: BathIcon,
-    color: 'green',
-    totalItems: 8,
-  },
+  { id: 'clothing',  label: 'Clothing',  icon: ClothingIcon, color: 'teal',   passAlong: true },
+  { id: 'sleep',     label: 'Sleep',     icon: SleepIcon,    color: 'blue'   },
+  { id: 'feeding',   label: 'Feeding',   icon: FeedingIcon,  color: 'amber'  },
+  { id: 'diapering', label: 'Diapering', icon: DiaperIcon,   color: 'gray'   },
+  { id: 'travel',    label: 'Travel',    icon: TravelIcon,   color: 'purple' },
+  { id: 'play',      label: 'Play',      icon: PlayIcon,     color: 'coral'  },
+  { id: 'health',    label: 'Health',    icon: HealthIcon,   color: 'red'    },
+  { id: 'bath',      label: 'Bath',      icon: BathIcon,     color: 'green'  },
 ]
 
 // Home is the main hub screen. Shows a category grid with per-category
@@ -158,8 +109,15 @@ export default function Home() {
   const ageInfo = useMemo(() => inferAgeRange(ageAnchor), [ageAnchor])
   const activeRange = ageInfo.currentRange || AGE_RANGES[0]
 
+  // Clothing-only owned items — used for clothing coverage math.
   const clothingItems = useMemo(
-    () => items.filter(i => i.inventory_status === 'owned'),
+    () => items.filter(i => i.top_category === 'clothing' && i.inventory_status === 'owned'),
+    [items],
+  )
+
+  // All owned items across every category — drives the "items tracked" stat.
+  const totalOwnedCount = useMemo(
+    () => items.filter(i => i.inventory_status === 'owned').length,
     [items],
   )
 
@@ -171,6 +129,19 @@ export default function Home() {
     ).length,
     [items],
   )
+
+  // Coverage for each of the 7 non-clothing categories.
+  const catCoverages = useMemo(() => {
+    const cats = ['sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath']
+    const result = {}
+    for (const cat of cats) {
+      result[cat] = getCategorySummary(
+        items.filter(i => i.top_category === cat),
+        cat,
+      )
+    }
+    return result
+  }, [items])
 
   // Aggregate coverage across all age ranges for the overall count
   const clothingCoverage = useMemo(() => {
@@ -247,7 +218,7 @@ export default function Home() {
         {/* Stat cards — desktop only, hidden on mobile via CSS */}
         <div className={styles.statsRow}>
           <div className={styles.statCard}>
-            <div className={styles.statValue}>{itemsLoading ? '—' : clothingItems.length}</div>
+            <div className={styles.statValue}>{itemsLoading ? '—' : totalOwnedCount}</div>
             <div className={styles.statLabel}>items tracked</div>
           </div>
           <div className={styles.statCard}>
@@ -300,13 +271,15 @@ export default function Home() {
               )
             }
 
-            // Placeholder cards for categories not yet tracked
+            // Non-clothing cards with real coverage data
+            const cov = catCoverages[cat.id] || { owned: 0, recommended: 1 }
+            const catPct = Math.round((cov.owned / cov.recommended) * 100)
             return (
               <button
                 key={cat.id}
                 type="button"
                 className={`${styles.card} ${styles[`card_${cat.color}`] || styles.cardGray}`}
-                onClick={() => navigate('/plan')}
+                onClick={() => navigate('/inventory')}
                 aria-label={cat.label}
               >
                 <div className={styles.cardTop}>
@@ -315,11 +288,14 @@ export default function Home() {
                   </div>
                   <span className={styles.cardLabel}>{cat.label}</span>
                 </div>
-                <p className={styles.cardMeta} style={{ color: 'var(--gray-400)' }}>
-                  0 of {cat.totalItems} items
+                <p className={styles.cardMeta}>
+                  {itemsLoading ? 'Loading…' : `${cov.owned} of ${cov.recommended} items`}
                 </p>
                 <div className={styles.progressTrack}>
-                  <div className={styles.progressFill} style={{ width: '0%' }} />
+                  <div
+                    className={styles.progressFill}
+                    style={{ width: `${Math.min(100, catPct)}%` }}
+                  />
                 </div>
               </button>
             )
