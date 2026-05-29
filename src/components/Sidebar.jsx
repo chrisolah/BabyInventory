@@ -72,16 +72,16 @@ export default function Sidebar() {
         onClick={() => navigate('/home')}
         aria-label="Sprigloop home"
       >
-        <svg viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
-          <path
-            d="M10 16 Q10 10 6 8 Q4 7 3 8 Q4 5 8 6 Q10 6.5 10 10"
-            stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" fill="none"
-          />
-          <path
-            d="M10 16 Q10 10 14 8 Q16 7 17 8 Q16 5 12 6 Q10 6.5 10 10"
-            stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" fill="none"
-          />
-          <line x1="10" y1="10" x2="10" y2="17" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+        <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
+          {/* Stem */}
+          <path d="M9.8 17.5 C9 14 9 11 9.5 8.5 C9.8 7 9.8 5.5 9.8 4"
+            stroke="white" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+          {/* Bud */}
+          <ellipse cx="9.8" cy="2.8" rx="1.5" ry="2" fill="white" />
+          {/* Right leaf */}
+          <ellipse cx="13.5" cy="7.5" rx="3.5" ry="1.5" transform="rotate(-30 13.5 7.5)" fill="white" />
+          {/* Left leaf */}
+          <ellipse cx="6" cy="11.5" rx="3.5" ry="1.5" transform="rotate(30 6 11.5)" fill="white" />
         </svg>
       </button>
 
