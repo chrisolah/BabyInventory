@@ -302,8 +302,6 @@ export default function Plan() {
           <div className={styles.loading}>Loading…</div>
         )}
       </main>
-
-      </main>
       </div>
 
       <BottomNav />
