@@ -101,9 +101,14 @@ export default async function handler(req, res) {
           `<meta name="twitter:description" content="${esc(description)}" />`,
         ].join('\n    ')
 
+        // Strip all existing title, description, og:*, and twitter:* tags
+        // so the injected wishlist-specific ones are the only ones scrapers see.
         html = html
-          .replace(/<title>[^<]*<\/title>/, '')
-          .replace(/<meta name="description"[^>]*\/?>/, '')
+          .replace(/<title>[^<]*<\/title>/gi, '')
+          .replace(/<meta\s+name="description"[^>]*\/?>/gi, '')
+          .replace(/<meta\s+property="og:[^"]*"[^>]*\/?>/gi, '')
+          .replace(/<meta\s+name="twitter:[^"]*"[^>]*\/?>/gi, '')
+          .replace(/<meta\s+name="twitter:card"[^>]*\/?>/gi, '')
           .replace('</head>', `    ${inject}\n  </head>`)
       }
     }
