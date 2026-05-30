@@ -130,9 +130,9 @@ export default function WishlistPublic() {
     <div className={styles.page}>
       {/* ── Header / hero ────────────────────────────────────── */}
       <header className={styles.hero}>
-        <div className={styles.heroBrand}>
-          <SprigMark size={22} />
-          <span className={styles.heroBrandName}>Sprigloop</span>
+        <span className={styles.heroBrandName}>Sprigloop</span>
+        <div className={styles.heroBrandMark}>
+          <SprigMark size={44} />
         </div>
         <h1 className={styles.heroTitle}>
           {household?.name ? `${household.name}'s Wishlist` : 'Baby Wishlist'}
@@ -149,7 +149,6 @@ export default function WishlistPublic() {
             {formatDate(share.target_date)}
           </div>
         )}
-        <IvyHero />
       </header>
 
       {/* ── Message from the family ───────────────────────────── */}
@@ -635,71 +634,6 @@ function ClaimSheet({ target, onSubmit, onClose }) {
           </>
         )}
       </div>
-    </div>
-  )
-}
-
-// ── Hero ivy ──────────────────────────────────────────────────────────────────
-// Horizontal growing vine at the bottom of the hero banner.
-// Full-width, solid white — mirrors the app's IvySprig animation recipe
-// (pathLength=1 + stroke-dashoffset) but self-contained so it works on the
-// public page without importing the app's CSS vars.
-
-function IvyHero() {
-  // Stem: gentle 3-wave curve across 800 units.
-  // On-curve midpoints used as leaf anchor positions:
-  //   seg1 midpoint ≈ (150, 10.5),  seg2 ≈ (450, 17),  seg3 ≈ (700, 10.5)
-  const LEAF = 'M 0 0 Q 6 -2 9 -7 Q 11 -11 5 -12 Q 1 -9 0 -3 Z'
-  return (
-    <div className={styles.heroIvy}>
-      <svg
-        className={styles.heroIvySvg}
-        viewBox="0 0 800 20"
-        preserveAspectRatio="xMidYMid meet"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        {/* Stem */}
-        <path
-          className={styles.heroIvyStem}
-          pathLength="1"
-          d="M 0 13 Q 150 6 300 13 Q 450 20 600 12 Q 700 7 800 13"
-          stroke="white"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-
-        {/* Leaf 1 — early, upper left, upward */}
-        <g transform="translate(70 12) rotate(-65)">
-          <path className={`${styles.heroLeaf} ${styles.hld1}`} style={{ '--ls': 0.8 }} d={LEAF} fill="white" fillOpacity="0.9" />
-        </g>
-
-        {/* Leaf 2 — first crest, pointing up */}
-        <g transform="translate(150 10) rotate(-55)">
-          <path className={`${styles.heroLeaf} ${styles.hld2}`} style={{ '--ls': 0.9 }} d={LEAF} fill="white" fillOpacity="0.9" />
-        </g>
-
-        {/* Leaf 3 — descending side, dips below */}
-        <g transform="translate(300 13) rotate(88)">
-          <path className={`${styles.heroLeaf} ${styles.hld3}`} style={{ '--ls': 1.0 }} d={LEAF} fill="white" fillOpacity="0.88" />
-        </g>
-
-        {/* Leaf 4 — second trough, pointing down */}
-        <g transform="translate(450 17) rotate(72)">
-          <path className={`${styles.heroLeaf} ${styles.hld4}`} style={{ '--ls': 1.0 }} d={LEAF} fill="white" fillOpacity="0.88" />
-        </g>
-
-        {/* Leaf 5 — ascending, pointing up */}
-        <g transform="translate(600 12) rotate(-58)">
-          <path className={`${styles.heroLeaf} ${styles.hld5}`} style={{ '--ls': 1.05 }} d={LEAF} fill="white" fillOpacity="0.9" />
-        </g>
-
-        {/* Leaf 6 — near end, pointing up */}
-        <g transform="translate(700 10) rotate(-60)">
-          <path className={`${styles.heroLeaf} ${styles.hld6}`} style={{ '--ls': 1.1 }} d={LEAF} fill="white" fillOpacity="0.9" />
-        </g>
-      </svg>
     </div>
   )
 }

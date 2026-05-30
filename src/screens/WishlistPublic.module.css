@@ -71,30 +71,26 @@
 /* ── Hero ──────────────────────────────────────────────────── */
 .hero {
   background: #2D8C6E;
-  padding: 32px 20px 0;
+  padding: 32px 20px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  /* Let ivy leaves bleed past the hero bottom edge */
-  overflow: visible;
-  position: relative;
-}
-
-.heroBrand {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 16px;
-  opacity: 0.9;
 }
 
 .heroBrandName {
+  display: block;
   font-size: 13px;
   font-weight: 600;
   color: rgba(255,255,255,0.92);
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.heroBrandMark {
+  margin-bottom: 16px;
+  opacity: 0.95;
 }
 
 .heroTitle {
@@ -129,53 +125,6 @@
   margin-top: 4px;
 }
 
-/* ── Hero ivy ──────────────────────────────────────────────── */
-.heroIvy {
-  width: 100%;
-  margin-top: 20px;
-  /* Let leaves bleed past the bottom of the hero */
-  overflow: visible;
-}
-
-.heroIvySvg {
-  display: block;
-  width: 100%;
-  height: 22px;
-  overflow: visible;
-}
-
-.heroIvyStem {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: heroStemGrow 3s ease-out forwards;
-}
-
-@keyframes heroStemGrow {
-  to { stroke-dashoffset: 0; }
-}
-
-.heroLeaf {
-  opacity: 0;
-  transform-origin: 0 0;
-  transform: scale(0.25);
-  animation: heroLeafUnfurl 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-@keyframes heroLeafUnfurl {
-  to { opacity: 1; transform: scale(var(--ls, 1)); }
-}
-
-.hld1 { animation-delay: 0.55s; }
-.hld2 { animation-delay: 0.90s; }
-.hld3 { animation-delay: 1.25s; }
-.hld4 { animation-delay: 1.60s; }
-.hld5 { animation-delay: 1.95s; }
-.hld6 { animation-delay: 2.25s; }
-
-@media (prefers-reduced-motion: reduce) {
-  .heroIvyStem { animation: none; stroke-dashoffset: 0; }
-  .heroLeaf    { animation: none; opacity: 1; transform: scale(var(--ls, 1)); }
-}
 
 /* ── Message card ──────────────────────────────────────────── */
 .messageCard {
