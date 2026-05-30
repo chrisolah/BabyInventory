@@ -28,6 +28,9 @@ Thumbs.db
 /playwright/.cache/
 supabase/.env
 
+# Vercel API — generated at build time
+api/wishlist/_index.html
+
 # Capacitor / iOS
 ios/App/Pods/
 ios/App/build/
