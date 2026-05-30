@@ -94,7 +94,8 @@ export default function ShareWishlistModal({ onClose }) {
     setTargetDate(s.target_date || '')
     setShowPriority(s.show_priority !== false)
     setIncludedCats(new Set(s.included_categories || ALL_CATS))
-    setSkipCats(new Set(s.skip_categories || []))
+    // 'clothing' was a skip_category before slot/size filtering existed — strip it
+    setSkipCats(new Set((s.skip_categories || []).filter(c => c !== 'clothing')))
     setSkipSizes(new Set(s.skip_sizes || []))
     setIncludedSlots(new Set(s.included_slots || ALL_SLOT_IDS))
     setSkipSlots(new Set(s.skip_slots || []))
@@ -121,7 +122,7 @@ export default function ShareWishlistModal({ onClose }) {
       target_date:         targetDate || null,
       show_priority:       showPriority,
       included_categories: includedCats.size < ALL_CATS.length ? [...includedCats] : null,
-      skip_categories:     skipCats.size > 0 ? [...skipCats] : null,
+      skip_categories:     skipCats.size > 0 ? [...skipCats].filter(c => c !== 'clothing') : null,
       skip_sizes:          (clothingIncluded && skipSizes.size > 0) ? [...skipSizes] : null,
       included_slots:      (clothingIncluded && includedSlots.size < ALL_SLOT_IDS.length) ? [...includedSlots] : null,
       skip_slots:          (clothingIncluded && skipSlots.size > 0) ? [...skipSlots] : null,

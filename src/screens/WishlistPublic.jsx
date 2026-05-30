@@ -120,7 +120,8 @@ export default function WishlistPublic() {
   }
 
   const { share, household, babies, clothing, items } = pageData
-  const skipCats    = new Set(share.skip_categories || [])
+  // Filter out 'clothing' — it was a legacy skip_category before slot/size filtering existed
+  const skipCats    = new Set((share.skip_categories || []).filter(c => c !== 'clothing'))
   const skipSizes   = share.skip_sizes || []
   const skipSlots   = share.skip_slots || []
   const showPriority = share.show_priority !== false
