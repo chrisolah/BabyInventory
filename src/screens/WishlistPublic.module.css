@@ -615,6 +615,50 @@
 
 .sheetInput:focus { border-color: #2D8C6E; }
 
+/* ── Anonymous toggle ──────────────────────────────────────── */
+.anonToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: 0.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.12s;
+  font-family: var(--font-body, system-ui, sans-serif);
+}
+
+.anonToggle:hover { background: #f9fafb; }
+
+.anonCheck {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.anonCheckOn {
+  background: #2D8C6E;
+  border-color: #2D8C6E;
+}
+
+.anonLabel {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.4;
+}
+
 /* Quantity stepper */
 .qtyStepper {
   display: flex;

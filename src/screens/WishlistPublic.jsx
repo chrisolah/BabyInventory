@@ -550,19 +550,21 @@ function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriori
 
 function ClaimSheet({ target, onSubmit, onClose }) {
   const [name, setName] = useState('')
+  const [anon, setAnon] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [done, setDone] = useState(false)
 
   const maxQty = target.maxQty || 1
+  const canSubmit = anon || name.trim().length > 0
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!name.trim()) return
+    if (!canSubmit) return
     setSubmitting(true)
     setError(null)
-    const result = await onSubmit(name, quantity)
+    const result = await onSubmit(anon ? 'Anonymous' : name.trim(), quantity)
     setSubmitting(false)
     if (!result.ok) {
       setError(result.error === 'share_not_found'
@@ -585,9 +587,12 @@ function ClaimSheet({ target, onSubmit, onClose }) {
         {done ? (
           <div className={styles.sheetDone}>
             <div className={styles.sheetDoneEmoji}>🎁</div>
-            <div className={styles.sheetDoneTitle}>Thanks, {name.trim()}!</div>
+            <div className={styles.sheetDoneTitle}>
+              {anon ? 'Gift claimed!' : `Thanks, ${name.trim()}!`}
+            </div>
             <p className={styles.sheetDoneSub}>
-              You claimed {quantity > 1 ? `${quantity}× ` : ''}{target.label}. The family will see your name.
+              You claimed {quantity > 1 ? `${quantity}× ` : ''}{target.label}.{' '}
+              {anon ? 'Your name is hidden from the family.' : 'The family will see your name.'}
             </p>
             <button type="button" className={styles.sheetCloseBtn} onClick={onClose}>Done</button>
           </div>
@@ -600,21 +605,34 @@ function ClaimSheet({ target, onSubmit, onClose }) {
             <div className={styles.sheetItem}>{target.label}</div>
 
             <form onSubmit={handleSubmit} className={styles.sheetForm}>
-              <div className={styles.sheetField}>
-                <label className={styles.sheetLabel} htmlFor="claimer-name">Your name</label>
-                <input
-                  id="claimer-name"
-                  type="text"
-                  className={styles.sheetInput}
-                  placeholder="e.g. Grandma Linda"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  autoFocus
-                  required
-                  disabled={submitting}
-                  style={{ fontSize: '16px' }}
-                />
-              </div>
+              {!anon && (
+                <div className={styles.sheetField}>
+                  <label className={styles.sheetLabel} htmlFor="claimer-name">Your name</label>
+                  <input
+                    id="claimer-name"
+                    type="text"
+                    className={styles.sheetInput}
+                    placeholder="e.g. Grandma Linda"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    autoFocus
+                    disabled={submitting}
+                    style={{ fontSize: '16px' }}
+                  />
+                </div>
+              )}
+
+              <button
+                type="button"
+                className={styles.anonToggle}
+                onClick={() => setAnon(a => !a)}
+                aria-pressed={anon}
+              >
+                <span className={`${styles.anonCheck} ${anon ? styles.anonCheckOn : ''}`}>
+                  {anon ? '✓' : ''}
+                </span>
+                <span className={styles.anonLabel}>Give anonymously — hide my name from the family</span>
+              </button>
 
               {maxQty > 1 && (
                 <div className={styles.sheetField}>
@@ -636,12 +654,12 @@ function ClaimSheet({ target, onSubmit, onClose }) {
               <button
                 type="submit"
                 className={styles.sheetSubmit}
-                disabled={!name.trim() || submitting}
+                disabled={!canSubmit || submitting}
               >
                 {submitting ? 'Claiming…' : `Claim ${quantity > 1 ? `${quantity}× ` : ''}${target.label.split(' · ')[0]}`}
               </button>
-              {!name.trim() && (
-                <p className={styles.sheetHint}>Enter your name to claim this item.</p>
+              {!canSubmit && (
+                <p className={styles.sheetHint}>Enter your name or gift anonymously.</p>
               )}
             </form>
           </>
