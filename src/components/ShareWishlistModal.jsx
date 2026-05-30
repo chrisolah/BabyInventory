@@ -54,6 +54,7 @@ export default function ShareWishlistModal({ onClose }) {
   const [skipSizes, setSkipSizes] = useState(new Set())
   const [includedSlots, setIncludedSlots] = useState(new Set(ALL_SLOT_IDS))
   const [skipSlots, setSkipSlots] = useState(new Set())
+  const [includedSizes, setIncludedSizes] = useState(new Set(AGE_RANGES))
 
   useEffect(() => {
     if (!household?.id) return
@@ -99,6 +100,7 @@ export default function ShareWishlistModal({ onClose }) {
     setSkipSizes(new Set(s.skip_sizes || []))
     setIncludedSlots(new Set(s.included_slots || ALL_SLOT_IDS))
     setSkipSlots(new Set(s.skip_slots || []))
+    setIncludedSizes(new Set(s.included_sizes || AGE_RANGES))
   }
 
   function toggle(setter) {
@@ -109,11 +111,12 @@ export default function ShareWishlistModal({ onClose }) {
     })
   }
 
-  const toggleIncluded    = toggle(setIncludedCats)
-  const toggleSkip        = toggle(setSkipCats)
-  const toggleSkipSize    = toggle(setSkipSizes)
+  const toggleIncluded     = toggle(setIncludedCats)
+  const toggleSkip         = toggle(setSkipCats)
+  const toggleSkipSize     = toggle(setSkipSizes)
   const toggleIncludedSlot = toggle(setIncludedSlots)
-  const toggleSkipSlot    = toggle(setSkipSlots)
+  const toggleSkipSlot     = toggle(setSkipSlots)
+  const toggleIncludedSize = toggle(setIncludedSizes)
 
   function buildPayload() {
     const clothingIncluded = includedCats.has('clothing')
@@ -126,6 +129,7 @@ export default function ShareWishlistModal({ onClose }) {
       skip_sizes:          (clothingIncluded && skipSizes.size > 0) ? [...skipSizes] : null,
       included_slots:      (clothingIncluded && includedSlots.size < ALL_SLOT_IDS.length) ? [...includedSlots] : null,
       skip_slots:          (clothingIncluded && skipSlots.size > 0) ? [...skipSlots] : null,
+      included_sizes:      (clothingIncluded && includedSizes.size < AGE_RANGES.length) ? [...includedSizes] : null,
     }
   }
 
@@ -238,6 +242,7 @@ export default function ShareWishlistModal({ onClose }) {
             skipSizes={skipSizes} onToggleSkipSize={toggleSkipSize}
             includedSlots={includedSlots} onToggleIncludedSlot={toggleIncludedSlot}
             skipSlots={skipSlots} onToggleSkipSlot={toggleSkipSlot}
+            includedSizes={includedSizes} onToggleIncludedSize={toggleIncludedSize}
             saving={saving} error={error}
             onSubmit={phase === 'editing' ? saveEdits : createShare}
             onCancel={phase === 'editing' ? cancelEditing : null}
@@ -275,6 +280,7 @@ function SharedForm({
   skipSizes, onToggleSkipSize,
   includedSlots, onToggleIncludedSlot,
   skipSlots, onToggleSkipSlot,
+  includedSizes, onToggleIncludedSize,
   saving, error,
   onSubmit, onCancel,
 }) {
@@ -331,37 +337,70 @@ function SharedForm({
           ))}
         </div>
 
-        {/* Clothing slot type filter — shown only when Clothing is included */}
+        {/* Clothing slot type + size filters — shown only when Clothing is included */}
         {clothingIncluded && (
-          <div className={styles.slotBlock}>
-            <div className={styles.slotBlockHead}>
-              <span className={styles.slotBlockLabel}>Clothing types</span>
-              <button
-                type="button"
-                className={styles.selectAllBtn}
-                onClick={() => {
-                  const allSelected = ALL_SLOT_IDS.every(id => includedSlots.has(id))
-                  if (allSelected) {
-                    // deselect all — keep at least one; skip this edge case by selecting all instead
-                    ALL_SLOT_IDS.forEach(id => !includedSlots.has(id) && onToggleIncludedSlot(id))
-                  } else {
-                    ALL_SLOT_IDS.filter(id => !includedSlots.has(id)).forEach(onToggleIncludedSlot)
-                  }
-                }}
-              >
-                {ALL_SLOT_IDS.every(id => includedSlots.has(id)) ? 'Deselect all' : 'Select all'}
-              </button>
+          <>
+            <div className={styles.slotBlock}>
+              <div className={styles.slotBlockHead}>
+                <span className={styles.slotBlockLabel}>Clothing types</span>
+                <button
+                  type="button"
+                  className={styles.selectAllBtn}
+                  onClick={() => {
+                    const allSelected = ALL_SLOT_IDS.every(id => includedSlots.has(id))
+                    if (allSelected) {
+                      ALL_SLOT_IDS.forEach(id => !includedSlots.has(id) && onToggleIncludedSlot(id))
+                    } else {
+                      ALL_SLOT_IDS.filter(id => !includedSlots.has(id)).forEach(onToggleIncludedSlot)
+                    }
+                  }}
+                >
+                  {ALL_SLOT_IDS.every(id => includedSlots.has(id)) ? 'Deselect all' : 'Select all'}
+                </button>
+              </div>
+              {SLOT_GROUPS.map(group => (
+                <SlotGroupChips
+                  key={group.cat}
+                  group={group}
+                  activeSet={includedSlots}
+                  onToggle={onToggleIncludedSlot}
+                  chipStyle={styles.chipActive}
+                />
+              ))}
             </div>
-            {SLOT_GROUPS.map(group => (
-              <SlotGroupChips
-                key={group.cat}
-                group={group}
-                activeSet={includedSlots}
-                onToggle={onToggleIncludedSlot}
-                chipStyle={styles.chipActive}
-              />
-            ))}
-          </div>
+
+            <div className={styles.sizeSkipBlock}>
+              <div className={styles.slotBlockHead} style={{ padding: '0 0 6px' }}>
+                <span className={styles.sizeSkipLabel}>Clothing sizes</span>
+                <button
+                  type="button"
+                  className={styles.selectAllBtn}
+                  onClick={() => {
+                    const allSelected = AGE_RANGES.every(s => includedSizes.has(s))
+                    if (allSelected) {
+                      AGE_RANGES.forEach(s => includedSizes.has(s) && onToggleIncludedSize(s))
+                    } else {
+                      AGE_RANGES.filter(s => !includedSizes.has(s)).forEach(onToggleIncludedSize)
+                    }
+                  }}
+                >
+                  {AGE_RANGES.every(s => includedSizes.has(s)) ? 'Deselect all' : 'Select all'}
+                </button>
+              </div>
+              <div className={styles.chipRow}>
+                {AGE_RANGES.map(size => (
+                  <button
+                    key={size}
+                    type="button"
+                    className={`${styles.chip} ${includedSizes.has(size) ? styles.chipActive : ''}`}
+                    onClick={() => onToggleIncludedSize(size)}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </div>
 
