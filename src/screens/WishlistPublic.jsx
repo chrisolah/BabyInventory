@@ -137,21 +137,21 @@ export default function WishlistPublic() {
           </a>
         </div>
         <div className={styles.heroBody}>
+          <div className={styles.heroEyebrow}>Baby Wishlist</div>
           <h1 className={styles.heroTitle}>
             {household?.name ? `${household.name}'s Wishlist` : 'Baby Wishlist'}
           </h1>
-          {babies?.length > 0 && (
-            <div className={styles.babyPills}>
-              {babies.map((b, i) => (
-                <span key={i} className={styles.babyPill}>{b.name}</span>
-              ))}
-            </div>
-          )}
-          {share.target_date && (
-            <div className={styles.targetDate}>
-              {formatDate(share.target_date)}
-            </div>
-          )}
+          <div className={styles.heroMeta}>
+            {babies?.map((b, i) => (
+              <span key={i} className={styles.babyPill}>{b.name}</span>
+            ))}
+            {babies?.length > 0 && share.target_date && (
+              <div className={styles.heroDot} aria-hidden="true" />
+            )}
+            {share.target_date && (
+              <span className={styles.targetDate}>{formatDate(share.target_date)}</span>
+            )}
+          </div>
         </div>
       </header>
 

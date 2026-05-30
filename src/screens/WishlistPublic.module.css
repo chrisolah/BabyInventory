@@ -70,16 +70,17 @@
 
 /* ── Hero ──────────────────────────────────────────────────── */
 .hero {
-  background: #04342C;
+  background: #fff;
   display: flex;
   flex-direction: column;
+  border-bottom: 0.5px solid #e5e7eb;
 }
 
 .heroTopbar {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 0.5px solid rgba(255,255,255,0.1);
+  border-bottom: 0.5px solid #f0f0ee;
 }
 
 .heroBrand {
@@ -90,9 +91,10 @@
 }
 
 .heroBrandName {
-  font-size: 13px;
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 12px;
   font-weight: 600;
-  color: rgba(255,255,255,0.82);
+  color: #04342C;
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
@@ -101,39 +103,57 @@
   padding: 20px 16px 28px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
+}
+
+.heroEyebrow {
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #2D8C6E;
+  margin-bottom: 8px;
 }
 
 .heroTitle {
   font-family: var(--font-display, Georgia, serif);
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 500;
-  color: #fff;
-  margin: 0 0 12px;
-  line-height: 1.25;
+  color: #111827;
+  margin: 0 0 14px;
+  line-height: 1.2;
 }
 
-.babyPills {
+.heroMeta {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 8px;
 }
 
 .babyPill {
-  background: rgba(255,255,255,0.2);
-  color: #fff;
-  font-size: 13px;
+  background: #e6f5ee;
+  color: #0F6E56;
+  font-size: 12px;
   font-weight: 500;
-  padding: 4px 12px;
+  padding: 3px 12px;
   border-radius: 999px;
 }
 
+.heroDot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #d1d5db;
+  flex-shrink: 0;
+}
+
 .targetDate {
-  font-size: 13px;
-  color: rgba(255,255,255,0.72);
-  margin-top: 4px;
+  font-size: 12px;
+  color: #9ca3af;
 }
 
 
