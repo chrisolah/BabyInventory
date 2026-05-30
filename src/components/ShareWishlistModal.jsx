@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
-import { AGE_RANGES } from '../lib/wardrobe'
+import { SLOTS, AGE_RANGES, CATEGORY_LABELS } from '../lib/wardrobe'
 import styles from './ShareWishlistModal.module.css'
 
 const ALL_CATS = ['clothing', 'sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath']
@@ -10,6 +10,30 @@ const CAT_LABEL = {
   clothing: 'Clothing', sleep: 'Sleep', feeding: 'Feeding', diapering: 'Diapering',
   travel: 'Travel', play: 'Play', health: 'Health', bath: 'Bath',
 }
+
+// Clothing slot taxonomy for the form — groups in the order they naturally
+// appear in a baby wardrobe checklist.
+const SLOT_GROUP_ORDER = [
+  'tops_and_bodysuits',
+  'one_pieces',
+  'bottoms',
+  'dresses_and_skirts',
+  'sleepwear',
+  'outerwear',
+  'footwear',
+  'accessories',
+  'swimwear',
+]
+
+const SLOT_GROUPS = SLOT_GROUP_ORDER
+  .map(cat => ({
+    cat,
+    label: CATEGORY_LABELS[cat] || cat,
+    slots: SLOTS.filter(s => s.category === cat),
+  }))
+  .filter(g => g.slots.length > 0)
+
+const ALL_SLOT_IDS = SLOTS.map(s => s.id)
 
 export default function ShareWishlistModal({ onClose }) {
   const { household } = useHousehold()
@@ -28,6 +52,8 @@ export default function ShareWishlistModal({ onClose }) {
   const [includedCats, setIncludedCats] = useState(new Set(ALL_CATS))
   const [skipCats, setSkipCats] = useState(new Set())
   const [skipSizes, setSkipSizes] = useState(new Set())
+  const [includedSlots, setIncludedSlots] = useState(new Set(ALL_SLOT_IDS))
+  const [skipSlots, setSkipSlots] = useState(new Set())
 
   useEffect(() => {
     if (!household?.id) return
@@ -70,30 +96,36 @@ export default function ShareWishlistModal({ onClose }) {
     setIncludedCats(new Set(s.included_categories || ALL_CATS))
     setSkipCats(new Set(s.skip_categories || []))
     setSkipSizes(new Set(s.skip_sizes || []))
+    setIncludedSlots(new Set(s.included_slots || ALL_SLOT_IDS))
+    setSkipSlots(new Set(s.skip_slots || []))
   }
 
-  function toggleIncluded(cat) {
-    setIncludedCats(prev => {
+  function toggle(setter) {
+    return (val) => setter(prev => {
       const next = new Set(prev)
-      next.has(cat) ? next.delete(cat) : next.add(cat)
+      next.has(val) ? next.delete(val) : next.add(val)
       return next
     })
   }
 
-  function toggleSkip(cat) {
-    setSkipCats(prev => {
-      const next = new Set(prev)
-      next.has(cat) ? next.delete(cat) : next.add(cat)
-      return next
-    })
-  }
+  const toggleIncluded    = toggle(setIncludedCats)
+  const toggleSkip        = toggle(setSkipCats)
+  const toggleSkipSize    = toggle(setSkipSizes)
+  const toggleIncludedSlot = toggle(setIncludedSlots)
+  const toggleSkipSlot    = toggle(setSkipSlots)
 
-  function toggleSkipSize(size) {
-    setSkipSizes(prev => {
-      const next = new Set(prev)
-      next.has(size) ? next.delete(size) : next.add(size)
-      return next
-    })
+  function buildPayload() {
+    const clothingIncluded = includedCats.has('clothing')
+    return {
+      message:             message.trim() || null,
+      target_date:         targetDate || null,
+      show_priority:       showPriority,
+      included_categories: includedCats.size < ALL_CATS.length ? [...includedCats] : null,
+      skip_categories:     skipCats.size > 0 ? [...skipCats] : null,
+      skip_sizes:          (clothingIncluded && skipSizes.size > 0) ? [...skipSizes] : null,
+      included_slots:      (clothingIncluded && includedSlots.size < ALL_SLOT_IDS.length) ? [...includedSlots] : null,
+      skip_slots:          (clothingIncluded && skipSlots.size > 0) ? [...skipSlots] : null,
+    }
   }
 
   async function createShare() {
@@ -103,15 +135,7 @@ export default function ShareWishlistModal({ onClose }) {
     const { data, error: err } = await supabase
       .schema(currentSchema)
       .from('wishlist_shares')
-      .insert({
-        household_id: household.id,
-        message: message.trim() || null,
-        target_date: targetDate || null,
-        show_priority: showPriority,
-        included_categories: includedCats.size < ALL_CATS.length ? [...includedCats] : null,
-        skip_categories: skipCats.size > 0 ? [...skipCats] : null,
-        skip_sizes: skipSizes.size > 0 ? [...skipSizes] : null,
-      })
+      .insert({ household_id: household.id, ...buildPayload() })
       .select()
       .single()
     setSaving(false)
@@ -128,14 +152,7 @@ export default function ShareWishlistModal({ onClose }) {
     const { data, error: err } = await supabase
       .schema(currentSchema)
       .from('wishlist_shares')
-      .update({
-        message: message.trim() || null,
-        target_date: targetDate || null,
-        show_priority: showPriority,
-        included_categories: includedCats.size < ALL_CATS.length ? [...includedCats] : null,
-        skip_categories: skipCats.size > 0 ? [...skipCats] : null,
-        skip_sizes: skipSizes.size > 0 ? [...skipSizes] : null,
-      })
+      .update(buildPayload())
       .eq('id', share.id)
       .select()
       .single()
@@ -161,6 +178,8 @@ export default function ShareWishlistModal({ onClose }) {
     setIncludedCats(new Set(ALL_CATS))
     setSkipCats(new Set())
     setSkipSizes(new Set())
+    setIncludedSlots(new Set(ALL_SLOT_IDS))
+    setSkipSlots(new Set())
     setPhase('setup')
   }
 
@@ -171,19 +190,15 @@ export default function ShareWishlistModal({ onClose }) {
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // fallback: user can copy from the input manually
-    }
+    } catch { /* fallback: user copies manually */ }
   }
 
   function startEditing() {
-    // populateFormFromShare was already called when we loaded; just switch phase
     setError(null)
     setPhase('editing')
   }
 
   function cancelEditing() {
-    // Restore form to match current saved share before returning
     if (share) populateFormFromShare(share)
     setError(null)
     setPhase('active')
@@ -200,13 +215,11 @@ export default function ShareWishlistModal({ onClose }) {
       <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="swm-title">
         <div className={styles.modalHead}>
           <div className={styles.modalTitle} id="swm-title">
-            {phase === 'active'  ? 'Wishlist link'        :
-             phase === 'editing' ? 'Edit wishlist link'   :
+            {phase === 'active'  ? 'Wishlist link'       :
+             phase === 'editing' ? 'Edit wishlist link'  :
                                    'Share your wishlist'}
           </div>
-          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
-            ×
-          </button>
+          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">×</button>
         </div>
 
         {phase === 'loading' && (
@@ -222,6 +235,8 @@ export default function ShareWishlistModal({ onClose }) {
             includedCats={includedCats} onToggleIncluded={toggleIncluded}
             skipCats={skipCats} onToggleSkip={toggleSkip}
             skipSizes={skipSizes} onToggleSkipSize={toggleSkipSize}
+            includedSlots={includedSlots} onToggleIncludedSlot={toggleIncludedSlot}
+            skipSlots={skipSlots} onToggleSkipSlot={toggleSkipSlot}
             saving={saving} error={error}
             onSubmit={phase === 'editing' ? saveEdits : createShare}
             onCancel={phase === 'editing' ? cancelEditing : null}
@@ -247,7 +262,7 @@ export default function ShareWishlistModal({ onClose }) {
   )
 }
 
-// ── Shared form (used for both setup and editing) ─────────────────────────────
+// ── Shared form ───────────────────────────────────────────────────────────────
 
 function SharedForm({
   isEditing,
@@ -257,6 +272,8 @@ function SharedForm({
   includedCats, onToggleIncluded,
   skipCats, onToggleSkip,
   skipSizes, onToggleSkipSize,
+  includedSlots, onToggleIncludedSlot,
+  skipSlots, onToggleSkipSlot,
   saving, error,
   onSubmit, onCancel,
 }) {
@@ -266,10 +283,11 @@ function SharedForm({
     <div className={styles.setupForm}>
       {!isEditing && (
         <p className={styles.sub}>
-          Create a link to share with family and friends. They can see what you still need and claim items directly — no account required.
+          Create a link to share with family and friends. They can see what you still need and claim items — no account required.
         </p>
       )}
 
+      {/* ── Message ─────────────────────────────────────────────── */}
       <div className={styles.field}>
         <label className={styles.label} htmlFor="swm-message">Message (optional)</label>
         <textarea
@@ -282,6 +300,7 @@ function SharedForm({
         />
       </div>
 
+      {/* ── Shower / due date ───────────────────────────────────── */}
       <div className={styles.field}>
         <label className={styles.label} htmlFor="swm-date">Shower or due date (optional)</label>
         <input
@@ -293,8 +312,11 @@ function SharedForm({
         />
       </div>
 
+      {/* ── What to include ─────────────────────────────────────── */}
       <div className={styles.field}>
         <label className={styles.label}>What to include</label>
+
+        {/* Top-level categories */}
         <div className={styles.chipRow}>
           {ALL_CATS.map(cat => (
             <button
@@ -307,15 +329,49 @@ function SharedForm({
             </button>
           ))}
         </div>
+
+        {/* Clothing slot type filter — shown only when Clothing is included */}
+        {clothingIncluded && (
+          <div className={styles.slotBlock}>
+            <div className={styles.slotBlockHead}>
+              <span className={styles.slotBlockLabel}>Clothing types</span>
+              <button
+                type="button"
+                className={styles.selectAllBtn}
+                onClick={() => {
+                  const allSelected = ALL_SLOT_IDS.every(id => includedSlots.has(id))
+                  if (allSelected) {
+                    // deselect all — keep at least one; skip this edge case by selecting all instead
+                    ALL_SLOT_IDS.forEach(id => !includedSlots.has(id) && onToggleIncludedSlot(id))
+                  } else {
+                    ALL_SLOT_IDS.filter(id => !includedSlots.has(id)).forEach(onToggleIncludedSlot)
+                  }
+                }}
+              >
+                {ALL_SLOT_IDS.every(id => includedSlots.has(id)) ? 'Deselect all' : 'Select all'}
+              </button>
+            </div>
+            {SLOT_GROUPS.map(group => (
+              <SlotGroupChips
+                key={group.cat}
+                group={group}
+                activeSet={includedSlots}
+                onToggle={onToggleIncludedSlot}
+                chipStyle={styles.chipActive}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* ── Well stocked on ─────────────────────────────────────── */}
       <div className={styles.field}>
         <label className={styles.label}>We&rsquo;re well stocked on…</label>
         <p className={styles.fieldNote}>
-          Recipients see a note to skip these. Select categories and/or specific clothing sizes you already have covered.
+          Recipients see a note to skip these. Select categories, clothing sizes, or specific clothing types you already have covered.
         </p>
 
-        {/* Non-clothing category skip chips */}
+        {/* Non-clothing category skip */}
         <div className={styles.chipRow}>
           {NON_CLOTHING_CATS.map(cat => (
             <button
@@ -329,26 +385,46 @@ function SharedForm({
           ))}
         </div>
 
-        {/* Clothing size skip chips — only shown if clothing is included */}
+        {/* Clothing-specific skips — only shown when clothing is included */}
         {clothingIncluded && (
-          <div className={styles.sizeSkipBlock}>
-            <span className={styles.sizeSkipLabel}>Clothing sizes</span>
-            <div className={styles.chipRow}>
-              {AGE_RANGES.map(size => (
-                <button
-                  key={size}
-                  type="button"
-                  className={`${styles.chip} ${skipSizes.has(size) ? styles.chipSkipActive : ''}`}
-                  onClick={() => onToggleSkipSize(size)}
-                >
-                  {size}
-                </button>
+          <>
+            {/* Size skips */}
+            <div className={styles.sizeSkipBlock}>
+              <span className={styles.sizeSkipLabel}>Clothing sizes</span>
+              <div className={styles.chipRow}>
+                {AGE_RANGES.map(size => (
+                  <button
+                    key={size}
+                    type="button"
+                    className={`${styles.chip} ${skipSizes.has(size) ? styles.chipSkipActive : ''}`}
+                    onClick={() => onToggleSkipSize(size)}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Slot type skips */}
+            <div className={styles.slotBlock}>
+              <div className={styles.slotBlockHead}>
+                <span className={styles.slotBlockLabel}>Clothing types</span>
+              </div>
+              {SLOT_GROUPS.map(group => (
+                <SlotGroupChips
+                  key={group.cat}
+                  group={group}
+                  activeSet={skipSlots}
+                  onToggle={onToggleSkipSlot}
+                  chipStyle={styles.chipSkipActive}
+                />
               ))}
             </div>
-          </div>
+          </>
         )}
       </div>
 
+      {/* ── Priority toggle ─────────────────────────────────────── */}
       <div className={styles.toggleRow}>
         <span className={styles.toggleLabel}>Show priority items first</span>
         <button
@@ -386,13 +462,34 @@ function SharedForm({
   )
 }
 
+// ── Slot group chip row ───────────────────────────────────────────────────────
+
+function SlotGroupChips({ group, activeSet, onToggle, chipStyle }) {
+  return (
+    <div className={styles.slotGroupRow}>
+      <span className={styles.slotGroupName}>{group.label}</span>
+      <div className={styles.chipRow}>
+        {group.slots.map(slot => (
+          <button
+            key={slot.id}
+            type="button"
+            className={`${styles.chip} ${activeSet.has(slot.id) ? chipStyle : ''}`}
+            onClick={() => onToggle(slot.id)}
+          >
+            {slot.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Active view ───────────────────────────────────────────────────────────────
 
 function ActiveView({
   shareUrl, copied, onCopy, claims, share,
   confirmDeactivate, onEdit, onDeactivate, onDeactivateConfirm, onDeactivateCancel,
 }) {
-  // Group claims by slot_id + slot_type + size_label
   const claimGroups = []
   const seen = {}
   for (const c of claims) {
@@ -409,23 +506,25 @@ function ActiveView({
     return group.size_label ? `${label} · ${group.size_label}` : label
   }
 
-  const CAT_LABEL = {
-    clothing: 'Clothing', sleep: 'Sleep', feeding: 'Feeding', diapering: 'Diapering',
-    travel: 'Travel', play: 'Play', health: 'Health', bath: 'Bath',
-  }
-
+  // Settings summary
   const includedList = share.included_categories
     ? share.included_categories.map(c => CAT_LABEL[c] || c).join(', ')
     : 'All categories'
 
+  const slotById = Object.fromEntries(SLOTS.map(s => [s.id, s]))
+
   const skipParts = []
-  if (share.skip_categories?.length) {
-    skipParts.push(...share.skip_categories.map(c => CAT_LABEL[c] || c))
-  }
-  if (share.skip_sizes?.length) {
-    skipParts.push(`Clothing ${share.skip_sizes.join(', ')}`)
+  if (share.skip_categories?.length) skipParts.push(...share.skip_categories.map(c => CAT_LABEL[c] || c))
+  if (share.skip_sizes?.length) skipParts.push(`Clothing ${share.skip_sizes.join(', ')}`)
+  if (share.skip_slots?.length) {
+    const names = share.skip_slots.map(id => slotById[id]?.label || id)
+    skipParts.push(names.join(', '))
   }
   const skipList = skipParts.length ? skipParts.join('; ') : null
+
+  const excludedSlotCount = share.included_slots
+    ? ALL_SLOT_IDS.length - share.included_slots.length
+    : 0
 
   return (
     <div className={styles.activeView}>
@@ -450,11 +549,14 @@ function ActiveView({
         </button>
       </div>
 
-      {/* ── Current settings summary ── */}
+      {/* Settings summary */}
       <div className={styles.settingsSummary}>
         <div className={styles.settingsRow}>
           <span className={styles.settingsKey}>Includes</span>
-          <span className={styles.settingsVal}>{includedList}</span>
+          <span className={styles.settingsVal}>
+            {includedList}
+            {excludedSlotCount > 0 && ` (${excludedSlotCount} clothing type${excludedSlotCount > 1 ? 's' : ''} hidden)`}
+          </span>
         </div>
         {skipList && (
           <div className={styles.settingsRow}>
@@ -471,7 +573,9 @@ function ActiveView({
         {share.message && (
           <div className={styles.settingsRow}>
             <span className={styles.settingsKey}>Message</span>
-            <span className={styles.settingsVal}>&ldquo;{share.message.length > 60 ? share.message.slice(0, 60) + '…' : share.message}&rdquo;</span>
+            <span className={styles.settingsVal}>
+              &ldquo;{share.message.length > 60 ? share.message.slice(0, 60) + '…' : share.message}&rdquo;
+            </span>
           </div>
         )}
         <button type="button" className={styles.editSettingsBtn} onClick={onEdit}>
@@ -490,15 +594,10 @@ function ActiveView({
       {claimGroups.length > 0 && (
         <div className={styles.claimsList}>
           {claimGroups.map(group => (
-            <div
-              key={`${group.slot_type}:${group.slot_id}:${group.size_label}`}
-              className={styles.claimGroup}
-            >
+            <div key={`${group.slot_type}:${group.slot_id}:${group.size_label}`} className={styles.claimGroup}>
               <span className={styles.claimSlot}>{slotLabel(group)}</span>
               <span className={styles.claimNames}>
-                {group.claimers
-                  .map(c => `${c.name}${c.quantity > 1 ? ` ×${c.quantity}` : ''}`)
-                  .join(', ')}
+                {group.claimers.map(c => `${c.name}${c.quantity > 1 ? ` ×${c.quantity}` : ''}`).join(', ')}
               </span>
             </div>
           ))}
@@ -543,7 +642,5 @@ function formatDate(dateStr) {
   try {
     const d = new Date(dateStr + 'T00:00:00')
     return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-  } catch {
-    return dateStr
-  }
+  } catch { return dateStr }
 }

@@ -194,6 +194,61 @@
   text-transform: uppercase;
 }
 
+/* ── Slot block (clothing type chips) ──────────────────────── */
+.slotBlock {
+  margin-top: 10px;
+  background: var(--gray-50);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.slotBlockHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 6px;
+  border-bottom: 0.5px solid var(--gray-100);
+}
+
+.slotBlockLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--gray-400);
+  text-transform: uppercase;
+}
+
+.selectAllBtn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-family: var(--font-body);
+  color: var(--teal-dark);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.slotGroupRow {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 12px;
+  border-top: 0.5px solid var(--gray-100);
+}
+
+.slotGroupRow:first-of-type {
+  border-top: none;
+}
+
+.slotGroupName {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-500);
+}
+
 /* ── Priority toggle ───────────────────────────────────────── */
 .toggleRow {
   display: flex;
