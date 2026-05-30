@@ -487,6 +487,44 @@ function SlotGroupChips({ group, activeSet, onToggle, chipStyle }) {
 
 // ── Active view ───────────────────────────────────────────────────────────────
 
+const SHARE_BUTTONS = [
+  {
+    id: 'native',
+    label: 'Share',
+    icon: '↗',
+    available: () => typeof navigator !== 'undefined' && !!navigator.share,
+    action: (url, msg) => navigator.share({ title: 'Baby Wishlist', text: msg, url }),
+  },
+  {
+    id: 'sms',
+    label: 'SMS',
+    icon: '💬',
+    available: () => true,
+    action: (url, msg) => { window.open(`sms:?&body=${encodeURIComponent(msg + '\n' + url)}`) },
+  },
+  {
+    id: 'whatsapp',
+    label: 'WhatsApp',
+    icon: '🟢',
+    available: () => true,
+    action: (url, msg) => { window.open(`https://wa.me/?text=${encodeURIComponent(msg + '\n' + url)}`) },
+  },
+  {
+    id: 'email',
+    label: 'Email',
+    icon: '✉️',
+    available: () => true,
+    action: (url, msg) => { window.open(`mailto:?subject=${encodeURIComponent('Baby Wishlist')}&body=${encodeURIComponent(msg + '\n\n' + url)}`) },
+  },
+  {
+    id: 'facebook',
+    label: 'Facebook',
+    icon: '📘',
+    available: () => true,
+    action: (url) => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`) },
+  },
+]
+
 function ActiveView({
   shareUrl, copied, onCopy, claims, share,
   confirmDeactivate, onEdit, onDeactivate, onDeactivateConfirm, onDeactivateCancel,
@@ -548,6 +586,27 @@ function ActiveView({
         >
           {copied ? '✓ Copied' : 'Copy link'}
         </button>
+      </div>
+
+      {/* Share buttons */}
+      <div className={styles.shareRow}>
+        {SHARE_BUTTONS.filter(b => b.available()).map(btn => {
+          const msg = share.message
+            ? `${share.message}\n\nView our wishlist:`
+            : 'View our baby wishlist:'
+          return (
+            <button
+              key={btn.id}
+              type="button"
+              className={styles.shareBtn}
+              onClick={() => btn.action(shareUrl, msg)}
+              aria-label={`Share via ${btn.label}`}
+            >
+              <span className={styles.shareBtnIcon}>{btn.icon}</span>
+              <span className={styles.shareBtnLabel}>{btn.label}</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Settings summary */}

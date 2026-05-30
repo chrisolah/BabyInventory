@@ -353,6 +353,42 @@
   margin-top: 8px;
 }
 
+/* ── Share buttons ─────────────────────────────────────────── */
+.shareRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.shareBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 12px;
+  min-width: 56px;
+  background: var(--gray-50);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.12s;
+  font-family: var(--font-body);
+}
+
+.shareBtn:hover { background: var(--gray-100); }
+
+.shareBtnIcon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.shareBtnLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-600);
+}
+
 /* ── Active view ───────────────────────────────────────────── */
 
 /* Settings summary card */
