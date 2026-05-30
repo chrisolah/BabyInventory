@@ -130,25 +130,29 @@ export default function WishlistPublic() {
     <div className={styles.page}>
       {/* ── Header / hero ────────────────────────────────────── */}
       <header className={styles.hero}>
-        <span className={styles.heroBrandName}>Sprigloop</span>
-        <div className={styles.heroBrandMark}>
-          <SprigMark size={44} />
+        <div className={styles.heroTopbar}>
+          <a href="https://sprigloop.com" className={styles.heroBrand}>
+            <SprigMark size={20} />
+            <span className={styles.heroBrandName}>Sprigloop</span>
+          </a>
         </div>
-        <h1 className={styles.heroTitle}>
-          {household?.name ? `${household.name}'s Wishlist` : 'Baby Wishlist'}
-        </h1>
-        {babies?.length > 0 && (
-          <div className={styles.babyPills}>
-            {babies.map((b, i) => (
-              <span key={i} className={styles.babyPill}>{b.name}</span>
-            ))}
-          </div>
-        )}
-        {share.target_date && (
-          <div className={styles.targetDate}>
-            {formatDate(share.target_date)}
-          </div>
-        )}
+        <div className={styles.heroBody}>
+          <h1 className={styles.heroTitle}>
+            {household?.name ? `${household.name}'s Wishlist` : 'Baby Wishlist'}
+          </h1>
+          {babies?.length > 0 && (
+            <div className={styles.babyPills}>
+              {babies.map((b, i) => (
+                <span key={i} className={styles.babyPill}>{b.name}</span>
+              ))}
+            </div>
+          )}
+          {share.target_date && (
+            <div className={styles.targetDate}>
+              {formatDate(share.target_date)}
+            </div>
+          )}
+        </div>
       </header>
 
       {/* ── Message from the family ───────────────────────────── */}
@@ -223,8 +227,17 @@ export default function WishlistPublic() {
       </div>
 
       <footer className={styles.footer}>
-        <SprigMark size={14} />
-        <span>Powered by <strong>Sprigloop</strong> — baby inventory &amp; community exchange</span>
+        <a href="https://sprigloop.com" className={styles.footerBrand}>
+          <SprigMark size={16} />
+          <span className={styles.footerWordmark}>Sprigloop</span>
+        </a>
+        <nav className={styles.footerLinks}>
+          <a href="https://sprigloop.com/about" className={styles.footerLink}>About</a>
+          <a href="https://sprigloop.com/contact" className={styles.footerLink}>Contact</a>
+          <a href="/privacy" className={styles.footerLink}>Privacy</a>
+          <a href="/terms" className={styles.footerLink}>Terms</a>
+        </nav>
+        <span className={styles.footerCopy}>© 2026 Sprigloop</span>
       </footer>
 
       {claimTarget && (
