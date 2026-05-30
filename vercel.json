@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/wishlist/[token].js": {
-      "includeFiles": "api/wishlist/_index.html"
-    }
-  },
   "rewrites": [
     { "source": "/wishlist/:token", "destination": "/api/wishlist/:token" },
     { "source": "/((?!assets/).*)", "destination": "/index.html" }
