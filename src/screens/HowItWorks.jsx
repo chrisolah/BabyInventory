@@ -91,9 +91,9 @@ export default function HowItWorks() {
           <div className={styles.eyebrow}>Free for all families</div>
           <h1 className={styles.h1}>How Sprigloop <em>works</em>.</h1>
           <p className={styles.lede}>
-            Sprigloop is a free baby clothes inventory app. You add what your baby owns,
-            organize it by size, and pass on what they outgrow to another Sprigloop family.
-            Here&rsquo;s how each step works.
+            Sprigloop helps you track what your baby has, plan what&rsquo;s coming,
+            share a wishlist with family, and pass on what they outgrow. Here&rsquo;s
+            how each step works.
           </p>
         </header>
 
@@ -114,16 +114,20 @@ export default function HowItWorks() {
 
         <section className={styles.step}>
           <div className={styles.stepNum}>02</div>
-          <h2 className={styles.h2}>Track and organize baby clothes by size</h2>
+          <h2 className={styles.h2}>Plan ahead and share your wishlist</h2>
           <p>
-            Sprigloop groups every item by size and age range, so you always know what fits
-            now, what&rsquo;s a few months out, and what your baby has already outgrown.
-            Filter by size, brand, or category. Plan ahead for the next size before you spend
-            on something you don&rsquo;t actually need.
+            The Plan tab tracks your baby&rsquo;s age across 8 categories — clothing, sleep,
+            feeding, travel, play, and more — and flags gaps before the next size window
+            arrives. You&rsquo;ll see a countdown to the next size and exactly what&rsquo;s
+            missing, so there&rsquo;s no last-minute scramble when they suddenly outgrow
+            the 0&ndash;3M pile.
           </p>
           <p>
-            If more than one parent or caregiver shares the same wardrobe, household sharing
-            keeps everyone on the same page without lists going back and forth.
+            From your Plan, you can generate a shareable wishlist in one tap. Family and
+            friends get a link that shows real gaps — by category, by size — and can claim
+            items without duplicating. No store account, no generic registry suggestions,
+            no duplicate onesies. If more than one parent or caregiver uses the app,
+            household sharing keeps everyone on the same page automatically.
           </p>
         </section>
 
@@ -259,6 +263,15 @@ export default function HowItWorks() {
           </details>
 
           <details className={styles.faqItem}>
+            <summary>Can I share a wishlist with family?</summary>
+            <p>
+              Yes. From the Plan tab, you can generate a shareable link that shows your
+              real gaps by category and size. Anyone with the link can see what&rsquo;s
+              needed and claim items. No store account required on their end.
+            </p>
+          </details>
+
+          <details className={styles.faqItem}>
             <summary>Do I have to photograph every item?</summary>
             <p>
               No. The photo-scan flow speeds things up, but you can also type items in by
@@ -303,7 +316,7 @@ export default function HowItWorks() {
             '@type': 'HowTo',
             name: 'How Sprigloop works',
             description:
-              'A free baby clothes inventory app: add what your baby owns, organize it by size, and pass on what they outgrow.',
+              'Track what your baby has, plan what is coming, share a wishlist with family, and pass on what they outgrow.',
             step: [
               {
                 '@type': 'HowToStep',
@@ -312,8 +325,8 @@ export default function HowItWorks() {
               },
               {
                 '@type': 'HowToStep',
-                name: 'Track and organize by size',
-                text: "Sprigloop groups every item by size and age range, so you always know what fits now, what's coming up, and what your baby has already outgrown.",
+                name: 'Plan ahead and share your wishlist',
+                text: 'The Plan tab tracks gaps across 8 categories and flags what is missing before the next size window hits. Share a wishlist link so family can claim real gaps without duplicating.',
               },
               {
                 '@type': 'HowToStep',
@@ -361,6 +374,14 @@ export default function HowItWorks() {
                 acceptedAnswer: {
                   '@type': 'Answer',
                   text: 'Yes. You can choose donation as the destination directly, or it is the fallback if no opted-in Sprigloop family is a match.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Can I share a wishlist with family?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Yes. From the Plan tab you can generate a shareable link that shows your real gaps by category and size. Anyone with the link can claim items without a store account.',
                 },
               },
               {
