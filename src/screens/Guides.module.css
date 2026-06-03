@@ -24,7 +24,6 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-family: var(--font-body);
   display: inline-flex;
   align-items: center;
   min-height: 44px;
