@@ -82,7 +82,7 @@ export default function Landing() {
       {/* ── 1. Hero ── */}
       <section className={styles.hero}>
         <div className={styles.eyebrow}>Free for all families</div>
-        <h1 className={styles.headline}>Nobody warns you<br />about <em>the stuff.</em></h1>
+        <h1 className={styles.headline}>Everyone prepares for the baby.<br />Nobody prepares for <em>the stuff.</em></h1>
         <p className={styles.sub}>
           The sizes that outgrow overnight. The duplicate gifts nobody coordinated.
           The outgrown clothes you meant to pass on. Sprigloop helps you stay on
