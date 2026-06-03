@@ -82,11 +82,11 @@ export default function Landing() {
       {/* ── 1. Hero ── */}
       <section className={styles.hero}>
         <div className={styles.eyebrow}>Free for all families</div>
-        <h1 className={styles.headline}>Every first-time parent<br />buys the <em>wrong things.</em></h1>
+        <h1 className={styles.headline}>Nobody warns you<br />about <em>the stuff.</em></h1>
         <p className={styles.sub}>
-          Too much newborn, not enough 3&ndash;6M. Seventeen holiday outfits, zero plain
-          onesies. A bag of outgrown stuff that&rsquo;s been by the door for three months.
-          Sprigloop helps you stay ahead of all of it.
+          The sizes that outgrow overnight. The duplicate gifts nobody coordinated.
+          The outgrown clothes you meant to pass on. Sprigloop helps you stay on
+          top of all of it — before, during, and after every size.
         </p>
         <div className={styles.heroBtns}>
           <button className={styles.heroCta} onClick={handleGetStarted} disabled={starting}>
@@ -114,12 +114,12 @@ export default function Landing() {
         <div className={styles.featureInner}>
           <div className={styles.featureCopy}>
             <span className={`${styles.featLabel} ${styles.featLabelTeal}`}>Add what you own</span>
-            <h2 className={styles.featureTitle}>Tags still on.<br />Never worn.</h2>
+            <h2 className={styles.featureTitle}>Everything you own,<br />actually accounted for.</h2>
             <p className={styles.featureBody}>
-              Most first-time parents spend hundreds of dollars on baby items they never
-              use — wrong sizes, duplicates, things they forgot they already had. Scan
-              any tag in seconds and Sprigloop logs it. Got a whole basket? Tap{' '}
-              <strong>Scan many</strong> and knock it out in one pass.
+              It&rsquo;s easy to lose track when sizes change every few weeks and
+              gifts keep arriving. Scan any tag in seconds and Sprigloop logs the
+              brand, size, and category. Got a whole basket? Tap{' '}
+              <strong>Scan many</strong> and knock out the whole pile in one pass.
             </p>
             <p className={styles.featureNote}>Works on clothing, gear, and most labeled items. Edit anything before you save.</p>
           </div>
@@ -159,13 +159,12 @@ export default function Landing() {
         <div className={`${styles.featureInner} ${styles.featureFlip}`}>
           <div className={styles.featureCopy}>
             <span className={`${styles.featLabel} ${styles.featLabelAmber}`}>Plan ahead</span>
-            <h2 className={styles.featureTitle}>Newborn size<br />lasts ten days.</h2>
+            <h2 className={styles.featureTitle}>The next size always<br />comes faster than you think.</h2>
             <p className={styles.featureBody}>
-              Some babies skip it entirely. Others are out of 0&ndash;3M in five weeks.
-              Most parents get caught off guard at every size transition because
-              nothing is telling them what&rsquo;s coming. Sprigloop tracks your
-              baby&rsquo;s age across 8 categories and flags what&rsquo;s missing
-              before the window hits, not after.
+              Some babies skip newborn entirely. Others are out of 0&ndash;3M in
+              five weeks. Sprigloop tracks your baby&rsquo;s age across 8 categories
+              and shows you exactly what&rsquo;s missing before the next window
+              arrives — so you&rsquo;re ready when it does.
             </p>
             <p className={styles.featureNote}>Clothing, sleep, feeding, travel, play. Every category, every size.</p>
           </div>
@@ -207,13 +206,13 @@ export default function Landing() {
         <div className={styles.featureInner}>
           <div className={styles.featureCopy}>
             <span className={`${styles.featLabel} ${styles.featLabelPurple}`}>Share with family</span>
-            <h2 className={styles.featureTitle}>Not a list of things<br />you might want.</h2>
+            <h2 className={styles.featureTitle}>A registry built from<br />your actual gaps.</h2>
             <p className={styles.featureBody}>
-              One parent described standing in a baby store staring at 57 types of
-              pacifiers and starting to cry. That&rsquo;s what traditional registries do
-              to people. Sprigloop&rsquo;s wishlist shows family exactly what you&rsquo;re
-              missing by size and category. They pick from real gaps. No duplicates.
-              No guessing.
+              Traditional registries make you guess what you need before you know
+              your baby. Sprigloop&rsquo;s wishlist shows family exactly what&rsquo;s
+              missing by size and category — so they can fill something real instead
+              of guessing. No duplicates, no wasted gifts, no standing in a store
+              feeling completely lost.
             </p>
             <p className={styles.featureNote}>One link. No store account required on their end.</p>
             <button className={styles.featureBtn} onClick={handleWishlistCta} disabled={starting}>
@@ -243,14 +242,13 @@ export default function Landing() {
         <div className={`${styles.featureInner} ${styles.featureFlip}`}>
           <div className={styles.featureCopy}>
             <span className={`${styles.featLabel} ${styles.featLabelGray}`}>Pass it on</span>
-            <h2 className={styles.featureTitle}>The bag has been by<br />the door for three months.</h2>
+            <h2 className={styles.featureTitle}>When they outgrow it,<br />we take it from there.</h2>
             <p className={styles.featureBody}>
-              Most parents mean to pass on outgrown clothes. The intention is there.
-              What&rsquo;s missing is a system that makes it as easy as dropping something
-              in a mailbox. Request a prepaid Sprigloop bag, fill it when you&rsquo;re
-              ready, and drop it anywhere. We route it to another family, a friend,
-              or a charity. 85% of outgrown baby clothes end up in landfill.
-              Yours don&rsquo;t have to.
+              Most parents want to pass outgrown clothes on to another family, a
+              friend, or a charity. What&rsquo;s missing is a frictionless way to
+              do it. Request a prepaid Sprigloop bag, fill it when you&rsquo;re
+              ready, and drop it in any mailbox. We handle the rest. 85% of
+              outgrown baby clothes end up in landfill — yours don&rsquo;t have to.
             </p>
             <p className={styles.featureNote}>No coordination. No logistics. Just a bag and a mailbox.</p>
           </div>
@@ -292,10 +290,10 @@ export default function Landing() {
       {/* ── 6. Final CTA ── */}
       <section className={styles.finalSection}>
         <div className={styles.finalCard}>
-          <h2 className={styles.finalTitle}>Start before you&rsquo;re overwhelmed.</h2>
+          <h2 className={styles.finalTitle}>Built for the whole journey.</h2>
           <p className={styles.finalSub}>
-            Most parents wish they&rsquo;d had a system from the beginning.
-            Free for every family. No account needed to get going.
+            From the first item you scan to the last bag you drop in a mailbox —
+            Sprigloop works through every size. Free for every family.
           </p>
           <button className={styles.finalBtn} onClick={handleFinalCta} disabled={starting}>
             {starting ? 'Starting…' : 'Try Sprigloop free'}
