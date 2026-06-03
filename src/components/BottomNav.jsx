@@ -1,8 +1,8 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import styles from './BottomNav.module.css'
 
-// BottomNav — persistent tab bar across all 4 main authed screens.
-// Tabs: Home, Inventory, Plan, Pass Along.
+// BottomNav — persistent tab bar across all 5 main authed screens.
+// Tabs: Home, Inventory, Plan, Guides, Pass Along.
 // Active state derived from current pathname so deep-link navigation
 // (e.g. /inventory/slot/… or /pass-along/:id) correctly highlights
 // the parent tab.
@@ -17,7 +17,7 @@ export default function BottomNav() {
       path: '/home',
       active: pathname === '/home',
       icon: (
-        <svg viewBox="0 0 20 20" width="22" height="22" fill="none" aria-hidden="true">
+        <svg viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
           <path
             d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"
             stroke="currentColor"
@@ -42,7 +42,7 @@ export default function BottomNav() {
         pathname.startsWith('/item/') ||
         pathname.startsWith('/add-item'),
       icon: (
-        <svg viewBox="0 0 20 20" width="22" height="22" fill="none" aria-hidden="true">
+        <svg viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
           <rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
           <rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
           <rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
@@ -56,7 +56,7 @@ export default function BottomNav() {
       path: '/plan',
       active: pathname.startsWith('/plan'),
       icon: (
-        <svg viewBox="0 0 20 20" width="22" height="22" fill="none" aria-hidden="true">
+        <svg viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
           <path
             d="M4 5h12M4 10h8M4 15h10"
             stroke="currentColor"
@@ -69,12 +69,34 @@ export default function BottomNav() {
       ),
     },
     {
+      id: 'guides',
+      label: 'Guides',
+      path: '/guides',
+      active: pathname.startsWith('/guides'),
+      icon: (
+        <svg viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
+          <path
+            d="M4 4h12v13H4z"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M7 8h6M7 11h4"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
+        </svg>
+      ),
+    },
+    {
       id: 'pass-along',
       label: 'Pass Along',
       path: '/pass-along',
       active: pathname.startsWith('/pass-along'),
       icon: (
-        <svg viewBox="0 0 20 20" width="22" height="22" fill="none" aria-hidden="true">
+        <svg viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
           <path
             d="M3 7l7-4 7 4v8l-7 4-7-4V7z"
             stroke="currentColor"
