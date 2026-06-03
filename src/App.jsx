@@ -42,6 +42,7 @@ import TrialBanner from './components/TrialBanner'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppSplash from './components/AppSplash'
 import AppShell from './components/AppShell'
+import BottomNav from './components/BottomNav'
 
 // Client-side admin allowlist — kept in sync with beta._admin_emails() in the
 // migration. Server is the source of truth; this lives client-side only so the
@@ -254,6 +255,7 @@ function GuidesLayout() {
     return (
       <AppShell>
         <Outlet />
+        <BottomNav />
       </AppShell>
     )
   }
