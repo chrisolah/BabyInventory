@@ -81,26 +81,32 @@ export default async function handler(req, res) {
         const babyNames = (babies || []).filter(b => b.name).map(b => b.name)
         let description
         if (babyNames.length) {
-          description = `Help ${babyNames.join(' & ')} get everything they need! Browse the wishlist and claim items.`
+          description = `See what ${babyNames.join(' & ')} needs before they arrive! Browse the wishlist, claim items, and help the family get ready with Sprigloop.`
         } else if (householdName) {
-          description = `Help the ${householdName} family prepare for their new arrival. Browse the wishlist and claim items.`
+          description = `Help the ${householdName} family prepare for their new arrival. Browse the wishlist, claim items, and make sure they have everything they need.`
         } else {
-          description = `Browse this baby wishlist and claim items for the family. Powered by Sprigloop.`
+          description = `Browse this baby wishlist and claim items for the family. Help them prepare for their new arrival with everything on their list — powered by Sprigloop.`
         }
 
         const pageUrl = `${BASE_URL}/wishlist/${encodeURIComponent(token)}`
+        const ogImageUrl = `${BASE_URL}/og-image.png`
+        const ogTitle = `${title} on Sprigloop`
 
         const inject = [
-          `<title>${esc(title)} | Sprigloop</title>`,
+          `<title>${esc(ogTitle)}</title>`,
           `<meta name="description" content="${esc(description)}" />`,
-          `<meta property="og:title" content="${esc(title)}" />`,
+          `<meta property="og:title" content="${esc(ogTitle)}" />`,
           `<meta property="og:description" content="${esc(description)}" />`,
           `<meta property="og:url" content="${pageUrl}" />`,
           `<meta property="og:type" content="website" />`,
           `<meta property="og:site_name" content="Sprigloop" />`,
-          `<meta name="twitter:card" content="summary" />`,
-          `<meta name="twitter:title" content="${esc(title)}" />`,
+          `<meta property="og:image" content="${ogImageUrl}" />`,
+          `<meta property="og:image:width" content="1200" />`,
+          `<meta property="og:image:height" content="630" />`,
+          `<meta name="twitter:card" content="summary_large_image" />`,
+          `<meta name="twitter:title" content="${esc(ogTitle)}" />`,
           `<meta name="twitter:description" content="${esc(description)}" />`,
+          `<meta name="twitter:image" content="${ogImageUrl}" />`,
         ].join('\n    ')
 
         html = html
