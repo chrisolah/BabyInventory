@@ -37,6 +37,7 @@ import WishlistPublic from './screens/WishlistPublic'
 import Admin from './screens/Admin'
 import IvyDecoration from './components/IvyDecoration'
 import LandingLayout from './components/LandingLayout'
+import MarketingFooter from './components/MarketingFooter'
 import TrialBanner from './components/TrialBanner'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppSplash from './components/AppSplash'
@@ -242,6 +243,29 @@ function RootIndex() {
   return <Landing />
 }
 
+// GuidesLayout renders guides inside AppShell (with sidebar) for logged-in
+// users, and inside the standard marketing chrome (IvyDecoration + footer)
+// for public visitors. This lets /guides and /guides/:slug work correctly
+// in both contexts without duplicating routes.
+function GuidesLayout() {
+  const { user, loading } = useAuth()
+  if (loading) return <div />
+  if (user) {
+    return (
+      <AppShell>
+        <Outlet />
+      </AppShell>
+    )
+  }
+  return (
+    <>
+      <IvyDecoration />
+      <Outlet />
+      <MarketingFooter />
+    </>
+  )
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -258,8 +282,6 @@ function AppRoutes() {
             PublicRoute would bounce authed users to /home and break inbound
             search traffic + footer links from inside the app. */}
         <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/guides" element={<Guides />} />
-        <Route path="/guides/:slug" element={<GuideDetail />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         {/* /privacy and /terms are public legal pages. Same LandingLayout
@@ -267,6 +289,14 @@ function AppRoutes() {
             footer (which links back to them, intentionally circular). */}
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
+      </Route>
+      {/* Guides routes use GuidesLayout which renders AppShell for authed
+          users (sidebar stays visible) and marketing chrome for public
+          visitors (IvyDecoration + MarketingFooter). Same URLs work in
+          both contexts. */}
+      <Route element={<GuidesLayout />}>
+        <Route path="/guides" element={<Guides />} />
+        <Route path="/guides/:slug" element={<GuideDetail />} />
       </Route>
       {/* /welcome — the native app's entry for logged-out users: a focused
           get-started screen instead of the marketing Landing. Outside

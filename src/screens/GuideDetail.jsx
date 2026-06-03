@@ -108,18 +108,19 @@ export default function GuideDetail() {
 
   return (
     <div className={styles.page}>
-      <nav className={styles.nav}>
-        <button className={styles.logo} onClick={() => navigate(user ? '/home' : '/')} aria-label="Sprigloop home">
-          sprigloop
-        </button>
-        <button className={styles.navLink} onClick={() => navigate('/how-it-works')}>How it works</button>
-        <button className={styles.navLink} onClick={() => navigate('/guides')}>Guides</button>
-        <button className={styles.loginBtn} onClick={() => navigate(user ? '/home' : '/login')}>
-          {user ? 'Go to app' : 'Log in'}
-        </button>
-      </nav>
-
-      <IvyBanner />
+      {!user && (
+        <>
+          <nav className={styles.nav}>
+            <button className={styles.logo} onClick={() => navigate('/')} aria-label="Sprigloop home">
+              sprigloop
+            </button>
+            <button className={styles.navLink} onClick={() => navigate('/how-it-works')}>How it works</button>
+            <button className={styles.navLink} onClick={() => navigate('/guides')}>Guides</button>
+            <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
+          </nav>
+          <IvyBanner />
+        </>
+      )}
 
       <article className={styles.article}>
         <header className={styles.hero}>
