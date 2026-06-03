@@ -12,6 +12,8 @@ import './styles/globals.css'
 import Landing from './screens/Landing'
 import NativeWelcome from './screens/NativeWelcome'
 import HowItWorks from './screens/HowItWorks'
+import Guides from './screens/Guides'
+import GuideDetail from './screens/GuideDetail'
 import About from './screens/About'
 import Contact from './screens/Contact'
 import Privacy from './screens/Privacy'
@@ -256,6 +258,8 @@ function AppRoutes() {
             PublicRoute would bounce authed users to /home and break inbound
             search traffic + footer links from inside the app. */}
         <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/guides" element={<Guides />} />
+        <Route path="/guides/:slug" element={<GuideDetail />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         {/* /privacy and /terms are public legal pages. Same LandingLayout

@@ -65,6 +65,15 @@ export default function Landing() {
         >
           How it works
         </button>
+        <button
+          className={styles.navLink}
+          onClick={() => {
+            track.ctaClicked('nav_guides')
+            navigate('/guides')
+          }}
+        >
+          Guides
+        </button>
         <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
       </nav>
 
