@@ -8,9 +8,8 @@
 /* ── Nav (matches Landing) ── */
 .nav {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  /* Top padding carries the iOS status-bar inset (see Home.module.css). */
+  align-items: baseline;
+  gap: 18px;
   padding: calc(1.25rem + env(safe-area-inset-top, 0px)) 1.5rem 1.25rem;
   border-bottom: 0.5px solid var(--gray-100);
   background: var(--white);
@@ -50,6 +49,7 @@
 }
 .navLink:hover { color: var(--teal-dark); }
 .loginBtn {
+  margin-left: auto;
   min-height: 44px;
   display: inline-flex;
   align-items: center;
