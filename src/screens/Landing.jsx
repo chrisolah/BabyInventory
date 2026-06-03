@@ -73,7 +73,7 @@ export default function Landing() {
       {/* ── 1. Hero ── */}
       <section className={styles.hero}>
         <div className={styles.eyebrow}>Free for all families</div>
-        <h1 className={styles.headline}>Baby prep, <em>handled.</em></h1>
+        <h1 className={styles.headline}>Know what you have.<br />Know what&rsquo;s <em>next.</em></h1>
         <p className={styles.sub}>
           Track everything you have, plan everything you need, share a wishlist
           that&rsquo;s actually useful, and pass it all on when baby outgrows it.
@@ -107,11 +107,11 @@ export default function Landing() {
             <span className={`${styles.featLabel} ${styles.featLabelTeal}`}>Add items</span>
             <h2 className={styles.featureTitle}>Snap a tag.<br />Skip the typing.</h2>
             <p className={styles.featureBody}>
-              Point your phone at a clothing tag and Sprigloop reads the brand,
+              Point your phone at any tag or label and Sprigloop reads the brand,
               size, and category in seconds. Got a pile? Tap <strong>Scan many</strong> and
-              knock out the whole basket without putting it down.
+              knock out the whole lot without putting it down.
             </p>
-            <p className={styles.featureNote}>Works on most baby-clothing brands and care labels. Edit anything before you save.</p>
+            <p className={styles.featureNote}>Works on clothing, gear, and most labeled items. Edit anything before you save.</p>
           </div>
           <div className={styles.featureVisual}>
             {/* Phone mock: camera viewfinder + tag + extracted chips */}

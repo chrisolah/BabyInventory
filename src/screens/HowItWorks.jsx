@@ -99,16 +99,16 @@ export default function HowItWorks() {
 
         <section className={styles.step}>
           <div className={styles.stepNum}>01</div>
-          <h2 className={styles.h2}>Add your baby&rsquo;s clothes to your inventory</h2>
+          <h2 className={styles.h2}>Add everything your baby has</h2>
           <p>
-            Take a photo of a clothing tag and Sprigloop pulls out the brand, size, and
-            category for you. Or type the details in by hand. Either way, every onesie,
-            jacket, and pair of pants ends up as a row in your baby clothes inventory.
+            Point your phone at any tag or label and Sprigloop pulls out the brand, size,
+            and category for you. Clothing, gear, feeding equipment — if it has a tag,
+            you can scan it. Or type the details in by hand for anything that doesn&rsquo;t.
           </p>
           <p>
             You can build the whole list in one evening or chip away at it one item at a time.
-            The photo-scan flow lets you stack scans in a row before reviewing, so seeding a
-            closet of 40 items takes about five minutes.
+            The photo-scan flow lets you stack scans before reviewing, so seeding a full
+            pile of 40 items takes about five minutes.
           </p>
         </section>
 
@@ -320,8 +320,8 @@ export default function HowItWorks() {
             step: [
               {
                 '@type': 'HowToStep',
-                name: 'Add your inventory',
-                text: 'Take a photo of a clothing tag and Sprigloop extracts the brand, size, and category. Or type the details in by hand.',
+                name: 'Add everything your baby has',
+                text: 'Point your phone at any tag or label — clothing, gear, feeding equipment — and Sprigloop extracts the brand, size, and category. Or type the details in by hand.',
               },
               {
                 '@type': 'HowToStep',
