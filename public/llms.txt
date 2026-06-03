@@ -1,0 +1,42 @@
+# Sprigloop
+
+> Sprigloop is a free baby preparation app for expecting and new parents. It helps families track what their baby owns, plan what they need before each size arrives, share a wishlist so family can fill real gaps, and pass on outgrown items to another family, a friend, or a charity.
+
+Sprigloop is built and run by a solo founder. It is free for all families, with no paid tier.
+
+## What Sprigloop does
+
+- **Inventory**: Parents scan clothing tags and item labels with their phone camera. Sprigloop reads the brand, size, and category automatically. Items can also be added manually. The inventory covers clothing, sleep gear, feeding equipment, travel gear, and play items.
+- **Plan tab**: Tracks the baby's age across 8 categories (clothing, sleep, feeding, travel, play, and more) and flags gaps before the next size window arrives. Shows a countdown to the next size transition.
+- **Shareable wishlist**: Turns the Plan tab's gaps into a shareable link. Family and friends see exactly what is missing by category and size, and can claim items. No store account required for gift-givers.
+- **Pass-along bags**: When items are outgrown, parents request a prepaid bag. They fill it and drop it in any mailbox. Sprigloop routes it to one of three destinations: another Sprigloop family who has opted in to receive, a named friend or family member, or a charity.
+
+## Who it is for
+
+Expecting parents preparing for a first baby, and parents of infants and toddlers managing a growing and changing set of items across multiple sizes.
+
+## Key facts
+
+- Free for all families, no paid tier
+- Available on web and iOS (App Store)
+- Founded and run by Chris Olah, Detroit area
+- Not a store, marketplace, or resale platform
+
+## Guides
+
+Sprigloop publishes research-backed guides for expecting and new parents at https://sprigloop.com/guides
+
+- How Much Does a Newborn Actually Need? — https://sprigloop.com/guides/how-much-does-a-newborn-need
+- When Will My Baby Outgrow Each Size? — https://sprigloop.com/guides/when-does-baby-outgrow-each-size
+- What to Do With Outgrown Baby Clothes — https://sprigloop.com/guides/what-to-do-with-outgrown-baby-clothes
+- Baby Registry: What You Actually Need — https://sprigloop.com/guides/baby-registry-what-you-actually-need
+- How to Organize Baby Clothes by Size — https://sprigloop.com/guides/how-to-organize-baby-clothes-by-size
+
+## Pages
+
+- Homepage: https://sprigloop.com
+- How it works: https://sprigloop.com/how-it-works
+- About: https://sprigloop.com/about
+- Contact: https://sprigloop.com/contact
+- Privacy policy: https://sprigloop.com/privacy
+- Terms of service: https://sprigloop.com/terms
