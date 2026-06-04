@@ -21,27 +21,24 @@
   gap: 12px;
 }
 
-/* Stacks the brand on top of an optional mobile-only sprig. Left-aligned
-   so the sprig lines up under the "Littleloop" wordmark; on desktop the
-   sprig hides itself so this cell collapses back to just the brand. */
-.brandWrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
-}
-
-/* position:relative promotes the brand into a later paint step than its
-   sibling IvySprig (static siblings otherwise paint in tree order, putting
-   the sprig on top). Ensures sprig leaves peeking up sit behind the
-   "Littleloop" wordmark rather than obscuring it. */
 .brand {
   font-family: var(--font-display);
   font-size: 18px;
   font-weight: 500;
   color: var(--gray-900);
-  position: relative;
-  z-index: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Middle column — takes all remaining space between brand and actions.
+   The IvySprig inside fills the width and animates left-to-right, so
+   the stem grows starting from just after "Sprigloop" toward the menu icon. */
+.sprigCenter {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0 10px;
 }
 
 /* Right-side action cluster — keeps Invite and Logout grouped to the right. */

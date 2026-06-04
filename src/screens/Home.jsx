@@ -194,8 +194,8 @@ export default function Home() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <div className={styles.brandWrap}>
-          <div className={styles.brand}>Sprigloop</div>
+        <div className={styles.brand}>Sprigloop</div>
+        <div className={styles.sprigCenter}>
           <IvySprig />
         </div>
         <div className={styles.headerActions}>
