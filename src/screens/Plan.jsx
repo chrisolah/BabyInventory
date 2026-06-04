@@ -42,7 +42,7 @@ const PRIORITY_LABEL = {
 // Maps each plan category to its relevant guide slug.
 // Used to surface a soft "Read our guide" link below each coverage summary card.
 const CATEGORY_GUIDE_SLUGS = {
-  clothing:  null, // clothing is covered by the newborn/size/organize guides
+  clothing:  'how-much-does-a-newborn-need',
   sleep:     'newborn-safe-sleep-setup',
   feeding:   'bottle-feeding-newborn-what-you-need',
   diapering: 'cloth-vs-disposable-diapers',
