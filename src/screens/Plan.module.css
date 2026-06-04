@@ -417,6 +417,22 @@
   .sprout, .sproutStem { animation: none; }
 }
 
+/* ── Plan guide link ───────────────────────────────────────── */
+.planGuideLink {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal-dark);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  padding: 2px 0 10px;
+  opacity: 0.8;
+}
+.planGuideLink:hover { opacity: 1; }
+
 /* ── Coverage summary card ─────────────────────────────────── */
 .summaryCard {
   background: var(--teal-dark);

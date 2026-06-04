@@ -39,6 +39,19 @@ const PRIORITY_LABEL = {
 
 // Category selector shown at the top. "clothing" is live; others are
 // coming soon and show a disabled/greyed treatment when tapped.
+// Maps each plan category to its relevant guide slug.
+// Used to surface a soft "Read our guide" link below each coverage summary card.
+const CATEGORY_GUIDE_SLUGS = {
+  clothing:  null, // clothing is covered by the newborn/size/organize guides
+  sleep:     'newborn-safe-sleep-setup',
+  feeding:   'bottle-feeding-newborn-what-you-need',
+  diapering: 'cloth-vs-disposable-diapers',
+  travel:    'choosing-a-car-seat',
+  play:      'baby-toys-first-year-by-age',
+  health:    'newborn-health-kit-what-to-have',
+  bath:      'how-to-bathe-a-newborn',
+}
+
 const PLAN_CATEGORIES = [
   { id: 'clothing',  label: 'Clothing',  live: true, icon: ClothingNavIcon },
   { id: 'sleep',     label: 'Sleep',     live: true, icon: SleepNavIcon },
@@ -323,6 +336,7 @@ export default function Plan() {
               title="Clothing wardrobe"
               subtitle={`${coverageSummary.owned} of ${coverageSummary.recommended} items · ${selectedAgeRange}`}
             />
+            <PlanGuideLink category="clothing" navigate={navigate} />
 
             {/* Category groups — flat, non-collapsible */}
             {coverageByCategory.map(group => (
@@ -365,6 +379,7 @@ export default function Plan() {
               title={`${PLAN_CATEGORIES.find(c => c.id === selectedCategory)?.label || ''} checklist`}
               subtitle={`${catCoverageSummary.owned} of ${catCoverageSummary.recommended} items`}
             />
+            <PlanGuideLink category={selectedCategory} navigate={navigate} />
 
             {catCoverageBySubCat.length === 0 && (
               <div className={styles.comingSoonCard}>
@@ -599,6 +614,24 @@ function Sprout() {
         </g>
       </svg>
     </span>
+  )
+}
+
+// ── Plan guide link — soft contextual guide surfacing ─────────────────────────
+// Shown below each category's coverage summary card. Only renders when a
+// relevant guide exists for the category. Intentionally subtle — teal text
+// link, no card chrome, no visual weight that competes with the coverage data.
+function PlanGuideLink({ category, navigate }) {
+  const slug = CATEGORY_GUIDE_SLUGS[category]
+  if (!slug) return null
+  return (
+    <button
+      type="button"
+      className={styles.planGuideLink}
+      onClick={() => navigate(`/guides/${slug}`)}
+    >
+      📖 Read our guide for this category →
+    </button>
   )
 }
 
