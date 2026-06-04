@@ -15,6 +15,7 @@ import BabySwitcher from '../components/BabySwitcher'
 import HeaderActions from '../components/HeaderActions'
 import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
+import ShareWishlistModal from '../components/ShareWishlistModal'
 import styles from './Home.module.css'
 
 // Category hub configuration — all 8 categories are now live with real
@@ -48,6 +49,16 @@ export default function Home() {
     itemsLoading,
   } = useHousehold()
   const [status, setStatus] = useState('checking')
+  const [showShareModal, setShowShareModal] = useState(false)
+  // One-time wishlist prompt: show once per household after setup
+  const [showWishlistPrompt, setShowWishlistPrompt] = useState(() => {
+    try { return !localStorage.getItem('sl_wishlist_prompt_dismissed') } catch { return false }
+  })
+
+  function dismissWishlistPrompt() {
+    try { localStorage.setItem('sl_wishlist_prompt_dismissed', '1') } catch {}
+    setShowWishlistPrompt(false)
+  }
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] ?? ''
 
@@ -311,6 +322,40 @@ export default function Home() {
           })}
         </div>
         {/* Stat cards */}
+        {/* One-time wishlist share prompt — shown once, dismissed permanently */}
+        {showWishlistPrompt && !itemsLoading && totalOwnedCount > 0 && (
+          <div className={styles.wishlistPrompt}>
+            <div className={styles.wishlistPromptIcon}>🔗</div>
+            <div className={styles.wishlistPromptBody}>
+              <div className={styles.wishlistPromptTitle}>Share your wishlist with family</div>
+              <div className={styles.wishlistPromptSub}>They&rsquo;ll see exactly what you still need — no guessing, no duplicates.</div>
+            </div>
+            <div className={styles.wishlistPromptActions}>
+              <button
+                type="button"
+                className={styles.wishlistPromptBtn}
+                onClick={() => { dismissWishlistPrompt(); setShowShareModal(true); track.ctaClicked('home_wishlist_prompt_share') }}
+              >
+                Share
+              </button>
+              <button type="button" className={styles.wishlistPromptDismiss} onClick={dismissWishlistPrompt} aria-label="Dismiss">×</button>
+            </div>
+          </div>
+        )}
+
+        {/* Permanent wishlist share card at bottom */}
+        <button
+          type="button"
+          className={styles.shareWishlistCard}
+          onClick={() => { setShowShareModal(true); track.ctaClicked('home_share_wishlist_card') }}
+        >
+          <div className={styles.shareWishlistLeft}>
+            <div className={styles.shareWishlistTitle}>Share your wishlist</div>
+            <div className={styles.shareWishlistSub}>Let family fill your real gaps — no store registry needed.</div>
+          </div>
+          <div className={styles.shareWishlistArrow}>→</div>
+        </button>
+
         <div className={styles.statsRow}>
           <div className={styles.statCard}>
             <div className={styles.statValue}>{itemsLoading ? '—' : totalOwnedCount}</div>
@@ -328,6 +373,7 @@ export default function Home() {
       </main>
 
       <BottomNav />
+      {showShareModal && <ShareWishlistModal onClose={() => setShowShareModal(false)} />}
 
     </div>
   )

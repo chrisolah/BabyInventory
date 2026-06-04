@@ -280,6 +280,29 @@
 }
 
 /* Coming-soon placeholder for non-clothing categories */
+/* ── Wishlist share banner ── */
+.wishlistShareBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: var(--teal-light);
+  border: none;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  transition: opacity 0.15s;
+}
+.wishlistShareBanner:hover { opacity: 0.88; }
+.wishlistShareIcon { font-size: 20px; flex-shrink: 0; }
+.wishlistShareText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.wishlistShareTitle { font-size: 14px; font-weight: 500; color: var(--teal-dark); }
+.wishlistShareSub   { font-size: 12px; color: #0F6E56; }
+.wishlistShareArrow { font-size: 16px; color: var(--teal-dark); flex-shrink: 0; }
+
 .comingSoonCard {
   margin-top: 32px;
   padding: 36px 24px;

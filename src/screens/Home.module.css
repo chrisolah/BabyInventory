@@ -111,6 +111,68 @@
 }
 
 /* ── Stat cards — now at bottom, visible on all screen sizes ── */
+/* ── Wishlist one-time prompt ── */
+.wishlistPrompt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--teal-light);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.wishlistPromptIcon { font-size: 22px; flex-shrink: 0; }
+.wishlistPromptBody { flex: 1; min-width: 0; }
+.wishlistPromptTitle { font-size: 14px; font-weight: 500; color: var(--teal-dark); margin-bottom: 2px; }
+.wishlistPromptSub   { font-size: 12px; color: #0F6E56; line-height: 1.4; }
+.wishlistPromptActions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.wishlistPromptBtn {
+  min-height: 36px;
+  padding: 0 14px;
+  background: var(--teal);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+.wishlistPromptDismiss {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; color: var(--teal-dark); opacity: 0.6;
+  font-family: var(--font-body);
+}
+.wishlistPromptDismiss:hover { opacity: 1; }
+
+/* ── Permanent share wishlist card ── */
+.shareWishlistCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.shareWishlistCard:hover {
+  border-color: var(--teal-light);
+  box-shadow: 0 2px 8px rgba(15,110,86,0.08);
+}
+.shareWishlistLeft { flex: 1; min-width: 0; }
+.shareWishlistTitle { font-size: 14px; font-weight: 500; color: var(--gray-900); margin-bottom: 2px; }
+.shareWishlistSub   { font-size: 12px; color: var(--gray-500); line-height: 1.4; }
+.shareWishlistArrow { font-size: 16px; color: var(--teal); flex-shrink: 0; }
+
 .statsRow {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -174,6 +236,7 @@
 
 /* Color variants */
 .cardTeal   { background: var(--teal-light); }
+.cardGray   { background: var(--gray-50); }
 .card_blue  { background: #E8F3FE; }
 .card_amber { background: var(--amber-light); }
 .card_gray  { background: var(--gray-100); }
@@ -199,6 +262,7 @@
 }
 
 .iconTeal    { background: var(--teal); color: #fff; }
+.iconGray    { background: var(--gray-200); color: var(--gray-600); }
 .icon_blue   { background: #3B82F6; color: #fff; }
 .icon_amber  { background: var(--amber); color: #fff; }
 .icon_gray   { background: var(--gray-400); color: #fff; }

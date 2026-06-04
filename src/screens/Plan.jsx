@@ -23,6 +23,7 @@ import Eyebrow from '../components/Eyebrow'
 import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
 import HeaderActions from '../components/HeaderActions'
+import ShareWishlistModal from '../components/ShareWishlistModal'
 import styles from './Plan.module.css'
 
 // Plan — the "wish list + guide" hub. Route: /plan
@@ -89,6 +90,7 @@ export default function Plan() {
   } = useHousehold()
 
   const [selectedCategory, setSelectedCategory] = useState('clothing')
+  const [showShareModal, setShowShareModal] = useState(false)
   const [selectedAgeRange, setSelectedAgeRange] = useState(null)
 
   // Initialize age range from baby's DOB. Read ?size= query param to
@@ -368,6 +370,7 @@ export default function Plan() {
             items={babyFilteredItems.filter(it => it.inventory_status === 'needed')}
             onItemTap={(id) => navigate(`/item/${id}`)}
             onAddWish={() => navigate('/add-item?mode=needed')}
+            onShare={() => { setShowShareModal(true); track.ctaClicked('plan_wishlist_share') }}
           />
         )}
 
@@ -430,6 +433,7 @@ export default function Plan() {
       </div>
 
       <BottomNav />
+      {showShareModal && <ShareWishlistModal onClose={() => setShowShareModal(false)} />}
 
     </div>
   )
@@ -521,7 +525,7 @@ const WISHLIST_CATEGORY_LABEL = {
   travel: 'Travel', play: 'Play', health: 'Health', bath: 'Bath',
 }
 
-function WishlistView({ items, onItemTap, onAddWish }) {
+function WishlistView({ items, onItemTap, onAddWish, onShare }) {
   // Group by top_category
   const grouped = {}
   for (const item of items) {
@@ -533,6 +537,16 @@ function WishlistView({ items, onItemTap, onAddWish }) {
 
   return (
     <div>
+      {/* Share banner — always visible at top of wishlist view */}
+      <button type="button" className={styles.wishlistShareBanner} onClick={onShare}>
+        <span className={styles.wishlistShareIcon}>🔗</span>
+        <div className={styles.wishlistShareText}>
+          <span className={styles.wishlistShareTitle}>Share with family</span>
+          <span className={styles.wishlistShareSub}>They&rsquo;ll see exactly what you still need</span>
+        </div>
+        <span className={styles.wishlistShareArrow}>→</span>
+      </button>
+
       {items.length === 0 && (
         <div className={styles.comingSoonCard}>
           <div className={styles.comingSoonEmoji}>📋</div>
