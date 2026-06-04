@@ -22,7 +22,7 @@
   /* Top padding carries the iOS status-bar inset (see Home.module.css). */
   padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(92px, 1fr) auto minmax(92px, 1fr);
   align-items: center;
   gap: 8px;
 }
@@ -38,17 +38,9 @@
    pin to columns 2 and 3 explicitly. Breakpoint matches the codebase's
    tablet threshold (Home/BabyFormModal/InviteMemberModal/TagScanner all
    pivot at 600px). */
-@media (min-width: 600px) {
-  .header {
-    grid-template-columns: minmax(92px, 1fr) auto minmax(92px, 1fr);
-  }
-  .titleCell {
-    grid-column: 2;
-  }
-  .headerActions {
-    grid-column: 3;
-  }
-}
+/* titleCell always in center column, actions always on right */
+.titleCell { grid-column: 2; }
+.headerActions { grid-column: 3; }
 
 /* Right-side action cluster — keeps Add and Logout grouped. */
 .headerActions {

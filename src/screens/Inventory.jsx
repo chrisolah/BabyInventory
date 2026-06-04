@@ -848,10 +848,6 @@ export default function Inventory() {
             ~85px for the title). */}
         <div className={styles.titleCell}>
           <div className={styles.title}>{title}</div>
-          {/* Tiny mobile-only vine under the wardrobe name. IvySprig hides
-              itself on desktop (≥ 960px) where the gutter IvyDecoration
-              carries the decoration instead. */}
-          <IvySprig />
         </div>
         <div className={styles.headerActions}>
           <HeaderActions />
