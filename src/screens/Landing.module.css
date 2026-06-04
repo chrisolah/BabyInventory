@@ -60,6 +60,7 @@
 .signupBtn:hover {
   background: var(--teal-light);
 }
+@media (max-width: 480px) { .signupBtn { display: none; } }
 .loginBtn {
   margin-left: 0;
   min-height: 44px;
