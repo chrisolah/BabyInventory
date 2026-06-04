@@ -137,7 +137,12 @@ function TrackPageViews() {
     const skipInternal =
       pathname === '/' || pathname === '/how-it-works' || pathname.startsWith('/admin')
     if (!skipInternal) {
-      track.pageViewed({ path: pathname })
+      // Derive a clean page name from the pathname so admin_page_breakdown
+      // can group by properties->>'page' consistently. Strip leading slash,
+      // take the first segment, fall back to 'home'.
+      const segments = pathname.split('/').filter(Boolean)
+      const page = segments[0] || 'home'
+      track.pageViewed({ page, path: pathname })
     }
 
     // Google Analytics page_view: we DO want landing + how-it-works here

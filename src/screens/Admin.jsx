@@ -187,7 +187,12 @@ function PagesTab({ sinceDays, excludeAdmins }) {
     home:         'Home (app)',
     inventory:    'Inventory',
     plan:         'Plan',
-    pass_along:   'Pass Along',
+    'pass-along': 'Pass Along',
+    item:         'Item detail',
+    'add-item':   'Add item',
+    onboarding:   'Onboarding',
+    profile:      'Profile',
+    wishlist:     'Wishlist (public)',
   }
 
   return (
@@ -198,7 +203,7 @@ function PagesTab({ sinceDays, excludeAdmins }) {
           <tr>
             <th>Page</th>
             <th className={styles.colNum}>Sessions</th>
-            <th className={styles.colNum}>Users</th>
+            <th className={styles.colNum}>Signed-in users</th>
           </tr>
         </thead>
         <tbody>
