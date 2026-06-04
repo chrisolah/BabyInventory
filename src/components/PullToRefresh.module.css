@@ -1,0 +1,54 @@
+/* Pull-to-refresh indicator — fixed at the top of the screen, slides
+   down with the pull gesture and snaps back on release. */
+
+.wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  /* Translate down by the pull distance so it appears to emerge from the top */
+  transform: translateY(calc(var(--pull, 0px) - 56px));
+  pointer-events: none;
+}
+
+.releasing {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  padding: 8px 16px 8px 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
+  margin-top: env(safe-area-inset-top, 0px);
+}
+
+.committed {
+  border-color: var(--teal-light);
+  background: var(--teal-light);
+}
+
+.committed .label {
+  color: var(--teal-dark);
+}
+
+.sprig {
+  flex-shrink: 0;
+  border-radius: 6px;
+  transition: transform 0.1s linear;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
+  white-space: nowrap;
+}
