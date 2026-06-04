@@ -74,6 +74,7 @@ export default function Landing() {
         >
           Guides
         </button>
+        <button className={styles.signupBtn} onClick={() => { track.ctaClicked('nav_signup'); navigate('/signup') }}>Sign up</button>
         <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
       </nav>
 
