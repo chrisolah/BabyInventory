@@ -48,7 +48,6 @@
   white-space: nowrap;
 }
 .navLink:hover { color: var(--teal-dark); }
-@media (max-width: 480px) { .navLink { display: none; } }
 .signupBtn {
   margin-left: auto;
   min-height: 44px;
@@ -65,6 +64,7 @@
   cursor: pointer;
 }
 .signupBtn:hover { background: var(--teal-light); }
+@media (max-width: 480px) { .signupBtn { display: none; } }
 .loginBtn {
   min-height: 44px;
   display: inline-flex;

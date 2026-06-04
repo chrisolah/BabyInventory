@@ -51,6 +51,7 @@
   cursor: pointer;
 }
 .signupBtn:hover { background: var(--teal-light); }
+@media (max-width: 480px) { .signupBtn { display: none; } }
 .loginBtn {
   min-height: 44px;
   display: inline-flex;

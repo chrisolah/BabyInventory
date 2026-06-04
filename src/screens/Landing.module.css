@@ -41,11 +41,6 @@
   white-space: nowrap;
 }
 .navLink:hover { color: var(--teal-dark); }
-@media (max-width: 480px) {
-  /* Hide middle nav links on small phones so Join + Log in always fit */
-  .navLink { display: none; }
-  .nav { gap: 10px; }
-}
 @media (max-width: 380px) { .nav { gap: 8px; } }
 .signupBtn {
   margin-left: auto;
