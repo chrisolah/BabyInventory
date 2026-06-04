@@ -628,7 +628,165 @@ export const GUIDES = [
       },
     ],
   },
-  // ── Guide 7: Sleep ───────────────────────────────────────────────────────
+  // ── Guide 7: Clothing ────────────────────────────────────────────────────
+  {
+    slug: 'baby-clothing-guide',
+    title: 'How to Build a Baby Clothing Plan Without Overbuying',
+    subtitle: 'Quantities by size, seasonal timing, what to buy ahead vs. just-in-time, and what to skip entirely.',
+    description: 'A practical clothing guide for the first year — how many items per size, how season timing changes what you need, and the categories most parents overbuy.',
+    date: 'June 2026',
+    readTime: '7 min',
+    tags: ['Clothing', 'Planning', 'Checklist'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from pediatric sizing guidance, parenting research, and consumer advice. It contains affiliate links to Amazon.',
+    planCategory: 'clothing',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Baby clothing is the category where parents most consistently overbuy the wrong things and underprepare for the right ones. Too many newborn-size onesies that fit for two weeks. Seventeen holiday outfits and zero plain bodysuits. A whole size window\'s worth of summer clothes arriving just as the weather turns cold. This guide gives you a framework for buying less and having exactly what you need.',
+      },
+      {
+        type: 'h2',
+        heading: 'The first rule: think in size windows, not age',
+        body: 'Baby clothing labels say "3 months" but what they mean is "fits babies around 12–13 lbs." Your baby\'s actual age when they wear each size depends on their weight — and that varies a lot. A 9-pound newborn and a 7-pound newborn will be in different sizes within weeks of each other. Always check the weight range on the label, not the age.',
+      },
+      {
+        type: 'table',
+        cols: ['Size', 'Weight range', 'Typical duration'],
+        rows: [
+          ['Newborn', '5–8 lbs', '2–4 weeks (skip if baby ≥ 8 lbs)'],
+          ['0–3M', '8–12 lbs', '6–10 weeks'],
+          ['3–6M', '12–16 lbs', '8–10 weeks'],
+          ['6–9M', '16–19 lbs', '6–8 weeks'],
+          ['9–12M', '19–22 lbs', '8–10 weeks'],
+          ['12–18M', '22–27 lbs', '3–4 months'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'How many items per size',
+        body: 'These quantities assume laundry every 2–3 days and that you\'re not trying to dress a baby in coordinated outfits. Babies in the first year live in bodysuits and sleepers. That\'s what you need more of.',
+      },
+      {
+        type: 'table',
+        cols: ['Item', 'Quantity per size'],
+        rows: [
+          ['Short-sleeve bodysuits / onesies', '5–7'],
+          ['Long-sleeve bodysuits', '4–6'],
+          ['Sleepers / zip-up pajamas', '5–7'],
+          ['Soft pants or leggings', '3–4'],
+          ['Socks', '6–8 pairs'],
+          ['Hats (warmth)', '2'],
+          ['Cardigan or light layer', '1–2'],
+          ['Outerwear (season-dependent)', '1'],
+        ],
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Zip closures beat snaps at 3am. Buy zip sleepers whenever you can find them.',
+          'Long-sleeve bodysuits are the foundation of layering in cooler weather — they go under everything.',
+          'If you wash daily, cut quantities roughly in half. If you go longer between washes, add 30–50%.',
+          'Skip structured "outfits" with matching pieces in the first six months. They\'re harder to put on and come off faster than you expect.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The seasonal timing problem',
+        body: 'This is where most parents get caught off guard. Your baby\'s due date determines what season they\'ll be in for each size window. If you buy for the size, not the season, you end up with fleece sleepers your baby outgrows before winter arrives.',
+      },
+      {
+        type: 'callout',
+        body: 'The rule: figure out what month your baby will be in each size, then buy for that season. A baby born in October will be in 3–6M around January — they need warm layers in that size. A baby born in April will be in 3–6M around July — they need lightweight cotton.',
+      },
+      {
+        type: 'table',
+        cols: ['Born in', '0–3M season', '3–6M season', '6–9M season'],
+        rows: [
+          ['January', 'Winter', 'Spring', 'Summer'],
+          ['April', 'Spring', 'Summer', 'Fall'],
+          ['July', 'Summer', 'Fall', 'Winter'],
+          ['October', 'Fall/Winter', 'Winter/Spring', 'Spring'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'What to buy ahead vs. just-in-time',
+        body: 'The temptation is to stock up on everything before the baby arrives. The problem is you don\'t know your baby\'s growth rate, and sizes stack up fast in a way that\'s hard to predict from outside.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Buy ahead: 0–3M basics (bodysuits, sleepers) — you\'ll need these immediately and won\'t have time to shop.',
+          'Buy just-in-time: 3–6M and beyond — you\'ll know the season, the growth rate, and the actual gaps by then.',
+          'Never bulk-buy a size you haven\'t reached yet. Babies grow differently. Your 0–3M stash is your guide for how to stock 3–6M.',
+          'Secondhand clothing from families whose babies are one size ahead of yours is the most efficient way to fill gaps just-in-time.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Layering: the only framework you need',
+        body: 'Dressing a baby for temperature is simple once you understand the layers. Add one layer more than you\'d wear yourself at the same temperature.',
+      },
+      {
+        type: 'table',
+        cols: ['Temperature', 'What baby wears'],
+        rows: [
+          ['75°F+ (warm indoors)', 'Short-sleeve bodysuit only'],
+          ['68–75°F (comfortable)', 'Long-sleeve bodysuit or light sleeper'],
+          ['60–68°F (cool)', 'Long-sleeve bodysuit + pants or heavier sleeper'],
+          ['Below 60°F (cold)', 'Long-sleeve bodysuit + warmer sleeper + cardigan or sleep sack'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'What to skip',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Shoes before walking — socks or soft booties are warmer and easier to get on.',
+          'Jeans and structured pants — hard waistbands on a baby who lies flat all day is uncomfortable for everyone.',
+          'Dry-clean-only or hand-wash items — you will not do this.',
+          'Matching sets and "outfits" in the first 6 months — you\'ll dress the baby in whatever is clean.',
+          'Excessive newborn size — buy 4–6 items max. Most babies outgrow it in 2–3 weeks.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '👕',
+            name: "Burt's Bees Baby Organic Bodysuits (5-pack)",
+            note: 'GOTS certified organic cotton — the foundation of every size window',
+            url: "https://www.amazon.com/s?k=burt%27s+bees+baby+organic+bodysuits+5+pack&tag=sprigloop-20",
+          },
+          {
+            emoji: '🌙',
+            name: 'Carter\'s Zip-Up Fleece Sleepers (2-pack)',
+            note: 'Two-way zip for quick night changes — the most-used item in the first year',
+            url: 'https://www.amazon.com/s?k=carters+zip+up+fleece+sleeper+baby+2+pack&tag=sprigloop-20',
+          },
+          {
+            emoji: '🧺',
+            name: 'Baby Clothing Closet Dividers by Size',
+            note: 'Keep each size window separated so incoming clothes land in the right section',
+            url: 'https://www.amazon.com/s?k=baby+closet+dividers+by+size&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'Babylist — How many baby clothes do I need?', url: 'https://www.babylist.com/hello-baby/how-many-baby-clothes-do-i-need' },
+          { label: 'Mommy on Purpose — How many baby clothes in each size?', url: 'https://mommyonpurpose.com/how-many-baby-clothes-do-i-need-in-each-size/' },
+          { label: 'Little Hometown — Best baby clothes by season', url: 'https://littlehometown.com/blogs/little-blog-town/best-baby-clothes-by-season' },
+          { label: 'PatPat — Seasonal baby wardrobe guide by due date', url: 'https://www.patpat.com/blogs/pregnancy/seasonal-baby-wardrobe-due-date-guide' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 8: Sleep ───────────────────────────────────────────────────────
   {
     slug: 'newborn-safe-sleep-setup',
     title: 'How to Set Up a Safe Sleep Space for a Newborn',

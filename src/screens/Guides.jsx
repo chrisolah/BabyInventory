@@ -13,6 +13,7 @@ const PREP_SLUGS = [
   'how-to-organize-baby-clothes-by-size',
   'what-to-do-with-outgrown-baby-clothes',
   'certified-vs-generic-baby-products',
+  'baby-clothing-guide',
 ]
 
 const CATEGORY_SLUGS = [
