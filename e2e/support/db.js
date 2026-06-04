@@ -67,18 +67,21 @@ const PK_BY_TABLE = {
  * via on-delete-cascade FKs, which is why we do users first.
  */
 async function wipeAuthUsers() {
-  // admin.listUsers is paginated. Default perPage is 50; bump up so a single
-  // call usually suffices for our test volumes.
-  const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 500 })
-  if (error) throw new Error(`listUsers failed: ${error.message}`)
-
-  for (const user of data.users) {
-    const { error: delErr } = await admin.auth.admin.deleteUser(user.id)
-    if (delErr) {
-      // Don't throw on individual failures — we want the rest to clean up.
-      // eslint-disable-next-line no-console
-      console.warn(`[wipe] deleteUser ${user.id} failed: ${delErr.message}`)
+  // Supabase admin listUsers caps at 50 per page regardless of perPage.
+  // Paginate through all pages to delete every user.
+  let page = 1
+  while (true) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 50 })
+    if (error) throw new Error(`listUsers failed: ${error.message}`)
+    for (const user of data.users) {
+      const { error: delErr } = await admin.auth.admin.deleteUser(user.id)
+      if (delErr) {
+        // eslint-disable-next-line no-console
+        console.warn(`[wipe] deleteUser ${user.id} failed: ${delErr.message}`)
+      }
     }
+    if (data.users.length < 50) break
+    page++
   }
 }
 

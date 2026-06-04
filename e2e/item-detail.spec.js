@@ -22,28 +22,19 @@ import {
 } from './support/helpers.js'
 
 // Find the household for a user we just created. Returns the id.
-// Supabase admin listUsers caps at 50 per page regardless of perPage param.
-// Paginate until we find the email or exhaust all pages.
-async function findUserByEmail(email) {
-  let page = 1
-  while (true) {
-    const { data } = await admin.auth.admin.listUsers({ page, perPage: 50 })
-    const found = data.users.find(u => u.email?.toLowerCase() === email.toLowerCase())
-    if (found) return found
-    if (data.users.length < 50) return null
-    page++
-  }
-}
-
-async function householdIdFor(email) {
-  const u = await findUserByEmail(email)
-  expect(u, `expected user ${email}`).toBeTruthy()
-  const { data: members } = await admin
-    .from('household_members')
+// Get household_id by looking up a clothing item with a known unique brand.
+// This avoids the listUsers pagination cap (Supabase caps at 50 per page
+// regardless of perPage) that made user-email lookups unreliable across
+// accumulated test runs.
+async function householdIdForBrand(brand) {
+  const { data, error } = await admin
+    .from('clothing_items')
     .select('household_id')
-    .eq('user_id', u.id)
-  expect(members?.length).toBe(1)
-  return members[0].household_id
+    .eq('brand', brand)
+    .limit(1)
+    .single()
+  expect(error, `expected to find item with brand ${brand}`).toBeNull()
+  return data.household_id
 }
 
 test('item detail: edit an item, save, see updated values in inventory', async ({ page }) => {
@@ -105,7 +96,8 @@ test('item detail: Tuck away → Move back to Owned round trip', async ({ page }
   await expect(page).toHaveURL(/\/inventory/)
 
   // Verify status='kept' on the row via service role.
-  const householdId = await householdIdFor(email)
+  // Look up by brand (unique per test run) to avoid listUsers pagination issues.
+  const householdId = await householdIdForBrand('TuckBrand')
   let { data: items } = await admin
     .from('clothing_items')
     .select('id, inventory_status, item_type')
@@ -136,6 +128,9 @@ test('item detail: delete removes the row + lands on /inventory', async ({ page 
 
   await addOwnedItem(page, { itemType: 'bodysuits', size: '6-9M', brand: 'DeleteBrand' })
 
+  // Capture household_id while the item still exists (can't look up after deletion).
+  const householdId = await householdIdForBrand('DeleteBrand')
+
   await page.getByText(/DeleteBrand/).first().click()
   // Page action label is "Delete item" (not "Delete"); regex is anchored.
   await page.getByRole('button', { name: /^delete item$/i }).click()
@@ -150,7 +145,6 @@ test('item detail: delete removes the row + lands on /inventory', async ({ page 
   await expect(page).toHaveURL(/\/inventory/, { timeout: 10000 })
   await expect(page.getByText(/DeleteBrand/)).toHaveCount(0)
 
-  const householdId = await householdIdFor(email)
   const { data: items } = await admin
     .from('clothing_items')
     .select('id')

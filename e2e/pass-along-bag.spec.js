@@ -56,6 +56,16 @@ test('pass-along: ItemDetail "Pass on" creates a draft and attaches the item', a
     brand: 'PassAlongBrand',
   })
 
+  // Capture household_id while the item exists (brand lookup is reliable;
+  // avoids listUsers pagination cap issues).
+  const { data: brandItem } = await admin
+    .from('clothing_items')
+    .select('household_id')
+    .eq('brand', 'PassAlongBrand')
+    .limit(1)
+    .single()
+  const householdId = brandItem?.household_id
+
   // Click into the item from /inventory. We target the unique brand text.
   await expect(page.getByText(/PassAlongBrand/)).toBeVisible()
   await page.getByText(/PassAlongBrand/).click()
@@ -72,17 +82,7 @@ test('pass-along: ItemDetail "Pass on" creates a draft and attaches the item', a
   await expect(page.getByText(/PassAlongBrand/)).toBeVisible()
 
   // ── Service-role assertions on the data ──────────────────────────────
-  // Find the household this user belongs to so we can scope queries.
-  const u = await findUserByEmail(email)
-  expect(u).toBeTruthy()
-
-  const { data: memberships } = await admin
-    .from('household_members')
-    .select('household_id')
-    .eq('user_id', u.id)
-  expect(memberships?.length).toBe(1)
-  const householdId = memberships[0].household_id
-
+  // householdId was captured before the pass-along action via brand lookup.
   const { data: batches, error: bErr } = await admin
     .from('pass_along_batches')
     .select('id, status, destination_type, reference_code, household_id')
@@ -118,6 +118,16 @@ test('pass-along: starting a second item from ItemDetail joins the SAME draft (s
   // Add two items, distinguished by unique brand strings (no name field
   // exists, so brand is the user-controlled row identifier).
   await addOwnedItem(page, { itemType: 'bodysuits', size: '6-9M', brand: 'FirstBrand' })
+
+  // Capture household_id early via brand lookup.
+  const { data: brandItem2 } = await admin
+    .from('clothing_items')
+    .select('household_id')
+    .eq('brand', 'FirstBrand')
+    .limit(1)
+    .single()
+  const householdId = brandItem2?.household_id
+
   await page.goto('/inventory')
   await addOwnedItem(page, { itemType: 'bodysuits', size: '6-9M', brand: 'SecondBrand' })
 
@@ -142,14 +152,7 @@ test('pass-along: starting a second item from ItemDetail joins the SAME draft (s
   await expect(page.getByText(/SecondBrand/)).toBeVisible()
 
   // And the data should show one batch with two items.
-  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-  const u = users.users.find(x => x.email?.toLowerCase() === email.toLowerCase())
-  const { data: memberships } = await admin
-    .from('household_members')
-    .select('household_id')
-    .eq('user_id', u.id)
-  const householdId = memberships[0].household_id
-
+  // householdId was captured early via brand lookup.
   const { data: batches } = await admin
     .from('pass_along_batches')
     .select('id, status')
