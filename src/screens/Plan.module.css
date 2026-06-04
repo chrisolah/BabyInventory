@@ -202,38 +202,62 @@
 }
 
 .catChip {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 5px;
-  padding: 7px 14px;
-  min-height: 36px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: 999px;
-  color: var(--gray-600);
-  cursor: pointer;
-  white-space: nowrap;
+  padding: 10px 8px 9px;
+  width: 70px;
   flex-shrink: 0;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.catChip:hover {
+  font-family: var(--font-body);
   background: var(--gray-50);
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
 }
+.catChip:active { transform: scale(0.96); }
+
+.catChip_teal   { background: var(--teal-light); }
+.catChip_blue   { background: #E8F3FE; }
+.catChip_amber  { background: var(--amber-light); }
+.catChip_gray   { background: var(--gray-100); }
+.catChip_purple { background: var(--purple-light); }
+.catChip_coral  { background: #FEECE8; }
+.catChip_red    { background: #FEECEC; }
+.catChip_green  { background: #E6F7EE; }
 
 .catChipActive {
-  background: var(--teal-dark);
-  border-color: var(--teal-dark);
-  color: var(--white);
+  border-color: var(--teal);
+  box-shadow: 0 2px 8px rgba(8, 80, 65, 0.18);
 }
 
-.catChipActive:hover {
-  background: var(--teal-dark);
-  color: var(--white);
+.catChipActive:hover { border-color: var(--teal); }
+
+.catChipIcon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
 }
+.catChipIcon_teal   { background: var(--teal); }
+.catChipIcon_blue   { background: #3B82F6; }
+.catChipIcon_amber  { background: var(--amber); }
+.catChipIcon_gray   { background: var(--gray-400); }
+.catChipIcon_purple { background: var(--purple); }
+.catChipIcon_coral  { background: #E05C3A; }
+.catChipIcon_red    { background: #DC3030; }
+.catChipIcon_green  { background: #1A9E5A; }
+
+.catChipLabel {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--gray-700);
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+.catChipActive .catChipLabel { color: var(--teal-dark); font-weight: 600; }
 
 .catChipSoon {
   opacity: 0.55;

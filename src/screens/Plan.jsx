@@ -54,15 +54,15 @@ const CATEGORY_GUIDE_SLUGS = {
 }
 
 const PLAN_CATEGORIES = [
-  { id: 'clothing',  label: 'Clothing',  live: true, icon: ClothingNavIcon },
-  { id: 'sleep',     label: 'Sleep',     live: true, icon: SleepNavIcon },
-  { id: 'feeding',   label: 'Feeding',   live: true, icon: FeedingNavIcon },
-  { id: 'diapering', label: 'Diapering', live: true, icon: DiaperNavIcon },
-  { id: 'travel',    label: 'Travel',    live: true, icon: TravelNavIcon },
-  { id: 'play',      label: 'Play',      live: true, icon: PlayNavIcon },
-  { id: 'health',    label: 'Health',    live: true, icon: HealthNavIcon },
-  { id: 'bath',      label: 'Bath',      live: true, icon: BathNavIcon },
-  { id: 'wishlist',  label: 'Wishlist',  live: true, icon: WishlistNavIcon },
+  { id: 'clothing',  label: 'Clothing',  live: true, icon: ClothingNavIcon, color: 'teal'   },
+  { id: 'sleep',     label: 'Sleep',     live: true, icon: SleepNavIcon,    color: 'blue'   },
+  { id: 'feeding',   label: 'Feeding',   live: true, icon: FeedingNavIcon,  color: 'amber'  },
+  { id: 'diapering', label: 'Diapering', live: true, icon: DiaperNavIcon,   color: 'gray'   },
+  { id: 'travel',    label: 'Travel',    live: true, icon: TravelNavIcon,   color: 'purple' },
+  { id: 'play',      label: 'Play',      live: true, icon: PlayNavIcon,     color: 'coral'  },
+  { id: 'health',    label: 'Health',    live: true, icon: HealthNavIcon,   color: 'red'    },
+  { id: 'bath',      label: 'Bath',      live: true, icon: BathNavIcon,     color: 'green'  },
+  { id: 'wishlist',  label: 'Wishlist',  live: true, icon: WishlistNavIcon, color: 'teal'   },
 ]
 
 const CATEGORY_ORDER = [
@@ -271,17 +271,24 @@ export default function Plan() {
 
       {/* Category selector — horizontal scroll row (mobile) */}
       <div className={styles.catRow}>
-        {PLAN_CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            type="button"
-            className={`${styles.catChip} ${selectedCategory === cat.id ? styles.catChipActive : ''}`}
-            onClick={() => setSelectedCategory(cat.id)}
-            aria-label={cat.label}
-          >
-            {cat.label}
-          </button>
-        ))}
+        {PLAN_CATEGORIES.map(cat => {
+          const active = selectedCategory === cat.id
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              className={`${styles.catChip} ${styles[`catChip_${cat.color}`]} ${active ? styles.catChipActive : ''}`}
+              onClick={() => setSelectedCategory(cat.id)}
+              aria-label={cat.label}
+              aria-pressed={active}
+            >
+              <div className={`${styles.catChipIcon} ${styles[`catChipIcon_${cat.color}`]}`}>
+                <cat.icon />
+              </div>
+              <span className={styles.catChipLabel}>{cat.label}</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Desktop two-column layout */}
