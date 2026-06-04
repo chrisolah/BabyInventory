@@ -17,6 +17,7 @@ import { useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { SLOTS, AGE_RANGES, recommendedQty } from '../lib/wardrobe'
 import { ITEMS, CATEGORY_META } from '../lib/categories'
+import { getWishlistProduct } from '../lib/wishlistProducts'
 import styles from './WishlistPublic.module.css'
 
 // Build slot label lookup maps once
@@ -538,9 +539,24 @@ function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriori
       )}
 
       {!isCovered && (
-        <button type="button" className={styles.claimBtn} onClick={handleClaim}>
-          Claim {stillNeeded > 1 ? 'one' : 'it'}
-        </button>
+        <>
+          <button type="button" className={styles.claimBtn} onClick={handleClaim}>
+            Claim {stillNeeded > 1 ? 'one' : 'it'}
+          </button>
+          {(() => {
+            const product = getWishlistProduct(slotId)
+            return product ? (
+              <a
+                href={product.url}
+                className={styles.buyLink}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+              >
+                Buy on Amazon →
+              </a>
+            ) : null
+          })()}
+        </>
       )}
     </div>
   )
@@ -594,6 +610,23 @@ function ClaimSheet({ target, onSubmit, onClose }) {
               You claimed {quantity > 1 ? `${quantity}× ` : ''}{target.label}.{' '}
               {anon ? 'Your name is hidden from the family.' : 'The family will see your name.'}
             </p>
+            {(() => {
+              const product = getWishlistProduct(target.slotId)
+              return product ? (
+                <div className={styles.sheetProduct}>
+                  <div className={styles.sheetProductLabel}>Sprigloop pick</div>
+                  <a
+                    href={product.url}
+                    className={styles.sheetProductLink}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                  >
+                    {product.name} →
+                  </a>
+                  <div className={styles.sheetProductNote}>{product.note}</div>
+                </div>
+              ) : null
+            })()}
             <button type="button" className={styles.sheetCloseBtn} onClick={onClose}>Done</button>
           </div>
         ) : (
