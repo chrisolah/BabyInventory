@@ -102,6 +102,8 @@ test('item detail: delete removes the row + lands on /inventory', async ({ page 
   await addOwnedItem(page, { itemType: 'bodysuits', size: '6-9M', brand: 'DeleteBrand' })
 
   await page.getByText(/DeleteBrand/).first().click()
+  await expect(page).toHaveURL(/\/item\/[0-9a-f-]+/)
+  const itemUrl = page.url()
   // Page action label is "Delete item" (not "Delete"); regex is anchored.
   await page.getByRole('button', { name: /^delete item$/i }).click()
 
