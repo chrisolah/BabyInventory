@@ -6,6 +6,45 @@ import { GUIDES } from '../lib/guides'
 import IvyBanner from '../components/IvyBanner'
 import styles from './Guides.module.css'
 
+const PREP_SLUGS = [
+  'how-much-does-a-newborn-need',
+  'when-does-baby-outgrow-each-size',
+  'baby-registry-what-you-actually-need',
+  'how-to-organize-baby-clothes-by-size',
+  'what-to-do-with-outgrown-baby-clothes',
+  'certified-vs-generic-baby-products',
+]
+
+const CATEGORY_SLUGS = [
+  'newborn-safe-sleep-setup',
+  'bottle-feeding-newborn-what-you-need',
+  'cloth-vs-disposable-diapers',
+  'choosing-a-car-seat',
+  'baby-toys-first-year-by-age',
+  'newborn-health-kit-what-to-have',
+  'how-to-bathe-a-newborn',
+]
+
+const guidesBySlug = Object.fromEntries(GUIDES.map(g => [g.slug, g]))
+
+const prepGuides      = PREP_SLUGS.map(s => guidesBySlug[s]).filter(Boolean)
+const categoryGuides  = CATEGORY_SLUGS.map(s => guidesBySlug[s]).filter(Boolean)
+
+function GuideCard({ guide, onClick }) {
+  return (
+    <button className={styles.card} onClick={onClick}>
+      <div className={styles.cardTags}>
+        {guide.tags.map(t => (
+          <span key={t} className={styles.tag}>{t}</span>
+        ))}
+      </div>
+      <h2 className={styles.cardTitle}>{guide.title}</h2>
+      <p className={styles.cardDesc}>{guide.description}</p>
+      <div className={styles.cardMeta}>{guide.readTime} read &nbsp;&middot;&nbsp; {guide.date}</div>
+    </button>
+  )
+}
+
 export default function Guides() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -25,6 +64,10 @@ export default function Guides() {
       if (prevDesc != null) descMeta?.setAttribute('content', prevDesc)
     }
   }, [])
+
+  function goTo(slug) {
+    navigate(`/guides/${slug}`)
+  }
 
   return (
     <div className={styles.page}>
@@ -57,22 +100,19 @@ export default function Guides() {
           </p>
         </header>
 
+        {/* Group 1 — Prep & Planning */}
+        <div className={styles.groupLabel}>Prep &amp; Planning</div>
         <section className={styles.grid}>
-          {GUIDES.map(guide => (
-            <button
-              key={guide.slug}
-              className={styles.card}
-              onClick={() => navigate(`/guides/${guide.slug}`)}
-            >
-              <div className={styles.cardTags}>
-                {guide.tags.map(t => (
-                  <span key={t} className={styles.tag}>{t}</span>
-                ))}
-              </div>
-              <h2 className={styles.cardTitle}>{guide.title}</h2>
-              <p className={styles.cardDesc}>{guide.description}</p>
-              <div className={styles.cardMeta}>{guide.readTime} read &nbsp;&middot;&nbsp; {guide.date}</div>
-            </button>
+          {prepGuides.map(guide => (
+            <GuideCard key={guide.slug} guide={guide} onClick={() => goTo(guide.slug)} />
+          ))}
+        </section>
+
+        {/* Group 2 — By Category */}
+        <div className={styles.groupLabel} style={{ marginTop: '2.5rem' }}>By Category</div>
+        <section className={styles.categoryGrid}>
+          {categoryGuides.map(guide => (
+            <GuideCard key={guide.slug} guide={guide} onClick={() => goTo(guide.slug)} />
           ))}
         </section>
       </article>
