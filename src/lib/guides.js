@@ -533,6 +533,168 @@ export const GUIDES = [
       },
     ],
   },
+  // ── Guide 6 ──────────────────────────────────────────────────────────────
+  {
+    slug: 'certified-vs-generic-baby-products',
+    title: "What's Actually Worth Buying Certified — and What Isn't",
+    subtitle: "A no-nonsense breakdown of when GOTS, OEKO-TEX, and GREENGUARD Gold actually matter, and when you're just paying for a label.",
+    description: "The word \"certified\" costs more money. The question is whether it changes anything for your baby — or whether a generic would have given you the same result. Here's how to tell the difference.",
+    date: 'June 2026',
+    readTime: '8 min',
+    tags: ['Safety', 'Buying', 'Certified'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from published safety research, pediatric guidance, and certification body standards. It contains affiliate links to Amazon. If you buy through them, Sprigloop earns a small commission at no cost to you.',
+    sections: [
+      {
+        type: 'lede',
+        body: "The word \"certified\" on a baby product does two things: it means something specific about how that product was made, and it costs you more money. The question worth asking before every purchase is whether the certification actually changes anything for your baby — or whether you're paying for peace of mind that a $12 generic would have given you anyway.",
+      },
+      {
+        type: 'lede',
+        body: "After going through the research, the answer isn't \"buy everything certified.\" There are specific categories where certification genuinely reduces your baby's chemical exposure, and others where it makes almost no practical difference. Here's how to tell the difference.",
+      },
+      {
+        type: 'h2',
+        heading: 'What the certifications actually mean',
+        body: 'GOTS (Global Organic Textile Standard) is the most rigorous — it requires organically grown fibers AND that no harmful chemicals were used in processing. OEKO-TEX Standard 100 tests the finished product for harmful substances but doesn\'t require organic fibers. GREENGUARD Gold is for hard goods like mattresses and furniture, testing for chemical emissions into the air.',
+      },
+      {
+        type: 'callout',
+        body: 'The key distinction: "Natural," "non-toxic," "eco-friendly," and "clean" are marketing terms with no regulatory definition. Anyone can put them on any product. GOTS, OEKO-TEX, and GREENGUARD Gold require third-party testing and ongoing audits. Everything else is just copy.',
+      },
+      {
+        type: 'h2',
+        heading: 'Worth buying certified',
+      },
+      {
+        type: 'h2',
+        heading: 'Sleep sacks and swaddles',
+        body: "Your baby spends 10–14 hours a day in a sleep sack. Conventional fabrics can carry flame retardant chemicals linked to developmental issues, formaldehyde-based wrinkle finishes, and synthetic dyes with heavy metals. GOTS cotton and wool are naturally flame-resistant without added chemicals. For an item worn during every sleep for the first two years, the premium is justified.",
+      },
+      {
+        type: 'verdict',
+        positive: true,
+        body: 'Worth the certified premium',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Look for GOTS certification specifically — not just "organic cotton" marketing language.',
+          'Two-way zipper is a must. 0.5 TOG for warm rooms, 2.5 TOG for winter.',
+          'Avoid weighted sleep sacks — the AAP recommends against them regardless of certification.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🛌',
+            name: 'Yoofoss Organic Cotton Sleep Sack 3-Pack (0–6M)',
+            note: 'GOTS certified, 2-way zipper, 0.5 TOG — best value for the newborn window',
+            url: 'https://www.amazon.com/dp/B0BMLT3M13/?tag=spriglooop-20',
+          },
+          {
+            emoji: '🌙',
+            name: 'Ecolino Organic Cotton Sleep Sack (6–18M)',
+            note: '100% GOTS certified cotton, bottom-zip for quick night changes',
+            url: 'https://www.amazon.com/dp/B06XJ35W1H/?tag=spriglooop-20',
+          },
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Sleepwear and bodysuits',
+        body: "A baby's skin is up to 30% thinner than an adult's. Studies have found formaldehyde-based finishes in 8% of conventional baby garments. Synthetic dyes can contain heavy metals that absorb through skin with repeated wear. For items worn closest to skin for the longest time, GOTS or OEKO-TEX certification meaningfully reduces exposure.",
+      },
+      {
+        type: 'verdict',
+        positive: true,
+        body: 'Worth the certified premium',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '👕',
+            name: "Burt's Bees Baby Organic Bodysuits",
+            note: 'GOTS certified, widely available in multipacks, reasonably priced for organic',
+            url: "https://www.amazon.com/s?k=burt%27s+bees+baby+organic+bodysuits&tag=spriglooop-20",
+          },
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Swaddle blankets',
+        body: "Used constantly in the newborn phase and multitasked constantly. Full GOTS is ideal but OEKO-TEX Standard 100 is a reasonable middle ground — it verifies the finished product is free of harmful substances at a similar price to conventional options.",
+      },
+      {
+        type: 'verdict',
+        positive: true,
+        body: 'Worth it — OEKO-TEX is enough',
+      },
+      {
+        type: 'h2',
+        heading: 'Save your money — generic is fine',
+      },
+      {
+        type: 'h2',
+        heading: 'Burp cloths and bibs',
+        body: "You need 8–12 burp cloths and will go through 4–6 a day. The chemical concern with textiles is cumulative skin exposure — burp cloths rest on your shoulder, not against baby's skin for extended periods. Buy cheap cotton ones in bulk and wash them before first use.",
+      },
+      {
+        type: 'verdict',
+        positive: false,
+        body: 'Generic is fine',
+      },
+      {
+        type: 'h2',
+        heading: 'Bottles',
+        body: "The main safety concern with bottles is BPA, a plasticizer linked to hormonal disruption. But BPA was removed from baby bottles in the US in 2012 — any bottle sold today is BPA-free by law. The \"BPA-free\" label isn't a premium, it's compliance. A $6 generic and a $25 glass bottle have the same BPA exposure: zero.",
+      },
+      {
+        type: 'verdict',
+        positive: false,
+        body: 'Generic is fine — with one rule',
+      },
+      {
+        type: 'h2',
+        heading: 'Strollers and car seats',
+        body: "Strollers aren't against baby's skin for 12 hours a day. The fabric content matters less than fit, weight, and ease of use. For car seats, the relevant certification is NHTSA compliance and crash test ratings — not GOTS. Never buy a used car seat. Consumer Reports ratings are the right research here.",
+      },
+      {
+        type: 'verdict',
+        positive: false,
+        body: 'Certification not the priority',
+      },
+      {
+        type: 'table',
+        cols: ['Item', 'Buy certified?', 'What to look for'],
+        rows: [
+          ['Sleep sacks', 'Yes', 'GOTS certified cotton or wool'],
+          ['Sleepwear / bodysuits', 'Yes', 'GOTS or OEKO-TEX'],
+          ['Swaddle blankets', 'Yes', 'OEKO-TEX minimum'],
+          ['Crib mattress', 'Yes', 'GREENGUARD Gold + no flame retardants'],
+          ['Burp cloths & bibs', 'Not necessary', 'Wash before first use'],
+          ['Bottles', 'Not necessary', 'BPA-free already required by law'],
+          ['Stroller & carrier', 'Low priority', 'Buy for fit and function'],
+          ['Car seat', 'Not applicable', 'Crash test ratings only, never buy used'],
+        ],
+      },
+      {
+        type: 'callout',
+        body: 'The rule of thumb: the longer something touches your baby\'s skin, and the more hours a day they wear it, the more certification matters. Sleepwear and the items underneath are worth the premium. Everything else is diminishing returns.',
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'US Right to Know — Toxic chemicals in baby clothes', url: 'https://usrtk.org/healthwire/toxic-chemicals-in-baby-clothes/' },
+          { label: 'Is GOTS-Certified Cotton Really Safer for Baby\'s Skin?', url: 'https://shopikimono.com/blogs/news/is-gots-certified-cotton-really-safer-for-my-babys-skin' },
+          { label: 'American Academy of Pediatrics — Safe Sleep Guidelines', url: 'https://www.aap.org/en/patient-care/safe-sleep/' },
+          { label: 'A Parent\'s Guide to Baby Product Safety Labels', url: 'https://pfwbs.org/decode-safety-certifications-like-a-pro-a-parents-ultimate-guide-to-baby-product-labels-that-matter/' },
+          { label: 'Consumer Reports — Best Crib Mattresses', url: 'https://www.consumerreports.org/babies-kids/crib-mattresses/best-crib-mattresses-a9683309833/' },
+        ],
+      },
+    ],
+  },
 ]
 
 export function getGuide(slug) {

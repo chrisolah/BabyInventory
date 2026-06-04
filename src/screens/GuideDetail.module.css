@@ -227,6 +227,59 @@
   background: var(--teal);
 }
 
+/* Verdict badge */
+.verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: 999px;
+  margin-bottom: 0.75rem;
+}
+.verdictGood    { background: var(--teal-light); color: var(--teal-dark); }
+.verdictNeutral { background: var(--gray-100);   color: var(--gray-600); }
+.verdictIcon    { font-weight: 700; }
+
+/* Callout */
+.callout {
+  background: var(--amber-light);
+  border-left: 3px solid var(--amber);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--gray-700);
+  line-height: 1.65;
+  margin-bottom: 1rem;
+}
+
+/* Product cards */
+.productsBlock  { margin: 1.25rem 0 1.75rem; }
+.productsLabel  { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-400); margin-bottom: 8px; }
+.productCards   { display: flex; flex-direction: column; gap: 10px; }
+.productCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.productCard:hover {
+  border-color: var(--teal-light);
+  box-shadow: 0 3px 12px rgba(15,110,86,0.08);
+}
+.productEmoji   { font-size: 28px; flex-shrink: 0; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: var(--gray-50); border-radius: 8px; }
+.productInfo    { flex: 1; min-width: 0; }
+.productName    { font-size: 14px; font-weight: 500; color: var(--gray-900); margin-bottom: 2px; }
+.productNote    { font-size: 12px; color: var(--gray-500); line-height: 1.4; }
+.productAmazonTag { font-size: 10px; color: var(--gray-400); display: block; margin-top: 2px; }
+.productCta     { flex-shrink: 0; font-size: 13px; font-weight: 500; color: var(--teal-dark); }
+
 /* Sources */
 .sources {
   margin-top: 3rem;

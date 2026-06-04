@@ -56,6 +56,48 @@ function renderSection(section, i) {
         </ul>
       )
 
+    case 'verdict':
+      return (
+        <div key={i} className={`${styles.verdict} ${section.positive ? styles.verdictGood : styles.verdictNeutral}`}>
+          <span className={styles.verdictIcon}>{section.positive ? '✓' : '—'}</span>
+          {section.body}
+        </div>
+      )
+
+    case 'callout':
+      return (
+        <div key={i} className={styles.callout}>
+          {section.body}
+        </div>
+      )
+
+    case 'products':
+      return (
+        <div key={i} className={styles.productsBlock}>
+          <div className={styles.productsLabel}>Sprigloop picks on Amazon</div>
+          <div className={styles.productCards}>
+            {section.items.map((product, pi) => (
+              <a
+                key={pi}
+                href={product.url}
+                className={styles.productCard}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                onClick={() => track.ctaClicked?.('affiliate_product_click', { guide: product.name })}
+              >
+                <div className={styles.productEmoji}>{product.emoji}</div>
+                <div className={styles.productInfo}>
+                  <div className={styles.productName}>{product.name}</div>
+                  <div className={styles.productNote}>{product.note}</div>
+                  <span className={styles.productAmazonTag}>Amazon affiliate link</span>
+                </div>
+                <span className={styles.productCta}>View →</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )
+
     case 'sources':
       return (
         <div key={i} className={styles.sources}>
