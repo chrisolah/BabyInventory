@@ -803,6 +803,24 @@
   line-height: 1.4;
 }
 
+.sheetDoneBtns {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.sheetUndoBtn {
+  font-size: 13px;
+  color: #9ca3af;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body, system-ui, sans-serif);
+  padding: 4px 0;
+  text-decoration: underline;
+}
+.sheetUndoBtn:hover { color: #374151; }
 .sheetCloseBtn {
   padding: 13px 40px;
   min-height: 44px;

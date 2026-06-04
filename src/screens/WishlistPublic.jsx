@@ -98,6 +98,26 @@ export default function WishlistPublic() {
     return { ok: true }
   }
 
+  async function submitUnclaim(claimerName, quantity) {
+    const target = claimTarget
+    await supabase
+      .schema(currentSchema)
+      .rpc('unclaim_wishlist_item', {
+        p_token:        token,
+        p_slot_id:      target.slotId,
+        p_slot_type:    target.slotType,
+        p_size_label:   target.sizeLabel || null,
+        p_claimer_name: claimerName,
+      })
+    // Remove the claim from local state regardless of RPC result
+    setClaims(prev => prev.filter(c =>
+      !(c.slot_id === target.slotId &&
+        c.slot_type === target.slotType &&
+        (c.size_label || '') === (target.sizeLabel || '') &&
+        c.claimer_name === claimerName)
+    ))
+  }
+
   if (loading) {
     return (
       <div className={styles.centered}>
@@ -245,6 +265,7 @@ export default function WishlistPublic() {
         <ClaimSheet
           target={claimTarget}
           onSubmit={submitClaim}
+          onUnclaim={submitUnclaim}
           onClose={() => setClaimTarget(null)}
         />
       )}
@@ -564,13 +585,15 @@ function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriori
 
 // ── Claim sheet ───────────────────────────────────────────────────────────────
 
-function ClaimSheet({ target, onSubmit, onClose }) {
+function ClaimSheet({ target, onSubmit, onUnclaim, onClose }) {
   const [name, setName] = useState('')
   const [anon, setAnon] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [submitting, setSubmitting] = useState(false)
+  const [undoing, setUndoing] = useState(false)
   const [error, setError] = useState(null)
   const [done, setDone] = useState(false)
+  const [claimedName, setClaimedName] = useState('')
 
   const maxQty = target.maxQty || 1
   const canSubmit = anon || name.trim().length > 0
@@ -588,7 +611,15 @@ function ClaimSheet({ target, onSubmit, onClose }) {
         : 'Something went wrong. Try again.')
       return
     }
+    setClaimedName(anon ? 'Anonymous' : name.trim())
     setDone(true)
+  }
+
+  async function handleUndo() {
+    setUndoing(true)
+    await onUnclaim(claimedName, quantity)
+    setUndoing(false)
+    onClose()
   }
 
   function onBackdropClick(e) {
@@ -627,7 +658,17 @@ function ClaimSheet({ target, onSubmit, onClose }) {
                 </div>
               ) : null
             })()}
-            <button type="button" className={styles.sheetCloseBtn} onClick={onClose}>Done</button>
+            <div className={styles.sheetDoneBtns}>
+              <button type="button" className={styles.sheetCloseBtn} onClick={onClose}>Done</button>
+              <button
+                type="button"
+                className={styles.sheetUndoBtn}
+                onClick={handleUndo}
+                disabled={undoing}
+              >
+                {undoing ? 'Removing…' : 'Undo claim'}
+              </button>
+            </div>
           </div>
         ) : (
           <>
