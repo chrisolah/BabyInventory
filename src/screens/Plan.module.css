@@ -396,33 +396,35 @@
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  padding: 6px 14px;
+  padding: 6px 16px;
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 500;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: 999px;
+  background: var(--gray-50);
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
   color: var(--gray-600);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.12s, color 0.12s, border-color 0.12s, box-shadow 0.12s;
 }
 
 .ageChip:hover {
-  background: var(--gray-50);
+  background: var(--gray-100);
 }
 
 .ageChipSelected {
-  background: var(--teal-dark);
-  border-color: var(--teal-dark);
-  color: var(--white);
+  background: var(--teal-light);
+  border-color: var(--teal);
+  color: var(--teal-dark);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(8, 80, 65, 0.14);
 }
 
 .ageChipSelected:hover {
-  background: var(--teal-dark);
-  color: var(--white);
+  background: var(--teal-light);
+  color: var(--teal-dark);
 }
 
 .ageChipPast { opacity: 0.5; }
