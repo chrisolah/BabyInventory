@@ -80,7 +80,7 @@ export default function Guides() {
             </button>
             <button className={styles.navLink} onClick={() => navigate('/how-it-works')}>How it works</button>
             <button className={`${styles.navLink} ${styles.navLinkActive}`} onClick={() => navigate('/guides')}>Guides</button>
-            <button className={styles.signupBtn} onClick={() => navigate('/signup')}>Join Sprigloop</button>
+            <button className={styles.signupBtn} onClick={() => navigate('/signup')}>Join</button>
             <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
           </nav>
           <IvyBanner />

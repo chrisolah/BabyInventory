@@ -60,7 +60,7 @@ export default function Terms() {
         >
           sprigloop
         </button>
-        <button className={styles.signupBtn} onClick={() => navigate('/signup')}>Join Sprigloop</button>
+        <button className={styles.signupBtn} onClick={() => navigate('/signup')}>Join</button>
         <button className={styles.loginBtn} onClick={() => navigate('/login')}>
           Log in
         </button>
