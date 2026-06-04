@@ -72,8 +72,9 @@ test.describe('/how-it-works', () => {
   test('logo navigates back to home', async ({ page }) => {
     await page.goto('/how-it-works')
     await page.getByRole('button', { name: /back to sprigloop home/i }).click()
-    // Accepts '/' (logged-out) or '/home' (if auth session exists from prior test)
-    await expect(page).toHaveURL(/^\/$|\/home/)
+    // Accepts any URL ending with '/' (root) or containing '/home'.
+    // Note: Playwright tests the full URL string, so ^\/ won't work here.
+    await expect(page).toHaveURL(/\/$|\/home/)
   })
 
   test('final CTA starts trial flow', async ({ page }) => {

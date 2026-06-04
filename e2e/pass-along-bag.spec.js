@@ -22,6 +22,18 @@
 
 import { test, expect } from '@playwright/test'
 import { admin } from './support/db.js'
+
+// Supabase admin listUsers caps at 50 per page regardless of perPage param.
+async function findUserByEmail(email) {
+  let page = 1
+  while (true) {
+    const { data } = await admin.auth.admin.listUsers({ page, perPage: 50 })
+    const found = data.users.find(u => u.email?.toLowerCase() === email.toLowerCase())
+    if (found) return found
+    if (data.users.length < 50) return null
+    page++
+  }
+}
 import {
   freshEmail,
   signUpWithPassword,
@@ -61,8 +73,7 @@ test('pass-along: ItemDetail "Pass on" creates a draft and attaches the item', a
 
   // ── Service-role assertions on the data ──────────────────────────────
   // Find the household this user belongs to so we can scope queries.
-  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-  const u = users.users.find(x => x.email?.toLowerCase() === email.toLowerCase())
+  const u = await findUserByEmail(email)
   expect(u).toBeTruthy()
 
   const { data: memberships } = await admin

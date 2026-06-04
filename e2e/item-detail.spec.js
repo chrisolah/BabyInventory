@@ -22,11 +22,21 @@ import {
 } from './support/helpers.js'
 
 // Find the household for a user we just created. Returns the id.
+// Supabase admin listUsers caps at 50 per page regardless of perPage param.
+// Paginate until we find the email or exhaust all pages.
+async function findUserByEmail(email) {
+  let page = 1
+  while (true) {
+    const { data } = await admin.auth.admin.listUsers({ page, perPage: 50 })
+    const found = data.users.find(u => u.email?.toLowerCase() === email.toLowerCase())
+    if (found) return found
+    if (data.users.length < 50) return null
+    page++
+  }
+}
+
 async function householdIdFor(email) {
-  // perPage:1000 avoids the issue where accumulated test users exceed the
-  // default page size and the target email falls outside the first page.
-  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-  const u = users.users.find(x => x.email?.toLowerCase() === email.toLowerCase())
+  const u = await findUserByEmail(email)
   expect(u, `expected user ${email}`).toBeTruthy()
   const { data: members } = await admin
     .from('household_members')
