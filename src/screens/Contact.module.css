@@ -34,6 +34,22 @@
   align-items: center;
   line-height: 1;
 }
+.signupBtn {
+  margin-left: auto;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: none;
+  border: 1px solid var(--teal);
+  color: var(--teal-dark);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.signupBtn:hover { background: var(--teal-light); }
 .loginBtn {
   min-height: 44px;
   display: inline-flex;

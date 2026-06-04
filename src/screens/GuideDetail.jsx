@@ -159,6 +159,7 @@ export default function GuideDetail() {
             </button>
             <button className={styles.navLink} onClick={() => navigate('/how-it-works')}>How it works</button>
             <button className={styles.navLink} onClick={() => navigate('/guides')}>Guides</button>
+            <button className={styles.signupBtn} onClick={() => navigate('/signup')}>Sign up</button>
             <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
           </nav>
           <IvyBanner />
