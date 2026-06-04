@@ -71,6 +71,34 @@ export const FUNNELS = [
   { id: 'login',       label: 'Login'       },
 ]
 
+/**
+ * Page-level traffic breakdown — unique sessions + users per page.
+ */
+export async function getPageBreakdown({ sinceDays = 7, excludeAdmins = true } = {}) {
+  const { data, error } = await supabase
+    .schema(currentSchema)
+    .rpc('admin_page_breakdown', {
+      _since_days: sinceDays,
+      _exclude_admins: excludeAdmins,
+    })
+  if (error) throw error
+  return data ?? []
+}
+
+/**
+ * Per-guide reads and affiliate clicks.
+ */
+export async function getGuideBreakdown({ sinceDays = 30, excludeAdmins = true } = {}) {
+  const { data, error } = await supabase
+    .schema(currentSchema)
+    .rpc('admin_guide_breakdown', {
+      _since_days: sinceDays,
+      _exclude_admins: excludeAdmins,
+    })
+  if (error) throw error
+  return data ?? []
+}
+
 // Time-window chips for the toolbar. `days = null` means "no upper bound" —
 // passed to the RPC as a very large number so we get everything.
 export const TIME_WINDOWS = [

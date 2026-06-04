@@ -83,7 +83,7 @@ function renderSection(section, i) {
                 className={styles.productCard}
                 target="_blank"
                 rel="noopener noreferrer sponsored"
-                onClick={() => track.ctaClicked?.('affiliate_product_click', { guide: product.name })}
+                onClick={() => track.affiliateLinkClicked?.({ guide: slug, product: product.name, url: product.url })}
               >
                 <div className={styles.productEmoji}>{product.emoji}</div>
                 <div className={styles.productInfo}>
@@ -126,6 +126,7 @@ export default function GuideDetail() {
   useEffect(() => {
     if (!guide) return
     track.pageViewed({ page: 'guide_detail', guide: slug, referrer: document.referrer })
+    track.guideRead?.({ slug, title: guide.title })
 
     const prevTitle = document.title
     const descMeta = document.querySelector('meta[name="description"]')

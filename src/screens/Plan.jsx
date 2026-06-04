@@ -628,7 +628,7 @@ function PlanGuideLink({ category, navigate }) {
     <button
       type="button"
       className={styles.planGuideLink}
-      onClick={() => navigate(`/guides/${slug}`)}
+      onClick={() => { track.guidePlanLinkClicked?.({ slug, category }); navigate(`/guides/${slug}`) }}
     >
       📖 Read our guide for this category →
     </button>

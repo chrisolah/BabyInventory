@@ -286,6 +286,20 @@ export const track = {
     logEvent('item_returned_to_owned', 'engagement', props),
   intentFlipped: (props) =>
     logEvent('intent_flipped', 'engagement', props),
+
+  // ── Guides + affiliate ────────────────────────────────────────────────
+  // guideRead fires when a guide detail page loads (supplement to page_viewed
+  // — this carries the slug directly for easier guide-level queries).
+  guideRead: (props) =>
+    logEvent('guide_read', 'content', props),
+  // affiliateLinkClicked fires whenever a product card in a guide is tapped.
+  // `guide` is the slug, `product` is the product name, `url` is the dest.
+  affiliateLinkClicked: (props) =>
+    logEvent('affiliate_link_clicked', 'content', props),
+  // guidePlanLinkClicked fires when the "Read our guide" link in the Plan tab
+  // is tapped — tells us how often in-app guide surfacing drives reads.
+  guidePlanLinkClicked: (props) =>
+    logEvent('guide_plan_link_clicked', 'content', props),
 }
 
 export { getSessionId }

@@ -9,6 +9,8 @@ import {
   getDailyVisits,
   getFunnelRollup,
   getHouseholdSummary,
+  getPageBreakdown,
+  getGuideBreakdown,
   FUNNELS,
   TIME_WINDOWS,
 } from '../lib/admin'
@@ -63,6 +65,7 @@ export default function Admin() {
         <div className={styles.tabs} role="tablist" aria-label="Admin sections">
           {[
             ['visits', 'Visits'],
+            ['pages', 'Pages'],
             ['funnel', 'Funnel'],
             ['households', 'Households'],
           ].map(([id, label]) => (
@@ -81,6 +84,9 @@ export default function Admin() {
         <div className={styles.tabPanel}>
           {tab === 'visits' && (
             <VisitsTab sinceDays={window.days} excludeAdmins={excludeAdmins} />
+          )}
+          {tab === 'pages' && (
+            <PagesTab sinceDays={window.days} excludeAdmins={excludeAdmins} />
           )}
           {tab === 'funnel' && (
             <FunnelTab
@@ -142,6 +148,98 @@ function VisitsTab({ sinceDays, excludeAdmins }) {
           </div>
         ))}
       </div>
+    </>
+  )
+}
+
+// ── Pages tab ──────────────────────────────────────────────────────────────
+function PagesTab({ sinceDays, excludeAdmins }) {
+  const [pages, setPages] = useState(null)
+  const [guides, setGuides] = useState(null)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setPages(null); setGuides(null); setError(null)
+    Promise.all([
+      getPageBreakdown({ sinceDays, excludeAdmins }),
+      getGuideBreakdown({ sinceDays: Math.max(sinceDays, 30), excludeAdmins }),
+    ])
+      .then(([p, g]) => { if (!cancelled) { setPages(p); setGuides(g) } })
+      .catch((err) => { if (!cancelled) setError(err?.message ?? String(err)) })
+    return () => { cancelled = true }
+  }, [sinceDays, excludeAdmins])
+
+  if (error) return <div className={styles.error}>Couldn't load page data: {error}</div>
+  if (!pages) return <div className={styles.loading}>Loading…</div>
+
+  const PAGE_LABELS = {
+    landing:      'Landing',
+    how_it_works: 'How it works',
+    guides:       'Guides listing',
+    guide_detail: 'Guide articles',
+    about:        'About',
+    contact:      'Contact',
+    privacy:      'Privacy',
+    terms:        'Terms',
+    login:        'Login',
+    signup:       'Signup',
+    home:         'Home (app)',
+    inventory:    'Inventory',
+    plan:         'Plan',
+    pass_along:   'Pass Along',
+  }
+
+  return (
+    <>
+      <h3 className={styles.sectionHeading}>Traffic by page</h3>
+      <table className={styles.dataTable}>
+        <thead>
+          <tr>
+            <th>Page</th>
+            <th className={styles.colNum}>Sessions</th>
+            <th className={styles.colNum}>Users</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pages.map((row) => (
+            <tr key={row.page}>
+              <td>{PAGE_LABELS[row.page] ?? row.page}</td>
+              <td className={styles.colNum}>{Number(row.sessions).toLocaleString()}</td>
+              <td className={styles.colNum}>{Number(row.users).toLocaleString()}</td>
+            </tr>
+          ))}
+          {pages.length === 0 && (
+            <tr><td colSpan={3} className={styles.empty}>No page views in this window.</td></tr>
+          )}
+        </tbody>
+      </table>
+
+      {guides && guides.length > 0 && (
+        <>
+          <h3 className={styles.sectionHeading} style={{ marginTop: '2rem' }}>Guide reads</h3>
+          <table className={styles.dataTable}>
+            <thead>
+              <tr>
+                <th>Guide</th>
+                <th className={styles.colNum}>Reads</th>
+                <th className={styles.colNum}>Unique readers</th>
+                <th className={styles.colNum}>Affiliate clicks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {guides.map((row) => (
+                <tr key={row.slug}>
+                  <td style={{ fontSize: '12px', maxWidth: '240px', wordBreak: 'break-word' }}>{row.slug}</td>
+                  <td className={styles.colNum}>{Number(row.reads).toLocaleString()}</td>
+                  <td className={styles.colNum}>{Number(row.unique_readers).toLocaleString()}</td>
+                  <td className={styles.colNum}>{Number(row.affiliate_clicks).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
     </>
   )
 }
