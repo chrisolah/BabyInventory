@@ -552,7 +552,7 @@ function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriori
                 target="_blank"
                 rel="noopener noreferrer sponsored"
               >
-                Buy on Amazon →
+                Sprigloop pick →
               </a>
             ) : null
           })()}
