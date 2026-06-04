@@ -81,6 +81,23 @@ export const GUIDES = [
         ],
       },
       {
+        type: 'products',
+        items: [
+          {
+            emoji: '🛌',
+            name: 'Yoofoss Organic Cotton Sleep Sack 3-Pack (0–6M)',
+            note: 'GOTS certified, 2-way zipper, 0.5 TOG — best value for the newborn window',
+            url: 'https://www.amazon.com/dp/B0BMLT3M13/?tag=sprigloop-20',
+          },
+          {
+            emoji: '🤍',
+            name: 'Muslin Swaddle Blankets (4-pack)',
+            note: 'Large enough to actually swaddle, gets softer with every wash',
+            url: 'https://www.amazon.com/s?k=muslin+swaddle+blankets+newborn+4+pack&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
         type: 'h2',
         heading: 'Feeding',
         body: 'Quantities here depend on whether you\'re breastfeeding, formula feeding, or both.',
@@ -101,6 +118,17 @@ export const GUIDES = [
           'Burp cloths are the item most parents wish they had bought more of. A newborn who spits up frequently can go through 4–6 in a single day.',
           'If formula-feeding or pumping, newborns eat 8–12 times per day. Start with 4-oz bottles — a newborn\'s stomach holds about 1–3 oz per feeding in the first weeks, growing to 4–5 oz by 3 months.',
           'In the 0–3 month window, bibs are for drool and spit-up, not food. 4–6 is a reasonable starting point; add more if your baby is a heavy spitter.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🧻',
+            name: 'Baby Burp Cloths — Large Cotton (10-pack)',
+            note: 'Thicker cloth diaper style outlasts the thin printed kind — buy in bulk',
+            url: 'https://www.amazon.com/s?k=baby+burp+cloths+large+cotton+10+pack&tag=sprigloop-20',
+          },
         ],
       },
       {
@@ -197,6 +225,17 @@ export const GUIDES = [
           ['9–12 months', '19–22 lbs', '8–10 weeks', 'Around 7–8 months'],
           ['12–18 months', '22–27 lbs', '3–4 months', 'Around 10–11 months'],
           ['18–24 months', '27–30 lbs', '3–5 months', 'Around 14 months'],
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🏷️',
+            name: 'Baby Closet Dividers by Size (NB–24M)',
+            note: 'Keeps each size section separate so you can find next-size items instantly',
+            url: 'https://www.amazon.com/s?k=baby+closet+dividers+by+size+newborn+24+months&tag=sprigloop-20',
+          },
         ],
       },
       {
@@ -330,6 +369,17 @@ export const GUIDES = [
         ],
       },
       {
+        type: 'products',
+        items: [
+          {
+            emoji: '📦',
+            name: 'Clear Storage Bins with Lids — Set of 6',
+            note: 'Label each bin by size. Clear sides let you see contents without opening',
+            url: 'https://www.amazon.com/s?k=clear+storage+bins+with+lids+baby+clothes&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
         type: 'h2',
         heading: 'The one thing that stops most parents from doing any of this',
         body: 'It\'s not sentiment. It\'s friction. The bag of outgrown clothes sits by the door for three months because passing them on requires coordination, driving somewhere, or figuring out shipping. The path of least resistance is to leave them in the closet until they go in the next purge — which is usually a landfill-bound donation run to whoever is convenient. Having a system before the clothes outgrow makes all the difference.',
@@ -387,6 +437,23 @@ export const GUIDES = [
           ['Travel', 'Stroller or baby carrier', '1'],
           ['Bath', 'Baby tub, washcloths, gentle wash', '1 tub'],
           ['Health', 'Thermometer, nail file, nasal aspirator', '1 each'],
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🛌',
+            name: 'Yoofoss Organic Cotton Sleep Sack 3-Pack',
+            note: 'GOTS certified, 2-way zipper — the single most-used item in the first year',
+            url: 'https://www.amazon.com/dp/B0BMLT3M13/?tag=sprigloop-20',
+          },
+          {
+            emoji: '🧻',
+            name: 'Baby Burp Cloths — Large Cotton (10-pack)',
+            note: 'Buy more than you think you need. These are the item parents wish they had doubled up on.',
+            url: 'https://www.amazon.com/s?k=baby+burp+cloths+large+cotton+10+pack&tag=sprigloop-20',
+          },
         ],
       },
       {
@@ -487,6 +554,17 @@ export const GUIDES = [
         ],
       },
       {
+        type: 'products',
+        items: [
+          {
+            emoji: '🗂️',
+            name: 'Baby Dresser Drawer Organizers',
+            note: 'Keeps onesies, sleepers, and pants separated in the same drawer',
+            url: 'https://www.amazon.com/s?k=baby+dresser+drawer+organizer+dividers&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
         type: 'h2',
         heading: 'The incoming bin: always be one size ahead',
         body: 'The most common organization failure is being unprepared for size transitions. Your baby fits 0–3M on Monday and by Friday none of it closes. If the 3–6M bin isn\'t washed and ready, you\'re doing emergency laundry in the middle of the night.',
@@ -508,6 +586,23 @@ export const GUIDES = [
         type: 'h2',
         heading: 'Labeling',
         body: 'Label everything by size, not by age. "3–6M" is more accurate than "3 months" because your baby\'s actual age when wearing each size will vary. A label maker is useful but not necessary — masking tape and a marker works fine for bins.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '📦',
+            name: 'Clear Storage Bins with Lids — Set of 6',
+            note: 'One bin per size range. Clear sides so you can see what\'s inside without opening.',
+            url: 'https://www.amazon.com/s?k=clear+storage+bins+lids+set+baby+clothes&tag=sprigloop-20',
+          },
+          {
+            emoji: '🏷️',
+            name: 'Baby Closet Dividers by Size (NB–24M)',
+            note: 'Keeps the closet sorted so hand-me-downs land in the right section immediately',
+            url: 'https://www.amazon.com/s?k=baby+closet+dividers+by+size&tag=sprigloop-20',
+          },
+        ],
       },
       {
         type: 'h2',
@@ -590,13 +685,13 @@ export const GUIDES = [
             emoji: '🛌',
             name: 'Yoofoss Organic Cotton Sleep Sack 3-Pack (0–6M)',
             note: 'GOTS certified, 2-way zipper, 0.5 TOG — best value for the newborn window',
-            url: 'https://www.amazon.com/dp/B0BMLT3M13/?tag=spriglooop-20',
+            url: 'https://www.amazon.com/dp/B0BMLT3M13/?tag=sprigloop-20',
           },
           {
             emoji: '🌙',
             name: 'Ecolino Organic Cotton Sleep Sack (6–18M)',
             note: '100% GOTS certified cotton, bottom-zip for quick night changes',
-            url: 'https://www.amazon.com/dp/B06XJ35W1H/?tag=spriglooop-20',
+            url: 'https://www.amazon.com/dp/B06XJ35W1H/?tag=sprigloop-20',
           },
         ],
       },
@@ -617,7 +712,7 @@ export const GUIDES = [
             emoji: '👕',
             name: "Burt's Bees Baby Organic Bodysuits",
             note: 'GOTS certified, widely available in multipacks, reasonably priced for organic',
-            url: "https://www.amazon.com/s?k=burt%27s+bees+baby+organic+bodysuits&tag=spriglooop-20",
+            url: "https://www.amazon.com/s?k=burt%27s+bees+baby+organic+bodysuits&tag=sprigloop-20",
           },
         ],
       },
