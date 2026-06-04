@@ -984,17 +984,24 @@ export default function Inventory() {
 
       {/* Category selector — horizontal scroll row (mobile) */}
       <div className={styles.catRow}>
-        {INVENTORY_CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            type="button"
-            className={`${styles.catChip} ${selectedTopCategory === cat.id ? styles.catChipActive : ''}`}
-            onClick={() => setSelectedTopCategory(cat.id)}
-            aria-label={cat.label}
-          >
-            {cat.label}
-          </button>
-        ))}
+        {INVENTORY_CATEGORIES.map(cat => {
+          const active = selectedTopCategory === cat.id
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              className={`${styles.catChip} ${styles[`catChip_${cat.color}`]} ${active ? styles.catChipActive : ''}`}
+              onClick={() => setSelectedTopCategory(cat.id)}
+              aria-label={cat.label}
+              aria-pressed={active}
+            >
+              <div className={`${styles.catChipIcon} ${styles[`catChipIcon_${cat.color}`]}`}>
+                <cat.icon />
+              </div>
+              <span className={styles.catChipLabel}>{cat.label}</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Desktop two-column layout */}
@@ -1725,15 +1732,15 @@ function WishlistNavIcon() {
 }
 
 const INVENTORY_CATEGORIES = [
-  { id: 'clothing',  label: 'Clothing',  icon: ClothingNavIcon },
-  { id: 'sleep',     label: 'Sleep',     icon: SleepNavIcon },
-  { id: 'feeding',   label: 'Feeding',   icon: FeedingNavIcon },
-  { id: 'diapering', label: 'Diapering', icon: DiaperNavIcon },
-  { id: 'travel',    label: 'Travel',    icon: TravelNavIcon },
-  { id: 'play',      label: 'Play',      icon: PlayNavIcon },
-  { id: 'health',    label: 'Health',    icon: HealthNavIcon },
-  { id: 'bath',      label: 'Bath',      icon: BathNavIcon },
-  { id: 'wishlist',  label: 'Wishlist',  icon: WishlistNavIcon },
+  { id: 'clothing',  label: 'Clothing',  icon: ClothingNavIcon,  color: 'teal'   },
+  { id: 'sleep',     label: 'Sleep',     icon: SleepNavIcon,     color: 'blue'   },
+  { id: 'feeding',   label: 'Feeding',   icon: FeedingNavIcon,   color: 'amber'  },
+  { id: 'diapering', label: 'Diapering', icon: DiaperNavIcon,    color: 'gray'   },
+  { id: 'travel',    label: 'Travel',    icon: TravelNavIcon,    color: 'purple' },
+  { id: 'play',      label: 'Play',      icon: PlayNavIcon,      color: 'coral'  },
+  { id: 'health',    label: 'Health',    icon: HealthNavIcon,    color: 'red'    },
+  { id: 'bath',      label: 'Bath',      icon: BathNavIcon,      color: 'green'  },
+  { id: 'wishlist',  label: 'Wishlist',  icon: WishlistNavIcon,  color: 'teal'   },
 ]
 
 // ── Non-clothing item card ────────────────────────────────────────────────
