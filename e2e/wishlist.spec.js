@@ -37,7 +37,7 @@ test('wishlist: tab renders coverage rows; adding an item bumps the matching slo
 
   // Switch to the Wishlist tab on /inventory.
   await page.goto('/inventory')
-  await page.getByRole('button', { name: /^wish list$/i }).click()
+  await page.getByRole('button', { name: /^wishlist$/i }).click()
 
   // The wishlist surfaces multiple slot rows ("Pajamas", "Bodysuits",
   // "Pants", etc.). We don't lock the test to a specific roster — just
@@ -68,7 +68,7 @@ test('wishlist: tab renders coverage rows; adding an item bumps the matching slo
   // can shift with calibration audits — assert the LEFT side moved
   // off zero.
   await page.goto('/inventory')
-  await page.getByRole('button', { name: /^wish list$/i }).click()
+  await page.getByRole('button', { name: /^wishlist$/i }).click()
 
   // Sanity: total "X of Y" rows present, and at least one of them shows
   // a non-zero LEFT count now.

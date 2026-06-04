@@ -55,19 +55,21 @@ test.describe('landing page', () => {
 
   test('nav shows How it works and Guides links', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('button', { name: /how it works/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /^guides$/i })).toBeVisible()
+    // Use exact: true — the hero also has "See how it works" which would
+    // cause a strict-mode violation with a loose regex match.
+    await expect(page.getByRole('button', { name: 'How it works', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Guides', exact: true })).toBeVisible()
   })
 
   test('nav Guides link navigates to /guides', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: /^guides$/i }).click()
+    await page.getByRole('button', { name: 'Guides', exact: true }).click()
     await expect(page).toHaveURL(/\/guides/)
   })
 
   test('nav How it works link navigates to /how-it-works', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: /how it works/i }).click()
+    await page.getByRole('button', { name: 'How it works', exact: true }).click()
     await expect(page).toHaveURL(/\/how-it-works/)
   })
 })

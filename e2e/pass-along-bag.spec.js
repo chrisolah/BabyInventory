@@ -61,7 +61,7 @@ test('pass-along: ItemDetail "Pass on" creates a draft and attaches the item', a
 
   // ── Service-role assertions on the data ──────────────────────────────
   // Find the household this user belongs to so we can scope queries.
-  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 50 })
+  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
   const u = users.users.find(x => x.email?.toLowerCase() === email.toLowerCase())
   expect(u).toBeTruthy()
 
@@ -131,7 +131,7 @@ test('pass-along: starting a second item from ItemDetail joins the SAME draft (s
   await expect(page.getByText(/SecondBrand/)).toBeVisible()
 
   // And the data should show one batch with two items.
-  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 50 })
+  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
   const u = users.users.find(x => x.email?.toLowerCase() === email.toLowerCase())
   const { data: memberships } = await admin
     .from('household_members')

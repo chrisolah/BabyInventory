@@ -69,10 +69,11 @@ test.describe('/how-it-works', () => {
     await expect(page).toHaveURL(/\/guides/)
   })
 
-  test('logo navigates back to /', async ({ page }) => {
+  test('logo navigates back to home', async ({ page }) => {
     await page.goto('/how-it-works')
     await page.getByRole('button', { name: /back to sprigloop home/i }).click()
-    await expect(page).toHaveURL(/^\/$|^\/.*\/$/)
+    // Accepts '/' (logged-out) or '/home' (if auth session exists from prior test)
+    await expect(page).toHaveURL(/^\/$|\/home/)
   })
 
   test('final CTA starts trial flow', async ({ page }) => {

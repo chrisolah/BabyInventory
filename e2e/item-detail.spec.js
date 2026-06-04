@@ -23,7 +23,9 @@ import {
 
 // Find the household for a user we just created. Returns the id.
 async function householdIdFor(email) {
-  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 50 })
+  // perPage:1000 avoids the issue where accumulated test users exceed the
+  // default page size and the target email falls outside the first page.
+  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
   const u = users.users.find(x => x.email?.toLowerCase() === email.toLowerCase())
   expect(u, `expected user ${email}`).toBeTruthy()
   const { data: members } = await admin

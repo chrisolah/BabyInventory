@@ -60,9 +60,11 @@ test('signup → onboard → add item → item appears in inventory', async ({ p
   await expect(page.getByRole('button', { name: /go to my inventory/i })).toBeVisible()
   await page.getByRole('button', { name: /go to my inventory/i }).click()
 
-  // Now on /home — the empty-state card deep-links to /inventory.
+  // Now on /home — the category hub. Navigate directly to /inventory.
+  // (The old "start your inventory" empty-state CTA was removed when Home
+  // became the 8-category readiness grid in 2026-06.)
   await expect(page).toHaveURL(/\/home/)
-  await page.getByRole('button', { name: /start your inventory/i }).click()
+  await page.goto('/inventory')
 
   // ── Inventory: empty state, follow CTA to /add-item ─────────────────────
   await expect(page).toHaveURL(/\/inventory/)
