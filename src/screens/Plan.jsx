@@ -278,7 +278,7 @@ export default function Plan() {
               key={cat.id}
               type="button"
               className={`${styles.catChip} ${styles[`catChip_${cat.color}`]} ${active ? styles.catChipActive : ''}`}
-              onClick={() => setSelectedCategory(cat.id)}
+              onClick={() => cat.id === 'wishlist' ? navigate('/wishlist/edit') : setSelectedCategory(cat.id)}
               aria-label={cat.label}
               aria-pressed={active}
             >
@@ -301,7 +301,7 @@ export default function Plan() {
               key={cat.id}
               type="button"
               className={`${styles.catSidebarItem} ${selectedCategory === cat.id ? styles.catSidebarItemActive : ''}`}
-              onClick={() => setSelectedCategory(cat.id)}
+              onClick={() => cat.id === 'wishlist' ? navigate('/wishlist/edit') : setSelectedCategory(cat.id)}
               aria-label={cat.label}
             >
               <span className={styles.catSidebarIcon}><cat.icon /></span>
