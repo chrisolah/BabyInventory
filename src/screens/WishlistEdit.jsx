@@ -1,186 +1,244 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { SLOTS, AGE_RANGES, recommendedQty } from '../lib/wardrobe'
 import { ITEMS as ITEM_DEFS, CATEGORY_META } from '../lib/categories'
-import ShareWishlistModal from '../components/ShareWishlistModal'
 import BottomNav from '../components/BottomNav'
 import styles from './WishlistEdit.module.css'
 
-const SLOT_BY_ID  = Object.fromEntries(SLOTS.map(s => [s.id, s]))
-const ITEM_BY_ID  = Object.fromEntries(ITEM_DEFS.map(i => [i.id, i]))
-
+// Mirrors the lookup maps in WishlistPublic
+const CLOTHING_SLOT = Object.fromEntries(SLOTS.map(s => [s.id, s]))
+const ITEM_SLOT     = Object.fromEntries(ITEM_DEFS.map(i => [i.id, i]))
 const NON_CLOTHING_ORDER = ['sleep','feeding','diapering','travel','play','health','bath']
 
-function getLabel(item) {
-  if (item.top_category === 'clothing') {
-    const slot = SLOT_BY_ID[item.item_type]
-    return item.name || item.brand || slot?.label || item.item_type
-  }
-  const def = ITEM_BY_ID[item.item_type]
-  return item.name || item.brand || def?.label || item.item_type
-}
-
-function getCatLabel(cat) {
-  return CATEGORY_META[cat]?.label || cat
+function claimKey(slotType, slotId, sizeLabel) {
+  return `${slotType}:${slotId}:${sizeLabel || ''}`
 }
 
 export default function WishlistEdit() {
-  const navigate  = useNavigate()
-  const { items, reloadItems, household, babies, currentBaby } = useHousehold()
-  const [showShareModal, setShowShareModal] = useState(false)
-  const [working, setWorking] = useState(new Set())
+  const navigate = useNavigate()
+  const { household, babies, currentBaby } = useHousehold()
 
-  const wishlist = items.filter(it => it.inventory_status === 'needed')
+  const [loading, setLoading]   = useState(true)
+  const [pageData, setPageData] = useState(null)
+  const [shareId, setShareId]   = useState(null)
+  const [token, setToken]       = useState(null)
+  const [skipSlots, setSkipSlotsState]  = useState(new Set())
+  const [skipCats, setSkipCatsState]    = useState(new Set())
+  const [working, setWorking]   = useState(new Set())
+  const [copyDone, setCopyDone] = useState(false)
 
-  // Local ordered ids for drag reorder
-  const [orderedIds, setOrderedIds] = useState(() => wishlist.map(it => it.id))
+  // Load or create the wishlist share, then fetch gap data
   useEffect(() => {
-    const valid = orderedIds.filter(id => wishlist.find(it => it.id === id))
-    const newIds = wishlist.map(it => it.id).filter(id => !orderedIds.includes(id))
-    setOrderedIds([...valid, ...newIds])
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items])
+    if (!household?.id) return
+    let cancelled = false
 
-  const orderedWishlist = orderedIds.map(id => wishlist.find(it => it.id === id)).filter(Boolean)
+    async function load() {
+      setLoading(true)
 
-  const priorityItems  = orderedWishlist.filter(it => it.is_priority)
-  const clothingItems  = orderedWishlist.filter(it => !it.is_priority && it.top_category === 'clothing')
-  const nonClothingItems = orderedWishlist.filter(it => !it.is_priority && it.top_category !== 'clothing')
+      // Find or create a wishlist share for this household
+      let { data: existing } = await supabase.schema(currentSchema)
+        .from('wishlist_shares')
+        .select('id, token, skip_slots, skip_categories, show_priority')
+        .eq('household_id', household.id)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle()
 
-  // Group clothing by size
-  const clothingBySize = {}
-  for (const item of clothingItems) {
-    const size = item.size_label || 'No size'
-    if (!clothingBySize[size]) clothingBySize[size] = []
-    clothingBySize[size].push(item)
+      let share = existing
+      if (!share) {
+        const { data: created } = await supabase.schema(currentSchema)
+          .from('wishlist_shares')
+          .insert({ household_id: household.id, is_active: true })
+          .select('id, token, skip_slots, skip_categories, show_priority')
+          .single()
+        share = created
+      }
+
+      if (!share || cancelled) { setLoading(false); return }
+
+      setShareId(share.id)
+      setToken(share.token)
+      setSkipSlotsState(new Set(share.skip_slots || []))
+      setSkipCatsState(new Set((share.skip_categories || []).filter(c => c !== 'clothing')))
+
+      // Fetch the gap data exactly as WishlistPublic does
+      const { data, error } = await supabase.schema(currentSchema)
+        .rpc('get_wishlist_for_share', { p_token: share.token })
+
+      if (!cancelled) {
+        if (!error && data && !data.error) setPageData(data)
+        setLoading(false)
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  }, [household?.id])
+
+  // Reload gap data after edits
+  const reloadGaps = useCallback(async () => {
+    if (!token) return
+    const { data, error } = await supabase.schema(currentSchema)
+      .rpc('get_wishlist_for_share', { p_token: token })
+    if (!error && data && !data.error) setPageData(data)
+  }, [token])
+
+  // Save skip_slots / skip_categories back to the share
+  const saveSkips = useCallback(async (newSkipSlots, newSkipCats) => {
+    if (!shareId) return
+    await supabase.schema(currentSchema)
+      .from('wishlist_shares')
+      .update({
+        skip_slots: newSkipSlots.size > 0 ? [...newSkipSlots] : null,
+        skip_categories: newSkipCats.size > 0 ? [...newSkipCats] : null,
+      })
+      .eq('id', shareId)
+  }, [shareId])
+
+  // Toggle priority on a gap row
+  const togglePriority = useCallback(async (row, slotType) => {
+    const key = row.id
+    setWorking(prev => new Set([...prev, key]))
+    const table = slotType === 'clothing' ? 'clothing_items' : 'items'
+    await supabase.schema(currentSchema)
+      .from(table)
+      .update({ is_priority: !row.is_priority })
+      .eq('id', row.id)
+    await reloadGaps()
+    setWorking(prev => { const s = new Set(prev); s.delete(key); return s })
+  }, [reloadGaps])
+
+  // Hide/show a slot from the shared view
+  const toggleSlotVisibility = useCallback(async (slotId) => {
+    setSkipSlotsState(prev => {
+      const next = new Set(prev)
+      if (next.has(slotId)) next.delete(slotId)
+      else next.add(slotId)
+      saveSkips(next, skipCats)
+      return next
+    })
+    // Reload so the view reflects the skip
+    setTimeout(reloadGaps, 300)
+  }, [skipCats, saveSkips, reloadGaps])
+
+  // Share link
+  const shareUrl = token ? `${window.location.origin}/wishlist/${token}` : null
+
+  async function copyLink() {
+    if (!shareUrl) return
+    try { await navigator.clipboard.writeText(shareUrl) } catch {}
+    setCopyDone(true)
+    setTimeout(() => setCopyDone(false), 2000)
   }
-  const sizes = AGE_RANGES.filter(s => clothingBySize[s]?.length > 0)
 
-  // Group non-clothing by category
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.loadingBar} />
+      </div>
+    )
+  }
+
+  if (!pageData) {
+    return (
+      <div className={styles.page}>
+        <header className={styles.hero}>
+          <button className={styles.backBtn} onClick={() => navigate(-1)}>←</button>
+        </header>
+        <div className={styles.empty}>
+          <p className={styles.emptyText}>Add items to your inventory first to generate your wishlist.</p>
+          <button className={styles.emptyBtn} onClick={() => navigate('/inventory')}>Go to Inventory</button>
+        </div>
+        <BottomNav />
+      </div>
+    )
+  }
+
+  const { share, household: hh, babies: hBabies, clothing, items } = pageData
+
+  const displayedClothing = (clothing || []).filter(r => !skipSlots.has(r.slot_id))
+  const displayedItems    = (items || []).filter(r => !skipSlots.has(r.slot_id))
+
+  const priorityClothing = displayedClothing.filter(r => r.is_priority)
+  const priorityItems    = displayedItems.filter(r => r.is_priority)
+  const hasPriority      = priorityClothing.length + priorityItems.length > 0
+
+  // Clothing by size
+  const bySize = {}
+  for (const r of displayedClothing.filter(r => !r.is_priority)) {
+    if (!bySize[r.size_label]) bySize[r.size_label] = []
+    bySize[r.size_label].push(r)
+  }
+  const sizes = AGE_RANGES.filter(s => bySize[s]?.length > 0)
+
+  // Non-clothing by category
   const byCat = {}
-  for (const item of nonClothingItems) {
-    if (!byCat[item.top_category]) byCat[item.top_category] = []
-    byCat[item.top_category].push(item)
+  for (const r of displayedItems.filter(r => !r.is_priority)) {
+    if (!byCat[r.top_category]) byCat[r.top_category] = []
+    byCat[r.top_category].push(r)
   }
   const usedCats = NON_CLOTHING_ORDER.filter(c => byCat[c]?.length > 0)
 
-  const togglePriority = useCallback(async (item) => {
-    const id = item.id
-    setWorking(prev => new Set([...prev, id]))
-    const table = item.top_category === 'clothing' ? 'clothing_items' : 'items'
-    await supabase.schema(currentSchema).from(table)
-      .update({ is_priority: !item.is_priority }).eq('id', id)
-    await reloadItems()
-    setWorking(prev => { const s = new Set(prev); s.delete(id); return s })
-  }, [reloadItems])
-
-  const removeItem = useCallback(async (item) => {
-    const id = item.id
-    setWorking(prev => new Set([...prev, id]))
-    const table = item.top_category === 'clothing' ? 'clothing_items' : 'items'
-    await supabase.schema(currentSchema).from(table)
-      .update({ inventory_status: 'owned' }).eq('id', id)
-    await reloadItems()
-    setWorking(prev => { const s = new Set(prev); s.delete(id); return s })
-  }, [reloadItems])
-
-  // Drag to reorder
-  const dragItem = useRef(null)
-  const dragOver = useRef(null)
-  function handleDragStart(id) { dragItem.current = id }
-  function handleDragEnter(id) { dragOver.current = id }
-  function handleDragEnd() {
-    if (!dragItem.current || !dragOver.current || dragItem.current === dragOver.current) {
-      dragItem.current = null; dragOver.current = null; return
-    }
-    setOrderedIds(prev => {
-      const list = [...prev]
-      const from = list.indexOf(dragItem.current)
-      const to   = list.indexOf(dragOver.current)
-      if (from === -1 || to === -1) return prev
-      list.splice(from, 1); list.splice(to, 0, dragItem.current)
-      return list
-    })
-    dragItem.current = null; dragOver.current = null
-  }
-
-  const babyName = currentBaby?.name || babies[0]?.name || null
-  const householdName = household?.name || 'Your'
+  const babyName = hBabies?.[0]?.name || null
+  const householdName = hh?.name || 'Your'
 
   return (
     <div className={styles.page}>
 
-      {/* Header — mirrors public wishlist style */}
+      {/* Hero — identical to WishlistPublic */}
       <header className={styles.hero}>
         <div className={styles.heroTopbar}>
-          <button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Back">←</button>
-          <div className={styles.heroActions}>
-            <button className={styles.shareBtn}
-              onClick={() => setShowShareModal(true)}>
-              Share
-            </button>
-          </div>
+          <button className={styles.backBtn} onClick={() => navigate(-1)}>←</button>
+          <button className={styles.copyBtn} onClick={copyLink}>
+            {copyDone ? 'Copied!' : 'Copy link'}
+          </button>
         </div>
         <div className={styles.heroEyebrow}>Baby Wishlist</div>
         <h1 className={styles.heroTitle}>{householdName}&apos;s Wishlist</h1>
         {babyName && <div className={styles.heroBabyPill}>{babyName}</div>}
         <p className={styles.heroHint}>
-          Star items to mark them as most needed. Drag to reorder. Tap × to remove.
+          ★ marks an item as most needed &nbsp;·&nbsp; × hides it from family
         </p>
       </header>
 
       <div className={styles.body}>
 
-        {wishlist.length === 0 && (
-          <div className={styles.empty}>
-            <div className={styles.emptyEmoji}>🌱</div>
-            <p className={styles.emptyText}>Nothing on your wishlist yet.</p>
-            <button className={styles.emptyBtn} onClick={() => navigate('/add-item?mode=needed')}>
-              Add items
-            </button>
-          </div>
-        )}
-
         {/* Most needed */}
-        {priorityItems.length > 0 && (
+        {hasPriority && (
           <section className={styles.section}>
-            <div className={styles.sectionToggle}>
+            <div className={styles.sectionHead}>
               <span className={styles.priorityStar}>★</span>
               <span className={styles.sectionTitle}>Most needed</span>
-              <span className={styles.badge}>{priorityItems.length} items</span>
             </div>
             <div className={styles.cardGrid}>
-              {priorityItems.map(item => (
-                <EditCard key={item.id} item={item}
-                  working={working.has(item.id)}
-                  onPriority={togglePriority} onRemove={removeItem}
-                  onDragStart={handleDragStart} onDragEnter={handleDragEnter}
-                  onDragEnd={handleDragEnd}
-                />
+              {priorityClothing.map(row => (
+                <GapCard key={`c-${row.id}`} row={row} slotType="clothing"
+                  hidden={false} working={working.has(row.id)}
+                  onPriority={togglePriority} onToggleVisibility={toggleSlotVisibility} />
+              ))}
+              {priorityItems.map(row => (
+                <GapCard key={`i-${row.id}`} row={row} slotType="item"
+                  hidden={false} working={working.has(row.id)}
+                  onPriority={togglePriority} onToggleVisibility={toggleSlotVisibility} />
               ))}
             </div>
           </section>
         )}
 
         {/* Clothing by size */}
-        {clothingItems.length > 0 && (
+        {displayedClothing.filter(r => !r.is_priority).length > 0 && (
           <section className={styles.section}>
-            <div className={styles.sectionStaticHead}>
-              <h2 className={styles.sectionTitle}>Clothing</h2>
-            </div>
+            <div className={styles.sectionStaticHead}>Clothing</div>
             {sizes.map(size => (
-              <div key={size} className={styles.sizeGroup}>
+              <div key={size}>
                 <div className={styles.sizeChip}>{size}</div>
                 <div className={styles.cardGrid}>
-                  {clothingBySize[size].map(item => (
-                    <EditCard key={item.id} item={item}
-                      working={working.has(item.id)}
-                      onPriority={togglePriority} onRemove={removeItem}
-                      onDragStart={handleDragStart} onDragEnter={handleDragEnter}
-                      onDragEnd={handleDragEnd}
-                    />
+                  {bySize[size].map(row => (
+                    <GapCard key={`c-${row.id}`} row={row} slotType="clothing"
+                      hidden={skipSlots.has(row.slot_id)} working={working.has(row.id)}
+                      onPriority={togglePriority} onToggleVisibility={toggleSlotVisibility} />
                   ))}
                 </div>
               </div>
@@ -192,75 +250,88 @@ export default function WishlistEdit() {
         {usedCats.map(cat => (
           <section key={cat} className={styles.section}>
             <div className={styles.sectionStaticHead}>
-              <h2 className={styles.sectionTitle}>{getCatLabel(cat)}</h2>
+              {CATEGORY_META[cat]?.label || cat}
             </div>
             <div className={styles.cardGrid}>
-              {byCat[cat].map(item => (
-                <EditCard key={item.id} item={item}
-                  working={working.has(item.id)}
-                  onPriority={togglePriority} onRemove={removeItem}
-                  onDragStart={handleDragStart} onDragEnter={handleDragEnter}
-                  onDragEnd={handleDragEnd}
-                />
+              {byCat[cat].map(row => (
+                <GapCard key={`i-${row.id}`} row={row} slotType="item"
+                  hidden={skipSlots.has(row.slot_id)} working={working.has(row.id)}
+                  onPriority={togglePriority} onToggleVisibility={toggleSlotVisibility} />
               ))}
             </div>
           </section>
         ))}
 
-        {wishlist.length > 0 && (
-          <button className={styles.addMoreBtn}
-            onClick={() => navigate('/add-item?mode=needed')}>
-            + Add more items
-          </button>
+        {(displayedClothing.length === 0 && displayedItems.length === 0 && !hasPriority) && (
+          <div className={styles.empty}>
+            <p className={styles.emptyText}>Add items to your inventory to generate wishlist gaps.</p>
+            <button className={styles.emptyBtn} onClick={() => navigate('/inventory')}>
+              Go to Inventory
+            </button>
+          </div>
         )}
       </div>
 
       <BottomNav />
-      {showShareModal && <ShareWishlistModal onClose={() => setShowShareModal(false)} />}
     </div>
   )
 }
 
-// ── Edit card — looks like a WishlistPublic card with overlaid controls ──
-function EditCard({ item, working, onPriority, onRemove, onDragStart, onDragEnter, onDragEnd }) {
-  const label = getLabel(item)
-  const size  = item.size_label || null
+// ── Gap card — matches WishlistPublic card style with edit overlays ──
+function GapCard({ row, slotType, hidden, working, onPriority, onToggleVisibility }) {
+  const isClothing = slotType === 'clothing'
+  const slot  = isClothing ? CLOTHING_SLOT[row.slot_id] : ITEM_SLOT[row.slot_id]
+  const label = slot?.label || row.slot_id
+
+  const recommended = isClothing
+    ? recommendedQty(slot, row.size_label)
+    : (slot?.recommended ?? 1)
+  const stillNeeded = Math.max(0, recommended - (row.owned_count || 0))
 
   return (
-    <div
-      className={`${styles.card} ${working ? styles.cardWorking : ''}`}
-      draggable
-      onDragStart={() => onDragStart(item.id)}
-      onDragEnter={() => onDragEnter(item.id)}
-      onDragEnd={onDragEnd}
-      onDragOver={e => e.preventDefault()}
-    >
-      {/* Card content */}
-      <div className={styles.cardMain}>
+    <div className={`${styles.card} ${hidden ? styles.cardHidden : ''} ${working ? styles.cardWorking : ''}`}>
+      <div className={styles.cardTop}>
         <span className={styles.cardLabel}>{label}</span>
-        {size && <span className={styles.cardSize}>{size}</span>}
+        {row.is_priority && !hidden && (
+          <span className={styles.cardStar}>★</span>
+        )}
       </div>
+
+      {isClothing && row.size_label && (
+        <span className={styles.cardSize}>{row.size_label}</span>
+      )}
+
+      {!hidden && (
+        <div className={styles.cardNeed}>
+          Need {stillNeeded} more
+        </div>
+      )}
+      {hidden && (
+        <div className={styles.cardHiddenLabel}>Hidden from family</div>
+      )}
 
       {/* Edit controls */}
       <div className={styles.cardControls}>
+        {!hidden && (
+          <button
+            className={`${styles.starBtn} ${row.is_priority ? styles.starBtnActive : ''}`}
+            onClick={() => onPriority(row, slotType)}
+            disabled={working}
+            aria-label={row.is_priority ? 'Remove from most needed' : 'Mark as most needed'}
+          >
+            {row.is_priority ? '★' : '☆'}
+          </button>
+        )}
         <button
-          className={`${styles.starBtn} ${item.is_priority ? styles.starBtnActive : ''}`}
-          onClick={() => onPriority(item)}
+          className={`${styles.hideBtn} ${hidden ? styles.hideBtnActive : ''}`}
+          onClick={() => onToggleVisibility(row.slot_id)}
           disabled={working}
-          aria-label={item.is_priority ? 'Remove from most needed' : 'Mark as most needed'}
+          aria-label={hidden ? 'Show to family' : 'Hide from family'}
+          title={hidden ? 'Show to family' : 'Hide from family'}
         >
-          {item.is_priority ? '★' : '☆'}
+          {hidden ? '👁' : '×'}
         </button>
-        <button
-          className={styles.removeBtn}
-          onClick={() => onRemove(item)}
-          disabled={working}
-          aria-label={`Remove ${label}`}
-        >×</button>
       </div>
-
-      {/* Drag hint */}
-      <span className={styles.dragHandle} aria-hidden="true">⠿</span>
     </div>
   )
 }
