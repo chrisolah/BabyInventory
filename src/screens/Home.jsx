@@ -15,7 +15,7 @@ import BabySwitcher from '../components/BabySwitcher'
 import HeaderActions from '../components/HeaderActions'
 import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
-import ShareWishlistModal from '../components/ShareWishlistModal'
+import ShareRegistryModal from '../components/ShareRegistryModal'
 import styles from './Home.module.css'
 
 // Category hub configuration — all 8 categories are now live with real
@@ -50,14 +50,14 @@ export default function Home() {
   } = useHousehold()
   const [status, setStatus] = useState('checking')
   const [showShareModal, setShowShareModal] = useState(false)
-  // One-time wishlist prompt: show once per household after setup
-  const [showWishlistPrompt, setShowWishlistPrompt] = useState(() => {
-    try { return !localStorage.getItem('sl_wishlist_prompt_dismissed') } catch { return false }
+  // One-time registry prompt: show once per household after setup
+  const [showRegistryPrompt, setShowRegistryPrompt] = useState(() => {
+    try { return !localStorage.getItem('sl_registry_prompt_dismissed') } catch { return false }
   })
 
-  function dismissWishlistPrompt() {
-    try { localStorage.setItem('sl_wishlist_prompt_dismissed', '1') } catch {}
-    setShowWishlistPrompt(false)
+  function dismissRegistryPrompt() {
+    try { localStorage.setItem('sl_registry_prompt_dismissed', '1') } catch {}
+    setShowRegistryPrompt(false)
   }
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] ?? ''
@@ -140,7 +140,7 @@ export default function Home() {
     [items],
   )
 
-  const wishlistCount = useMemo(
+  const registryCount = useMemo(
     () => items.filter(i => i.inventory_status === 'needed').length,
     [items],
   )
@@ -322,44 +322,44 @@ export default function Home() {
           })}
         </div>
         {/* Stat cards */}
-        {/* One-time wishlist share prompt — shown once, dismissed permanently */}
-        {showWishlistPrompt && !itemsLoading && totalOwnedCount > 0 && (
-          <div className={styles.wishlistPrompt}>
-            <div className={styles.wishlistPromptIcon}>🔗</div>
-            <div className={styles.wishlistPromptBody}>
-              <div className={styles.wishlistPromptTitle}>Share your wishlist with family and friends</div>
-              <div className={styles.wishlistPromptSub}>They&rsquo;ll see exactly what you still need — no guessing, no duplicates.</div>
+        {/* One-time registry share prompt — shown once, dismissed permanently */}
+        {showRegistryPrompt && !itemsLoading && totalOwnedCount > 0 && (
+          <div className={styles.registryPrompt}>
+            <div className={styles.registryPromptIcon}>🔗</div>
+            <div className={styles.registryPromptBody}>
+              <div className={styles.registryPromptTitle}>Share your registry with family and friends</div>
+              <div className={styles.registryPromptSub}>They&rsquo;ll see exactly what you still need — no guessing, no duplicates.</div>
             </div>
-            <div className={styles.wishlistPromptActions}>
+            <div className={styles.registryPromptActions}>
               <button
                 type="button"
-                className={styles.wishlistPromptBtn}
-                onClick={() => { dismissWishlistPrompt(); setShowShareModal(true); track.ctaClicked('home_wishlist_prompt_share') }}
+                className={styles.registryPromptBtn}
+                onClick={() => { dismissRegistryPrompt(); setShowShareModal(true); track.ctaClicked('home_registry_prompt_share') }}
               >
                 Share
               </button>
-              <button type="button" className={styles.wishlistPromptDismiss} onClick={dismissWishlistPrompt} aria-label="Dismiss">×</button>
+              <button type="button" className={styles.registryPromptDismiss} onClick={dismissRegistryPrompt} aria-label="Dismiss">×</button>
             </div>
           </div>
         )}
 
-        {/* Wishlist two-card row */}
-        <div className={styles.wishlistCardRow}>
+        {/* Registry two-card row */}
+        <div className={styles.registryCardRow}>
           <button
             type="button"
-            className={styles.wishlistActionCard}
-            onClick={() => { navigate('/wishlist/edit'); track.ctaClicked('home_edit_wishlist') }}
+            className={styles.registryActionCard}
+            onClick={() => { navigate('/registry/edit'); track.ctaClicked('home_edit_registry') }}
           >
-            <div className={styles.wishlistActionTitle}>Edit wishlist</div>
-            <div className={styles.wishlistActionSub}>Update what you need</div>
+            <div className={styles.registryActionTitle}>Edit registry</div>
+            <div className={styles.registryActionSub}>Smart registry built from what you own</div>
           </button>
           <button
             type="button"
-            className={`${styles.wishlistActionCard} ${styles.wishlistActionCardShare}`}
-            onClick={() => { setShowShareModal(true); track.ctaClicked('home_share_wishlist_card') }}
+            className={`${styles.registryActionCard} ${styles.registryActionCardShare}`}
+            onClick={() => { setShowShareModal(true); track.ctaClicked('home_share_registry_card') }}
           >
-            <div className={styles.wishlistActionTitle}>Share wishlist</div>
-            <div className={styles.wishlistActionSub}>Let family &amp; friends fill your gaps</div>
+            <div className={styles.registryActionTitle}>Share registry</div>
+            <div className={styles.registryActionSub}>Knows what you have. Shows what you need.</div>
           </button>
         </div>
 
@@ -369,8 +369,8 @@ export default function Home() {
             <div className={styles.statLabel}>items tracked</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statValue}>{itemsLoading ? '—' : wishlistCount}</div>
-            <div className={styles.statLabel}>on wishlist</div>
+            <div className={styles.statValue}>{itemsLoading ? '—' : registryCount}</div>
+            <div className={styles.statLabel}>on registry</div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.statValue}>{itemsLoading ? '—' : outgrownCount}</div>
@@ -380,7 +380,7 @@ export default function Home() {
       </main>
 
       <BottomNav />
-      {showShareModal && <ShareWishlistModal onClose={() => setShowShareModal(false)} />}
+      {showShareModal && <ShareRegistryModal onClose={() => setShowShareModal(false)} />}
 
     </div>
   )

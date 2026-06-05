@@ -126,7 +126,7 @@ export default function WishlistEdit() {
   }, [saveSkips, reloadGaps])
 
   async function copyLink() {
-    const url = token ? `${window.location.origin}/wishlist/${token}` : null
+    const url = token ? `${window.location.origin}/registry/${token}` : null
     if (!url) return
     try { await navigator.clipboard.writeText(url) } catch {}
     setCopyDone(true); setTimeout(() => setCopyDone(false), 2000)

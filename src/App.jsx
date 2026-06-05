@@ -324,7 +324,7 @@ function AppRoutes() {
       {/* /wishlist/:token — public registry link, no auth required.
           Full recipient UI in task #15; WishlistPublic is currently a
           placeholder that confirms the link resolves correctly. */}
-      <Route path="/wishlist/:token" element={<WishlistPublic />} />
+      <Route path="/registry/:token" element={<WishlistPublic />} />
       {/* All authed routes share ProtectedLayout so HouseholdProvider stays
           mounted across navigation. Adding a new authed screen? Add it as a
           child of this route, not as its own top-level <Route>. */}
@@ -346,7 +346,7 @@ function AppRoutes() {
         <Route path="/pass-along" element={<PassAlongList />} />
         <Route path="/pass-along/:id" element={<PassAlongBatch />} />
         <Route path="/plan" element={<Plan />} />
-        <Route path="/wishlist/edit" element={<WishlistEdit />} />
+        <Route path="/registry/edit" element={<WishlistEdit />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
       {/* /admin is gated by AdminGuard (email allowlist) and lives outside

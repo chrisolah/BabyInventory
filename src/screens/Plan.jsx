@@ -23,7 +23,7 @@ import Eyebrow from '../components/Eyebrow'
 import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
 import HeaderActions from '../components/HeaderActions'
-import ShareWishlistModal from '../components/ShareWishlistModal'
+import ShareRegistryModal from '../components/ShareRegistryModal'
 import styles from './Plan.module.css'
 
 // Plan — the "wish list + guide" hub. Route: /plan
@@ -62,7 +62,7 @@ const PLAN_CATEGORIES = [
   { id: 'play',      label: 'Play',      live: true, icon: PlayNavIcon,     color: 'coral'  },
   { id: 'health',    label: 'Health',    live: true, icon: HealthNavIcon,   color: 'red'    },
   { id: 'bath',      label: 'Bath',      live: true, icon: BathNavIcon,     color: 'green'  },
-  { id: 'wishlist',  label: 'Wishlist',  live: true, icon: WishlistNavIcon, color: 'teal'   },
+  { id: 'registry',  label: 'Registry',  live: true, icon: RegistryNavIcon, color: 'teal'   },
 ]
 
 const CATEGORY_ORDER = [
@@ -278,7 +278,7 @@ export default function Plan() {
               key={cat.id}
               type="button"
               className={`${styles.catChip} ${styles[`catChip_${cat.color}`]} ${active ? styles.catChipActive : ''}`}
-              onClick={() => cat.id === 'wishlist' ? navigate('/wishlist/edit') : setSelectedCategory(cat.id)}
+              onClick={() => cat.id === 'registry' ? navigate('/registry/edit') : setSelectedCategory(cat.id)}
               aria-label={cat.label}
               aria-pressed={active}
             >
@@ -301,7 +301,7 @@ export default function Plan() {
               key={cat.id}
               type="button"
               className={`${styles.catSidebarItem} ${selectedCategory === cat.id ? styles.catSidebarItemActive : ''}`}
-              onClick={() => cat.id === 'wishlist' ? navigate('/wishlist/edit') : setSelectedCategory(cat.id)}
+              onClick={() => cat.id === 'registry' ? navigate('/registry/edit') : setSelectedCategory(cat.id)}
               aria-label={cat.label}
             >
               <span className={styles.catSidebarIcon}><cat.icon /></span>
@@ -372,16 +372,16 @@ export default function Plan() {
           </>
         )}
 
-        {!itemsLoading && selectedCategory === 'wishlist' && (
-          <WishlistView
+        {!itemsLoading && selectedCategory === 'registry' && (
+          <RegistryView
             items={babyFilteredItems.filter(it => it.inventory_status === 'needed')}
             onItemTap={(id) => navigate(`/item/${id}`)}
             onAddWish={() => navigate('/add-item?mode=needed')}
-            onShare={() => { setShowShareModal(true); track.ctaClicked('plan_wishlist_share') }}
+            onShare={() => { setShowShareModal(true); track.ctaClicked('plan_registry_share') }}
           />
         )}
 
-        {!itemsLoading && !isClothing && selectedCategory !== 'wishlist' && (
+        {!itemsLoading && !isClothing && selectedCategory !== 'registry' && (
           <>
             {/* Coverage summary card */}
             <CoverageSummaryCard
@@ -440,7 +440,7 @@ export default function Plan() {
       </div>
 
       <BottomNav />
-      {showShareModal && <ShareWishlistModal onClose={() => setShowShareModal(false)} />}
+      {showShareModal && <ShareRegistryModal onClose={() => setShowShareModal(false)} />}
 
     </div>
   )
@@ -514,7 +514,7 @@ function BathNavIcon() {
   )
 }
 
-function WishlistNavIcon() {
+function RegistryNavIcon() {
   return (
     <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
       <path d="M5 3h10a1 1 0 011 1v12l-6-3-6 3V4a1 1 0 011-1z"
@@ -523,7 +523,7 @@ function WishlistNavIcon() {
   )
 }
 
-// ── Wishlist view — all needed items across every category ────────────────────
+// ── Registry view — all needed items across every category ────────────────────
 const WISHLIST_CATEGORY_ORDER = [
   'clothing', 'sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath',
 ]
@@ -532,7 +532,7 @@ const WISHLIST_CATEGORY_LABEL = {
   travel: 'Travel', play: 'Play', health: 'Health', bath: 'Bath',
 }
 
-function WishlistView({ items, onItemTap, onAddWish, onShare }) {
+function RegistryView({ items, onItemTap, onAddWish, onShare }) {
   // Group by top_category
   const grouped = {}
   for (const item of items) {
@@ -544,20 +544,20 @@ function WishlistView({ items, onItemTap, onAddWish, onShare }) {
 
   return (
     <div>
-      {/* Share banner — always visible at top of wishlist view */}
-      <button type="button" className={styles.wishlistShareBanner} onClick={onShare}>
-        <span className={styles.wishlistShareIcon}>🔗</span>
-        <div className={styles.wishlistShareText}>
-          <span className={styles.wishlistShareTitle}>Share with family &amp; friends</span>
-          <span className={styles.wishlistShareSub}>They&rsquo;ll see exactly what you still need</span>
+      {/* Share banner — always visible at top of registry view */}
+      <button type="button" className={styles.registryShareBanner} onClick={onShare}>
+        <span className={styles.registryShareIcon}>🔗</span>
+        <div className={styles.registryShareText}>
+          <span className={styles.registryShareTitle}>Share with family &amp; friends</span>
+          <span className={styles.registryShareSub}>They&rsquo;ll see exactly what you still need</span>
         </div>
-        <span className={styles.wishlistShareArrow}>→</span>
+        <span className={styles.registryShareArrow}>→</span>
       </button>
 
       {items.length === 0 && (
         <div className={styles.comingSoonCard}>
           <div className={styles.comingSoonEmoji}>📋</div>
-          <div className={styles.comingSoonTitle}>Your wishlist is empty</div>
+          <div className={styles.comingSoonTitle}>Your registry is empty</div>
           <p className={styles.comingSoonBody}>Add items you still need to track them here.</p>
         </div>
       )}
@@ -585,7 +585,7 @@ function WishlistView({ items, onItemTap, onAddWish, onShare }) {
         </section>
       ))}
       <button type="button" className={styles.wishAddBtn} onClick={onAddWish}>
-        + Add to wishlist
+        + Add to registry
       </button>
     </div>
   )
