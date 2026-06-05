@@ -3,15 +3,45 @@
 .loadingBar { height: 3px; background: var(--teal); animation: ls 1s ease-in-out infinite; }
 @keyframes ls { 0%{width:0;margin-left:0} 50%{width:60%;margin-left:20%} 100%{width:0;margin-left:100%} }
 
-/* ── Hero ── */
-.hero { background: var(--teal-dark); padding: calc(1rem + env(safe-area-inset-top,0px)) 1.25rem 1.25rem; }
-.heroTop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.backBtn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.12); border: none; border-radius: 8px; cursor: pointer; font-size: 18px; color: #fff; font-family: var(--font-body); }
-.copyBtn { background: var(--teal); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 500; font-family: var(--font-body); cursor: pointer; transition: opacity 0.15s; }
+/* ── Header — matches Home/Inventory ── */
+.header {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--white); border-bottom: 0.5px solid var(--gray-200);
+  padding: calc(14px + env(safe-area-inset-top,0px)) 20px 14px;
+  display: grid;
+  grid-template-columns: minmax(92px,1fr) auto minmax(92px,1fr);
+  align-items: center; gap: 8px;
+}
+.brand {
+  font-family: var(--font-display); font-size: 18px; font-weight: 500;
+  color: var(--gray-900); grid-column: 1;
+}
+.sprigCenter {
+  grid-column: 2; display: flex; align-items: center; justify-content: center;
+}
+.headerActions { grid-column: 3; display: flex; justify-content: flex-end; }
+.copyBtn {
+  background: var(--teal); color: #fff; border: none; border-radius: 8px;
+  padding: 8px 16px; font-size: 13px; font-weight: 500;
+  font-family: var(--font-body); cursor: pointer; transition: opacity 0.15s;
+}
 .copyBtn:hover { opacity: 0.88; }
-.heroEyebrow { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal-light); margin-bottom: 3px; }
-.heroTitle { font-family: var(--font-display); font-size: 22px; font-weight: 500; color: #fff; margin-bottom: 6px; }
-.heroPill { display: inline-block; background: rgba(255,255,255,0.12); color: var(--teal-light); font-size: 11px; font-weight: 500; padding: 2px 10px; border-radius: 999px; }
+
+/* Title row below header */
+.titleRow {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px 10px;
+  border-bottom: 0.5px solid var(--gray-100);
+  background: var(--white);
+}
+.backBtn {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  background: var(--gray-100); border: none; border-radius: 8px; cursor: pointer;
+  font-size: 18px; color: var(--gray-700); font-family: var(--font-body); flex-shrink: 0;
+}
+.titleInfo { flex: 1; }
+.titleMain { font-family: var(--font-display); font-size: 17px; font-weight: 500; color: var(--gray-900); }
+.titleSub  { font-size: 12px; color: var(--gray-500); margin-top: 1px; }
 
 /* ── Category tile row — identical to Inventory/Plan ── */
 .catRow {
@@ -19,7 +49,7 @@
   gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 12px 16px 8px;
+  padding: 12px 20px 8px;
   background: var(--white);
   border-bottom: 0.5px solid var(--gray-100);
 }
@@ -73,10 +103,10 @@
 .catChip_amber .catChipBadge { background: var(--amber-dark); }
 
 /* ── Hint ── */
-.hint { font-size: 11px; color: var(--gray-400); padding: 8px 16px 0; }
+.hint { font-size: 11px; color: var(--gray-400); padding: 8px 20px 0; }
 
 /* ── Body ── */
-.body { flex: 1; padding: 8px 16px 16px; }
+.body { flex: 1; padding: 8px 20px 16px; }
 
 /* Size label */
 .sizeLabel {
@@ -91,11 +121,12 @@
 /* ── Gap row ── */
 .row {
   display: flex; align-items: center; gap: 12px;
-  background: var(--white); border: 1px solid var(--gray-200);
-  border-radius: 12px; padding: 13px 14px; margin-bottom: 6px;
+  background: var(--gray-50); border: none;
+  border-radius: 14px; padding: 14px 16px; margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   transition: opacity 0.15s;
 }
-.rowHidden { opacity: 0.45; background: var(--gray-50); }
+.rowHidden { opacity: 0.4; background: var(--gray-100); }
 .rowWorking { opacity: 0.4; pointer-events: none; }
 
 .rowInfo { flex: 1; min-width: 0; }

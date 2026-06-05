@@ -4,6 +4,7 @@ import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { SLOTS, AGE_RANGES, recommendedQty } from '../lib/wardrobe'
 import { ITEMS as ITEM_DEFS, CATEGORY_META } from '../lib/categories'
+import IvySprig from '../components/IvySprig'
 import BottomNav from '../components/BottomNav'
 import styles from './WishlistEdit.module.css'
 
@@ -150,18 +151,25 @@ export default function WishlistEdit() {
 
   return (
     <div className={styles.page}>
-      {/* Hero */}
-      <header className={styles.hero}>
-        <div className={styles.heroTop}>
-          <button className={styles.backBtn} onClick={() => navigate(-1)}>←</button>
+      {/* Header — matches Home/Inventory style */}
+      <header className={styles.header}>
+        <div className={styles.brand}>sprigloop</div>
+        <div className={styles.sprigCenter}><IvySprig /></div>
+        <div className={styles.headerActions}>
           <button className={styles.copyBtn} onClick={copyLink}>
             {copyDone ? '✓ Copied' : 'Copy link'}
           </button>
         </div>
-        <div className={styles.heroEyebrow}>Baby Wishlist</div>
-        <div className={styles.heroTitle}>{householdName}&apos;s Wishlist</div>
-        {babyName && <span className={styles.heroPill}>{babyName}</span>}
       </header>
+
+      {/* Sub-header with wishlist title */}
+      <div className={styles.titleRow}>
+        <button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Back">←</button>
+        <div className={styles.titleInfo}>
+          <div className={styles.titleMain}>{householdName}&apos;s Wishlist</div>
+          {babyName && <div className={styles.titleSub}>{babyName}</div>}
+        </div>
+      </div>
 
       {/* Category tile tabs — matches Inventory/Plan style */}
       <div className={styles.catRow}>
