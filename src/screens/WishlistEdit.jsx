@@ -303,6 +303,12 @@ function CategoryView({ rows, skipSlots, working, onPriority, onToggleVisibility
   )
 }
 
+const CAT_COLOR = {
+  clothing: 'purple', sleep: 'blue', feeding: 'amber',
+  diapering: 'gray', travel: 'purple', play: 'coral',
+  health: 'red', bath: 'green',
+}
+
 function GapCard({ row, skipSlots, working, onPriority, onToggleVisibility }) {
   const isClothing = row._type === 'clothing'
   const slot = isClothing ? CLOTHING_SLOT[row.slot_id] : ITEM_SLOT[row.slot_id]
@@ -310,38 +316,42 @@ function GapCard({ row, skipSlots, working, onPriority, onToggleVisibility }) {
   const recommended = isClothing ? recommendedQty(slot, row.size_label) : (slot?.recommended ?? 1)
   const stillNeeded = Math.max(0, recommended - (row.owned_count || 0))
   const hidden = skipSlots.has(row.slot_id)
+  const color = isClothing ? 'purple' : (CAT_COLOR[row.top_category] || 'gray')
 
   return (
     <div className={`${styles.card} ${hidden ? styles.cardHidden : ''} ${working ? styles.cardWorking : ''}`}>
-      <div className={styles.cardTop}>
-        <span className={styles.cardLabel}>{label}</span>
-        {row.is_priority && !hidden && <span className={styles.cardStar}>★</span>}
-        {hidden && <span className={styles.cardHiddenIcon}>🚫</span>}
-      </div>
+      <div className={`${styles.cardBand} ${styles[`band_${color}`]}`} />
+      <div className={styles.cardBody}>
+        <div className={styles.cardTop}>
+          <span className={styles.cardLabel}>{label}</span>
+          {row.is_priority && !hidden && <span className={styles.cardStar}>★</span>}
+          {hidden && <span className={styles.cardHiddenIcon}>🚫</span>}
+        </div>
 
-      {isClothing && row.size_label && (
-        <span className={styles.cardSize}>{row.size_label}</span>
-      )}
-
-      <div className={styles.cardNeed}>
-        {hidden ? 'Hidden' : `Need ${stillNeeded} more`}
-      </div>
-
-      <div className={styles.cardControls}>
-        {!hidden && (
-          <button
-            className={`${styles.starBtn} ${row.is_priority ? styles.starBtnActive : ''}`}
-            onClick={() => onPriority(row, row._type)}
-            disabled={working}
-            aria-label={row.is_priority ? 'Remove priority' : 'Mark as most needed'}
-          >{row.is_priority ? '★' : '☆'}</button>
+        {isClothing && row.size_label && (
+          <span className={styles.cardSize}>{row.size_label}</span>
         )}
-        <button
-          className={`${styles.hideBtn} ${hidden ? styles.hideBtnActive : ''}`}
-          onClick={() => onToggleVisibility(row.slot_id)}
-          disabled={working}
-          aria-label={hidden ? 'Show to family & friends' : 'Hide from family & friends'}
-        >{hidden ? '👁' : '×'}</button>
+
+        <div className={styles.cardNeed}>
+          {hidden ? 'Hidden' : `Need ${stillNeeded} more`}
+        </div>
+
+        <div className={styles.cardControls}>
+          {!hidden && (
+            <button
+              className={`${styles.starBtn} ${row.is_priority ? styles.starBtnActive : ''}`}
+              onClick={() => onPriority(row, row._type)}
+              disabled={working}
+              aria-label={row.is_priority ? 'Remove priority' : 'Mark as most needed'}
+            >{row.is_priority ? '★ Priority' : '☆ Prioritize'}</button>
+          )}
+          <button
+            className={`${styles.hideBtn} ${hidden ? styles.hideBtnActive : ''}`}
+            onClick={() => onToggleVisibility(row.slot_id)}
+            disabled={working}
+            aria-label={hidden ? 'Show to family & friends' : 'Hide from family & friends'}
+          >{hidden ? '👁' : '×'}</button>
+        </div>
       </div>
     </div>
   )

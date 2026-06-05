@@ -178,15 +178,31 @@
 }
 
 .card {
-  background: var(--gray-50);
-  border: 0.5px solid var(--gray-200);
-  border-radius: 12px;
-  padding: 12px 12px 10px;
-  display: flex; flex-direction: column; gap: 4px;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
   transition: opacity 0.15s;
 }
-.cardHidden { opacity: 0.45; background: var(--gray-100); }
+.cardHidden { opacity: 0.45; }
 .cardWorking { opacity: 0.4; pointer-events: none; }
+
+/* ── Color band ── */
+.cardBand { height: 5px; width: 100%; flex-shrink: 0; }
+.band_purple { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+.band_blue   { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.band_amber  { background: linear-gradient(90deg, #d97706, #fbbf24); }
+.band_teal   { background: linear-gradient(90deg, var(--teal), #4ABDA0); }
+.band_gray   { background: linear-gradient(90deg, #6b7280, #9ca3af); }
+.band_coral  { background: linear-gradient(90deg, #e05c3a, #f59d7a); }
+.band_red    { background: linear-gradient(90deg, #dc2626, #f87171); }
+.band_green  { background: linear-gradient(90deg, #16a34a, #4ade80); }
+
+.cardBody {
+  padding: 12px 12px 10px;
+  display: flex; flex-direction: column; gap: 4px; flex: 1;
+}
 
 .cardTop {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 4px;
@@ -202,28 +218,27 @@
 .cardSize { font-size: 11px; color: var(--gray-400); font-weight: 500; }
 .cardNeed { font-size: 12px; font-weight: 500; color: var(--gray-700); }
 
-.cardControls {
-  display: flex; gap: 6px; margin-top: 6px;
-}
+.cardControls { display: flex; gap: 5px; margin-top: 8px; }
 
 .starBtn {
-  flex: 1; height: 32px;
-  background: var(--gray-100); border: 1px solid var(--gray-200);
-  border-radius: 8px; font-size: 16px; color: var(--gray-300);
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: all 0.12s;
+  flex: 1; height: 30px;
+  background: var(--gray-50); border: 1.5px solid var(--gray-200);
+  border-radius: 8px; font-size: 11px; font-weight: 600; color: var(--gray-500);
+  cursor: pointer; font-family: var(--font-body);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s; white-space: nowrap;
 }
-.starBtn:hover { color: var(--amber); background: var(--amber-light); border-color: var(--amber-light); }
-.starBtnActive { color: var(--amber) !important; background: var(--amber-light) !important; border-color: var(--amber-light) !important; }
+.starBtn:hover { color: var(--amber-dark); background: var(--amber-light); border-color: var(--amber-light); }
+.starBtnActive { color: #92400e !important; background: #fef3c7 !important; border-color: #fcd34d !important; }
 
 .hideBtn {
-  width: 32px; height: 32px;
-  background: var(--gray-100); border: 1px solid var(--gray-200);
-  border-radius: 8px; font-size: 16px; color: var(--gray-400);
+  width: 30px; height: 30px; flex-shrink: 0;
+  background: var(--gray-50); border: 1.5px solid var(--gray-200);
+  border-radius: 8px; font-size: 15px; color: var(--gray-400);
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-body); transition: all 0.12s; flex-shrink: 0;
+  font-family: var(--font-body); transition: all 0.12s;
 }
-.hideBtn:hover { color: #DC3030; background: #FEECEC; border-color: #FEECEC; }
+.hideBtn:hover { color: #DC3030; background: #FEECEC; border-color: #fca5a5; }
 .hideBtnActive { color: var(--teal-dark) !important; background: var(--teal-light) !important; border-color: var(--teal-light) !important; }
 
 /* Empty */
