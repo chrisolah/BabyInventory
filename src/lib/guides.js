@@ -628,6 +628,230 @@ export const GUIDES = [
       },
     ],
   },
+  // ── Guide 7a: Splurge vs Save ────────────────────────────────────────────
+  {
+    slug: 'baby-gear-splurge-vs-save',
+    title: 'Where to Spend Top Dollar on Baby Gear — and Where Not To',
+    subtitle: 'A no-nonsense guide to what actually justifies the premium and what you\'re just paying for marketing.',
+    description: 'Not all expensive baby gear is worth it. And some things you should definitely not cheap out on. Here\'s the real breakdown by category.',
+    date: 'June 2026',
+    readTime: '7 min',
+    tags: ['Buying', 'Registry', 'Planning'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from parenting guides, consumer safety research, and verified parent reviews. It contains affiliate links to Amazon.',
+    planCategory: 'clothing',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Registry culture has a way of making everything feel essential. The $1,800 smart bassinet. The $70 wipe warmer. The $500 nursing chair that looks stunning in a showroom. Some of these things genuinely improve your life with a newborn. Most of them don\'t. This guide tells you which is which.',
+      },
+      {
+        type: 'callout',
+        body: 'The rule: spend top dollar on things you use daily for safety or survival. Save aggressively on things that are single-purpose, short-lived, or just aesthetically driven.',
+      },
+      {
+        type: 'h2',
+        heading: 'Spend top dollar on: the stroller',
+        body: 'This is the one luxury purchase parents almost universally don\'t regret. You will use a stroller almost every day for 2–3 years. A quality stroller — $400 to $900 — pushes easier, folds faster, handles rougher terrain, holds its resale value, and lasts through a second child. The difference between a $150 stroller and a $600 stroller is immediately obvious the first time you try to push the cheap one over a sidewalk crack while holding a coffee.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'One-hand fold is not a luxury — it\'s what you need when you\'re holding a baby.',
+          'Suspension matters if you live anywhere with uneven pavement, trails, or winter conditions.',
+          'High-end brands (UPPAbaby, Bugaboo, Nuna) hold 40–60% resale value. A $700 stroller you sell for $350 cost you $350 over 3 years.',
+          'Skip: stroller accessories marketed as must-haves (cup holders, footmuffs, snack trays). Most are overpriced add-ons.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Save on: the car seat',
+        body: 'Every car seat sold in the US passes the same federal crash safety standards. A $90 car seat and a $500 car seat offer the same legal crash protection. The premium price buys you ease of installation, nicer fabric, and brand recognition — not measurably better safety. Look for high ease-of-use ratings from NHTSA (they measure installation accuracy, which actually does matter for safety) rather than premium price.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'The Chicco KeyFit 35 consistently ranks at the top of Consumer Reports and costs $200–$250.',
+          'Never buy a used car seat — no way to verify accident history.',
+          'Get your installation checked for free at any NHTSA-certified inspection station.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Spend top dollar on: the nursing chair',
+        body: 'You will sit in this chair for 8–12 hours a day in the first weeks. A cheap glider with poor lumbar support will leave you in real pain during one of the most exhausting periods of your life. A good nursing chair — $400 to $700 — with proper back support, a smooth glide mechanism, and an ottoman to rest your feet is one of the few items parents consistently say they wish they\'d spent more on.',
+      },
+      {
+        type: 'h2',
+        heading: 'Save on: the SNOO (or any smart bassinet)',
+        body: 'The SNOO costs $1,695 new and has a devoted fan base and an equally devoted group of people who returned theirs after two weeks. It works very well for some babies and makes essentially no difference for others — and there\'s no way to know which kind of baby you have until they arrive. Babies outgrow it at 6 months, or sooner if they start rolling. Rental ($159/month) is the right move if you\'re curious. If you do buy, buy secondhand.',
+      },
+      {
+        type: 'h2',
+        heading: 'Spend top dollar on: a quality breast pump (if breastfeeding)',
+        body: 'Check your insurance first — most US insurance plans cover a breast pump at 100% under the ACA. If yours doesn\'t, or if you want an upgrade, a hospital-grade or wearable pump ($200–$500) is worth it. You will use this multiple times a day for potentially a year. The Spectra S2 is the gold standard recommendation from lactation consultants and is far more effective than entry-level pumps.',
+      },
+      {
+        type: 'h2',
+        heading: 'Save on: the baby monitor',
+        body: 'The $300 Nanit with AI-powered sleep tracking and breathing monitoring is a compelling product, but for most families the HelloBaby ($67) does the core job — video, audio, temperature display — without a subscription or WiFi dependency. Baby monitors do not need to be connected to the internet. Non-WiFi monitors also can\'t be hacked.',
+      },
+      {
+        type: 'h2',
+        heading: 'Spend top dollar on: the baby carrier',
+        body: 'A good structured carrier ($120–$180) that fits your body correctly is worth every dollar. You\'ll use it for walks, errands, fussy periods, and anything requiring your hands. A cheap carrier that digs into your shoulders or doesn\'t position the baby\'s hips correctly becomes unusable fast. The Ergobaby Omni 360 and Lillebaby Complete are the two most consistently recommended carriers by people who\'ve used them past the 3-month mark.',
+      },
+      {
+        type: 'h2',
+        heading: 'Skip entirely: the wipe warmer',
+        body: 'Wipe warmers are on nearly every "don\'t buy this" list from experienced parents. They dry out wipes, can overheat, and are barely noticed by babies who are used to room-temperature wipes from day one. The $30 saves you counter space and decision fatigue.',
+      },
+      {
+        type: 'h2',
+        heading: 'Skip entirely: the Diaper Genie (or any proprietary diaper pail)',
+        body: 'Any trash can with a tight-fitting lid does the same job as a $50 diaper pail that requires $8 refill bags you have to order every month forever. The math on proprietary refill systems is almost always bad.',
+      },
+      {
+        type: 'h2',
+        heading: 'Save on: baby clothes',
+        body: 'Babies grow out of sizes every 6–10 weeks in the first year. Unless you have a specific reason to buy new (gifting, certified organic for sensitive skin), almost all baby clothing is available secondhand in near-perfect condition. Parents overbuy newborn size constantly — you\'ll find it at every consignment sale.',
+      },
+      {
+        type: 'table',
+        cols: ['Item', 'Verdict', 'Why'],
+        rows: [
+          ['Stroller', 'Spend', 'Daily use for 2+ years, resale value holds'],
+          ['Car seat', 'Save', 'All meet the same safety standard'],
+          ['Nursing chair', 'Spend', 'Daily use, posture matters a lot'],
+          ['SNOO / smart bassinet', 'Rent or buy used', 'Only 6 months of use, baby-dependent results'],
+          ['Breast pump', 'Check insurance first', 'Often free — then upgrade if needed'],
+          ['Baby monitor', 'Save', 'Basic video/audio is all you need'],
+          ['Baby carrier', 'Spend', 'Daily use, fit matters for your back'],
+          ['Wipe warmer', 'Skip', 'Dries out wipes, barely noticed by babies'],
+          ['Diaper pail', 'Save', 'Any sealed trash can works'],
+          ['Baby clothes', 'Save/secondhand', 'Outgrown in 6-10 weeks'],
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'Today\'s Parent — Save or Splurge on Baby Gear', url: 'https://www.todaysparent.com/pregnancy/baby-registry/save-or-splurge-where-to-spend-your-money-on-baby-gear/' },
+          { label: 'Consumer Reports — Best Infant Car Seats', url: 'https://www.consumerreports.org/babies-kids/car-seats/best-infant-car-seats-of-the-year-a7088444370/' },
+          { label: 'Fortune — SNOO Bassinet Review', url: 'https://fortune.com/2024/08/22/snoo-sleeper-bassinet-added-monthly-subscription-parents-mad/' },
+          { label: 'NHTSA — Car Seat Safety Ratings', url: 'https://www.nhtsa.gov/equipment/car-seats-and-booster-seats' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 7b: How to Build Your Registry ─────────────────────────────────
+  {
+    slug: 'how-to-build-your-baby-registry',
+    title: 'How to Build a Baby Registry That Actually Helps',
+    subtitle: 'What belongs on it, what doesn\'t, how many of each, and how to organize it so people can actually use it.',
+    description: 'A registry built from your real gaps is worth 10x more than a store-generated list. Here\'s how to build one that gets you what you actually need.',
+    date: 'June 2026',
+    readTime: '8 min',
+    tags: ['Registry', 'Planning', 'Checklist'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from parenting guides, consumer research, and registry best practice guidance. It contains affiliate links to Amazon.',
+    planCategory: 'clothing',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Most baby registries are built by walking through a store with a scanner, pointing it at things that look useful, and ending up with 200 items and no clear sense of what you actually need. Then guests buy the fun stuff and skip the practical stuff, and you end up with 8 receiving blankets and no waterproof mattress cover. This guide is the alternative.',
+      },
+      {
+        type: 'h2',
+        heading: 'Start with the daily loop',
+        body: 'Before you add a single item, map the first week: sleep → feed → diaper → soothe → leave the house. That\'s the loop that repeats every 2–3 hours. Everything on your registry should support one of those five things. If it doesn\'t fit the loop, it goes lower priority or off entirely.',
+      },
+      {
+        type: 'h2',
+        heading: 'The honest registry: what actually belongs',
+        body: 'These are the items that experienced parents consistently say they needed and used from day one.',
+      },
+      {
+        type: 'table',
+        cols: ['Category', 'Item', 'Quantity', 'Notes'],
+        rows: [
+          ['Sleep', 'Bassinet or crib', '1', 'Start with a bassinet for room-sharing (AAP recommends 6 months)'],
+          ['Sleep', 'Firm crib mattress', '1', 'GREENGUARD Gold, no chemical flame retardants'],
+          ['Sleep', 'Fitted crib/bassinet sheets', '3–4', 'You\'ll change these at 3am — extras matter'],
+          ['Sleep', 'Sleep sacks (wearable blankets)', '3–4', 'GOTS certified, no loose blankets in the sleep space'],
+          ['Sleep', 'Swaddle blankets', '6–8', 'Used constantly — way more than you think'],
+          ['Sleep', 'White noise machine', '1', 'Non-negotiable if you live anywhere with noise'],
+          ['Feeding', 'Nursing pillow', '1', 'Boppy or My Brest Friend'],
+          ['Feeding', 'Burp cloths', '10–12', 'More than you think. Always.'],
+          ['Feeding', 'Bottles + slow-flow nipples', '6–8', 'Even if breastfeeding — useful from the start'],
+          ['Feeding', 'Bottle brush', '1', 'More important than a sterilizer'],
+          ['Diapering', 'Changing pad + 2–3 covers', '1 + covers', 'Covers get wet — extras are necessary'],
+          ['Diapering', 'Diaper rash cream', '1', 'Aquaphor or zinc-oxide based'],
+          ['Diapering', 'Diaper bag', '1', 'Backpack style, wipe-clean interior'],
+          ['Health', 'Digital rectal thermometer', '1', 'Only accurate method for newborns under 3 months'],
+          ['Health', 'Nasal aspirator (NoseFrida)', '1', 'More effective than a bulb syringe'],
+          ['Health', 'Nail file or scissors', '1', 'Newborn nails are sharp and grow fast'],
+          ['Travel', 'Infant car seat', '1', 'Required to leave the hospital'],
+          ['Travel', 'Stroller', '1', 'Match to your lifestyle'],
+          ['Travel', 'Baby carrier', '1', 'Structured or wrap — try before committing'],
+          ['Bath', 'Baby tub with sling', '1', 'Supports baby while your hands are free'],
+          ['Bath', 'Fragrance-free baby wash', '1', 'Fragrance is the #1 skin irritant for newborns'],
+          ['Bath', 'Soft washcloths', '4–6', 'Dedicated baby cloths are gentler than adult ones'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'What doesn\'t belong on the registry',
+        body: 'These are the things stores push hard because they\'re high-margin, not because you need them.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Wipe warmer — dries out wipes, not noticed by babies raised without one.',
+          'Baby food maker — a blender does the same thing. Skip for 6 months minimum.',
+          'Bottle sterilizer — hot soapy water or a dishwasher is sufficient for healthy full-term babies per the CDC.',
+          'Baby bathrobe — a regular towel wrapped around them is identical.',
+          'Shoe-anything for newborns — they don\'t walk. Socks do the same job.',
+          'Swing and bouncer both — try one first. Many babies have a strong preference, and you don\'t know which until they\'re here.',
+          'Excessive newborn-size anything — most babies outgrow newborn in 2–3 weeks. Buy 4–6 items max.',
+          'Matching nursery sets — fitted sheet, bumper, comforter, dust ruffle, decorative pillows. The bumper and comforter are unsafe. The dust ruffle collects dust. The matching sheet is fine but the set is priced at a 3x premium for the coordination factor.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Registry strategy: make it easy to gift from',
+        body: 'A registry that\'s hard to gift from gets ignored. Here\'s how to make yours actually work.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Include a range of price points. $20–$40 items (burp cloths, diaper cream, washcloths) get bought. A registry of only $200+ items sits unclaimed.',
+          'Group items by category or by who it\'s for. A guest who wants to buy for feeding needs to be able to find feeding items quickly.',
+          'Mark priority items. Guests use this signal — they\'d rather buy something you specifically need.',
+          'Add the mundane. Batteries, diaper pail liners, storage bags. Nobody buys these at a shower and they\'re immediately needed.',
+          'Keep it under 75 items. A 200-item registry is overwhelming and guests skim past it.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The Sprigloop approach: register from real gaps',
+        body: 'The problem with traditional registries is that you\'re guessing what you need before you know your baby. Sprigloop flips this: once you\'ve added what you already have, the Plan tab shows your actual gaps by category and size. You can share that as a wishlist link — family sees exactly what\'s missing, not a curated list of products you added pre-birth. It\'s the difference between "I think I might need sleep sacks" and "I have 1 sleep sack in 0-3M and need 3 more."',
+      },
+      {
+        type: 'h2',
+        heading: 'When to start your registry',
+        body: 'Start around week 12–16 of pregnancy — early enough to research properly, late enough that you\'ve had your anatomy scan and have a better sense of what\'s coming. Give guests at least 6 weeks before your shower date to browse and order. Items from smaller brands can take longer to ship.',
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'Babylist — Baby Registry Must-Haves', url: 'https://www.babylist.com/hello-baby/baby-registry-must-haves' },
+          { label: 'The Bump — Registry 101', url: 'https://www.thebump.com/a/registry-101' },
+          { label: 'CDC — Infant Formula and Bottle Sterilization', url: 'https://www.cdc.gov/infant-toddler-nutrition/formula-feeding/preparation-and-storage.html' },
+          { label: 'AAP — Safe Sleep Guidelines', url: 'https://www.aap.org/en/patient-care/safe-sleep/' },
+        ],
+      },
+    ],
+  },
+
   // ── Guide 7: Clothing ────────────────────────────────────────────────────
   {
     slug: 'baby-clothing-guide',

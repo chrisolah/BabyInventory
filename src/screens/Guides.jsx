@@ -14,6 +14,8 @@ const PREP_SLUGS = [
   'what-to-do-with-outgrown-baby-clothes',
   'certified-vs-generic-baby-products',
   'baby-clothing-guide',
+  'baby-gear-splurge-vs-save',
+  'how-to-build-your-baby-registry',
 ]
 
 const CATEGORY_SLUGS = [
