@@ -114,6 +114,34 @@
 }
 .catChip_amber .catChipBadge { background: var(--amber-dark); }
 
+/* ── Size sub-nav — matches Plan/Inventory ageChip style ── */
+.sizeNav {
+  background: var(--white);
+  border-bottom: 0.5px solid var(--gray-100);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sizeNav::-webkit-scrollbar { display: none; }
+.sizeNavInner {
+  display: flex; gap: 6px;
+  padding: 8px 1rem;
+  max-width: 480px; margin: 0 auto; width: 100%;
+}
+@media (min-width: 768px) { .sizeNavInner { max-width: 960px; padding: 8px 2rem; } }
+.sizeChipNav {
+  min-height: 36px; display: inline-flex; align-items: center;
+  padding: 4px 14px; font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  background: var(--gray-50); border: 1.5px solid var(--gray-200);
+  border-radius: 10px; color: var(--gray-600); cursor: pointer;
+  white-space: nowrap; flex-shrink: 0;
+  transition: background 0.12s, color 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+.sizeChipNavActive {
+  background: var(--teal-light); border-color: var(--teal);
+  color: var(--teal-dark); font-weight: 600;
+  box-shadow: 0 2px 6px rgba(8,80,65,0.14);
+}
+
 /* ── Hint ── */
 .hint {
   font-size: 11px; color: var(--gray-400);

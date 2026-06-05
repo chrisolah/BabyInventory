@@ -47,6 +47,7 @@ export default function WishlistEdit() {
   const [working, setWorking]   = useState(new Set())
   const [copyDone, setCopyDone] = useState(false)
   const [selectedCat, setSelectedCat] = useState('priority')
+  const [selectedSize, setSelectedSize] = useState(null) // null = all sizes
 
   useEffect(() => {
     if (!household?.id) return
@@ -196,6 +197,31 @@ export default function WishlistEdit() {
         </div>
       </div>
 
+      {/* Size sub-nav — appears below category row when clothing is selected */}
+      {selectedCat === 'clothing' && (() => {
+        const availSizes = AGE_RANGES.filter(s =>
+          (pageData?.clothing || []).some(r => r.size_label === s)
+        )
+        if (availSizes.length < 2) return null
+        return (
+          <div className={styles.sizeNav}>
+            <div className={styles.sizeNavInner}>
+              <button
+                className={`${styles.sizeChipNav} ${!selectedSize ? styles.sizeChipNavActive : ''}`}
+                onClick={() => setSelectedSize(null)}
+              >All</button>
+              {availSizes.map(size => (
+                <button
+                  key={size}
+                  className={`${styles.sizeChipNav} ${selectedSize === size ? styles.sizeChipNavActive : ''}`}
+                  onClick={() => setSelectedSize(selectedSize === size ? null : size)}
+                >{size}</button>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Hint */}
       <div className={styles.hint}>★ most needed &nbsp;·&nbsp; × hide from family</div>
 
@@ -212,6 +238,7 @@ export default function WishlistEdit() {
         {selectedCat === 'clothing' && (
           <ClothingCategoryView
             rows={clothing} skipSlots={skipSlots} working={working}
+            selectedSize={selectedSize}
             onPriority={togglePriority} onToggleVisibility={toggleVisibility}
           />
         )}
@@ -231,9 +258,10 @@ export default function WishlistEdit() {
 }
 
 // Clothing grouped by size
-function ClothingCategoryView({ rows, skipSlots, working, onPriority, onToggleVisibility }) {
+function ClothingCategoryView({ rows, skipSlots, working, selectedSize, onPriority, onToggleVisibility }) {
+  const filteredRows = selectedSize ? rows.filter(r => r.size_label === selectedSize) : rows
   const bySize = {}
-  for (const r of rows) {
+  for (const r of filteredRows) {
     const size = r.size_label || 'No size'
     if (!bySize[size]) bySize[size] = []
     bySize[size].push(r)
