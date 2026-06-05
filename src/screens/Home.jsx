@@ -15,7 +15,7 @@ import BabySwitcher from '../components/BabySwitcher'
 import HeaderActions from '../components/HeaderActions'
 import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
-import ShareRegistryModal from '../components/ShareRegistryModal'
+import ShareRegistryModal from '../components/ShareWishlistModal'
 import styles from './Home.module.css'
 
 // Category hub configuration — all 8 categories are now live with real
