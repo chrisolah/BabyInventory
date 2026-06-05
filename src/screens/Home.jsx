@@ -348,7 +348,7 @@ export default function Home() {
           <button
             type="button"
             className={styles.wishlistActionCard}
-            onClick={() => { navigate('/inventory?category=wishlist'); track.ctaClicked('home_edit_wishlist') }}
+            onClick={() => { navigate('/wishlist/edit'); track.ctaClicked('home_edit_wishlist') }}
           >
             <div className={styles.wishlistActionIcon}>✏️</div>
             <div className={styles.wishlistActionTitle}>Edit wishlist</div>

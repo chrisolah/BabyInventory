@@ -34,6 +34,7 @@ import Plan from './screens/Plan'
 import Profile from './screens/Profile'
 import AcceptInvite from './screens/AcceptInvite'
 import WishlistPublic from './screens/WishlistPublic'
+import WishlistEdit from './screens/WishlistEdit'
 import Admin from './screens/Admin'
 import IvyDecoration from './components/IvyDecoration'
 import LandingLayout from './components/LandingLayout'
@@ -323,6 +324,7 @@ function AppRoutes() {
       {/* /wishlist/:token — public registry link, no auth required.
           Full recipient UI in task #15; WishlistPublic is currently a
           placeholder that confirms the link resolves correctly. */}
+      <Route path="/wishlist/edit" element={<WishlistEdit />} />
       <Route path="/wishlist/:token" element={<WishlistPublic />} />
       {/* All authed routes share ProtectedLayout so HouseholdProvider stays
           mounted across navigation. Adding a new authed screen? Add it as a
