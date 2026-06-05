@@ -682,7 +682,7 @@ function SlotCard({ slotType, topCategory, slotId, sizeLabel, ownedCount, claims
       {!isCovered && (
         <>
           <button type="button" className={styles.claimBtn} onClick={handleClaim}>
-            Claim {stillNeeded > 1 ? `${stillNeeded}` : 'it'}
+            Claim
           </button>
           {(() => {
             const product = getWishlistProduct(slotId)
@@ -851,7 +851,7 @@ function ClaimSheet({ target, onSubmit, onUnclaim, onClose }) {
                 className={styles.sheetSubmit}
                 disabled={!canSubmit || submitting}
               >
-                {submitting ? 'Claiming…' : `Claim ${quantity > 1 ? `${quantity}× ` : ''}${target.label.split(' · ')[0]}`}
+                {submitting ? 'Claiming…' : 'Claim'}
               </button>
               {!canSubmit && (
                 <p className={styles.sheetHint}>Enter your name or gift anonymously.</p>
