@@ -732,6 +732,15 @@ export const GUIDES = [
         ],
       },
       {
+        type: 'products',
+        items: [
+          { emoji: '🛻', name: 'UPPAbaby Vista V2 Stroller', note: 'Top-rated full-size stroller, holds resale value well, expands for a second child', url: 'https://www.amazon.com/s?k=UPPAbaby+Vista+V2+stroller&tag=sprigloop-20' },
+          { emoji: '🪑', name: 'Chicco KeyFit 35 Infant Car Seat', note: 'Consistently top-rated by Consumer Reports, excellent ease-of-use, load-leg base', url: 'https://www.amazon.com/s?k=Chicco+KeyFit+35+infant+car+seat&tag=sprigloop-20' },
+          { emoji: '🤱', name: 'Ergobaby Omni 360 Baby Carrier', note: 'Newborn-ready without insert, 4 carry positions, exceptional lumbar support', url: 'https://www.amazon.com/s?k=Ergobaby+Omni+360+baby+carrier&tag=sprigloop-20' },
+          { emoji: '🔊', name: 'LectroFan Classic White Noise Machine', note: 'Non-looping fan and white noise, consistently recommended by sleep consultants', url: 'https://www.amazon.com/s?k=LectroFan+white+noise+machine&tag=sprigloop-20' },
+        ],
+      },
+      {
         type: 'sources',
         items: [
           { label: 'Today\'s Parent — Save or Splurge on Baby Gear', url: 'https://www.todaysparent.com/pregnancy/baby-registry/save-or-splurge-where-to-spend-your-money-on-baby-gear/' },
@@ -839,6 +848,15 @@ export const GUIDES = [
         type: 'h2',
         heading: 'When to start your registry',
         body: 'Start around week 12–16 of pregnancy — early enough to research properly, late enough that you\'ve had your anatomy scan and have a better sense of what\'s coming. Give guests at least 6 weeks before your shower date to browse and order. Items from smaller brands can take longer to ship.',
+      },
+      {
+        type: 'products',
+        items: [
+          { emoji: '🛌', name: 'Yoofoss Organic Cotton Sleep Sack 3-Pack', note: 'GOTS certified, 2-way zipper, 0.5 TOG — the most-needed registry item parents forget', url: 'https://www.amazon.com/dp/B0BMLT3M13/?tag=sprigloop-20' },
+          { emoji: '🧻', name: 'Baby Burp Cloths Large Cotton 10-Pack', note: 'The item most parents wish they had more of. Register for more than you think.', url: 'https://www.amazon.com/s?k=baby+burp+cloths+large+cotton+10+pack&tag=sprigloop-20' },
+          { emoji: '🍼', name: "Dr. Brown's Natural Flow Newborn Bottle Set", note: 'Slow-flow Level 1 nipples included, widely recommended by pediatricians', url: "https://www.amazon.com/s?k=dr+browns+natural+flow+newborn+bottle+set&tag=sprigloop-20" },
+          { emoji: '👃', name: 'FridaBaby NoseFrida Nasal Aspirator', note: 'The one health item parents consistently wish they had from day one', url: 'https://www.amazon.com/s?k=fridababy+nosefrida+nasal+aspirator&tag=sprigloop-20' },
+        ],
       },
       {
         type: 'sources',
