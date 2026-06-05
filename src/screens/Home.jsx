@@ -327,7 +327,7 @@ export default function Home() {
           <div className={styles.wishlistPrompt}>
             <div className={styles.wishlistPromptIcon}>🔗</div>
             <div className={styles.wishlistPromptBody}>
-              <div className={styles.wishlistPromptTitle}>Share your wishlist with family</div>
+              <div className={styles.wishlistPromptTitle}>Share your wishlist with family and friends</div>
               <div className={styles.wishlistPromptSub}>They&rsquo;ll see exactly what you still need — no guessing, no duplicates.</div>
             </div>
             <div className={styles.wishlistPromptActions}>
@@ -359,7 +359,7 @@ export default function Home() {
             onClick={() => { setShowShareModal(true); track.ctaClicked('home_share_wishlist_card') }}
           >
             <div className={styles.wishlistActionTitle}>Share wishlist</div>
-            <div className={styles.wishlistActionSub}>Let family fill your gaps</div>
+            <div className={styles.wishlistActionSub}>Let family &amp; friends fill your gaps</div>
           </button>
         </div>
 

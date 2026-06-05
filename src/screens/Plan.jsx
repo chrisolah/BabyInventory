@@ -548,7 +548,7 @@ function WishlistView({ items, onItemTap, onAddWish, onShare }) {
       <button type="button" className={styles.wishlistShareBanner} onClick={onShare}>
         <span className={styles.wishlistShareIcon}>🔗</span>
         <div className={styles.wishlistShareText}>
-          <span className={styles.wishlistShareTitle}>Share with family</span>
+          <span className={styles.wishlistShareTitle}>Share with family &amp; friends</span>
           <span className={styles.wishlistShareSub}>They&rsquo;ll see exactly what you still need</span>
         </div>
         <span className={styles.wishlistShareArrow}>→</span>

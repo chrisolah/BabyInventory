@@ -206,11 +206,11 @@ export default function Landing() {
       <section className={styles.feature}>
         <div className={styles.featureInner}>
           <div className={styles.featureCopy}>
-            <span className={`${styles.featLabel} ${styles.featLabelPurple}`}>Share with family</span>
+            <span className={`${styles.featLabel} ${styles.featLabelPurple}`}>Share with family &amp; friends</span>
             <h2 className={styles.featureTitle}>A registry built from<br />your actual gaps.</h2>
             <p className={styles.featureBody}>
               Traditional registries make you guess what you need before you know
-              your baby. Sprigloop&rsquo;s wishlist shows family exactly what&rsquo;s
+              your baby. Sprigloop&rsquo;s wishlist shows family and friends exactly what&rsquo;s
               missing by size and category — so they can fill something real instead
               of guessing. No duplicates, no wasted gifts, no standing in a store
               feeling completely lost.

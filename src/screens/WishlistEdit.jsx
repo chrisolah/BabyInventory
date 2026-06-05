@@ -223,7 +223,7 @@ export default function WishlistEdit() {
       })()}
 
       {/* Hint */}
-      <div className={styles.hint}>★ most needed &nbsp;·&nbsp; × hide from family</div>
+      <div className={styles.hint}>★ most needed &nbsp;·&nbsp; × hide from family &amp; friends</div>
 
       {/* Category content */}
       <div className={styles.body}>
@@ -232,7 +232,7 @@ export default function WishlistEdit() {
             rows={[...priorityClothing.map(r=>({...r,_type:'clothing'})), ...priorityItems.map(r=>({...r,_type:'item'}))]}
             skipSlots={skipSlots} working={working}
             onPriority={togglePriority} onToggleVisibility={toggleVisibility}
-            emptyText="Star items to mark them as most needed for family."
+            emptyText="Star items to mark them as most needed for family and friends."
           />
         )}
         {selectedCat === 'clothing' && (
@@ -314,7 +314,7 @@ function GapRow({ row, skipSlots, working, onPriority, onToggleVisibility }) {
       <div className={styles.rowInfo}>
         <div className={styles.rowLabel}>{label}</div>
         <div className={styles.rowMeta}>
-          {hidden ? 'Hidden from family' : `Need ${stillNeeded} more`}
+          {hidden ? 'Hidden from family & friends' : `Need ${stillNeeded} more`}
           {row.is_priority && !hidden && <span className={styles.rowPriorityStar}> ★</span>}
         </div>
       </div>
@@ -331,7 +331,7 @@ function GapRow({ row, skipSlots, working, onPriority, onToggleVisibility }) {
           className={`${styles.hideBtn} ${hidden ? styles.hideBtnActive : ''}`}
           onClick={() => onToggleVisibility(row.slot_id)}
           disabled={working}
-          aria-label={hidden ? 'Show to family' : 'Hide from family'}
+          aria-label={hidden ? 'Show to family & friends' : 'Hide from family & friends'}
         >{hidden ? '👁' : '×'}</button>
       </div>
     </div>

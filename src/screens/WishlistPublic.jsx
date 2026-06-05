@@ -639,7 +639,7 @@ function ClaimSheet({ target, onSubmit, onUnclaim, onClose }) {
             </div>
             <p className={styles.sheetDoneSub}>
               You claimed {quantity > 1 ? `${quantity}× ` : ''}{target.label}.{' '}
-              {anon ? 'Your name is hidden from the family.' : 'The family will see your name.'}
+              {anon ? 'Your name is hidden from the parents.' : 'The parents will see your name.'}
             </p>
             {(() => {
               const product = getWishlistProduct(target.slotId)
@@ -705,7 +705,7 @@ function ClaimSheet({ target, onSubmit, onUnclaim, onClose }) {
                 <span className={`${styles.anonCheck} ${anon ? styles.anonCheckOn : ''}`}>
                   {anon ? '✓' : ''}
                 </span>
-                <span className={styles.anonLabel}>Give anonymously — hide my name from the family</span>
+                <span className={styles.anonLabel}>Give anonymously — hide my name from the parents</span>
               </button>
 
               {maxQty > 1 && (
