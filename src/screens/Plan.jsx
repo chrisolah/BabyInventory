@@ -23,7 +23,7 @@ import Eyebrow from '../components/Eyebrow'
 import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
 import HeaderActions from '../components/HeaderActions'
-import ShareRegistryModal from '../components/ShareRegistryModal'
+import ShareRegistryModal from '../components/ShareWishlistModal'
 import styles from './Plan.module.css'
 
 // Plan — the "wish list + guide" hub. Route: /plan
