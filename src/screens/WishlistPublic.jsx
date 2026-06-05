@@ -319,6 +319,7 @@ function PrioritySection({ clothing, items, claimsMap, onClaim }) {
             <SlotCard
               key={`c-${row.id}`}
               slotType="clothing"
+              topCategory="clothing"
               slotId={row.slot_id}
               sizeLabel={row.size_label}
               ownedCount={row.owned_count || 0}
@@ -331,6 +332,7 @@ function PrioritySection({ clothing, items, claimsMap, onClaim }) {
             <SlotCard
               key={`i-${row.id}`}
               slotType="item"
+              topCategory={row.top_category}
               slotId={row.slot_id}
               sizeLabel={null}
               ownedCount={row.owned_count || 0}
@@ -410,6 +412,7 @@ function SizeGroup({ size, rows, claimsMap, onClaim }) {
             <SlotCard
               key={row.id}
               slotType="clothing"
+              topCategory="clothing"
               slotId={row.slot_id}
               sizeLabel={row.size_label}
               ownedCount={row.owned_count || 0}
@@ -489,6 +492,7 @@ function CategoryGroup({ cat, rows, claimsMap, onClaim }) {
             <SlotCard
               key={row.id}
               slotType="item"
+              topCategory={row.top_category || cat}
               slotId={row.slot_id}
               sizeLabel={null}
               ownedCount={row.owned_count || 0}
@@ -505,7 +509,13 @@ function CategoryGroup({ cat, rows, claimsMap, onClaim }) {
 
 // ── Slot card ─────────────────────────────────────────────────────────────────
 
-function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriority, onClaim }) {
+const PUB_CAT_COLOR = {
+  clothing: 'purple', sleep: 'blue', feeding: 'amber',
+  diapering: 'gray', travel: 'purple', play: 'coral',
+  health: 'red', bath: 'green',
+}
+
+function SlotCard({ slotType, topCategory, slotId, sizeLabel, ownedCount, claimsMap, isPriority, onClaim }) {
   const isClothing   = slotType === 'clothing'
   const slot         = isClothing ? CLOTHING_SLOT[slotId] : ITEM_SLOT[slotId]
   const label        = slot?.label || slotId.replace(/_/g, ' ')
@@ -527,8 +537,12 @@ function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriori
     })
   }
 
+  const bandColor = topCategory ? (PUB_CAT_COLOR[topCategory] || 'gray') : (slotType === 'clothing' ? 'purple' : 'gray')
+
   return (
     <div className={`${styles.card} ${isCovered ? styles.cardCovered : ''}`}>
+      <div className={`${styles.cardBand} ${styles[`band_${bandColor}`]}`} />
+      <div className={styles.cardBody}>
       <div className={styles.cardTop}>
         <span className={styles.cardLabel}>{label}</span>
         {isPriority && !isCovered && (
@@ -562,7 +576,7 @@ function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriori
       {!isCovered && (
         <>
           <button type="button" className={styles.claimBtn} onClick={handleClaim}>
-            Claim {stillNeeded > 1 ? 'one' : 'it'}
+            Claim {stillNeeded > 1 ? `${stillNeeded}` : 'it'}
           </button>
           {(() => {
             const product = getWishlistProduct(slotId)
@@ -579,6 +593,7 @@ function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriori
           })()}
         </>
       )}
+      </div>{/* cardBody */}
     </div>
   )
 }

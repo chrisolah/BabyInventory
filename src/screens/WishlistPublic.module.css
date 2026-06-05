@@ -346,18 +346,35 @@
 
 /* ── Slot card ─────────────────────────────────────────────── */
 .card {
-  background: #f9fafb;
-  border: 0.5px solid #e5e7eb;
-  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardCovered {
+  opacity: 0.55;
+}
+
+/* ── Color band ── */
+.cardBand { height: 5px; width: 100%; flex-shrink: 0; }
+.band_purple { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+.band_blue   { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.band_amber  { background: linear-gradient(90deg, #d97706, #fbbf24); }
+.band_teal   { background: linear-gradient(90deg, #2D8C6E, #4ABDA0); }
+.band_gray   { background: linear-gradient(90deg, #6b7280, #9ca3af); }
+.band_coral  { background: linear-gradient(90deg, #e05c3a, #f59d7a); }
+.band_red    { background: linear-gradient(90deg, #dc2626, #f87171); }
+.band_green  { background: linear-gradient(90deg, #16a34a, #4ade80); }
+
+.cardBody {
   padding: 12px 12px 10px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.cardCovered {
-  background: #f9fafb;
-  opacity: 0.6;
+  flex: 1;
 }
 
 .cardTop {
@@ -431,16 +448,16 @@
 }
 
 .claimBtn {
-  margin-top: 6px;
+  margin-top: 8px;
   width: 100%;
   padding: 8px 0;
-  min-height: 36px;
+  min-height: 32px;
   background: #2D8C6E;
   color: #fff;
   border: none;
   border-radius: 8px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   font-family: var(--font-body, system-ui, sans-serif);
   cursor: pointer;
   transition: opacity 0.15s;
