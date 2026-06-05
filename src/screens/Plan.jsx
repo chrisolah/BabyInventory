@@ -545,13 +545,13 @@ function RegistryView({ items, onItemTap, onAddWish, onShare }) {
   return (
     <div>
       {/* Share banner — always visible at top of registry view */}
-      <button type="button" className={styles.registryShareBanner} onClick={onShare}>
-        <span className={styles.registryShareIcon}>🔗</span>
-        <div className={styles.registryShareText}>
-          <span className={styles.registryShareTitle}>Share with family &amp; friends</span>
-          <span className={styles.registryShareSub}>They&rsquo;ll see exactly what you still need</span>
+      <button type="button" className={styles.wishlistShareBanner} onClick={onShare}>
+        <span className={styles.wishlistShareIcon}>🔗</span>
+        <div className={styles.wishlistShareText}>
+          <span className={styles.wishlistShareTitle}>Share with family &amp; friends</span>
+          <span className={styles.wishlistShareSub}>They&rsquo;ll see exactly what you still need</span>
         </div>
-        <span className={styles.registryShareArrow}>→</span>
+        <span className={styles.wishlistShareArrow}>→</span>
       </button>
 
       {items.length === 0 && (

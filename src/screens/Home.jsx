@@ -324,42 +324,42 @@ export default function Home() {
         {/* Stat cards */}
         {/* One-time registry share prompt — shown once, dismissed permanently */}
         {showRegistryPrompt && !itemsLoading && totalOwnedCount > 0 && (
-          <div className={styles.registryPrompt}>
-            <div className={styles.registryPromptIcon}>🔗</div>
-            <div className={styles.registryPromptBody}>
-              <div className={styles.registryPromptTitle}>Share your registry with family and friends</div>
-              <div className={styles.registryPromptSub}>They&rsquo;ll see exactly what you still need — no guessing, no duplicates.</div>
+          <div className={styles.wishlistPrompt}>
+            <div className={styles.wishlistPromptIcon}>🔗</div>
+            <div className={styles.wishlistPromptBody}>
+              <div className={styles.wishlistPromptTitle}>Share your registry with family and friends</div>
+              <div className={styles.wishlistPromptSub}>They&rsquo;ll see exactly what you still need — no guessing, no duplicates.</div>
             </div>
-            <div className={styles.registryPromptActions}>
+            <div className={styles.wishlistPromptActions}>
               <button
                 type="button"
-                className={styles.registryPromptBtn}
+                className={styles.wishlistPromptBtn}
                 onClick={() => { dismissRegistryPrompt(); setShowShareModal(true); track.ctaClicked('home_registry_prompt_share') }}
               >
                 Share
               </button>
-              <button type="button" className={styles.registryPromptDismiss} onClick={dismissRegistryPrompt} aria-label="Dismiss">×</button>
+              <button type="button" className={styles.wishlistPromptDismiss} onClick={dismissRegistryPrompt} aria-label="Dismiss">×</button>
             </div>
           </div>
         )}
 
         {/* Registry two-card row */}
-        <div className={styles.registryCardRow}>
+        <div className={styles.wishlistCardRow}>
           <button
             type="button"
-            className={styles.registryActionCard}
+            className={styles.wishlistActionCard}
             onClick={() => { navigate('/registry/edit'); track.ctaClicked('home_edit_registry') }}
           >
-            <div className={styles.registryActionTitle}>Edit registry</div>
-            <div className={styles.registryActionSub}>Smart registry built from what you own</div>
+            <div className={styles.wishlistActionTitle}>Edit registry</div>
+            <div className={styles.wishlistActionSub}>Smart registry built from what you own</div>
           </button>
           <button
             type="button"
-            className={`${styles.registryActionCard} ${styles.registryActionCardShare}`}
+            className={`${styles.wishlistActionCard} ${styles.wishlistActionCardShare}`}
             onClick={() => { setShowShareModal(true); track.ctaClicked('home_share_registry_card') }}
           >
-            <div className={styles.registryActionTitle}>Share registry</div>
-            <div className={styles.registryActionSub}>Knows what you have. Shows what you need.</div>
+            <div className={styles.wishlistActionTitle}>Share registry</div>
+            <div className={styles.wishlistActionSub}>Knows what you have. Shows what you need.</div>
           </button>
         </div>
 
