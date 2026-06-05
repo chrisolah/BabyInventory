@@ -173,6 +173,7 @@ export default function WishlistEdit() {
 
       {/* Category tile tabs — matches Inventory/Plan style */}
       <div className={styles.catRow}>
+        <div className={styles.catRowInner}>
         {WISH_CATEGORIES.map(cat => {
           const active = selectedCat === cat.id
           const count  = catCounts[cat.id] || 0
@@ -192,6 +193,7 @@ export default function WishlistEdit() {
             </button>
           )
         })}
+        </div>
       </div>
 
       {/* Hint */}

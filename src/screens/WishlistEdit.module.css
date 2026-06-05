@@ -43,23 +43,33 @@
 .titleMain { font-family: var(--font-display); font-size: 17px; font-weight: 500; color: var(--gray-900); }
 .titleSub  { font-size: 12px; color: var(--gray-500); margin-top: 1px; }
 
-/* ── Category tile row — fills width like Home grid ── */
+/* ── Category tile row — matches Home content width ── */
 .catRow {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
   gap: 8px;
-  padding: 12px 20px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
   background: var(--white);
   border-bottom: 0.5px solid var(--gray-100);
+  /* inner content uses max-width + centering via .catRowInner */
 }
-/* Second row for the overflow categories */
-@media (max-width: 440px) {
-  .catRow { grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 10px 16px 8px; }
+.catRow::-webkit-scrollbar { display: none; }
+.catRowInner {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 12px 1rem 10px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+@media (min-width: 768px) {
+  .catRowInner { max-width: 960px; padding: 12px 2rem 10px; }
 }
 
 .catChip {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 10px 4px 8px; width: 100%;
+  padding: 10px 8px 8px; width: 70px; flex-shrink: 0;
   background: var(--gray-50); border: 1.5px solid transparent;
   border-radius: 14px; cursor: pointer;
   font-family: var(--font-body);
@@ -105,10 +115,22 @@
 .catChip_amber .catChipBadge { background: var(--amber-dark); }
 
 /* ── Hint ── */
-.hint { font-size: 11px; color: var(--gray-400); padding: 8px 20px 0; }
+.hint {
+  font-size: 11px; color: var(--gray-400);
+  padding: 8px 1rem 0;
+  max-width: 480px; margin: 0 auto; width: 100%;
+}
+@media (min-width: 768px) { .hint { max-width: 960px; padding: 8px 2rem 0; } }
 
-/* ── Body ── */
-.body { flex: 1; padding: 8px 20px 16px; }
+/* ── Body — matches Home content area ── */
+.body {
+  flex: 1;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 8px 1rem 16px;
+}
+@media (min-width: 768px) { .body { max-width: 960px; padding: 8px 2rem 16px; } }
 
 /* Size label */
 .sizeLabel {
