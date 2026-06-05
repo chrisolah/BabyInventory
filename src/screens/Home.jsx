@@ -350,7 +350,6 @@ export default function Home() {
             className={styles.wishlistActionCard}
             onClick={() => { navigate('/wishlist/edit'); track.ctaClicked('home_edit_wishlist') }}
           >
-            <div className={styles.wishlistActionIcon}>✏️</div>
             <div className={styles.wishlistActionTitle}>Edit wishlist</div>
             <div className={styles.wishlistActionSub}>Update what you need</div>
           </button>
@@ -359,7 +358,6 @@ export default function Home() {
             className={`${styles.wishlistActionCard} ${styles.wishlistActionCardShare}`}
             onClick={() => { setShowShareModal(true); track.ctaClicked('home_share_wishlist_card') }}
           >
-            <div className={styles.wishlistActionIcon}>🔗</div>
             <div className={styles.wishlistActionTitle}>Share wishlist</div>
             <div className={styles.wishlistActionSub}>Let family fill your gaps</div>
           </button>
