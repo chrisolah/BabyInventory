@@ -204,6 +204,57 @@
   margin-top: 4px;
 }
 
+/* ── Category chip row ─────────────────────────────────────── */
+.catRow { display: flex; overflow-x: auto; scrollbar-width: none; background: #fff; border-bottom: 0.5px solid #e5e7eb; }
+.catRow::-webkit-scrollbar { display: none; }
+.catRowInner { display: flex; gap: 8px; flex-shrink: 0; padding: 12px 1rem 10px; width: 100%; max-width: 680px; margin: 0 auto; }
+.catChip {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 8px 8px; width: 70px; flex-shrink: 0;
+  background: #f9fafb; border: 1.5px solid transparent;
+  border-radius: 14px; cursor: pointer; font-family: inherit; position: relative;
+  transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+}
+.catChip:active { transform: scale(0.96); }
+.catChip_amber  { background: #fffbeb; }
+.catChip_purple { background: #ede9fe; }
+.catChip_blue   { background: #eff6ff; }
+.catChip_gray   { background: #f3f4f6; }
+.catChip_coral  { background: #fff1ee; }
+.catChip_red    { background: #fff1f1; }
+.catChip_green  { background: #f0fdf4; }
+.catChipActive { border-color: #2D8C6E; box-shadow: 0 2px 8px rgba(8,80,65,0.18); }
+.catChipIcon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #fff; }
+.catChipIcon_amber  { background: #d97706; }
+.catChipIcon_purple { background: #7c3aed; }
+.catChipIcon_blue   { background: #2563eb; }
+.catChipIcon_gray   { background: #6b7280; }
+.catChipIcon_coral  { background: #e05c3a; }
+.catChipIcon_red    { background: #dc2626; }
+.catChipIcon_green  { background: #16a34a; }
+.catChipLabel { font-size: 10px; font-weight: 500; color: #374151; text-align: center; white-space: nowrap; line-height: 1.2; }
+.catChipActive .catChipLabel { color: #065f46; font-weight: 600; }
+.catChipBadge {
+  position: absolute; top: -5px; right: -4px;
+  background: #2D8C6E; color: #fff; font-size: 9px; font-weight: 600;
+  min-width: 16px; height: 16px; border-radius: 999px; padding: 0 4px;
+  display: flex; align-items: center; justify-content: center; border: 1.5px solid #fff;
+}
+/* ── Size sub-nav ──────────────────────────────────────────── */
+.sizeNav { background: #fff; border-bottom: 0.5px solid #e5e7eb; overflow-x: auto; scrollbar-width: none; }
+.sizeNav::-webkit-scrollbar { display: none; }
+.sizeNavInner { display: flex; gap: 6px; padding: 8px 1rem; max-width: 680px; margin: 0 auto; width: 100%; }
+.sizeChipNav {
+  min-height: 36px; display: inline-flex; align-items: center;
+  padding: 4px 14px; font-size: 13px; font-weight: 500; font-family: inherit;
+  background: #f3f4f6; border: 1.5px solid #e5e7eb;
+  border-radius: 10px; color: #6b7280; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.sizeChipNavActive { background: #e6f5f0; border-color: #2D8C6E; color: #065f46; font-weight: 600; }
+/* ── Size label ────────────────────────────────────────────── */
+.sizeLabel { display: inline-flex; font-size: 11px; font-weight: 600; color: #065f46; background: #d1fae5; padding: 3px 10px; border-radius: 999px; margin: 10px 0 6px; }
+
 /* ── Main body ─────────────────────────────────────────────── */
 .body {
   flex: 1;
