@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
@@ -7,14 +7,32 @@ import { ITEMS as ITEM_DEFS, CATEGORY_META } from '../lib/categories'
 import BottomNav from '../components/BottomNav'
 import styles from './WishlistEdit.module.css'
 
-// Mirrors the lookup maps in WishlistPublic
+// Category icons — same SVG icons used in Inventory/Plan
+function ClothingIcon() { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M2 6l4-2 4 2 4-2 4 2v10H2V6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg> }
+function SleepIcon()    { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M3 10a7 7 0 0012.6-4.2A7 7 0 003 10z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg> }
+function FeedingIcon()  { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M8 3v3a2 2 0 002 2h0a2 2 0 002-2V3M10 8v9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg> }
+function DiaperIcon()   { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><rect x="2" y="5" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="1.4"/><path d="M2 10h16" stroke="currentColor" strokeWidth="1.4"/></svg> }
+function TravelIcon()   { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><rect x="3" y="8" width="14" height="8" rx="1" stroke="currentColor" strokeWidth="1.4"/><path d="M7 8V6a1 1 0 011-1h4a1 1 0 011 1v2" stroke="currentColor" strokeWidth="1.4"/></svg> }
+function PlayIcon()     { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7l5 3-5 3V7z" fill="currentColor"/></svg> }
+function HealthIcon()   { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> }
+function BathIcon()     { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M3 11h14v2a5 5 0 01-14 0v-2z" stroke="currentColor" strokeWidth="1.4"/><path d="M5 11V7a2 2 0 014 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg> }
+function PriorityIcon() { return <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor"><path d="M10 2l2.4 4.9 5.4.8-3.9 3.8.9 5.3L10 14.4l-4.8 2.4.9-5.3L2.2 7.7l5.4-.8L10 2z"/></svg> }
+
+const WISH_CATEGORIES = [
+  { id: 'priority',  label: 'Priority',  icon: PriorityIcon,  color: 'amber'  },
+  { id: 'clothing',  label: 'Clothing',  icon: ClothingIcon,  color: 'teal'   },
+  { id: 'sleep',     label: 'Sleep',     icon: SleepIcon,     color: 'blue'   },
+  { id: 'feeding',   label: 'Feeding',   icon: FeedingIcon,   color: 'amber'  },
+  { id: 'diapering', label: 'Diapering', icon: DiaperIcon,    color: 'gray'   },
+  { id: 'travel',    label: 'Travel',    icon: TravelIcon,    color: 'purple' },
+  { id: 'play',      label: 'Play',      icon: PlayIcon,      color: 'coral'  },
+  { id: 'health',    label: 'Health',    icon: HealthIcon,    color: 'red'    },
+  { id: 'bath',      label: 'Bath',      icon: BathIcon,      color: 'green'  },
+]
+
 const CLOTHING_SLOT = Object.fromEntries(SLOTS.map(s => [s.id, s]))
 const ITEM_SLOT     = Object.fromEntries(ITEM_DEFS.map(i => [i.id, i]))
 const NON_CLOTHING_ORDER = ['sleep','feeding','diapering','travel','play','health','bath']
-
-function claimKey(slotType, slotId, sizeLabel) {
-  return `${slotType}:${slotId}:${sizeLabel || ''}`
-}
 
 export default function WishlistEdit() {
   const navigate = useNavigate()
@@ -24,60 +42,46 @@ export default function WishlistEdit() {
   const [pageData, setPageData] = useState(null)
   const [shareId, setShareId]   = useState(null)
   const [token, setToken]       = useState(null)
-  const [skipSlots, setSkipSlotsState]  = useState(new Set())
-  const [skipCats, setSkipCatsState]    = useState(new Set())
+  const [skipSlots, setSkipSlots] = useState(new Set())
   const [working, setWorking]   = useState(new Set())
   const [copyDone, setCopyDone] = useState(false)
+  const [selectedCat, setSelectedCat] = useState('priority')
 
-  // Load or create the wishlist share, then fetch gap data
   useEffect(() => {
     if (!household?.id) return
     let cancelled = false
 
     async function load() {
       setLoading(true)
-
-      // Find or create a wishlist share for this household
       let { data: existing } = await supabase.schema(currentSchema)
-        .from('wishlist_shares')
-        .select('id, token, skip_slots, skip_categories, show_priority')
-        .eq('household_id', household.id)
-        .eq('is_active', true)
-        .limit(1)
-        .maybeSingle()
+        .from('wishlist_shares').select('id, token, skip_slots, skip_categories, show_priority')
+        .eq('household_id', household.id).eq('is_active', true).limit(1).maybeSingle()
 
       let share = existing
       if (!share) {
         const { data: created } = await supabase.schema(currentSchema)
           .from('wishlist_shares')
           .insert({ household_id: household.id, is_active: true })
-          .select('id, token, skip_slots, skip_categories, show_priority')
-          .single()
+          .select('id, token, skip_slots, skip_categories, show_priority').single()
         share = created
       }
-
       if (!share || cancelled) { setLoading(false); return }
 
       setShareId(share.id)
       setToken(share.token)
-      setSkipSlotsState(new Set(share.skip_slots || []))
-      setSkipCatsState(new Set((share.skip_categories || []).filter(c => c !== 'clothing')))
+      setSkipSlots(new Set(share.skip_slots || []))
 
-      // Fetch the gap data exactly as WishlistPublic does
       const { data, error } = await supabase.schema(currentSchema)
         .rpc('get_wishlist_for_share', { p_token: share.token })
-
       if (!cancelled) {
         if (!error && data && !data.error) setPageData(data)
         setLoading(false)
       }
     }
-
     load()
     return () => { cancelled = true }
   }, [household?.id])
 
-  // Reload gap data after edits
   const reloadGaps = useCallback(async () => {
     if (!token) return
     const { data, error } = await supabase.schema(currentSchema)
@@ -85,190 +89,129 @@ export default function WishlistEdit() {
     if (!error && data && !data.error) setPageData(data)
   }, [token])
 
-  // Save skip_slots / skip_categories back to the share
-  const saveSkips = useCallback(async (newSkipSlots, newSkipCats) => {
+  const saveSkips = useCallback(async (next) => {
     if (!shareId) return
-    await supabase.schema(currentSchema)
-      .from('wishlist_shares')
-      .update({
-        skip_slots: newSkipSlots.size > 0 ? [...newSkipSlots] : null,
-        skip_categories: newSkipCats.size > 0 ? [...newSkipCats] : null,
-      })
-      .eq('id', shareId)
+    await supabase.schema(currentSchema).from('wishlist_shares')
+      .update({ skip_slots: next.size > 0 ? [...next] : null }).eq('id', shareId)
   }, [shareId])
 
-  // Toggle priority on a gap row
   const togglePriority = useCallback(async (row, slotType) => {
-    const key = row.id
-    setWorking(prev => new Set([...prev, key]))
+    const id = row.id
+    setWorking(prev => new Set([...prev, id]))
     const table = slotType === 'clothing' ? 'clothing_items' : 'items'
-    await supabase.schema(currentSchema)
-      .from(table)
-      .update({ is_priority: !row.is_priority })
-      .eq('id', row.id)
+    await supabase.schema(currentSchema).from(table)
+      .update({ is_priority: !row.is_priority }).eq('id', id)
     await reloadGaps()
-    setWorking(prev => { const s = new Set(prev); s.delete(key); return s })
+    setWorking(prev => { const s = new Set(prev); s.delete(id); return s })
   }, [reloadGaps])
 
-  // Hide/show a slot from the shared view
-  const toggleSlotVisibility = useCallback(async (slotId) => {
-    setSkipSlotsState(prev => {
+  const toggleVisibility = useCallback(async (slotId) => {
+    setSkipSlots(prev => {
       const next = new Set(prev)
-      if (next.has(slotId)) next.delete(slotId)
-      else next.add(slotId)
-      saveSkips(next, skipCats)
+      if (next.has(slotId)) next.delete(slotId); else next.add(slotId)
+      saveSkips(next)
       return next
     })
-    // Reload so the view reflects the skip
-    setTimeout(reloadGaps, 300)
-  }, [skipCats, saveSkips, reloadGaps])
-
-  // Share link
-  const shareUrl = token ? `${window.location.origin}/wishlist/${token}` : null
+    setTimeout(reloadGaps, 200)
+  }, [saveSkips, reloadGaps])
 
   async function copyLink() {
-    if (!shareUrl) return
-    try { await navigator.clipboard.writeText(shareUrl) } catch {}
-    setCopyDone(true)
-    setTimeout(() => setCopyDone(false), 2000)
+    const url = token ? `${window.location.origin}/wishlist/${token}` : null
+    if (!url) return
+    try { await navigator.clipboard.writeText(url) } catch {}
+    setCopyDone(true); setTimeout(() => setCopyDone(false), 2000)
   }
 
-  if (loading) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.loadingBar} />
-      </div>
-    )
+  if (loading) return <div className={styles.page}><div className={styles.loadingBar} /></div>
+
+  const clothing = pageData?.clothing || []
+  const items    = pageData?.items    || []
+  const household_data = pageData?.household
+
+  const priorityClothing = clothing.filter(r => r.is_priority)
+  const priorityItems    = items.filter(r => r.is_priority)
+  const priorityCount    = priorityClothing.length + priorityItems.length
+
+  // Count gaps per category for badge
+  const catCounts = {
+    priority: priorityCount,
+    clothing: clothing.filter(r => !skipSlots.has(r.slot_id)).length,
+    sleep: items.filter(r => r.top_category === 'sleep' && !skipSlots.has(r.slot_id)).length,
+    feeding: items.filter(r => r.top_category === 'feeding' && !skipSlots.has(r.slot_id)).length,
+    diapering: items.filter(r => r.top_category === 'diapering' && !skipSlots.has(r.slot_id)).length,
+    travel: items.filter(r => r.top_category === 'travel' && !skipSlots.has(r.slot_id)).length,
+    play: items.filter(r => r.top_category === 'play' && !skipSlots.has(r.slot_id)).length,
+    health: items.filter(r => r.top_category === 'health' && !skipSlots.has(r.slot_id)).length,
+    bath: items.filter(r => r.top_category === 'bath' && !skipSlots.has(r.slot_id)).length,
   }
 
-  if (!pageData) {
-    return (
-      <div className={styles.page}>
-        <header className={styles.hero}>
-          <button className={styles.backBtn} onClick={() => navigate(-1)}>←</button>
-        </header>
-        <div className={styles.empty}>
-          <p className={styles.emptyText}>Add items to your inventory first to generate your wishlist.</p>
-          <button className={styles.emptyBtn} onClick={() => navigate('/inventory')}>Go to Inventory</button>
-        </div>
-        <BottomNav />
-      </div>
-    )
-  }
-
-  const { share, household: hh, babies: hBabies, clothing, items } = pageData
-
-  const displayedClothing = (clothing || []).filter(r => !skipSlots.has(r.slot_id))
-  const displayedItems    = (items || []).filter(r => !skipSlots.has(r.slot_id))
-
-  const priorityClothing = displayedClothing.filter(r => r.is_priority)
-  const priorityItems    = displayedItems.filter(r => r.is_priority)
-  const hasPriority      = priorityClothing.length + priorityItems.length > 0
-
-  // Clothing by size
-  const bySize = {}
-  for (const r of displayedClothing.filter(r => !r.is_priority)) {
-    if (!bySize[r.size_label]) bySize[r.size_label] = []
-    bySize[r.size_label].push(r)
-  }
-  const sizes = AGE_RANGES.filter(s => bySize[s]?.length > 0)
-
-  // Non-clothing by category
-  const byCat = {}
-  for (const r of displayedItems.filter(r => !r.is_priority)) {
-    if (!byCat[r.top_category]) byCat[r.top_category] = []
-    byCat[r.top_category].push(r)
-  }
-  const usedCats = NON_CLOTHING_ORDER.filter(c => byCat[c]?.length > 0)
-
-  const babyName = hBabies?.[0]?.name || null
-  const householdName = hh?.name || 'Your'
+  const householdName = household_data?.name || household?.name || 'Your'
+  const babyName = pageData?.babies?.[0]?.name || currentBaby?.name || null
 
   return (
     <div className={styles.page}>
-
-      {/* Hero — identical to WishlistPublic */}
+      {/* Hero */}
       <header className={styles.hero}>
-        <div className={styles.heroTopbar}>
+        <div className={styles.heroTop}>
           <button className={styles.backBtn} onClick={() => navigate(-1)}>←</button>
           <button className={styles.copyBtn} onClick={copyLink}>
-            {copyDone ? 'Copied!' : 'Copy link'}
+            {copyDone ? '✓ Copied' : 'Copy link'}
           </button>
         </div>
         <div className={styles.heroEyebrow}>Baby Wishlist</div>
-        <h1 className={styles.heroTitle}>{householdName}&apos;s Wishlist</h1>
-        {babyName && <div className={styles.heroBabyPill}>{babyName}</div>}
-        <p className={styles.heroHint}>
-          ★ marks an item as most needed &nbsp;·&nbsp; × hides it from family
-        </p>
+        <div className={styles.heroTitle}>{householdName}&apos;s Wishlist</div>
+        {babyName && <span className={styles.heroPill}>{babyName}</span>}
       </header>
 
-      <div className={styles.body}>
-
-        {/* Most needed */}
-        {hasPriority && (
-          <section className={styles.section}>
-            <div className={styles.sectionHead}>
-              <span className={styles.priorityStar}>★</span>
-              <span className={styles.sectionTitle}>Most needed</span>
-            </div>
-            <div className={styles.cardGrid}>
-              {priorityClothing.map(row => (
-                <GapCard key={`c-${row.id}`} row={row} slotType="clothing"
-                  hidden={false} working={working.has(row.id)}
-                  onPriority={togglePriority} onToggleVisibility={toggleSlotVisibility} />
-              ))}
-              {priorityItems.map(row => (
-                <GapCard key={`i-${row.id}`} row={row} slotType="item"
-                  hidden={false} working={working.has(row.id)}
-                  onPriority={togglePriority} onToggleVisibility={toggleSlotVisibility} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Clothing by size */}
-        {displayedClothing.filter(r => !r.is_priority).length > 0 && (
-          <section className={styles.section}>
-            <div className={styles.sectionStaticHead}>Clothing</div>
-            {sizes.map(size => (
-              <div key={size}>
-                <div className={styles.sizeChip}>{size}</div>
-                <div className={styles.cardGrid}>
-                  {bySize[size].map(row => (
-                    <GapCard key={`c-${row.id}`} row={row} slotType="clothing"
-                      hidden={skipSlots.has(row.slot_id)} working={working.has(row.id)}
-                      onPriority={togglePriority} onToggleVisibility={toggleSlotVisibility} />
-                  ))}
-                </div>
+      {/* Category tile tabs — matches Inventory/Plan style */}
+      <div className={styles.catRow}>
+        {WISH_CATEGORIES.map(cat => {
+          const active = selectedCat === cat.id
+          const count  = catCounts[cat.id] || 0
+          return (
+            <button
+              key={cat.id}
+              className={`${styles.catChip} ${styles[`catChip_${cat.color}`]} ${active ? styles.catChipActive : ''}`}
+              onClick={() => setSelectedCat(cat.id)}
+              aria-pressed={active}
+              aria-label={cat.label}
+            >
+              <div className={`${styles.catChipIcon} ${styles[`catChipIcon_${cat.color}`]}`}>
+                <cat.icon />
               </div>
-            ))}
-          </section>
-        )}
-
-        {/* Non-clothing by category */}
-        {usedCats.map(cat => (
-          <section key={cat} className={styles.section}>
-            <div className={styles.sectionStaticHead}>
-              {CATEGORY_META[cat]?.label || cat}
-            </div>
-            <div className={styles.cardGrid}>
-              {byCat[cat].map(row => (
-                <GapCard key={`i-${row.id}`} row={row} slotType="item"
-                  hidden={skipSlots.has(row.slot_id)} working={working.has(row.id)}
-                  onPriority={togglePriority} onToggleVisibility={toggleSlotVisibility} />
-              ))}
-            </div>
-          </section>
-        ))}
-
-        {(displayedClothing.length === 0 && displayedItems.length === 0 && !hasPriority) && (
-          <div className={styles.empty}>
-            <p className={styles.emptyText}>Add items to your inventory to generate wishlist gaps.</p>
-            <button className={styles.emptyBtn} onClick={() => navigate('/inventory')}>
-              Go to Inventory
+              <span className={styles.catChipLabel}>{cat.label}</span>
+              {count > 0 && <span className={styles.catChipBadge}>{count}</span>}
             </button>
-          </div>
+          )
+        })}
+      </div>
+
+      {/* Hint */}
+      <div className={styles.hint}>★ most needed &nbsp;·&nbsp; × hide from family</div>
+
+      {/* Category content */}
+      <div className={styles.body}>
+        {selectedCat === 'priority' && (
+          <CategoryView
+            rows={[...priorityClothing.map(r=>({...r,_type:'clothing'})), ...priorityItems.map(r=>({...r,_type:'item'}))]}
+            skipSlots={skipSlots} working={working}
+            onPriority={togglePriority} onToggleVisibility={toggleVisibility}
+            emptyText="Star items to mark them as most needed for family."
+          />
+        )}
+        {selectedCat === 'clothing' && (
+          <ClothingCategoryView
+            rows={clothing} skipSlots={skipSlots} working={working}
+            onPriority={togglePriority} onToggleVisibility={toggleVisibility}
+          />
+        )}
+        {NON_CLOTHING_ORDER.includes(selectedCat) && (
+          <CategoryView
+            rows={items.filter(r => r.top_category === selectedCat).map(r=>({...r,_type:'item'}))}
+            skipSlots={skipSlots} working={working}
+            onPriority={togglePriority} onToggleVisibility={toggleVisibility}
+            emptyText={`No ${selectedCat} gaps yet.`}
+          />
         )}
       </div>
 
@@ -277,60 +220,81 @@ export default function WishlistEdit() {
   )
 }
 
-// ── Gap card — matches WishlistPublic card style with edit overlays ──
-function GapCard({ row, slotType, hidden, working, onPriority, onToggleVisibility }) {
-  const isClothing = slotType === 'clothing'
-  const slot  = isClothing ? CLOTHING_SLOT[row.slot_id] : ITEM_SLOT[row.slot_id]
-  const label = slot?.label || row.slot_id
+// Clothing grouped by size
+function ClothingCategoryView({ rows, skipSlots, working, onPriority, onToggleVisibility }) {
+  const bySize = {}
+  for (const r of rows) {
+    const size = r.size_label || 'No size'
+    if (!bySize[size]) bySize[size] = []
+    bySize[size].push(r)
+  }
+  const sizes = AGE_RANGES.filter(s => bySize[s]?.length > 0)
 
-  const recommended = isClothing
-    ? recommendedQty(slot, row.size_label)
-    : (slot?.recommended ?? 1)
-  const stillNeeded = Math.max(0, recommended - (row.owned_count || 0))
+  if (rows.length === 0) return <div className={styles.empty}>No clothing gaps yet.</div>
 
   return (
-    <div className={`${styles.card} ${hidden ? styles.cardHidden : ''} ${working ? styles.cardWorking : ''}`}>
-      <div className={styles.cardTop}>
-        <span className={styles.cardLabel}>{label}</span>
-        {row.is_priority && !hidden && (
-          <span className={styles.cardStar}>★</span>
-        )}
-      </div>
-
-      {isClothing && row.size_label && (
-        <span className={styles.cardSize}>{row.size_label}</span>
-      )}
-
-      {!hidden && (
-        <div className={styles.cardNeed}>
-          Need {stillNeeded} more
+    <div className={styles.sizeList}>
+      {sizes.map(size => (
+        <div key={size}>
+          <div className={styles.sizeLabel}>{size}</div>
+          {bySize[size].map(row => (
+            <GapRow key={row.id} row={{...row,_type:'clothing'}}
+              skipSlots={skipSlots} working={working.has(row.id)}
+              onPriority={onPriority} onToggleVisibility={onToggleVisibility}
+            />
+          ))}
         </div>
-      )}
-      {hidden && (
-        <div className={styles.cardHiddenLabel}>Hidden from family</div>
-      )}
+      ))}
+    </div>
+  )
+}
 
-      {/* Edit controls */}
-      <div className={styles.cardControls}>
+function CategoryView({ rows, skipSlots, working, onPriority, onToggleVisibility, emptyText }) {
+  if (rows.length === 0) return <div className={styles.empty}>{emptyText}</div>
+  return (
+    <div className={styles.itemList}>
+      {rows.map(row => (
+        <GapRow key={`${row._type}-${row.id}`} row={row}
+          skipSlots={skipSlots} working={working.has(row.id)}
+          onPriority={onPriority} onToggleVisibility={onToggleVisibility}
+        />
+      ))}
+    </div>
+  )
+}
+
+function GapRow({ row, skipSlots, working, onPriority, onToggleVisibility }) {
+  const isClothing = row._type === 'clothing'
+  const slot = isClothing ? CLOTHING_SLOT[row.slot_id] : ITEM_SLOT[row.slot_id]
+  const label = slot?.label || row.slot_id
+  const recommended = isClothing ? recommendedQty(slot, row.size_label) : (slot?.recommended ?? 1)
+  const stillNeeded = Math.max(0, recommended - (row.owned_count || 0))
+  const hidden = skipSlots.has(row.slot_id)
+
+  return (
+    <div className={`${styles.row} ${hidden ? styles.rowHidden : ''} ${working ? styles.rowWorking : ''}`}>
+      <div className={styles.rowInfo}>
+        <div className={styles.rowLabel}>{label}</div>
+        <div className={styles.rowMeta}>
+          {hidden ? 'Hidden from family' : `Need ${stillNeeded} more`}
+          {row.is_priority && !hidden && <span className={styles.rowPriorityStar}> ★</span>}
+        </div>
+      </div>
+      <div className={styles.rowControls}>
         {!hidden && (
           <button
             className={`${styles.starBtn} ${row.is_priority ? styles.starBtnActive : ''}`}
-            onClick={() => onPriority(row, slotType)}
+            onClick={() => onPriority(row, row._type)}
             disabled={working}
-            aria-label={row.is_priority ? 'Remove from most needed' : 'Mark as most needed'}
-          >
-            {row.is_priority ? '★' : '☆'}
-          </button>
+            aria-label={row.is_priority ? 'Remove priority' : 'Mark as most needed'}
+          >{row.is_priority ? '★' : '☆'}</button>
         )}
         <button
           className={`${styles.hideBtn} ${hidden ? styles.hideBtnActive : ''}`}
           onClick={() => onToggleVisibility(row.slot_id)}
           disabled={working}
           aria-label={hidden ? 'Show to family' : 'Hide from family'}
-          title={hidden ? 'Show to family' : 'Hide from family'}
-        >
-          {hidden ? '👁' : '×'}
-        </button>
+        >{hidden ? '👁' : '×'}</button>
       </div>
     </div>
   )
