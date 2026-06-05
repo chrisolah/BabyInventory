@@ -987,7 +987,7 @@ export default function Inventory() {
               key={cat.id}
               type="button"
               className={`${styles.catChip} ${styles[`catChip_${cat.color}`]} ${active ? styles.catChipActive : ''}`}
-              onClick={() => setSelectedTopCategory(cat.id)}
+              onClick={() => cat.id === 'wishlist' ? navigate('/registry/edit') : setSelectedTopCategory(cat.id)}
               aria-label={cat.label}
               aria-pressed={active}
             >
@@ -1010,7 +1010,7 @@ export default function Inventory() {
               key={cat.id}
               type="button"
               className={`${styles.catSidebarItem} ${selectedTopCategory === cat.id ? styles.catSidebarItemActive : ''}`}
-              onClick={() => setSelectedTopCategory(cat.id)}
+              onClick={() => cat.id === 'wishlist' ? navigate('/registry/edit') : setSelectedTopCategory(cat.id)}
               aria-label={cat.label}
             >
               <span className={styles.catSidebarIcon}><cat.icon /></span>
@@ -1736,7 +1736,7 @@ const INVENTORY_CATEGORIES = [
   { id: 'play',      label: 'Play',      icon: PlayNavIcon,      color: 'coral'  },
   { id: 'health',    label: 'Health',    icon: HealthNavIcon,    color: 'red'    },
   { id: 'bath',      label: 'Bath',      icon: BathNavIcon,      color: 'green'  },
-  { id: 'wishlist',  label: 'Wishlist',  icon: WishlistNavIcon,  color: 'teal'   },
+  { id: 'wishlist',  label: 'Registry',  icon: WishlistNavIcon,  color: 'teal'   },
 ]
 
 // ── Non-clothing item card ────────────────────────────────────────────────
