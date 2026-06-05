@@ -274,13 +274,15 @@ function ClothingCategoryView({ rows, skipSlots, working, selectedSize, onPriori
     <div className={styles.sizeList}>
       {sizes.map(size => (
         <div key={size}>
-          <div className={styles.sizeLabel}>{size}</div>
-          {bySize[size].map(row => (
-            <GapRow key={row.id} row={{...row,_type:'clothing'}}
-              skipSlots={skipSlots} working={working.has(row.id)}
-              onPriority={onPriority} onToggleVisibility={onToggleVisibility}
-            />
-          ))}
+          {!selectedSize && <div className={styles.sizeLabel}>{size}</div>}
+          <div className={styles.cardGrid}>
+            {bySize[size].map(row => (
+              <GapCard key={row.id} row={{...row,_type:'clothing'}}
+                skipSlots={skipSlots} working={working.has(row.id)}
+                onPriority={onPriority} onToggleVisibility={onToggleVisibility}
+              />
+            ))}
+          </div>
         </div>
       ))}
     </div>
@@ -290,9 +292,9 @@ function ClothingCategoryView({ rows, skipSlots, working, selectedSize, onPriori
 function CategoryView({ rows, skipSlots, working, onPriority, onToggleVisibility, emptyText }) {
   if (rows.length === 0) return <div className={styles.empty}>{emptyText}</div>
   return (
-    <div className={styles.itemList}>
+    <div className={styles.cardGrid}>
       {rows.map(row => (
-        <GapRow key={`${row._type}-${row.id}`} row={row}
+        <GapCard key={`${row._type}-${row.id}`} row={row}
           skipSlots={skipSlots} working={working.has(row.id)}
           onPriority={onPriority} onToggleVisibility={onToggleVisibility}
         />
@@ -301,7 +303,7 @@ function CategoryView({ rows, skipSlots, working, onPriority, onToggleVisibility
   )
 }
 
-function GapRow({ row, skipSlots, working, onPriority, onToggleVisibility }) {
+function GapCard({ row, skipSlots, working, onPriority, onToggleVisibility }) {
   const isClothing = row._type === 'clothing'
   const slot = isClothing ? CLOTHING_SLOT[row.slot_id] : ITEM_SLOT[row.slot_id]
   const label = slot?.label || row.slot_id
@@ -310,15 +312,22 @@ function GapRow({ row, skipSlots, working, onPriority, onToggleVisibility }) {
   const hidden = skipSlots.has(row.slot_id)
 
   return (
-    <div className={`${styles.row} ${hidden ? styles.rowHidden : ''} ${working ? styles.rowWorking : ''}`}>
-      <div className={styles.rowInfo}>
-        <div className={styles.rowLabel}>{label}</div>
-        <div className={styles.rowMeta}>
-          {hidden ? 'Hidden from family & friends' : `Need ${stillNeeded} more`}
-          {row.is_priority && !hidden && <span className={styles.rowPriorityStar}> ★</span>}
-        </div>
+    <div className={`${styles.card} ${hidden ? styles.cardHidden : ''} ${working ? styles.cardWorking : ''}`}>
+      <div className={styles.cardTop}>
+        <span className={styles.cardLabel}>{label}</span>
+        {row.is_priority && !hidden && <span className={styles.cardStar}>★</span>}
+        {hidden && <span className={styles.cardHiddenIcon}>🚫</span>}
       </div>
-      <div className={styles.rowControls}>
+
+      {isClothing && row.size_label && (
+        <span className={styles.cardSize}>{row.size_label}</span>
+      )}
+
+      <div className={styles.cardNeed}>
+        {hidden ? 'Hidden' : `Need ${stillNeeded} more`}
+      </div>
+
+      <div className={styles.cardControls}>
         {!hidden && (
           <button
             className={`${styles.starBtn} ${row.is_priority ? styles.starBtnActive : ''}`}

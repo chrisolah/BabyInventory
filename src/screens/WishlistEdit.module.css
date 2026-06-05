@@ -167,30 +167,49 @@
   padding: 3px 10px; border-radius: 999px;
   margin: 10px 0 6px;
 }
-.sizeList { display: flex; flex-direction: column; }
-.itemList { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.sizeList { display: flex; flex-direction: column; gap: 4px; }
 
-/* ── Gap row ── */
-.row {
-  display: flex; align-items: center; gap: 12px;
-  background: var(--gray-50); border: none;
-  border-radius: 14px; padding: 14px 16px; margin-bottom: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+/* ── Gap card grid — matches WishlistPublic layout ── */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 10px;
+  padding: 10px 0 6px;
+}
+
+.card {
+  background: var(--gray-50);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 12px 12px 10px;
+  display: flex; flex-direction: column; gap: 4px;
   transition: opacity 0.15s;
 }
-.rowHidden { opacity: 0.4; background: var(--gray-100); }
-.rowWorking { opacity: 0.4; pointer-events: none; }
+.cardHidden { opacity: 0.45; background: var(--gray-100); }
+.cardWorking { opacity: 0.4; pointer-events: none; }
 
-.rowInfo { flex: 1; min-width: 0; }
-.rowLabel { font-size: 14px; font-weight: 500; color: var(--gray-900); }
-.rowMeta  { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
-.rowPriorityStar { color: var(--amber); }
+.cardTop {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 4px;
+}
+.cardLabel {
+  font-size: 13px; font-weight: 500; color: var(--gray-900);
+  line-height: 1.3; flex: 1;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.cardStar { color: var(--amber); font-size: 13px; flex-shrink: 0; line-height: 1.3; }
+.cardHiddenIcon { font-size: 12px; flex-shrink: 0; line-height: 1.3; opacity: 0.6; }
 
-.rowControls { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.cardSize { font-size: 11px; color: var(--gray-400); font-weight: 500; }
+.cardNeed { font-size: 12px; font-weight: 500; color: var(--gray-700); }
+
+.cardControls {
+  display: flex; gap: 6px; margin-top: 6px;
+}
 
 .starBtn {
-  width: 38px; height: 38px; background: var(--gray-50); border: 1px solid var(--gray-200);
-  border-radius: 10px; font-size: 20px; color: var(--gray-300);
+  flex: 1; height: 32px;
+  background: var(--gray-100); border: 1px solid var(--gray-200);
+  border-radius: 8px; font-size: 16px; color: var(--gray-300);
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: all 0.12s;
 }
@@ -198,13 +217,14 @@
 .starBtnActive { color: var(--amber) !important; background: var(--amber-light) !important; border-color: var(--amber-light) !important; }
 
 .hideBtn {
-  width: 38px; height: 38px; background: var(--gray-50); border: 1px solid var(--gray-200);
-  border-radius: 10px; font-size: 18px; color: var(--gray-400);
+  width: 32px; height: 32px;
+  background: var(--gray-100); border: 1px solid var(--gray-200);
+  border-radius: 8px; font-size: 16px; color: var(--gray-400);
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-body); transition: all 0.12s;
+  font-family: var(--font-body); transition: all 0.12s; flex-shrink: 0;
 }
 .hideBtn:hover { color: #DC3030; background: #FEECEC; border-color: #FEECEC; }
-.hideBtnActive { font-size: 14px; color: var(--teal-dark) !important; background: var(--teal-light) !important; border-color: var(--teal-light) !important; }
+.hideBtnActive { color: var(--teal-dark) !important; background: var(--teal-light) !important; border-color: var(--teal-light) !important; }
 
 /* Empty */
 .empty { padding: 3rem 0; text-align: center; font-size: 14px; color: var(--gray-400); line-height: 1.6; }
