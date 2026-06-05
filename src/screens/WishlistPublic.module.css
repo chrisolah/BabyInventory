@@ -204,6 +204,35 @@
   margin-top: 4px;
 }
 
+/* ── Gift-giver info card ──────────────────────────────────── */
+.infoCard {
+  width: 100%;
+  background: linear-gradient(135deg, #e8f5f0 0%, #f0f9f5 100%);
+  border-bottom: 0.5px solid #b6e8d8;
+}
+.infoInner {
+  position: relative;
+  max-width: 680px; margin: 0 auto; width: 100%;
+  padding: 16px 1rem 16px; box-sizing: border-box;
+}
+@media (min-width: 768px) { .infoInner { padding: 16px 2rem; } }
+.infoDismiss {
+  position: absolute; top: 12px; right: 14px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(0,0,0,0.06); border: none;
+  font-size: 16px; color: #6b7280; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-family: inherit; line-height: 1; transition: background 0.12s;
+}
+.infoDismiss:hover { background: rgba(0,0,0,0.12); }
+.infoTitle {
+  font-family: Georgia, serif; font-size: 14px; font-weight: 600;
+  color: #065f46; margin-bottom: 5px; padding-right: 28px;
+}
+.infoBody {
+  font-size: 13px; color: #374151; line-height: 1.55; margin: 0;
+}
+
 /* ── Category chip row ─────────────────────────────────────── */
 .catRow { display: flex; overflow-x: auto; scrollbar-width: none; background: #fff; border-bottom: 0.5px solid #e5e7eb; }
 .catRow::-webkit-scrollbar { display: none; }

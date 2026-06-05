@@ -240,14 +240,16 @@ export default function WishlistPublic() {
       {/* ── Gift-giver info card ──────────────────────────────────── */}
       {!giftInfoDismissed && (
         <div className={styles.infoCard}>
-          <button className={styles.infoDismiss} onClick={() => setGiftInfoDismissed(true)} aria-label="Dismiss">×</button>
-          <div className={styles.infoTitle}>This registry is a little different</div>
-          <p className={styles.infoBody}>
-            It&rsquo;s built from what {household?.name ? `${household.name} ` : 'the family and friends '}
-            already owns — so every item here is a real gap, not a guess.
-            Quantities show exactly how many are still needed, and claiming an item
-            coordinates with other gift-givers automatically.
-          </p>
+          <div className={styles.infoInner}>
+            <button className={styles.infoDismiss} onClick={() => setGiftInfoDismissed(true)} aria-label="Dismiss">×</button>
+            <div className={styles.infoTitle}>This registry is a little different</div>
+            <p className={styles.infoBody}>
+              It&rsquo;s built from what {household?.name ? `${household.name} ` : 'they '}
+              already own — so every item here is a real gap, not a guess.
+              Quantities show exactly how many are still needed, and claiming an item
+              coordinates with other gift-givers automatically.
+            </p>
+          </div>
         </div>
       )}
 
