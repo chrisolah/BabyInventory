@@ -343,18 +343,27 @@ export default function Home() {
           </div>
         )}
 
-        {/* Permanent wishlist share card at bottom */}
-        <button
-          type="button"
-          className={styles.shareWishlistCard}
-          onClick={() => { setShowShareModal(true); track.ctaClicked('home_share_wishlist_card') }}
-        >
-          <div className={styles.shareWishlistLeft}>
-            <div className={styles.shareWishlistTitle}>Share your wishlist</div>
-            <div className={styles.shareWishlistSub}>Let family fill your real gaps — no store registry needed.</div>
-          </div>
-          <div className={styles.shareWishlistArrow}>→</div>
-        </button>
+        {/* Wishlist two-card row */}
+        <div className={styles.wishlistCardRow}>
+          <button
+            type="button"
+            className={styles.wishlistActionCard}
+            onClick={() => { navigate('/inventory?category=wishlist'); track.ctaClicked('home_edit_wishlist') }}
+          >
+            <div className={styles.wishlistActionIcon}>✏️</div>
+            <div className={styles.wishlistActionTitle}>Edit wishlist</div>
+            <div className={styles.wishlistActionSub}>Update what you need</div>
+          </button>
+          <button
+            type="button"
+            className={`${styles.wishlistActionCard} ${styles.wishlistActionCardShare}`}
+            onClick={() => { setShowShareModal(true); track.ctaClicked('home_share_wishlist_card') }}
+          >
+            <div className={styles.wishlistActionIcon}>🔗</div>
+            <div className={styles.wishlistActionTitle}>Share wishlist</div>
+            <div className={styles.wishlistActionSub}>Let family fill your gaps</div>
+          </button>
+        </div>
 
         <div className={styles.statsRow}>
           <div className={styles.statCard}>
