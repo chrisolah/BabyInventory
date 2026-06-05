@@ -440,6 +440,7 @@ export default function AddItem() {
           // ── Clothing path (unchanged) ──────────────────────────────────
           const fields = {
             category,
+            slot_id: itemType || null,
             item_type: itemType,
             size_label: sizeLabel,
             condition: mode === 'owned' ? (condition || null) : null,
