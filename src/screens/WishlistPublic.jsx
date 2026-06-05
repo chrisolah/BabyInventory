@@ -237,22 +237,6 @@ export default function WishlistPublic() {
         </div>
       )}
 
-      {/* ── Gift-giver info card ──────────────────────────────────── */}
-      {!giftInfoDismissed && (
-        <div className={styles.infoCard}>
-          <div className={styles.infoInner}>
-            <button className={styles.infoDismiss} onClick={() => setGiftInfoDismissed(true)} aria-label="Dismiss">×</button>
-            <div className={styles.infoTitle}>This registry is a little different</div>
-            <p className={styles.infoBody}>
-              It&rsquo;s built from what {household?.name ? `${household.name} ` : 'they '}
-              already own — so every item here is a real gap, not a guess.
-              Quantities show exactly how many are still needed, and claiming an item
-              coordinates with other gift-givers automatically.
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* ── Category chip nav ─────────────────────────────────── */}
       <div className={styles.catRow}>
         <div className={styles.catRowInner}>
@@ -313,6 +297,20 @@ export default function WishlistPublic() {
       })()}
 
       <div className={styles.body}>
+        {/* ── Gift-giver info card ── */}
+        {!giftInfoDismissed && (
+          <div className={styles.infoCard}>
+            <button className={styles.infoDismiss} onClick={() => setGiftInfoDismissed(true)} aria-label="Dismiss">×</button>
+            <div className={styles.infoTitle}>This registry is a little different</div>
+            <p className={styles.infoBody}>
+              It&rsquo;s built from what {household?.name ? `${household.name} ` : 'they '}
+              already own — so every item here is a real gap, not a guess.
+              Quantities show exactly how many are still needed, and claiming an item
+              coordinates with other gift-givers automatically.
+            </p>
+          </div>
+        )}
+
         {/* ── Priority ── */}
         {selectedCat === 'priority' && (() => {
           const rows = [
