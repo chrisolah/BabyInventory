@@ -1,5 +1,5 @@
-// Public wishlist recipient page. No auth required.
-// Route: /wishlist/:token
+// Public registry recipient page. No auth required.
+// Route: /registry/:token
 //
 // Loads via the get_wishlist_for_share security-definer RPC (anon-callable).
 // Claims submitted via claim_wishlist_item RPC — also anon-callable.
@@ -20,7 +20,7 @@ import { ITEMS, CATEGORY_META } from '../lib/categories'
 import { getWishlistProduct } from '../lib/wishlistProducts'
 import styles from './WishlistPublic.module.css'
 
-// ── Category icons + nav (matches WishlistEdit) ───────────────────────────────
+// ── Category icons + nav (matches RegistryEdit) ───────────────────────────────
 function ClothingIcon() { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M2 6l4-2 4 2 4-2 4 2v10H2V6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg> }
 function SleepIcon()    { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M3 10a7 7 0 0012.6-4.2A7 7 0 003 10z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg> }
 function FeedingIcon()  { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M8 3v3a2 2 0 002 2h0a2 2 0 002-2V3M10 8v9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg> }
@@ -60,6 +60,7 @@ export default function WishlistPublic() {
   // { slotId, slotType, sizeLabel, label, maxQty } — null = sheet closed
   const [claimTarget, setClaimTarget] = useState(null)
   const [selectedCat, setSelectedCat] = useState('priority')
+  const [giftInfoDismissed, setGiftInfoDismissed] = useState(false)
   const [selectedSize, setSelectedSize] = useState(null)
 
   useEffect(() => {
@@ -156,7 +157,7 @@ export default function WishlistPublic() {
     return (
       <div className={styles.notFound}>
         <SprigMark size={48} />
-        <h1 className={styles.notFoundTitle}>This wishlist isn&rsquo;t available</h1>
+        <h1 className={styles.notFoundTitle}>This registry isn&rsquo;t available</h1>
         <p className={styles.notFoundSub}>
           The link may have expired or been deactivated by the family.
         </p>
@@ -183,9 +184,9 @@ export default function WishlistPublic() {
           </a>
         </div>
         <div className={styles.heroBody}>
-          <div className={styles.heroEyebrow}>Baby Wishlist</div>
+          <div className={styles.heroEyebrow}>Baby Registry</div>
           <h1 className={styles.heroTitle}>
-            {household?.name ? `${household.name}'s Wishlist` : 'Baby Wishlist'}
+            {household?.name ? `${household.name}'s Registry` : 'Baby Registry'}
           </h1>
           <div className={styles.heroMeta}>
             {babies?.map((b, i) => (
@@ -233,6 +234,20 @@ export default function WishlistPublic() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── Gift-giver info card ──────────────────────────────────── */}
+      {!giftInfoDismissed && (
+        <div className={styles.infoCard}>
+          <button className={styles.infoDismiss} onClick={() => setGiftInfoDismissed(true)} aria-label="Dismiss">×</button>
+          <div className={styles.infoTitle}>This registry is a little different</div>
+          <p className={styles.infoBody}>
+            It&rsquo;s built from what {household?.name ? `${household.name} ` : 'the family and friends '}
+            already owns — so every item here is a real gap, not a guess.
+            Quantities show exactly how many are still needed, and claiming an item
+            coordinates with other gift-givers automatically.
+          </p>
         </div>
       )}
 
@@ -711,7 +726,7 @@ function ClaimSheet({ target, onSubmit, onUnclaim, onClose }) {
     setSubmitting(false)
     if (!result.ok) {
       setError(result.error === 'share_not_found'
-        ? 'This wishlist is no longer active.'
+        ? 'This registry is no longer active.'
         : 'Something went wrong. Try again.')
       return
     }

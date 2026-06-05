@@ -95,7 +95,7 @@ export default function HowItWorks() {
           <h1 className={styles.h1}>How Sprigloop <em>works</em>.</h1>
           <p className={styles.lede}>
             Sprigloop helps you track what your baby has, plan what&rsquo;s coming,
-            share a wishlist with family, and pass on what they outgrow. Here&rsquo;s
+            share a registry with family and friends, and pass on what they outgrow. Here&rsquo;s
             how each step works.
           </p>
         </header>
@@ -117,7 +117,7 @@ export default function HowItWorks() {
 
         <section className={styles.step}>
           <div className={styles.stepNum}>02</div>
-          <h2 className={styles.h2}>Plan ahead and share your wishlist</h2>
+          <h2 className={styles.h2}>Plan ahead and share your registry</h2>
           <p>
             The Plan tab tracks your baby&rsquo;s age across 8 categories — clothing, sleep,
             feeding, travel, play, and more — and flags gaps before the next size window
@@ -126,7 +126,7 @@ export default function HowItWorks() {
             the 0&ndash;3M pile.
           </p>
           <p>
-            From your Plan, you can generate a shareable wishlist in one tap. Family and
+            From your Plan, you can generate a shareable registry in one tap. Family and
             friends get a link that shows real gaps — by category, by size — and can claim
             items without duplicating. No store account, no generic registry suggestions,
             no duplicate onesies. If more than one parent or caregiver uses the app,
@@ -266,7 +266,7 @@ export default function HowItWorks() {
           </details>
 
           <details className={styles.faqItem}>
-            <summary>Can I share a wishlist with family?</summary>
+            <summary>Can I share a registry with family and friends?</summary>
             <p>
               Yes. From the Plan tab, you can generate a shareable link that shows your
               real gaps by category and size. Anyone with the link can see what&rsquo;s
@@ -319,7 +319,7 @@ export default function HowItWorks() {
             '@type': 'HowTo',
             name: 'How Sprigloop works',
             description:
-              'Track what your baby has, plan what is coming, share a wishlist with family, and pass on what they outgrow.',
+              'Track what your baby has, plan what is coming, share a registry with family and friends, and pass on what they outgrow.',
             step: [
               {
                 '@type': 'HowToStep',
@@ -328,8 +328,8 @@ export default function HowItWorks() {
               },
               {
                 '@type': 'HowToStep',
-                name: 'Plan ahead and share your wishlist',
-                text: 'The Plan tab tracks gaps across 8 categories and flags what is missing before the next size window hits. Share a wishlist link so family can claim real gaps without duplicating.',
+                name: 'Plan ahead and share your registry',
+                text: 'The Plan tab tracks gaps across 8 categories and flags what is missing before the next size window hits. Share a registry link so family and friends can claim real gaps without duplicating.',
               },
               {
                 '@type': 'HowToStep',
@@ -381,7 +381,7 @@ export default function HowItWorks() {
               },
               {
                 '@type': 'Question',
-                name: 'Can I share a wishlist with family?',
+                name: 'Can I share a registry with family and friends?',
                 acceptedAnswer: {
                   '@type': 'Answer',
                   text: 'Yes. From the Plan tab you can generate a shareable link that shows your real gaps by category and size. Anyone with the link can claim items without a store account.',

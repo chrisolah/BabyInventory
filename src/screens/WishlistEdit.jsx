@@ -48,6 +48,14 @@ export default function WishlistEdit() {
   const [copyDone, setCopyDone] = useState(false)
   const [selectedCat, setSelectedCat] = useState('priority')
   const [selectedSize, setSelectedSize] = useState(null) // null = all sizes
+  const [sellDismissed, setSellDismissed] = useState(
+    () => sessionStorage.getItem('registry_sell_dismissed') === '1'
+  )
+
+  function dismissSell() {
+    sessionStorage.setItem('registry_sell_dismissed', '1')
+    setSellDismissed(true)
+  }
 
   useEffect(() => {
     if (!household?.id) return
@@ -163,14 +171,34 @@ export default function WishlistEdit() {
         </div>
       </header>
 
-      {/* Sub-header with wishlist title */}
+      {/* Sub-header with registry title */}
       <div className={styles.titleRow}>
         <button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Back">←</button>
         <div className={styles.titleInfo}>
-          <div className={styles.titleMain}>{householdName}&apos;s Wishlist</div>
+          <div className={styles.titleMain}>{householdName}&apos;s Registry</div>
           {babyName && <div className={styles.titleSub}>{babyName}</div>}
         </div>
       </div>
+
+      {/* ── Registry sell card ── */}
+      {!sellDismissed && (
+        <div className={styles.sellCard}>
+          <button className={styles.sellDismiss} onClick={dismissSell} aria-label="Dismiss">×</button>
+          <div className={styles.sellTitle}>Your registry, built from reality</div>
+          <p className={styles.sellBody}>
+            Most registries are a wish list you fill before baby arrives — guesses dressed up as needs.
+            This one tracks what you actually own and surfaces only the real gaps, organised by size.
+            Your family and friends see <em>exactly</em> how many more bodysuits you need in 0–3M, not just &ldquo;bodysuits.&rdquo;
+            When someone claims an item it&rsquo;s coordinated automatically — no duplicates, no awkward returns.
+          </p>
+          <div className={styles.sellPills}>
+            <span className={styles.sellPill}>✓ Knows what you own</span>
+            <span className={styles.sellPill}>✓ Quantity-aware</span>
+            <span className={styles.sellPill}>✓ Auto-coordinated claims</span>
+            <span className={styles.sellPill}>✓ Size-organised</span>
+          </div>
+        </div>
+      )}
 
       {/* Category tile tabs — matches Inventory/Plan style */}
       <div className={styles.catRow}>

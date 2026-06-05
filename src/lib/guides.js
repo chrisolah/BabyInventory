@@ -495,7 +495,7 @@ export const GUIDES = [
       {
         type: 'h2',
         heading: 'A better kind of registry',
-        body: 'Sprigloop\'s wishlist works differently from a traditional registry. Instead of manually curating a list of products, it shows family and friends your actual gaps — what you\'re missing by category and size — so they can fill something real. No store account required on their end, no duplicates, no generic suggestions.',
+        body: 'Sprigloop\'s registry works differently from a traditional registry. Instead of manually curating a list of products, it shows family and friends your actual gaps — what you\'re missing by category and size — so they can fill something real. No store account required on their end, no duplicates, no generic suggestions.',
       },
       {
         type: 'sources',
@@ -842,7 +842,7 @@ export const GUIDES = [
       {
         type: 'h2',
         heading: 'The Sprigloop approach: register from real gaps',
-        body: 'The problem with traditional registries is that you\'re guessing what you need before you know your baby. Sprigloop flips this: once you\'ve added what you already have, the Plan tab shows your actual gaps by category and size. You can share that as a wishlist link — family sees exactly what\'s missing, not a curated list of products you added pre-birth. It\'s the difference between "I think I might need sleep sacks" and "I have 1 sleep sack in 0-3M and need 3 more."',
+        body: 'The problem with traditional registries is that you\'re guessing what you need before you know your baby. Sprigloop flips this: once you\'ve added what you already have, the Plan tab shows your actual gaps by category and size. You can share that as a registry link — family sees exactly what\'s missing, not a curated list of products you added pre-birth. It\'s the difference between "I think I might need sleep sacks" and "I have 1 sleep sack in 0-3M and need 3 more."',
       },
       {
         type: 'h2',
