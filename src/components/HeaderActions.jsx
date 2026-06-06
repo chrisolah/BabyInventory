@@ -4,7 +4,7 @@
 // actions into one consistent entry point:
 //
 //   + Add item         → /add-item
-//   🔗 Share wishlist  → opens ShareWishlistModal
+//   🔗 Share registry  → opens ShareWishlistModal
 //   👋 Invite someone  → opens InviteMemberModal
 //   👤 Profile         → /profile
 //   ── divider ──
@@ -80,7 +80,7 @@ export default function HeaderActions() {
               Add item
             </button>
 
-            {/* Share wishlist — styled as the featured action */}
+            {/* Share registry — styled as the featured action */}
             <button
               type="button"
               role="menuitem"
@@ -88,7 +88,7 @@ export default function HeaderActions() {
               onClick={() => { setShowShare(true); close() }}
             >
               <ShareIcon />
-              Share wishlist
+              Share registry
             </button>
 
             <button
