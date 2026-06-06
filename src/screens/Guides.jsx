@@ -33,12 +33,14 @@ const CATEGORY_SLUGS = [
 
 const guidesBySlug = Object.fromEntries(GUIDES.map(g => [g.slug, g]))
 
+const newGuides        = [...GUIDES].slice(-3).reverse()
 const prepGuides      = PREP_SLUGS.map(s => guidesBySlug[s]).filter(Boolean)
 const categoryGuides  = CATEGORY_SLUGS.map(s => guidesBySlug[s]).filter(Boolean)
 
-function GuideCard({ guide, onClick }) {
+function GuideCard({ guide, onClick, isNew }) {
   return (
     <button className={styles.card} onClick={onClick}>
+      {isNew && <span className={styles.newBadge}>New</span>}
       <div className={styles.cardTags}>
         {guide.tags.map(t => (
           <span key={t} className={styles.tag}>{t}</span>
@@ -106,6 +108,14 @@ export default function Guides() {
             including the American Academy of Pediatrics. Sources are linked in each article.
           </p>
         </header>
+
+        {/* New guides strip */}
+        <div className={styles.groupLabel}>New</div>
+        <section className={styles.newStrip}>
+          {newGuides.map(guide => (
+            <GuideCard key={guide.slug} guide={guide} onClick={() => goTo(guide.slug)} isNew />
+          ))}
+        </section>
 
         {/* Group 1 — Prep & Planning */}
         <div className={styles.groupLabel}>Prep &amp; Planning</div>
