@@ -238,6 +238,7 @@ export default function Home() {
             range={ageInfo.currentRange}
             ageInfo={ageInfo}
             babyName={ageAnchor?.name ?? null}
+            navigate={navigate}
           />
         )}
 
@@ -387,7 +388,7 @@ export default function Home() {
 }
 
 // ── Overall tracker card ──────────────────────────────────────────────────
-function OverallTrackerCard({ pct, owned, recommended, range, ageInfo, babyName }) {
+function OverallTrackerCard({ pct, owned, recommended, range, ageInfo, babyName, navigate }) {
   // Build the countdown line based on ageInfo state.
   let countdown = null
   if (ageInfo?.expecting && ageInfo.daysUntilDue != null) {
@@ -404,8 +405,15 @@ function OverallTrackerCard({ pct, owned, recommended, range, ageInfo, babyName 
     }
   }
 
+  const isExpecting = ageInfo?.expecting && ageInfo.daysUntilDue != null && Math.ceil(ageInfo.daysUntilDue) > 0
+
+  const Tag = isExpecting ? 'button' : 'div'
+  const tagProps = isExpecting
+    ? { type: 'button', className: `${styles.trackerCard} ${styles.trackerCardClickable}`, onClick: () => navigate('/arrival-checklist') }
+    : { className: styles.trackerCard }
+
   return (
-    <div className={styles.trackerCard}>
+    <Tag {...tagProps}>
       <div className={styles.trackerTop}>
         <div className={styles.trackerLeft}>
           <div className={styles.trackerPct}>{pct}%</div>
@@ -426,25 +434,13 @@ function OverallTrackerCard({ pct, owned, recommended, range, ageInfo, babyName 
         </div>
       </div>
       {countdown && (
-        countdown.type === 'due'
-          ? (
-            <button
-              type="button"
-              className={`${styles.trackerCountdown} ${styles.trackerCountdownBtn}`}
-              onClick={() => navigate('/arrival-checklist')}
-            >
-              <CountdownIcon type={countdown.type} />
-              <span>{countdown.text}</span>
-              <span className={styles.trackerCountdownArrow}>→</span>
-            </button>
-          ) : (
-            <div className={styles.trackerCountdown}>
-              <CountdownIcon type={countdown.type} />
-              <span>{countdown.text}</span>
-            </div>
-          )
+        <div className={styles.trackerCountdown}>
+          <CountdownIcon type={countdown.type} />
+          <span>{countdown.text}</span>
+          {countdown.type === 'due' && <span className={styles.trackerCountdownArrow}>→</span>}
+        </div>
       )}
-    </div>
+    </Tag>
   )
 }
 
