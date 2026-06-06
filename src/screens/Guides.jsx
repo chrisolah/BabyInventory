@@ -16,6 +16,7 @@ const PREP_SLUGS = [
   'baby-clothing-guide',
   'baby-gear-splurge-vs-save',
   'how-to-build-your-baby-registry',
+  'what-you-need-before-baby-arrives',
 ]
 
 const CATEGORY_SLUGS = [

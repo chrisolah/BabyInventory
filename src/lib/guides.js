@@ -1535,6 +1535,238 @@ export const GUIDES = [
       },
     ],
   },
+  {
+    slug: 'what-you-need-before-baby-arrives',
+    title: 'What You Actually Need Before Baby Arrives',
+    subtitle: 'A research-backed, tier-by-tier breakdown of what to have ready — and what can wait. Sourced from AAP guidelines, Consumer Reports, and pediatricians.',
+    category: 'prep',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Most baby checklists are written by stores that want you to buy more. This one is different. We broke it down by when you actually need things — what has to be ready before you leave the hospital, what matters in the first week, and what can genuinely wait. The honest answer is that babies need less than the industry wants you to think.',
+      },
+      {
+        type: 'heading',
+        body: 'The one thing hospitals check before discharge',
+      },
+      {
+        type: 'body',
+        body: 'An infant car seat, properly installed. That's it. Hospital staff will inspect it before you leave. No seat, no discharge. This is the single item to get right first — have it installed and checked at a certified inspection station before your due date. The NHTSA has a free car seat check locator.',
+      },
+      {
+        type: 'callout',
+        body: 'New federal safety standard FMVSS 213a took effect June 2025, requiring all car seats for children under 40 lbs to meet stricter side-impact standards. When buying, verify the seat was manufactured after this date.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🚗',
+            name: 'Chicco KeyFit 35 Infant Car Seat',
+            note: 'Consistently top-rated by Consumer Reports. Easy install, extended rear-facing, fits most vehicles.',
+            url: 'https://www.amazon.com/s?k=Chicco+KeyFit+35+infant+car+seat&tag=sprigloop-20',
+          },
+          {
+            emoji: '🚗',
+            name: 'Cybex Cloud T Infant Car Seat',
+            note: 'One of Consumer Reports' highest scorers. Anti-rebound base with load leg reduces crash forces.',
+            url: 'https://www.amazon.com/s?k=Cybex+Cloud+T+infant+car+seat&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'heading',
+        body: 'Tier 1: Before you leave the hospital',
+      },
+      {
+        type: 'body',
+        body: 'Beyond the car seat, have these ready at home for day one. You won't know your baby's exact size until birth, so buy a small amount in newborn and put most of your investment in 0–3M.',
+      },
+      {
+        type: 'body',
+        body: 'CLOTHING (0–3M): Expect 3–4 outfit changes per day — spit-up and diaper leaks are relentless. You need 7–10 bodysuits, 4–6 one-pieces or footed pajamas, and at least 3–4 warm hats. Newborns lose heat rapidly through their heads; a hat is non-negotiable. Look for envelope necklines (makes undressing a blowout much easier) and two-way zippers for nighttime changes. Burp cloths: have at least 8–10. They work triple duty as spit-up catchers, nursing covers, and changing pad liners.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '👕',
+            name: 'Simple Joys by Carter's Bodysuits 10-Pack (0–3M)',
+            note: 'Snap closures, 100% cotton, envelope necklines. The standard for a reason — durable, soft, affordable.',
+            url: 'https://www.amazon.com/s?k=Simple+Joys+Carters+bodysuits+10+pack+0-3+months&tag=sprigloop-20',
+          },
+          {
+            emoji: '🐣',
+            name: 'Carter's Footed Pajamas 4-Pack',
+            note: 'Two-way zippers for nighttime diaper changes without fully undressing baby. Machine washable.',
+            url: 'https://www.amazon.com/s?k=Carters+footed+pajamas+4+pack+newborn+zipper&tag=sprigloop-20',
+          },
+          {
+            emoji: '🤍',
+            name: 'aden + anais Muslin Burp Cloths 6-Pack',
+            note: 'Large, absorbent, gets softer with every wash. Muslin dries faster than terry.',
+            url: 'https://www.amazon.com/s?k=aden+anais+muslin+burp+cloths+6+pack&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'body',
+        body: 'SLEEP: The AAP recommends babies sleep in the same room as parents for at least the first six months — which makes a bassinet far more practical than a crib for the newborn period. You need a firm, flat sleep surface with a tight-fitting sheet. Nothing else in the sleep space: no pillows, no loose blankets, no positioners. A sleep sack (wearable blanket) replaces loose blankets safely. Choose TOG 1.0–1.5 for 68–72°F rooms; TOG 0.5 for warmer climates.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🛏',
+            name: 'HALO BassiNest Swivel Sleeper',
+            note: 'Bedside design lets you reach baby without getting up. Swivels 360°, adjusts to bed height. Widely recommended by postpartum nurses.',
+            url: 'https://www.amazon.com/s?k=HALO+BassiNest+swivel+sleeper&tag=sprigloop-20',
+          },
+          {
+            emoji: '🛌',
+            name: 'HALO SleepSack Swaddle — TOG 1.5, Newborn',
+            note: 'Endorsed by hospitals nationwide. Three-way adjustable swaddle transitions to arms-out as baby grows.',
+            url: 'https://www.amazon.com/dp/B001PB8G04/?tag=sprigloop-20',
+          },
+          {
+            emoji: '🛌',
+            name: 'Yoofoss Organic Cotton Sleep Sack 3-Pack',
+            note: 'GOTS certified, two-way zipper, 0.5 TOG — best value for the newborn window.',
+            url: 'https://www.amazon.com/dp/B0BMLT3M13/?tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'body',
+        body: 'DIAPERING: A changing pad and wipes are the only diapering items you need on day one. The hospital will send you home with a small supply of newborn diapers. A changing pad cover matters more than people think — it's what your baby actually touches, and you'll be washing it constantly.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🩹',
+            name: 'Keekaroo Peanut Changer',
+            note: 'Waterproof, wipes clean in seconds, no cover needed. Worth every penny at 3am.',
+            url: 'https://www.amazon.com/s?k=Keekaroo+Peanut+Changer&tag=sprigloop-20',
+          },
+          {
+            emoji: '🧻',
+            name: 'WaterWipes Sensitive Baby Wipes',
+            note: '99.9% water, recommended for newborn skin. No fragrance, no preservatives.',
+            url: 'https://www.amazon.com/s?k=WaterWipes+sensitive+baby+wipes&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'body',
+        body: 'HEALTH: Hospitals typically send you home with a bulb nasal aspirator — but the Frida NoseFrida is significantly more effective and worth having. A rectal thermometer is the most accurate for newborns; axillary (armpit) and ear readings aren't reliable under 3 months.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🤧',
+            name: 'Frida Baby NoseFrida Nasal Aspirator',
+            note: 'More effective than the bulb syringe the hospital gives you. Parents who have it swear by it.',
+            url: 'https://www.amazon.com/s?k=FridaBaby+NoseFrida+nasal+aspirator&tag=sprigloop-20',
+          },
+          {
+            emoji: '🌡',
+            name: 'Frida Baby 3-in-1 Ear, Forehead + Rectal Thermometer',
+            note: 'Most accurate for newborns is rectal. This covers all three in one device.',
+            url: 'https://www.amazon.com/s?k=Frida+Baby+3+in+1+thermometer&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'heading',
+        body: 'Tier 2: First week home',
+      },
+      {
+        type: 'body',
+        body: 'These items matter in the first week but aren't needed before you leave the hospital. Get them in place before your due date.',
+      },
+      {
+        type: 'body',
+        body: 'FEEDING: Bottles and a nursing pillow are feeding-method-dependent — not every family needs them immediately. If you plan to breastfeed, a nursing pillow makes positioning easier and reduces back strain. Bottles are essential if formula-feeding or combo-feeding. If breastfeeding, hold off on buying a pump until after birth — many insurance plans cover one, and your hospital's lactation consultant can advise on what's right for your supply situation.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🍼',
+            name: 'Dr. Brown's Anti-Colic Bottles Newborn Starter Set',
+            note: 'Internal vent system reduces colic, spit-up, and gas. Widely recommended by pediatricians.',
+            url: 'https://www.amazon.com/s?k=Dr+Browns+anti-colic+bottles+newborn+starter+set&tag=sprigloop-20',
+          },
+          {
+            emoji: '🤱',
+            name: 'Boppy Original Nursing Pillow',
+            note: 'Doubles as a support pillow for tummy time. Washable cover. The most widely used nursing pillow.',
+            url: 'https://www.amazon.com/s?k=Boppy+original+nursing+pillow&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'body',
+        body: 'BATH: Sponge baths only until the umbilical cord falls off — typically around two weeks. You don't need a baby bathtub for the first few weeks, but have one ready. Hooded towels are genuinely worth it; they keep baby warm instantly after a bath.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🛁',
+            name: 'Frida Baby 4-in-1 Grow-with-Me Bathtub',
+            note: 'Works from newborn through toddler. Mesh sling for newborns, converts as baby grows.',
+            url: 'https://www.amazon.com/s?k=Frida+Baby+4+in+1+bathtub&tag=sprigloop-20',
+          },
+          {
+            emoji: '🏊',
+            name: 'Baby Hooded Towels 3-Pack',
+            note: 'Bamboo-cotton blend. Absorbs fast, stays soft. Sized for newborn through 2 years.',
+            url: 'https://www.amazon.com/s?k=baby+hooded+towel+bamboo+newborn+3+pack&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'body',
+        body: 'SLEEP (continued): A white noise machine is close to essential for the first weeks — newborns were used to the constant sound of the womb and silence is actually unfamiliar. A baby monitor matters once baby is sleeping in a separate room; most families don't use one for the first few weeks while baby is in the bassinet by the bed.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🔊',
+            name: 'LectroFan Classic White Noise Machine',
+            note: '10 fan sounds, 10 ambient noise variations. No looping, no tinny speaker. Runs all night.',
+            url: 'https://www.amazon.com/s?k=LectroFan+Classic+white+noise+machine&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'heading',
+        body: 'What you definitely don't need on day one',
+      },
+      {
+        type: 'body',
+        body: 'High chair: not until 4–6 months when baby can sit upright. Baby food maker: not until starting solids at 6 months. Diaper pail: a regular trash can with a lid works fine to start — buy the pail when you're ready to stop walking to the garbage. Jumper or bouncer: nice to have, not urgent. Wipe warmer: genuinely unnecessary (your hands work). Baby monitor: not needed if baby is sleeping in your room, which the AAP recommends for the first six months.',
+      },
+      {
+        type: 'callout',
+        body: 'The most common mistake first-time parents make is buying everything before the baby arrives. Babies develop preferences fast — the bouncer one baby loves, another hates. Buy the essentials, then let your actual baby tell you what else they need.',
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'AAP Safe Sleep Guidelines 2025', url: 'https://www.healthychildren.org/English/ages-stages/baby/sleep/Pages/a-parents-guide-to-safe-sleep.aspx' },
+          { label: 'Consumer Reports — Best Infant Car Seats 2026', url: 'https://www.consumerreports.org/babies-kids/car-seats/best-infant-car-seats-of-the-year-a7088444370/' },
+          { label: 'The Bump — Best Infant Car Seats', url: 'https://www.thebump.com/a/best-infant-car-seats' },
+          { label: 'Newton Baby — Minimalist Baby Registry Checklist', url: 'https://www.newtonbaby.com/blogs/parenting-kids/minimalist-baby-registry-checklist' },
+          { label: 'Cuddle Sprouts — How Many Bodysuits Does a Baby Need', url: 'https://cuddlesprouts.com/blogs/news/how-many-bodysuits-does-a-baby-need-a-realistic-checklist-by-age-laundry-schedule' },
+        ],
+      },
+    ],
+  },
 ]
 
 export function getGuide(slug) {
