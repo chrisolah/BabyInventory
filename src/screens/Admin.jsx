@@ -311,17 +311,19 @@ function OverviewTab({ sinceDays, excludeAdmins }) {
         <div className={styles.overviewCardTitle}>Activation funnel</div>
         <div className={styles.visualFunnel}>
           {activation.map((row, i) => {
-            const w = Math.max(30, row.pct)
+            const w = Math.max(20, row.pct)
             const colors = ['#2D8C6E','#3aab87','#52c4a0','#6dd9b8']
             return (
               <div key={row.stage} className={styles.funnelStage}>
-                <div className={styles.funnelBar}
-                  style={{ width: `${w}%`, background: colors[i] || '#2D8C6E' }}>
-                  <span className={styles.funnelPct}>{row.pct}%</span>
+                <div className={styles.funnelBarRow}>
+                  <div className={styles.funnelBar}
+                    style={{ width: `${w}%`, background: colors[i] || '#2D8C6E' }}>
+                    <span className={styles.funnelPct}>{row.pct}%</span>
+                  </div>
                 </div>
                 <div className={styles.funnelMeta}>
                   <span className={styles.funnelLabel}>{row.stage}</span>
-                  <span className={styles.funnelCount}>{row.households}</span>
+                  <span className={styles.funnelCount}>{row.households} households</span>
                 </div>
               </div>
             )
@@ -453,9 +455,11 @@ function ProductTab({ sinceDays, excludeAdmins, funnelId, onFunnelChange }) {
             const w = Math.max(20, (Number(row.sessions)/topFunnel)*100)
             return (
               <div key={row.step} className={styles.funnelStage}>
-                <div className={styles.funnelBar}
-                  style={{ width: `${w}%`, background: i === 0 ? '#2D8C6E' : '#4ABDA0' }}>
-                  <span className={styles.funnelPct}>{Number(row.sessions)}</span>
+                <div className={styles.funnelBarRow}>
+                  <div className={styles.funnelBar}
+                    style={{ width: `${w}%`, background: i === 0 ? '#2D8C6E' : '#4ABDA0' }}>
+                    <span className={styles.funnelPct}>{Number(row.sessions)}</span>
+                  </div>
                 </div>
                 <div className={styles.funnelMeta}>
                   <span className={styles.funnelLabel}>{row.event_name}</span>

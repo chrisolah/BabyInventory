@@ -543,15 +543,15 @@
 .miniStats strong { color: #111827; }
 
 /* ── Visual funnel ── */
-.visualFunnel { display: flex; flex-direction: column; gap: 8px; }
-.funnelStage { display: flex; align-items: center; gap: 10px; }
+.visualFunnel { display: flex; flex-direction: column; gap: 12px; }
+.funnelStage { display: flex; flex-direction: column; gap: 3px; }
+.funnelBarRow { width: 100%; }
 .funnelBar {
   height: 32px; border-radius: 6px; display: flex; align-items: center;
   padding: 0 10px; transition: width 0.3s ease; min-width: 40px;
-  flex-shrink: 0;
 }
 .funnelPct { font-size: 12px; font-weight: 600; color: #fff; white-space: nowrap; }
-.funnelMeta { display: flex; flex-direction: column; min-width: 0; }
+.funnelMeta { display: flex; justify-content: space-between; padding: 0 2px; }
 .funnelLabel { font-size: 12px; color: #374151; font-weight: 500; }
 .funnelCount { font-size: 11px; color: #9ca3af; }
 
