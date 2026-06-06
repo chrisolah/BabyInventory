@@ -801,3 +801,18 @@
 }
 
 .wishAddBtn:hover { background: var(--gray-50); }
+
+/* ── Arrival checklist banner ── */
+.arrivalBanner {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 12px 1rem;
+  background: linear-gradient(135deg, var(--teal-dark) 0%, #1d9e75 100%);
+  border: none; cursor: pointer; font-family: var(--font-body);
+  text-align: left; transition: opacity 0.12s;
+}
+.arrivalBanner:hover { opacity: 0.92; }
+.arrivalBannerIcon { font-size: 20px; flex-shrink: 0; }
+.arrivalBannerText { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.arrivalBannerTitle { font-size: 13px; font-weight: 600; color: #fff; }
+.arrivalBannerSub { font-size: 11px; color: rgba(255,255,255,0.75); }
+.arrivalBannerArrow { font-size: 16px; color: rgba(255,255,255,0.7); flex-shrink: 0; }

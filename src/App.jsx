@@ -35,6 +35,7 @@ import Profile from './screens/Profile'
 import AcceptInvite from './screens/AcceptInvite'
 import WishlistPublic from './screens/WishlistPublic'
 import WishlistEdit from './screens/WishlistEdit'
+import ArrivalChecklist from './screens/ArrivalChecklist'
 import Admin from './screens/Admin'
 import IvyDecoration from './components/IvyDecoration'
 import LandingLayout from './components/LandingLayout'
@@ -347,6 +348,7 @@ function AppRoutes() {
         <Route path="/pass-along/:id" element={<PassAlongBatch />} />
         <Route path="/plan" element={<Plan />} />
         <Route path="/registry/edit" element={<WishlistEdit />} />
+        <Route path="/arrival-checklist" element={<ArrivalChecklist />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
       {/* /admin is gated by AdminGuard (email allowlist) and lives outside

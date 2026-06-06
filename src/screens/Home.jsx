@@ -426,10 +426,23 @@ function OverallTrackerCard({ pct, owned, recommended, range, ageInfo, babyName 
         </div>
       </div>
       {countdown && (
-        <div className={styles.trackerCountdown}>
-          <CountdownIcon type={countdown.type} />
-          <span>{countdown.text}</span>
-        </div>
+        countdown.type === 'due'
+          ? (
+            <button
+              type="button"
+              className={`${styles.trackerCountdown} ${styles.trackerCountdownBtn}`}
+              onClick={() => navigate('/arrival-checklist')}
+            >
+              <CountdownIcon type={countdown.type} />
+              <span>{countdown.text}</span>
+              <span className={styles.trackerCountdownArrow}>→</span>
+            </button>
+          ) : (
+            <div className={styles.trackerCountdown}>
+              <CountdownIcon type={countdown.type} />
+              <span>{countdown.text}</span>
+            </div>
+          )
       )}
     </div>
   )
