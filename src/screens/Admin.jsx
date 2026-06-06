@@ -504,8 +504,8 @@ function GrowthTab({ excludeAdmins }) {
                 <td>{row.stage}</td>
                 <td>{row.households}</td>
                 <td>
-                  <div className={styles.barWrap}>
-                    <div className={styles.bar} style={{ width: `${row.pct}%` }} />
+                  <div className={styles.growthBarWrap}>
+                    <div className={styles.growthBar} style={{ width: `${row.pct}%` }} />
                     <span>{row.pct}%</span>
                   </div>
                 </td>

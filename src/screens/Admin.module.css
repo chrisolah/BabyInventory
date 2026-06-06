@@ -503,8 +503,8 @@
 }
 .growthTable tr:last-child td { border-bottom: none; }
 .pct { color: #9ca3af; font-size: 11px; }
-.barWrap { display: flex; align-items: center; gap: 8px; }
-.bar { height: 6px; background: #2D8C6E; border-radius: 3px; min-width: 2px; }
+.growthBarWrap { display: flex; align-items: center; gap: 8px; }
+.growthBar { height: 6px; background: #2D8C6E; border-radius: 3px; min-width: 2px; }
 
 /* Category bars */
 .catBars { display: flex; flex-direction: column; gap: 8px; }
