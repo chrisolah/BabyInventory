@@ -1551,7 +1551,7 @@ export const GUIDES = [
       },
       {
         type: 'body',
-        body: 'An infant car seat, properly installed. That's it. Hospital staff will inspect it before you leave. No seat, no discharge. This is the single item to get right first — have it installed and checked at a certified inspection station before your due date. The NHTSA has a free car seat check locator.',
+        body: 'An infant car seat, properly installed. That\'s it. Hospital staff will inspect it before you leave. No seat, no discharge. This is the single item to get right first — have it installed and checked at a certified inspection station before your due date. The NHTSA has a free car seat check locator.',
       },
       {
         type: 'callout',
@@ -1569,7 +1569,7 @@ export const GUIDES = [
           {
             emoji: '🚗',
             name: 'Cybex Cloud T Infant Car Seat',
-            note: 'One of Consumer Reports' highest scorers. Anti-rebound base with load leg reduces crash forces.',
+            note: 'One of Consumer Reports\' highest scorers. Anti-rebound base with load leg reduces crash forces.',
             url: 'https://www.amazon.com/s?k=Cybex+Cloud+T+infant+car+seat&tag=sprigloop-20',
           },
         ],
@@ -1580,7 +1580,7 @@ export const GUIDES = [
       },
       {
         type: 'body',
-        body: 'Beyond the car seat, have these ready at home for day one. You won't know your baby's exact size until birth, so buy a small amount in newborn and put most of your investment in 0–3M.',
+        body: 'Beyond the car seat, have these ready at home for day one. You won\'t know your baby\'s exact size until birth, so buy a small amount in newborn and put most of your investment in 0–3M.',
       },
       {
         type: 'body',
@@ -1591,13 +1591,13 @@ export const GUIDES = [
         items: [
           {
             emoji: '👕',
-            name: 'Simple Joys by Carter's Bodysuits 10-Pack (0–3M)',
+            name: 'Simple Joys by Carter\'s Bodysuits 10-Pack (0–3M)',
             note: 'Snap closures, 100% cotton, envelope necklines. The standard for a reason — durable, soft, affordable.',
             url: 'https://www.amazon.com/s?k=Simple+Joys+Carters+bodysuits+10+pack+0-3+months&tag=sprigloop-20',
           },
           {
             emoji: '🐣',
-            name: 'Carter's Footed Pajamas 4-Pack',
+            name: 'Carter\'s Footed Pajamas 4-Pack',
             note: 'Two-way zippers for nighttime diaper changes without fully undressing baby. Machine washable.',
             url: 'https://www.amazon.com/s?k=Carters+footed+pajamas+4+pack+newborn+zipper&tag=sprigloop-20',
           },
@@ -1638,7 +1638,7 @@ export const GUIDES = [
       },
       {
         type: 'body',
-        body: 'DIAPERING: A changing pad and wipes are the only diapering items you need on day one. The hospital will send you home with a small supply of newborn diapers. A changing pad cover matters more than people think — it's what your baby actually touches, and you'll be washing it constantly.',
+        body: 'DIAPERING: A changing pad and wipes are the only diapering items you need on day one. The hospital will send you home with a small supply of newborn diapers. A changing pad cover matters more than people think — it\'s what your baby actually touches, and you\'ll be washing it constantly.',
       },
       {
         type: 'products',
@@ -1659,7 +1659,7 @@ export const GUIDES = [
       },
       {
         type: 'body',
-        body: 'HEALTH: Hospitals typically send you home with a bulb nasal aspirator — but the Frida NoseFrida is significantly more effective and worth having. A rectal thermometer is the most accurate for newborns; axillary (armpit) and ear readings aren't reliable under 3 months.',
+        body: 'HEALTH: Hospitals typically send you home with a bulb nasal aspirator — but the Frida NoseFrida is significantly more effective and worth having. A rectal thermometer is the most accurate for newborns; axillary (armpit) and ear readings aren\'t reliable under 3 months.',
       },
       {
         type: 'products',
@@ -1684,18 +1684,18 @@ export const GUIDES = [
       },
       {
         type: 'body',
-        body: 'These items matter in the first week but aren't needed before you leave the hospital. Get them in place before your due date.',
+        body: 'These items matter in the first week but aren\'t needed before you leave the hospital. Get them in place before your due date.',
       },
       {
         type: 'body',
-        body: 'FEEDING: Bottles and a nursing pillow are feeding-method-dependent — not every family needs them immediately. If you plan to breastfeed, a nursing pillow makes positioning easier and reduces back strain. Bottles are essential if formula-feeding or combo-feeding. If breastfeeding, hold off on buying a pump until after birth — many insurance plans cover one, and your hospital's lactation consultant can advise on what's right for your supply situation.',
+        body: 'FEEDING: Bottles and a nursing pillow are feeding-method-dependent — not every family needs them immediately. If you plan to breastfeed, a nursing pillow makes positioning easier and reduces back strain. Bottles are essential if formula-feeding or combo-feeding. If breastfeeding, hold off on buying a pump until after birth — many insurance plans cover one, and your hospital\'s lactation consultant can advise on what\'s right for your supply situation.',
       },
       {
         type: 'products',
         items: [
           {
             emoji: '🍼',
-            name: 'Dr. Brown's Anti-Colic Bottles Newborn Starter Set',
+            name: 'Dr. Brown\'s Anti-Colic Bottles Newborn Starter Set',
             note: 'Internal vent system reduces colic, spit-up, and gas. Widely recommended by pediatricians.',
             url: 'https://www.amazon.com/s?k=Dr+Browns+anti-colic+bottles+newborn+starter+set&tag=sprigloop-20',
           },
@@ -1709,7 +1709,7 @@ export const GUIDES = [
       },
       {
         type: 'body',
-        body: 'BATH: Sponge baths only until the umbilical cord falls off — typically around two weeks. You don't need a baby bathtub for the first few weeks, but have one ready. Hooded towels are genuinely worth it; they keep baby warm instantly after a bath.',
+        body: 'BATH: Sponge baths only until the umbilical cord falls off — typically around two weeks. You don\'t need a baby bathtub for the first few weeks, but have one ready. Hooded towels are genuinely worth it; they keep baby warm instantly after a bath.',
       },
       {
         type: 'products',
@@ -1730,7 +1730,7 @@ export const GUIDES = [
       },
       {
         type: 'body',
-        body: 'SLEEP (continued): A white noise machine is close to essential for the first weeks — newborns were used to the constant sound of the womb and silence is actually unfamiliar. A baby monitor matters once baby is sleeping in a separate room; most families don't use one for the first few weeks while baby is in the bassinet by the bed.',
+        body: 'SLEEP (continued): A white noise machine is close to essential for the first weeks — newborns were used to the constant sound of the womb and silence is actually unfamiliar. A baby monitor matters once baby is sleeping in a separate room; most families don\'t use one for the first few weeks while baby is in the bassinet by the bed.',
       },
       {
         type: 'products',
@@ -1745,11 +1745,11 @@ export const GUIDES = [
       },
       {
         type: 'heading',
-        body: 'What you definitely don't need on day one',
+        body: 'What you definitely don\'t need on day one',
       },
       {
         type: 'body',
-        body: 'High chair: not until 4–6 months when baby can sit upright. Baby food maker: not until starting solids at 6 months. Diaper pail: a regular trash can with a lid works fine to start — buy the pail when you're ready to stop walking to the garbage. Jumper or bouncer: nice to have, not urgent. Wipe warmer: genuinely unnecessary (your hands work). Baby monitor: not needed if baby is sleeping in your room, which the AAP recommends for the first six months.',
+        body: 'High chair: not until 4–6 months when baby can sit upright. Baby food maker: not until starting solids at 6 months. Diaper pail: a regular trash can with a lid works fine to start — buy the pail when you\'re ready to stop walking to the garbage. Jumper or bouncer: nice to have, not urgent. Wipe warmer: genuinely unnecessary (your hands work). Baby monitor: not needed if baby is sleeping in your room, which the AAP recommends for the first six months.',
       },
       {
         type: 'callout',
