@@ -112,6 +112,12 @@ function renderSection(section, i) {
         </div>
       )
 
+    case 'heading':
+      return <h2 key={i} className={styles.h2}>{section.body}</h2>
+
+    case 'body':
+      return <p key={i} className={styles.p}>{section.body}</p>
+
     default:
       return null
   }
