@@ -269,26 +269,6 @@ export default function Plan() {
 
       <BabySwitcher from="plan" />
 
-      {/* Arrival checklist banner — pre-birth only */}
-      {ageInfo?.expecting && ageInfo?.daysUntilDue != null && ageInfo.daysUntilDue > 0 && (
-        <div className={styles.arrivalBannerWrap}>
-          <button
-            type="button"
-            className={styles.arrivalBanner}
-            onClick={() => navigate('/arrival-checklist')}
-          >
-            <span className={styles.arrivalBannerIcon}>🍼</span>
-            <div className={styles.arrivalBannerText}>
-              <span className={styles.arrivalBannerTitle}>Arrival checklist</span>
-              <span className={styles.arrivalBannerSub}>
-                {Math.ceil(ageInfo.daysUntilDue)} days to go — see what you need before day one
-              </span>
-            </div>
-            <span className={styles.arrivalBannerArrow}>→</span>
-          </button>
-        </div>
-      )}
-
       {/* Category selector — horizontal scroll row (mobile) */}
       <div className={styles.catRow}>
         {PLAN_CATEGORIES.map(cat => {
@@ -332,6 +312,24 @@ export default function Plan() {
 
         {/* Right: main content */}
       <main className={styles.body}>
+        {/* Arrival checklist banner — pre-birth, inside body for correct width */}
+        {ageInfo?.expecting && ageInfo?.daysUntilDue != null && ageInfo.daysUntilDue > 0 && (
+          <button
+            type="button"
+            className={styles.arrivalBanner}
+            onClick={() => navigate('/arrival-checklist')}
+          >
+            <span className={styles.arrivalBannerIcon}>🍼</span>
+            <div className={styles.arrivalBannerText}>
+              <span className={styles.arrivalBannerTitle}>Arrival checklist</span>
+              <span className={styles.arrivalBannerSub}>
+                {Math.ceil(ageInfo.daysUntilDue)} days to go — see what you need before day one
+              </span>
+            </div>
+            <span className={styles.arrivalBannerArrow}>→</span>
+          </button>
+        )}
+
         {!itemsLoading && selectedAgeRange && selectedCategory === 'clothing' && (
           <>
             {/* Age-range chip navbar */}
