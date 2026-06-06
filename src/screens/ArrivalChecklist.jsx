@@ -163,16 +163,26 @@ export default function ArrivalChecklist() {
         <div className={styles.headerRight} />
       </header>
 
-      {/* Day-1 readiness hero */}
-      <div className={styles.hero}>
-        <div className={styles.heroInner}>
+      {/* Day-1 readiness hero card */}
+      <div className={styles.heroWrap}>
+        <div className={styles.hero}>
           <div className={styles.heroLeft}>
-            <div className={styles.heroPct}>{day1Pct}%</div>
-            <div className={styles.heroLabel}>Day-1 ready</div>
-            <div className={styles.heroSub}>{day1Ready} of {day1Slots.length} essentials covered</div>
+            <div className={styles.heroTitle}>What to have ready before you leave the hospital</div>
+            <div className={styles.heroDesc}>
+              Work through these three tiers in order. Star items to flag them on your registry
+              so family and friends can help fill the gaps.
+            </div>
+            <div className={styles.heroProgress}>
+              <div className={styles.heroProgressTrack}>
+                <div className={styles.heroProgressFill} style={{ width: `${day1Pct}%` }} />
+              </div>
+              <span className={styles.heroProgressLabel}>
+                {day1Pct}% day-1 ready &nbsp;·&nbsp; {day1Ready} of {day1Slots.length} essentials covered
+              </span>
+            </div>
           </div>
           <div className={styles.heroRing}>
-            <svg viewBox="0 0 80 80" width="80" height="80">
+            <svg viewBox="0 0 80 80" width="72" height="72">
               <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="7"/>
               <circle cx="40" cy="40" r="34" fill="none" stroke="#fff" strokeWidth="7"
                 strokeDasharray={`${(day1Pct / 100) * 213.6} 213.6`}

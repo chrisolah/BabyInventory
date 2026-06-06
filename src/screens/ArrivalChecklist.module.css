@@ -21,19 +21,33 @@
 .headerRight { width: 44px; }
 
 /* ── Hero ── */
+.heroWrap {
+  padding: 12px 1rem 0;
+  max-width: 480px; margin: 0 auto; width: 100%; box-sizing: border-box;
+}
+@media (min-width: 768px) { .heroWrap { max-width: 960px; padding: 16px 2rem 0; } }
+
 .hero {
   background: linear-gradient(135deg, var(--teal-dark) 0%, #1d9e75 100%);
-  padding: 20px 1rem;
+  border-radius: 16px; padding: 18px 18px;
+  display: flex; align-items: center; gap: 16px;
 }
-.heroInner {
-  max-width: 480px; margin: 0 auto; width: 100%;
-  display: flex; align-items: center; justify-content: space-between;
+.heroLeft { flex: 1; min-width: 0; color: #fff; }
+.heroTitle {
+  font-family: var(--font-display); font-size: 15px; font-weight: 500;
+  line-height: 1.35; margin-bottom: 6px;
 }
-@media (min-width: 768px) { .heroInner { max-width: 960px; padding: 0 1rem; } }
-.heroLeft { color: #fff; }
-.heroPct { font-family: var(--font-display); font-size: 40px; font-weight: 600; line-height: 1; }
-.heroLabel { font-size: 14px; font-weight: 600; margin-top: 4px; opacity: 0.9; }
-.heroSub { font-size: 12px; opacity: 0.7; margin-top: 3px; }
+.heroDesc {
+  font-size: 12px; line-height: 1.5; opacity: 0.8; margin-bottom: 12px;
+}
+.heroProgress { display: flex; flex-direction: column; gap: 5px; }
+.heroProgressTrack {
+  height: 6px; background: rgba(255,255,255,0.25); border-radius: 3px; overflow: hidden;
+}
+.heroProgressFill {
+  height: 100%; background: #fff; border-radius: 3px; transition: width 0.4s ease;
+}
+.heroProgressLabel { font-size: 11px; opacity: 0.8; font-weight: 500; }
 .heroRing { flex-shrink: 0; }
 
 /* ── Body ── */
