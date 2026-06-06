@@ -150,6 +150,13 @@ export async function getPassAlongFunnel({ excludeAdmins = true } = {}) {
   return data ?? []
 }
 
+export async function getReferrerBreakdown({ sinceDays = 30, excludeAdmins = true } = {}) {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_referrer_breakdown', { _since_days: sinceDays, _exclude_admins: excludeAdmins })
+  if (error) throw error
+  return data ?? []
+}
+
 // Time-window chips for the toolbar. `days = null` means "no upper bound" —
 // passed to the RPC as a very large number so we get everything.
 export const TIME_WINDOWS = [

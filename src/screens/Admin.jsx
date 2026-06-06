@@ -18,6 +18,7 @@ import {
   getRetention,
   getCategoryDepth,
   getPassAlongFunnel,
+  getReferrerBreakdown,
   FUNNELS,
   TIME_WINDOWS,
 } from '../lib/admin'
@@ -384,6 +385,7 @@ function ProductTab({ sinceDays, excludeAdmins, funnelId, onFunnelChange }) {
   const [cats, setCats] = useState([])
   const [passAlong, setPassAlong] = useState([])
   const [funnelRows, setFunnelRows] = useState([])
+  const [referrers, setReferrers] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -394,8 +396,9 @@ function ProductTab({ sinceDays, excludeAdmins, funnelId, onFunnelChange }) {
       getCategoryDepth({ excludeAdmins }),
       getPassAlongFunnel({ excludeAdmins }),
       getFunnelRollup(funnelId, { sinceDays, excludeAdmins }),
-    ]).then(([p, g, c, pa, f]) => {
-      setPages(p); setGuides(g); setCats(c); setPassAlong(pa); setFunnelRows(f)
+      getReferrerBreakdown({ sinceDays, excludeAdmins }),
+    ]).then(([p, g, c, pa, f, ref]) => {
+      setPages(p); setGuides(g); setCats(c); setPassAlong(pa); setFunnelRows(f); setReferrers(ref)
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [sinceDays, excludeAdmins, funnelId])
@@ -498,6 +501,21 @@ function ProductTab({ sinceDays, excludeAdmins, funnelId, onFunnelChange }) {
             </tbody>
           </table>
         </>}
+      </div>
+
+      {/* Traffic sources */}
+      <div className={styles.overviewCard}>
+        <div className={styles.overviewCardTitle}>Traffic sources (30d)</div>
+        <table className={styles.growthTable}>
+          <thead><tr><th>Source</th><th>Sessions</th><th>Users</th></tr></thead>
+          <tbody>
+            {referrers.map(row => (
+              <tr key={row.source}>
+                <td>{row.source}</td><td>{row.sessions}</td><td>{row.users}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
     </div>
