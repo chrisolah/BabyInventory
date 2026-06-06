@@ -1538,6 +1538,10 @@ export const GUIDES = [
   {
     slug: 'what-you-need-before-baby-arrives',
     title: 'What You Actually Need Before Baby Arrives',
+    description: 'A research-backed, tier-by-tier breakdown — car seat first, then sleep, feeding, and health. What to buy, what to borrow, and what to skip.',
+    date: 'June 2026',
+    readTime: '8 min',
+    tags: ['Checklist', 'Planning', 'Newborn'],
     subtitle: 'A research-backed, tier-by-tier breakdown of what to have ready — and what can wait. Sourced from AAP guidelines, Consumer Reports, and pediatricians.',
     category: 'prep',
     sections: [
@@ -1770,6 +1774,10 @@ export const GUIDES = [
   {
     slug: "how-much-does-a-baby-cost-first-year",
     title: "How Much Does a Baby Actually Cost in the First Year?",
+    description: "Real numbers broken down by category — childcare, feeding, diapers, gear, healthcare, and clothing — with honest budget, mid-range, and premium ranges.",
+    date: "June 2026",
+    readTime: "7 min",
+    tags: ["Budgeting", "Planning", "First Year"],
     subtitle: "Real numbers, broken down by category — with honest ranges for budget, mid-range, and premium. No fluff.",
     category: "prep",
     sections: [
@@ -1877,6 +1885,10 @@ export const GUIDES = [
   {
     slug: "how-much-to-save-before-baby-arrives",
     title: "How Much to Save Before Baby Arrives",
+    description: "A realistic savings target for the gear and supplies you need before day one, with budget vs mid-range vs premium breakdowns and a month-by-month savings plan.",
+    date: "June 2026",
+    readTime: "6 min",
+    tags: ["Budgeting", "Planning", "Checklist"],
     subtitle: "A realistic savings target for the gear and supplies you need before day one — broken down so you know exactly what you are building toward.",
     category: "prep",
     sections: [
