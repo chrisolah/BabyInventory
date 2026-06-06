@@ -40,8 +40,8 @@ const categoryGuides  = CATEGORY_SLUGS.map(s => guidesBySlug[s]).filter(Boolean)
 function GuideCard({ guide, onClick, isNew }) {
   return (
     <button className={styles.card} onClick={onClick}>
-      {isNew && <span className={styles.newBadge}>New</span>}
       <div className={styles.cardTags}>
+        {isNew && <span className={styles.newBadge}>New</span>}
         {guide.tags.map(t => (
           <span key={t} className={styles.tag}>{t}</span>
         ))}
