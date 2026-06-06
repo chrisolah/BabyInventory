@@ -1767,6 +1767,212 @@ export const GUIDES = [
       },
     ],
   },
+  {
+    slug: "how-much-does-a-baby-cost-first-year",
+    title: "How Much Does a Baby Actually Cost in the First Year?",
+    subtitle: "Real numbers, broken down by category — with honest ranges for budget, mid-range, and premium. No fluff.",
+    category: "prep",
+    sections: [
+      {
+        type: "lede",
+        body: "The figure you see most often is around $20,000 for the first year. That number is real, but it hides a massive range. A family that breastfeeds, uses daycare subsidies, and buys secondhand gear might spend $8,000. A family with formula, a full-time nanny, and a SNOO might spend $50,000. The number that matters is yours — so here is every category broken down honestly.",
+      },
+      {
+        type: "heading",
+        body: "The big one: childcare",
+      },
+      {
+        type: "body",
+        body: "Childcare is almost always the largest first-year expense for working parents — often larger than all other categories combined. Infant daycare runs $650–$1,500 per month nationally, but averages over $2,000 per month in high-cost cities like San Francisco, New York, or Boston. A full-time nanny costs $1,500–$4,300 per month depending on location. If one parent stays home, this category is $0 — which is why first-year cost estimates vary so wildly. Budget $8,000–$24,000 for daycare, or $18,000–$50,000+ for a nanny.",
+      },
+      {
+        type: "callout",
+        body: "If both parents are working, childcare alone will likely be your largest monthly expense — bigger than your mortgage or rent in many cities. Build this into your budget before anything else.",
+      },
+      {
+        type: "heading",
+        body: "Feeding: $0–$3,600 depending on method",
+      },
+      {
+        type: "body",
+        body: "Breastfeeding: the cost of nursing supplies, a pump (often covered by insurance under the ACA), and lactation support runs $300–$800 for the year. Many families pay much less. Formula: store-brand formula runs $70–$100 per month ($840–$1,200/year). Name-brand formula runs $120–$200 per month ($1,440–$2,400/year). Specialty or hypoallergenic formula runs $200–$300 per month ($2,400–$3,600/year). Combo-feeding lands somewhere in between. You likely will not know which category you fall into until after birth.",
+      },
+      {
+        type: "heading",
+        body: "Diapers and wipes: $1,000–$1,500",
+      },
+      {
+        type: "body",
+        body: "Disposable diapers cost $840–$1,200 for the first year, averaging $70–$100 per month. Add $150–$300 for wipes. Cloth diapers require a larger upfront investment ($300–$600 for a full set) but dramatically lower ongoing costs. Most families spend $1,000–$1,500 total on diapers and wipes in year one.",
+      },
+      {
+        type: "products",
+        items: [
+          {
+            emoji: "👶",
+            name: "Pampers Swaddlers Newborn Gift Set",
+            note: "Most hospital-recommended diaper. Wetness indicator for newborns. Start here and switch brands if you want to save.",
+            url: "https://www.amazon.com/s?k=Pampers+Swaddlers+newborn+gift+set&tag=sprigloop-20",
+          },
+          {
+            emoji: "🧻",
+            name: "WaterWipes Sensitive Baby Wipes 720-Count",
+            note: "99.9% water, no fragrance. The standard for newborn skin. Buying in bulk cuts the per-wipe cost significantly.",
+            url: "https://www.amazon.com/s?k=WaterWipes+sensitive+baby+wipes+720&tag=sprigloop-20",
+          },
+        ],
+      },
+      {
+        type: "heading",
+        body: "Healthcare: $500–$3,500",
+      },
+      {
+        type: "body",
+        body: "Babies have at least seven well-child visits in their first year — at birth, 1 month, 2 months, 4 months, 6 months, 9 months, and 12 months. With good insurance, your out-of-pocket is often $0 for these visits since preventive care is covered under the ACA. Without insurance, expect $85–$150 per visit ($600–$1,000 for the year). Vaccinations add $620+ if not covered by insurance — most plans cover them fully, and the CDC Vaccines for Children program covers them for eligible families at no cost. Budget $500–$1,500 with insurance, $2,000–$3,500 without.",
+      },
+      {
+        type: "heading",
+        body: "Gear and one-time purchases: $1,200–$4,500",
+      },
+      {
+        type: "body",
+        body: "This is where most first-time parents overspend — buying everything new and at full price. The reality: babies outgrow most gear quickly, and secondhand is safe for almost everything except car seats and crib mattresses. Budget ranges: Car seat: $150–$500 (buy new). Bassinet or crib: $100–$900. Stroller: $200–$1,200. Baby monitor: $30–$350. Swing or bouncer: $60–$200. Baby carrier: $40–$180. Breast pump: $0–$400 (check insurance first). Total gear budget: $1,200–$4,500 depending on how much you buy new vs. secondhand.",
+      },
+      {
+        type: "callout",
+        body: "The two items experts unanimously say to buy new: infant car seat (safety ratings degrade over time, recalls matter) and crib mattress (firmness standards and off-gassing). Everything else can safely be bought secondhand.",
+      },
+      {
+        type: "heading",
+        body: "Clothing: $300–$600",
+      },
+      {
+        type: "body",
+        body: "Babies outgrow sizes every 6–10 weeks in the first year. A common mistake is buying too much in any single size — especially newborn, which many babies skip entirely. Budget $50–$80 per size window, and plan on 5–8 size windows in the first year. Total: $300–$600. Gifts and hand-me-downs can dramatically reduce this number. If you are using Sprigloop to track what you have and receive as gifts, you will know exactly where your gaps are at each size.",
+      },
+      {
+        type: "heading",
+        body: "The full picture: what to expect",
+      },
+      {
+        type: "body",
+        body: "Without childcare — $8,000–$15,000 for the year. Budget families who breastfeed, buy secondhand, and receive gifts can get to the lower end. With daycare — $18,000–$35,000. With a nanny — $30,000–$55,000. The USDA puts the average at $20,384, which assumes a middle-income family with some childcare and no major medical costs.",
+      },
+      {
+        type: "callout",
+        body: "The most common financial mistake: not accounting for the income lost during parental leave, especially unpaid leave. The gear costs are the visible part of the budget — the leave period is often where the real financial pressure comes from.",
+      },
+      {
+        type: "sources",
+        items: [
+          { label: "BabyCenter — First Year Baby Costs 2025", url: "https://blog.americanheritagecu.org/what-a-baby-costs-in-their-first-year-in-2025" },
+          { label: "USDA — Expenditures on Children by Families", url: "https://www.usda.gov/about-usda/news/blog/cost-raising-child" },
+          { label: "New York Life — Monthly Baby Expenses Breakdown", url: "https://www.newyorklife.com/articles/breakdown-of-biggest-expenses-for-your-child" },
+          { label: "CDC — Vaccines for Children Program", url: "https://www.cdc.gov/vaccines-for-children/vfc-information-for-parents/index.html" },
+          { label: "Healthline — Budgeting for Baby First Year", url: "https://www.healthline.com/health/parenting/how-much-does-it-cost-to-raise-a-baby-and-what-you-can-do-to-prepare" },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "how-much-to-save-before-baby-arrives",
+    title: "How Much to Save Before Baby Arrives",
+    subtitle: "A realistic savings target for the gear and supplies you need before day one — broken down so you know exactly what you are building toward.",
+    category: "prep",
+    sections: [
+      {
+        type: "lede",
+        body: "Most financial advice tells you to save three to six months of expenses and calls it a day. That is useful for the long run, but it does not answer the more immediate question: how much do I need in the bank before this baby arrives? Here is the honest breakdown for the pre-arrival gear window specifically.",
+      },
+      {
+        type: "heading",
+        body: "The arrival gear budget: $1,500–$4,000",
+      },
+      {
+        type: "body",
+        body: "This is the amount most families spend on gear before the baby comes home — the one-time purchases that need to be in place on day one. It does not include ongoing costs like diapers, formula, or childcare, which begin after birth. A realistic pre-arrival gear budget looks like this: Car seat ($150–$500), bassinet or bedside sleeper ($100–$900), stroller ($200–$1,200), changing pad and cover ($50–$150), clothing for 0–3M ($100–$200 before gifts arrive), newborn health kit — thermometer, nasal aspirator, nail clippers ($40–$80), white noise machine ($30–$80), baby monitor ($30–$350). Total: $700–$3,460 for the essentials. Add a swing or bouncer ($60–$200) and a breast pump ($0–$400 depending on insurance) and you reach $1,500–$4,000.",
+      },
+      {
+        type: "callout",
+        body: "Buy the car seat and bassinet first. Everything else can be ordered in the final weeks or after birth. Do not let the full list paralyze you into buying nothing — the car seat and a safe sleep surface are the two non-negotiables before discharge.",
+      },
+      {
+        type: "heading",
+        body: "Budget vs. mid-range vs. premium",
+      },
+      {
+        type: "body",
+        body: "BUDGET ($700–$1,200): Graco infant car seat, Graco Pack n Play as sleep surface, umbrella stroller, basic monitor, Carter brand clothing in bulk. Safe, functional, no frills. MID-RANGE ($1,500–$2,500): Chicco KeyFit car seat, HALO BassiNest, UPPAbaby or similar stroller, Nanit or Infant Optics monitor, mix of mid-range clothing brands. PREMIUM ($3,000–$5,000+): Cybex Cloud T, SNOO smart bassinet, high-end stroller system, Owlet monitor. The gear does not determine the outcome. A Graco car seat is just as safe as a Cybex — the difference is convenience features and aesthetics.",
+      },
+      {
+        type: "products",
+        items: [
+          {
+            emoji: "💰",
+            name: "Graco SnugRide 35 Lite LX — Budget Pick",
+            note: "Consistently top-rated by Consumer Reports in the budget category. Lightweight, easy install, widely compatible with strollers.",
+            url: "https://www.amazon.com/s?k=Graco+SnugRide+35+Lite+LX+infant+car+seat&tag=sprigloop-20",
+          },
+          {
+            emoji: "🏆",
+            name: "Chicco KeyFit 35 — Mid-Range Pick",
+            note: "Top-rated by Consumer Reports for several years. Easy install, superior base, extended rear-facing weight limit.",
+            url: "https://www.amazon.com/s?k=Chicco+KeyFit+35+infant+car+seat&tag=sprigloop-20",
+          },
+          {
+            emoji: "💰",
+            name: "HALO BassiNest Glide — Budget Bassinet Pick",
+            note: "Bedside design, swivels for easy access, adjustable height. Much more affordable than the SNOO with similar positioning.",
+            url: "https://www.amazon.com/s?k=HALO+BassiNest+Glide+Sleeper&tag=sprigloop-20",
+          },
+          {
+            emoji: "🏆",
+            name: "SNOO Smart Bassinet — Premium Pick",
+            note: "Automatically responds to baby cries with motion and sound. Backed by clinical sleep research. Expensive but available to rent ($200/month) if the purchase price is a barrier.",
+            url: "https://www.amazon.com/s?k=SNOO+smart+bassinet&tag=sprigloop-20",
+          },
+        ],
+      },
+      {
+        type: "heading",
+        body: "What you can safely wait on",
+      },
+      {
+        type: "body",
+        body: "High chair: not until 4–6 months. Buy after birth when you can see what fits your space. Baby bathtub: sponge baths only for the first 2 weeks (until the umbilical cord falls off). You have time. Crib: a bassinet or Pack n Play handles the first 3–6 months while you figure out the nursery. Baby food maker, sippy cups, plates: not until 6 months when solids start. Swing or bouncer: many babies love these, many ignore them. Buy one, test it, then decide if you need another. Nursery decor and furniture: nice, but has no bearing on safety or readiness.",
+      },
+      {
+        type: "heading",
+        body: "The savings target: how to think about the number",
+      },
+      {
+        type: "body",
+        body: "Most financial advisors recommend having 3–6 months of living expenses saved before baby arrives. That is good advice for the long run. But specifically for the pre-arrival gear window: save $2,000–$3,000 before your due date to cover gear without stress, knowing that registry gifts will cover some of it. Then separately, build a buffer for the income gap during parental leave — typically 6–12 weeks of your monthly take-home if your employer does not offer paid leave. That buffer is often more important than the gear budget.",
+      },
+      {
+        type: "callout",
+        body: "The registry is your most underused financial tool. A well-structured registry — one that shows real gaps rather than a manually curated wish list — can reduce your out-of-pocket gear spending by $500–$1,500. Star your most critical items so family and friends know where to focus.",
+      },
+      {
+        type: "heading",
+        body: "Month-by-month savings plan",
+      },
+      {
+        type: "body",
+        body: "If you have 9 months until your due date and want to save $3,000 for gear: $333/month gets you there. If you have 6 months: $500/month. If you have 3 months: $1,000/month — focus on the essentials list only and let the registry cover the rest. Practical starting point: open a dedicated savings account the day you find out you are pregnant, name it something specific (Baby Gear Fund), and automate a transfer the day after your paycheck lands. The name matters — it makes the money feel earmarked and discourages spending it on other things.",
+      },
+      {
+        type: "sources",
+        items: [
+          { label: "BECU — Year 1 Baby Costs", url: "https://www.becu.org/blog/year-1-baby-costs-its-more-than-you-think" },
+          { label: "Omega Pediatrics — New Mom Guide to Budgeting", url: "https://www.omegapediatrics.com/new-moms-guide-to-budgeting/" },
+          { label: "PatPat — First Year Baby Costs Calculator", url: "https://www.patpat.com/blogs/parenting/first-year-baby-costs-calculator-guide" },
+          { label: "WealthKeel — First Year Baby Budget", url: "https://wealthkeel.com/blog/first-year-baby-budget/" },
+          { label: "Consumer Reports — Best Infant Car Seats 2026", url: "https://www.consumerreports.org/babies-kids/car-seats/best-infant-car-seats-of-the-year-a7088444370/" },
+        ],
+      },
+    ],
+  },
 ]
 
 export function getGuide(slug) {
