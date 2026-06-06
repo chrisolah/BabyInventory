@@ -11,6 +11,13 @@ import {
   getHouseholdSummary,
   getPageBreakdown,
   getGuideBreakdown,
+  getActivationFunnel,
+  getTimeToFirstItem,
+  getAnonConversion,
+  getRegistryShareRate,
+  getRetention,
+  getCategoryDepth,
+  getPassAlongFunnel,
   FUNNELS,
   TIME_WINDOWS,
 } from '../lib/admin'
@@ -68,6 +75,7 @@ export default function Admin() {
             ['pages', 'Pages'],
             ['funnel', 'Funnel'],
             ['households', 'Households'],
+            ['growth', 'Growth'],
           ].map(([id, label]) => (
             <button
               key={id}
@@ -97,6 +105,7 @@ export default function Admin() {
             />
           )}
           {tab === 'households' && <HouseholdsTab excludeAdmins={excludeAdmins} />}
+          {tab === 'growth' && <GrowthTab excludeAdmins={excludeAdmins} />}
         </div>
       </main>
     </div>
@@ -429,4 +438,168 @@ function timeAgo(iso) {
   if (diffMs < day) return `${Math.round(diffMs / hr)}h ago`
   if (diffMs < 30 * day) return `${Math.round(diffMs / day)}d ago`
   return new Date(iso).toLocaleDateString()
+}
+
+// ── Growth Tab ────────────────────────────────────────────────────────────────
+
+function GrowthTab({ excludeAdmins }) {
+  const [loading, setLoading] = useState(true)
+  const [activation, setActivation] = useState([])
+  const [timeToFirst, setTimeToFirst] = useState(null)
+  const [anon, setAnon] = useState(null)
+  const [shareRate, setShareRate] = useState(null)
+  const [retention, setRetention] = useState([])
+  const [categories, setCategories] = useState([])
+  const [passAlong, setPassAlong] = useState([])
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    load()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [excludeAdmins])
+
+  async function load() {
+    setLoading(true)
+    setError(null)
+    try {
+      const [act, ttf, anv, sr, ret, cats, pa] = await Promise.all([
+        getActivationFunnel({ excludeAdmins }),
+        getTimeToFirstItem({ excludeAdmins }),
+        getAnonConversion(),
+        getRegistryShareRate({ excludeAdmins }),
+        getRetention({ excludeAdmins }),
+        getCategoryDepth({ excludeAdmins }),
+        getPassAlongFunnel({ excludeAdmins }),
+      ])
+      setActivation(act)
+      setTimeToFirst(ttf)
+      setAnon(anv)
+      setShareRate(sr)
+      setRetention(ret)
+      setCategories(cats)
+      setPassAlong(pa)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) return <div className={styles.loading}>Loading growth metrics…</div>
+  if (error)   return <div className={styles.error}>{error}</div>
+
+  const maxCatItems = Math.max(...categories.map(c => c.items), 1)
+
+  return (
+    <div className={styles.growthGrid}>
+
+      {/* ── Activation funnel ── */}
+      <div className={styles.growthCard} style={{ gridColumn: 'span 2' }}>
+        <div className={styles.growthCardTitle}>Activation funnel</div>
+        <table className={styles.growthTable}>
+          <thead><tr><th>Stage</th><th>Households</th><th>%</th></tr></thead>
+          <tbody>
+            {activation.map(row => (
+              <tr key={row.stage}>
+                <td>{row.stage}</td>
+                <td>{row.households}</td>
+                <td>
+                  <div className={styles.barWrap}>
+                    <div className={styles.bar} style={{ width: `${row.pct}%` }} />
+                    <span>{row.pct}%</span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ── Quick stat cards ── */}
+      <div className={styles.growthCard}>
+        <div className={styles.growthCardTitle}>Time to first item</div>
+        <div className={styles.bigStat}>
+          {timeToFirst ? `${timeToFirst.median_minutes}m` : '—'}
+        </div>
+        <div className={styles.bigStatSub}>
+          median &nbsp;·&nbsp; avg {timeToFirst?.avg_minutes ?? '—'}m &nbsp;·&nbsp; n={timeToFirst?.sample_size ?? 0}
+        </div>
+      </div>
+
+      <div className={styles.growthCard}>
+        <div className={styles.growthCardTitle}>Trial → permanent</div>
+        <div className={styles.bigStat}>
+          {anon ? `${anon.conversion_rate}%` : '—'}
+        </div>
+        <div className={styles.bigStatSub}>
+          {anon?.permanent_accounts ?? 0} permanent &nbsp;·&nbsp; {anon?.anon_active ?? 0} still anon
+        </div>
+      </div>
+
+      <div className={styles.growthCard}>
+        <div className={styles.growthCardTitle}>Registry share rate</div>
+        <div className={styles.bigStat}>
+          {shareRate ? `${shareRate.share_rate}%` : '—'}
+        </div>
+        <div className={styles.bigStatSub}>
+          {shareRate?.households_shared ?? 0} of {shareRate?.households_with_items ?? 0} households
+        </div>
+      </div>
+
+      {/* ── Retention ── */}
+      <div className={styles.growthCard} style={{ gridColumn: 'span 2' }}>
+        <div className={styles.growthCardTitle}>Retention by cohort</div>
+        <table className={styles.growthTable}>
+          <thead>
+            <tr><th>Cohort</th><th>Total</th><th>Active 7d</th><th>Active 30d</th></tr>
+          </thead>
+          <tbody>
+            {retention.map(row => (
+              <tr key={row.cohort}>
+                <td>{row.cohort}</td>
+                <td>{row.total}</td>
+                <td>{row.active_7d} <span className={styles.pct}>({row.retention_7d}%)</span></td>
+                <td>{row.active_30d} <span className={styles.pct}>({row.retention_30d}%)</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ── Category depth ── */}
+      <div className={styles.growthCard} style={{ gridColumn: 'span 2' }}>
+        <div className={styles.growthCardTitle}>Items by category</div>
+        <div className={styles.catBars}>
+          {categories.map(row => (
+            <div key={row.category} className={styles.catBarRow}>
+              <span className={styles.catBarLabel}>{row.category}</span>
+              <div className={styles.catBarTrack}>
+                <div className={styles.catBarFill}
+                  style={{ width: `${(row.items / maxCatItems) * 100}%` }} />
+              </div>
+              <span className={styles.catBarVal}>{row.items} items · {row.households} hh</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Pass-along funnel ── */}
+      <div className={styles.growthCard}>
+        <div className={styles.growthCardTitle}>Pass-along funnel</div>
+        <table className={styles.growthTable}>
+          <thead><tr><th>Stage</th><th>Batches</th><th>Households</th></tr></thead>
+          <tbody>
+            {passAlong.map(row => (
+              <tr key={row.stage}>
+                <td>{row.stage}</td>
+                <td>{row.batches}</td>
+                <td>{row.households}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  )
 }

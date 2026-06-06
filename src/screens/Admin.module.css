@@ -467,3 +467,49 @@
   font-variant-numeric: tabular-nums;
   color: var(--gray-900) !important;
 }
+
+/* ── Growth tab ── */
+.growthGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px;
+}
+.growthCard {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.growthCardTitle {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #9ca3af; margin-bottom: 12px;
+}
+.bigStat {
+  font-size: 36px; font-weight: 700; color: #111827; line-height: 1;
+}
+.bigStatSub {
+  font-size: 12px; color: #6b7280; margin-top: 6px;
+}
+.growthTable {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+.growthTable th {
+  text-align: left; font-size: 11px; font-weight: 600;
+  color: #9ca3af; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6;
+}
+.growthTable td {
+  padding: 7px 0; border-bottom: 1px solid #f9fafb; color: #374151;
+}
+.growthTable tr:last-child td { border-bottom: none; }
+.pct { color: #9ca3af; font-size: 11px; }
+.barWrap { display: flex; align-items: center; gap: 8px; }
+.bar { height: 6px; background: #2D8C6E; border-radius: 3px; min-width: 2px; }
+
+/* Category bars */
+.catBars { display: flex; flex-direction: column; gap: 8px; }
+.catBarRow { display: flex; align-items: center; gap: 8px; }
+.catBarLabel { font-size: 12px; color: #374151; width: 90px; flex-shrink: 0; text-transform: capitalize; }
+.catBarTrack { flex: 1; height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden; }
+.catBarFill  { height: 100%; background: #2D8C6E; border-radius: 4px; }
+.catBarVal   { font-size: 11px; color: #9ca3af; width: 130px; flex-shrink: 0; }

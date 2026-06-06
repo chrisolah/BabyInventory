@@ -99,6 +99,57 @@ export async function getGuideBreakdown({ sinceDays = 30, excludeAdmins = true }
   return data ?? []
 }
 
+// ── Growth metrics ────────────────────────────────────────────────────────────
+
+export async function getActivationFunnel({ excludeAdmins = true } = {}) {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_activation_funnel', { _exclude_admins: excludeAdmins })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getTimeToFirstItem({ excludeAdmins = true } = {}) {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_time_to_first_item', { _exclude_admins: excludeAdmins })
+  if (error) throw error
+  return data?.[0] ?? null
+}
+
+export async function getAnonConversion() {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_anon_conversion')
+  if (error) throw error
+  return data?.[0] ?? null
+}
+
+export async function getRegistryShareRate({ excludeAdmins = true } = {}) {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_registry_share_rate', { _exclude_admins: excludeAdmins })
+  if (error) throw error
+  return data?.[0] ?? null
+}
+
+export async function getRetention({ excludeAdmins = true } = {}) {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_retention', { _exclude_admins: excludeAdmins })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getCategoryDepth({ excludeAdmins = true } = {}) {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_category_depth', { _exclude_admins: excludeAdmins })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getPassAlongFunnel({ excludeAdmins = true } = {}) {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_pass_along_funnel', { _exclude_admins: excludeAdmins })
+  if (error) throw error
+  return data ?? []
+}
+
 // Time-window chips for the toolbar. `days = null` means "no upper bound" —
 // passed to the RPC as a very large number so we get everything.
 export const TIME_WINDOWS = [
