@@ -183,9 +183,6 @@ export default function GuideDetail() {
           <h1 className={styles.h1}>{guide.title}</h1>
           <p className={styles.subtitle}>{guide.subtitle}</p>
           <div className={styles.meta}>{guide.readTime} read &nbsp;&middot;&nbsp; {guide.date}</div>
-          <div className={styles.aiDisclosure}>
-            <strong>AI-assisted research: </strong>{guide.aiDisclosure}
-          </div>
         </header>
 
         <div className={styles.body}>
