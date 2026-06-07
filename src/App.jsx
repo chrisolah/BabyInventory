@@ -157,6 +157,29 @@ function TrackPageViews() {
   return null
 }
 
+// CanonicalTag keeps the <link rel="canonical"> in sync with the current route.
+// The hardcoded canonical in index.html always points to the homepage, which
+// causes Google to treat every page as a duplicate. This component overrides it
+// on every navigation so each public URL gets its own canonical.
+// Strips query strings — registry/share tokens should never be canonicalized.
+function CanonicalTag() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    // Only canonicalize public marketing/content routes. Authenticated app
+    // routes (/home, /inventory, etc.) are blocked in robots.txt anyway.
+    const clean = pathname.replace(/\/$/, '') || '/'
+    const href  = `https://sprigloop.com${clean}`
+    let link = document.querySelector("link[rel='canonical']")
+    if (!link) {
+      link = document.createElement('link')
+      link.setAttribute('rel', 'canonical')
+      document.head.appendChild(link)
+    }
+    link.setAttribute('href', href)
+  }, [pathname])
+  return null
+}
+
 // AdminGuard gates /admin on email allowlist membership. Lives outside
 // ProtectedLayout so we don't drag in HouseholdProvider/UpgradeGateProvider —
 // admin is a tools surface and doesn't need household state. Mirrors
@@ -380,6 +403,7 @@ export default function App() {
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <ScrollToTop />
           <TrackPageViews />
+          <CanonicalTag />
           <AppRoutes />
         </BrowserRouter>
       </AuthProvider>
