@@ -524,9 +524,9 @@ async function render_d2_nudge(args: RenderArgs): Promise<RenderedEmail> {
         ``,
         `Sprigloop is one of those apps that feels pointless empty and useful the second it has a few items in it. Five is the threshold.`,
         ``,
-        `Grab whatever's nearest. A onesie on the changing table, a sleeper in the wash basket. Take a picture of the tag. We do the rest.`,
+        `Grab whatever's nearest. A onesie, a sleep sack, a baby monitor. Whatever's closest. Take a picture of the tag. We do the rest.`,
         ``,
-        `Once your wardrobe is in, the size shifts get easier, the duplicates get obvious, and pass-along becomes a one-tap thing instead of a Saturday project.`,
+        `Once you have items in, the Plan tab shows exactly what you're still missing — and your registry updates automatically so family can see real gaps, not guesses.`,
       ].join('\n')
 
   const bodyHtml = engaged
@@ -534,11 +534,11 @@ async function render_d2_nudge(args: RenderArgs): Promise<RenderedEmail> {
     <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">${headlineHtml}</h1>
     <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
       <p style="margin:0 0 12px;">${greeting}</p>
-      <p style="margin:0 0 12px;">Sprigloop becomes useful around here. Sizes start lining up, the next-up shelf becomes obvious, pass-along is a one-tap thing instead of a Saturday project.</p>
-      <p style="margin:0 0 12px;">Keep snapping when something new comes in. The wardrobe stays current with about thirty seconds of tag photos a week.</p>
+      <p style="margin:0 0 12px;">Sprigloop becomes useful around here. Sizes start lining up, the next-up gaps become obvious, pass-along is a one-tap thing instead of a Saturday project.</p>
+      <p style="margin:0 0 12px;">Keep snapping when something new comes in. Sprigloop stays current with about thirty seconds of tag photos a week.</p>
     </div>
     <div style="padding:14px 28px 4px;">
-      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open the wardrobe</a>
+      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open Sprigloop</a>
     </div>
     <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
       <p style="margin:0;">— Chris</p>
@@ -548,14 +548,14 @@ async function render_d2_nudge(args: RenderArgs): Promise<RenderedEmail> {
     <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
       <p style="margin:0 0 12px;">${greeting}</p>
       <p style="margin:0 0 12px;">Sprigloop is one of those apps that feels pointless empty and useful the second it has a few items in it. Five is the threshold.</p>
-      <p style="margin:0 0 12px;">Grab whatever's nearest. A onesie on the changing table, a sleeper in the wash basket. Take a picture of the tag. We do the rest.</p>
+      <p style="margin:0 0 12px;">Grab whatever's nearest. A onesie, a sleep sack, a baby monitor. Whatever's closest. Take a picture of the tag. We do the rest.</p>
     </div>
     <div style="padding:14px 28px 4px;">
       <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Snap one now</a>
     </div>
-    <p style="font-family:'Fraunces',Georgia,serif;font-size:14px;font-weight:500;color:#085041;letter-spacing:0.04em;text-transform:uppercase;padding:18px 28px 4px;margin:0;">Why we ask</p>
+    <p style="font-family:'Fraunces',Georgia,serif;font-size:14px;font-weight:500;color:#085041;letter-spacing:0.04em;text-transform:uppercase;padding:18px 28px 4px;margin:0;">Why it matters</p>
     <div style="padding:8px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
-      <p style="margin:0 0 12px;">Once your wardrobe is in, the size shifts get easier, the duplicates get obvious, and pass-along becomes a one-tap thing instead of a Saturday project.</p>
+      <p style="margin:0 0 12px;">Once you have items in, the Plan tab shows exactly what you're still missing before the next size arrives. Your registry updates automatically so family can see real gaps, not guesses.</p>
     </div>
     <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
       <p style="margin:0;">— Chris</p>
@@ -571,7 +571,7 @@ async function render_d2_nudge(args: RenderArgs): Promise<RenderedEmail> {
     ``,
     bodyPlain,
     ``,
-    engaged ? `Open the wardrobe: ${homeUrl}` : `Snap one now: ${homeUrl}`,
+    engaged ? `Open Sprigloop: ${homeUrl}` : `Snap one now: ${homeUrl}`,
     ``,
     `— Chris`,
     ``,
@@ -698,7 +698,7 @@ async function render_d7_snapshot(args: RenderArgs): Promise<RenderResult> {
     bodyHtml: `
     <span style="display:inline-block;font-size:12px;font-weight:500;background:#E1F5EE;color:#085041;padding:4px 14px;border-radius:999px;margin:14px 28px 0;">Week one</span>
     <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">A week <em style="font-style:italic;color:#1D9E75;">in</em>.</h1>
-    <p style="font-family:'Fraunces',Georgia,serif;font-size:17px;font-style:italic;color:#085041;line-height:1.4;padding:6px 28px 0;margin:0;">Here's what your wardrobe looks like so far.</p>
+    <p style="font-family:'Fraunces',Georgia,serif;font-size:17px;font-style:italic;color:#085041;line-height:1.4;padding:6px 28px 0;margin:0;">Here's what's in your Sprigloop so far.</p>
     <div style="padding:0 28px;margin-top:14px;color:#5F5E5A;font-size:15px;line-height:1.65;">
       <p style="margin:0 0 12px;">${greeting}</p>
     </div>
@@ -707,10 +707,11 @@ async function render_d7_snapshot(args: RenderArgs): Promise<RenderResult> {
       </table>
     </div>
     <div style="padding:14px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
-      <p style="margin:0 0 12px;">Not bad for a week. The more you scan, the easier the size shifts get and the more obvious the pass-along moments become.</p>
+      <p style="margin:0 0 12px;">Not bad for a week. The more you scan, the easier the size shifts get — and the Plan tab will show exactly what's still missing before the next size arrives.</p>
+      <p style="margin:0 0 12px;">If you haven't shared your registry yet, now's a good time. Family and friends can see your real gaps and claim items without duplicating. Share it from the Registry tab.</p>
     </div>
     <div style="padding:14px 28px 4px;">
-      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open the wardrobe</a>
+      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open Sprigloop</a>
     </div>
     <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
       <p style="margin:0;">— Chris</p>
@@ -729,9 +730,11 @@ async function render_d7_snapshot(args: RenderArgs): Promise<RenderResult> {
     outgrown > 0 ? `  Outgrown:      ${outgrown}` : '',
     topBrand ? `  Top brand:     ${topBrand}` : '',
     ``,
-    `Not bad for a week. The more you scan, the easier the size shifts get and the more obvious the pass-along moments become.`,
+    `Not bad for a week. The more you scan, the easier the size shifts get — and the Plan tab will show exactly what's still missing before the next size arrives.`,
     ``,
-    `Open the wardrobe: ${homeUrl}`,
+    `If you haven't shared your registry yet, now's a good time. Family can see your real gaps and claim items without duplicating. Share it from the Registry tab.`,
+    ``,
+    `Open Sprigloop: ${homeUrl}`,
     ``,
     `— Chris`,
     ``,
@@ -770,7 +773,7 @@ async function render_d14_reengage(args: RenderArgs): Promise<RenderResult> {
     <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
       <p style="margin:0 0 12px;">${greeting}</p>
       <p style="margin:0 0 12px;">You signed up two weeks ago and life probably got busy. That tracks. Babies are a lot.</p>
-      <p style="margin:0 0 12px;">Sprigloop will be here when you have ten quiet minutes. The wardrobe you started will be exactly how you left it. Pick it up whenever.</p>
+      <p style="margin:0 0 12px;">Sprigloop will be here when you have ten quiet minutes. Everything you've set up will be exactly how you left it. Pick it up whenever.</p>
     </div>
     <div style="padding:14px 28px 4px;">
       <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open Sprigloop</a>
@@ -788,7 +791,7 @@ async function render_d14_reengage(args: RenderArgs): Promise<RenderResult> {
     ``,
     `You signed up two weeks ago and life probably got busy. That tracks. Babies are a lot.`,
     ``,
-    `Sprigloop will be here when you have ten quiet minutes. The wardrobe you started will be exactly how you left it. Pick it up whenever.`,
+    `Sprigloop will be here when you have ten quiet minutes. Everything you've set up will be exactly how you left it. Pick it up whenever.`,
     ``,
     `Open Sprigloop: ${homeUrl}`,
     ``,
@@ -902,7 +905,7 @@ function render_invite_accepted(payload: Record<string, unknown>): RenderedEmail
       <p style="margin:0 0 14px;">When something fits no longer, either of you can flag it for pass-along.</p>
     </div>
     <div style="padding:14px 28px 4px;">
-      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open the wardrobe</a>
+      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open Sprigloop</a>
     </div>
     <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
       <p style="margin:0;">— Chris</p>
@@ -919,7 +922,7 @@ function render_invite_accepted(payload: Record<string, unknown>): RenderedEmail
       `  - Both of you can scan and edit. Anything either of you adds shows up for the other instantly.`,
       `  - You'll both see the same outgrown shelf. When something fits no longer, either of you can flag it for pass-along.`,
       ``,
-      `Open the wardrobe: ${homeUrl}`,
+      `Open Sprigloop: ${homeUrl}`,
       ``,
       `— Chris`,
       ``,
@@ -1101,7 +1104,7 @@ async function render_size_shift(args: RenderArgs): Promise<RenderResult> {
       <p style="margin:0 0 12px;">If anything's been tucked away in a closet from a baby shower or older siblings, now's a good time to scan it in.</p>
     </div>
     <div style="padding:14px 28px 4px;">
-      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open the wardrobe</a>
+      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">See what's coming up</a>
     </div>
     <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
       <p style="margin:0;">— Chris</p>
@@ -1119,7 +1122,7 @@ async function render_size_shift(args: RenderArgs): Promise<RenderResult> {
     ``,
     `If anything's been tucked away in a closet from a baby shower or older siblings, now's a good time to scan it in.`,
     ``,
-    `Open the wardrobe: ${homeUrl}`,
+    `See what's coming up: ${homeUrl}`,
     ``,
     `— Chris`,
     ``,
@@ -1208,7 +1211,7 @@ async function render_six_month_retro(args: RenderArgs): Promise<RenderResult> {
       <p style="margin:0 0 12px;">Anything missing? Anything we should be doing that we're not? Hit reply. We use these notes more than you'd think.</p>
     </div>
     <div style="padding:14px 28px 4px;">
-      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open the wardrobe</a>
+      <a href="${esc(homeUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Open Sprigloop</a>
     </div>
     <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
       <p style="margin:0;">— Chris</p>
@@ -1228,7 +1231,7 @@ async function render_six_month_retro(args: RenderArgs): Promise<RenderResult> {
     ``,
     `Anything missing? Anything we should be doing that we're not? Hit reply. We use these notes more than you'd think.`,
     ``,
-    `Open the wardrobe: ${homeUrl}`,
+    `Open Sprigloop: ${homeUrl}`,
     ``,
     `— Chris`,
     ``,
@@ -1346,6 +1349,66 @@ async function render_outgrown_nudge(args: RenderArgs): Promise<RenderResult> {
   return { subject, html, text, headers: LIFECYCLE_HEADERS }
 }
 
+// d10_registry — Email #new. D+10 onboarding nudge. Explains the registry
+// share feature — skips if user has fewer than 5 items (nothing useful to
+// share). The registry is built from real gaps, not a store wish list, and
+// this email makes that distinction clear for users who haven't shared yet.
+async function render_d10_registry(args: RenderArgs): Promise<RenderResult> {
+  let itemCount = 0
+  if (args.recipientUserId) {
+    const { data, error } = await args.supabase.schema('beta').rpc('_user_item_count', {
+      _user_id: args.recipientUserId,
+    })
+    if (!error && typeof data === 'number') itemCount = data
+  }
+  if (itemCount < 5) return { skip: 'too_few_items' }
+
+  const firstName = (args.payload.first_name as string | null) || null
+  const greeting = firstName ? `${esc(firstName)},` : 'Hi,'
+  const registryUrl = `${APP_URL}/registry/edit`
+
+  const subject = `Your registry is different from every other registry.`
+  const html = shell({
+    title: 'Your registry is different',
+    bodyHtml: `
+    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:26px;font-weight:500;line-height:1.2;margin:14px 28px 0;color:#2C2C2A;">Your registry is <em style="font-style:italic;color:#1D9E75;">different</em>.</h1>
+    <div style="padding:0 28px;margin-top:16px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0 0 12px;">${greeting}</p>
+      <p style="margin:0 0 12px;">Most baby registries are built before you own anything — guesses dressed up as needs. Yours is built from what you actually have. Every item on it is a real gap, not a wish.</p>
+      <p style="margin:0 0 12px;">When you share the link, family and friends see exactly how many more bodysuits you still need in 0-3M, not just "bodysuits." When someone claims an item, it's automatically coordinated with everyone else. No duplicates, no awkward returns.</p>
+      <p style="margin:0 0 12px;">One link. No store account needed on their end.</p>
+    </div>
+    <div style="padding:14px 28px 4px;">
+      <a href="${esc(registryUrl)}" style="display:inline-block;background:#1D9E75;color:#E1F5EE !important;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;">Share your registry</a>
+    </div>
+    <div style="padding:18px 28px 4px;color:#5F5E5A;font-size:15px;line-height:1.65;">
+      <p style="margin:0;">— Chris</p>
+    </div>`,
+  })
+
+  const text = [
+    `Your registry is different.`,
+    ``,
+    `${firstName ? firstName + ',' : 'Hi,'}`,
+    ``,
+    `Most baby registries are built before you own anything — guesses dressed up as needs. Yours is built from what you actually have. Every item on it is a real gap, not a wish.`,
+    ``,
+    `When you share the link, family and friends see exactly how many more bodysuits you still need in 0-3M, not just "bodysuits." When someone claims an item, it's automatically coordinated with everyone else. No duplicates, no awkward returns.`,
+    ``,
+    `One link. No store account needed on their end.`,
+    ``,
+    `Share your registry: ${registryUrl}`,
+    ``,
+    `— Chris`,
+    ``,
+    `—`,
+    `Onboarding nudge from Sprigloop. Reply with "stop" to pause these.`,
+    `${APP_URL}/about · ${APP_URL}/contact`,
+  ].join('\n')
+
+  return { subject, html, text, headers: LIFECYCLE_HEADERS }
+}
+
 // renderTemplate — central router. Throws on unknown template_id; the
 // dispatcher catches and marks the row 'failed' with the error message.
 // Returning a SkipResult is NOT an error — the dispatcher honors it by
@@ -1370,6 +1433,8 @@ async function renderTemplate(template_id: string, args: RenderArgs): Promise<Re
       return await render_d4_invite(args)
     case 'd7_snapshot':
       return await render_d7_snapshot(args)
+    case 'd10_registry':
+      return await render_d10_registry(args)
     case 'd14_reengage':
       return await render_d14_reengage(args)
     case 'six_month_retro':
