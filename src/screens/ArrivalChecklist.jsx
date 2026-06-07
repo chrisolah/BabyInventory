@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { SLOTS, recommendedQty } from '../lib/wardrobe'
-import { ITEMS } from '../lib/categories'
+import { ITEMS, CONSUMABLE_SLOT_IDS } from '../lib/categories'
 import { ARRIVAL_TIERS } from '../lib/arrivalChecklist'
 import BottomNav from '../components/BottomNav'
 import styles from './ArrivalChecklist.module.css'
@@ -233,7 +233,9 @@ export default function ArrivalChecklist() {
                           {label}
                         </div>
                         <div className={styles.slotCount}>
-                          {covered ? 'Covered' : `${owned} of ${rec}`}
+                          {slot.type !== 'clothing' && CONSUMABLE_SLOT_IDS.has(slot.id)
+                            ? 'Keep stocked'
+                            : covered ? 'Covered' : `${owned} of ${rec}`}
                           {prio && !covered && <span className={styles.prioStar}> ★</span>}
                         </div>
                       </div>
