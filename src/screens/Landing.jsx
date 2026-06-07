@@ -11,7 +11,7 @@ import styles from './Landing.module.css'
 //   1. Hero — full-width, no widget
 //   2. Feature row: Scan (copy left, mock right)
 //   3. Feature row: Plan (mock left, copy right — flipped)
-//   4. Feature row: Wishlist (copy left, mock right)
+//   4. Feature row: Registry (copy left, mock right)
 //   5. Feature row: Pass-along (mock left, copy right — flipped)
 //   6. Final CTA — dark card
 //
@@ -44,7 +44,7 @@ export default function Landing() {
   }
 
   function handleGetStarted()  { startTrial('get_started') }
-  function handleWishlistCta() { startTrial('wishlist_cta') }
+  function handleRegistryCta() { startTrial('registry_cta') }
   function handleFinalCta()    { startTrial('final_cta') }
 
   function handleSeeHow() {
@@ -202,7 +202,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── 4. Wishlist ── */}
+      {/* ── 4. Registry ── */}
       <section className={styles.feature}>
         <div className={styles.featureInner}>
           <div className={styles.featureCopy}>
@@ -210,18 +210,18 @@ export default function Landing() {
             <h2 className={styles.featureTitle}>A registry built from<br />your actual gaps.</h2>
             <p className={styles.featureBody}>
               Traditional registries make you guess what you need before you know
-              your baby. Sprigloop&rsquo;s wishlist shows family and friends exactly what&rsquo;s
+              your baby. Sprigloop&rsquo;s registry shows family and friends exactly what&rsquo;s
               missing by size and category — so they can fill something real instead
               of guessing. No duplicates, no wasted gifts, no standing in a store
               feeling completely lost.
             </p>
             <p className={styles.featureNote}>One link. No store account required on their end.</p>
-            <button className={styles.featureBtn} onClick={handleWishlistCta} disabled={starting}>
+            <button className={styles.featureBtn} onClick={handleRegistryCta} disabled={starting}>
               {starting ? 'Starting…' : 'Try Sprigloop free'}
             </button>
           </div>
           <div className={styles.featureVisual}>
-            {/* Wishlist card mock */}
+            {/* Registry card mock */}
             <div className={styles.wlMock} aria-hidden="true">
               <div className={styles.wlEye}>OLAH&rsquo;S WISHLIST</div>
               <div className={styles.wlTitle}>Baby Roo &middot; 0&ndash;3M</div>
