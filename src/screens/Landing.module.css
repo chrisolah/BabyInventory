@@ -154,6 +154,18 @@
 }
 .appStoreLink:hover { color: var(--gray-900); }
 
+.appStoreBadge {
+  display: inline-block;
+  margin-top: 16px;
+  transition: opacity 0.15s;
+}
+.appStoreBadge:hover { opacity: 0.82; }
+.appStoreBadgeImg {
+  height: 44px;
+  width: auto;
+  display: block;
+}
+
 /* ── Feature rows ── */
 .feature {
   border-top: 0.5px solid var(--gray-100);

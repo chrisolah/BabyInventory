@@ -98,16 +98,21 @@ export default function Landing() {
           </button>
         </div>
         <div className={styles.heroFootnote}>
-          No account needed to start &nbsp;·&nbsp;{' '}
-          <a
-            className={styles.appStoreLink}
-            href="https://apps.apple.com/us/app/sprigloop-baby-wardrobe/id6772641313"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Also on the App Store →
-          </a>
+          No account needed to start
         </div>
+        <a
+          className={styles.appStoreBadge}
+          href="https://apps.apple.com/us/app/sprigloop-baby-wardrobe/id6772641313"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Download on the App Store"
+        >
+          <img
+            src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+            alt="Download on the App Store"
+            className={styles.appStoreBadgeImg}
+          />
+        </a>
       </section>
 
       {/* ── 2. Scan ── */}
