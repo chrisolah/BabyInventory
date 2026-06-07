@@ -1,0 +1,102 @@
+/* Matches the 36×36 footprint of the ProfileMenu it replaces. */
+
+.root {
+  position: relative;
+}
+
+.btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--gray-500);
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+/* ── Dropdown ──────────────────────────────────────────────── */
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--white);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
+  min-width: 192px;
+  z-index: 40;
+  overflow: hidden;
+  animation: menuIn 0.12s ease-out;
+  /* Keep it within the viewport on narrow screens */
+  max-width: calc(100vw - 24px);
+}
+
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Menu items ────────────────────────────────────────────── */
+.item {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.item:hover {
+  background: var(--gray-50);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+
+/* Share wishlist — teal treatment so it reads as the featured action */
+.itemShare {
+  color: var(--teal-dark);
+  font-weight: 500;
+}
+
+.itemShare:hover {
+  background: var(--teal-light);
+}
+
+.divider {
+  height: 0.5px;
+  background: var(--gray-100);
+  margin: 2px 0;
+}
+
+/* Sign out — muted destructive color on hover */
+.itemSignOut {
+  color: var(--gray-500);
+}
+
+.itemSignOut:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}

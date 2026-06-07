@@ -4,7 +4,7 @@ import { supabase, currentSchema } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
-import ProfileMenu from '../components/ProfileMenu'
+import HeaderActions from '../components/HeaderActions'
 import IvySprig from '../components/IvySprig'
 import Eyebrow from '../components/Eyebrow'
 import BottomNav from '../components/BottomNav'
@@ -265,7 +265,7 @@ export default function PassAlongList() {
           </div>
           <IvySprig />
         </div>
-        <ProfileMenu />
+        <HeaderActions />
       </header>
 
       <main className={styles.body}>

@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold, matchesBabyFilter } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import {
@@ -21,6 +22,7 @@ import BabySwitcher from '../components/BabySwitcher'
 import Eyebrow from '../components/Eyebrow'
 import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
+import HeaderActions from '../components/HeaderActions'
 import styles from './Plan.module.css'
 
 // Plan — the "wish list + guide" hub. Route: /plan
@@ -64,11 +66,13 @@ const CATEGORY_ORDER = [
 export default function Plan() {
   const navigate = useNavigate()
   const {
+    household,
     babies,
     selectedBabyId,
     currentBaby,
     items,
     itemsLoading,
+    reloadItems,
   } = useHousehold()
 
   const [selectedCategory, setSelectedCategory] = useState('clothing')
@@ -179,6 +183,39 @@ export default function Plan() {
       })
   }, [isClothing, catCoverage, selectedCategory])
 
+  // ── Gap row lookup maps ───────────────────────────────────────────────
+  // Clothing: keyed by "slot_id:size_label" (size_label = age range)
+  const clothingGapBySlotSize = useMemo(() => {
+    const map = {}
+    for (const item of babyFilteredItems) {
+      if (item.inventory_status !== 'gap' || item.top_category !== 'clothing') continue
+      if (item.slot_id && item.size_label) {
+        map[`${item.slot_id}:${item.size_label}`] = item
+      }
+    }
+    return map
+  }, [babyFilteredItems])
+
+  // Non-clothing: keyed by slot_id
+  const itemGapBySlot = useMemo(() => {
+    const map = {}
+    for (const item of babyFilteredItems) {
+      if (item.inventory_status !== 'gap' || item.top_category === 'clothing') continue
+      if (item.slot_id) map[item.slot_id] = item
+    }
+    return map
+  }, [babyFilteredItems])
+
+  const toggleGapPriority = useCallback(async (gapRow) => {
+    const table = gapRow.top_category === 'clothing' ? 'clothing_items' : 'items'
+    await supabase
+      .schema(currentSchema)
+      .from(table)
+      .update({ is_priority: !gapRow.is_priority })
+      .eq('id', gapRow.id)
+    reloadItems()
+  }, [reloadItems])
+
   const showOutgrow = shouldShowOutgrowBanner(ageInfo)
 
   function handleOutgrowClick() {
@@ -206,8 +243,12 @@ export default function Plan() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
+        <div className={styles.headerLeft} />
         <div className={styles.titleCell}>
           <span className={styles.title}>Plan</span>
+        </div>
+        <div className={styles.headerRight}>
+          <HeaderActions />
         </div>
       </header>
 
@@ -297,6 +338,8 @@ export default function Plan() {
                       key={row.slot.id}
                       row={row}
                       onClick={() => handleSlotTap(row.slot.id)}
+                      gapRow={clothingGapBySlotSize[`${row.slot.id}:${selectedAgeRange}`]}
+                      onStarToggle={toggleGapPriority}
                     />
                   ))}
                 </div>
@@ -347,6 +390,8 @@ export default function Plan() {
                       key={row.slot.id}
                       row={row}
                       onClick={() => navigate(`/add-item?category=${selectedCategory}`)}
+                      gapRow={itemGapBySlot[row.slot.id]}
+                      onStarToggle={toggleGapPriority}
                     />
                   ))}
                 </div>
@@ -370,6 +415,7 @@ export default function Plan() {
       </div>
 
       <BottomNav />
+
     </div>
   )
 }
@@ -590,7 +636,7 @@ function FlatGroupHeader({ title, owned, recommended }) {
 }
 
 // ── Slot card ─────────────────────────────────────────────────────────────────
-function SlotCard({ row, onClick }) {
+function SlotCard({ row, onClick, gapRow, onStarToggle }) {
   const { slot, ownedCount, recommended, status } = row
 
   const countClass =
@@ -599,17 +645,43 @@ function SlotCard({ row, onClick }) {
                             styles.slotCountGap
 
   return (
-    <button type="button" className={styles.slotCard} onClick={onClick}>
-      <span className={styles.slotCardName}>{slot.label}</span>
-      <div className={styles.slotCardMeta}>
-        <span className={`${styles.slotCardCount} ${countClass}`}>
-          {ownedCount} of {recommended}
-        </span>
-        {slot.hint && (
-          <span className={styles.slotCardHint}>{' · '}{slot.hint}</span>
-        )}
-      </div>
-    </button>
+    <div className={styles.slotCardWrapper}>
+      <button type="button" className={styles.slotCard} onClick={onClick}>
+        <span className={styles.slotCardName}>{slot.label}</span>
+        <div className={styles.slotCardMeta}>
+          <span className={`${styles.slotCardCount} ${countClass}`}>
+            {ownedCount} of {recommended}
+          </span>
+          {slot.hint && (
+            <span className={styles.slotCardHint}>{' · '}{slot.hint}</span>
+          )}
+        </div>
+      </button>
+      {gapRow && onStarToggle && (
+        <button
+          type="button"
+          className={`${styles.starBtn} ${gapRow.is_priority ? styles.starBtnActive : ''}`}
+          onClick={e => { e.stopPropagation(); onStarToggle(gapRow) }}
+          aria-label={gapRow.is_priority ? 'Remove priority' : 'Mark as priority'}
+        >
+          <StarIcon filled={gapRow.is_priority} />
+        </button>
+      )}
+    </div>
+  )
+}
+
+function StarIcon({ filled }) {
+  return (
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+      <path
+        d="M8 1.5l1.75 3.55 3.92.57-2.84 2.77.67 3.91L8 10.35l-3.5 1.95.67-3.91L2.33 5.62l3.92-.57L8 1.5z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+        fill={filled ? 'currentColor' : 'none'}
+      />
+    </svg>
   )
 }
 

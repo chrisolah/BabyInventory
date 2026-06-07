@@ -31,6 +31,7 @@ import PassAlongList from './screens/PassAlongList'
 import Plan from './screens/Plan'
 import Profile from './screens/Profile'
 import AcceptInvite from './screens/AcceptInvite'
+import WishlistPublic from './screens/WishlistPublic'
 import Admin from './screens/Admin'
 import IvyDecoration from './components/IvyDecoration'
 import LandingLayout from './components/LandingLayout'
@@ -278,6 +279,10 @@ function AppRoutes() {
           to /home before they could accept) or ProtectedLayout (would block
           unauthed recipients before they could see the preview). */}
       <Route path="/invite/:token" element={<AcceptInvite />} />
+      {/* /wishlist/:token — public registry link, no auth required.
+          Full recipient UI in task #15; WishlistPublic is currently a
+          placeholder that confirms the link resolves correctly. */}
+      <Route path="/wishlist/:token" element={<WishlistPublic />} />
       {/* All authed routes share ProtectedLayout so HouseholdProvider stays
           mounted across navigation. Adding a new authed screen? Add it as a
           child of this route, not as its own top-level <Route>. */}

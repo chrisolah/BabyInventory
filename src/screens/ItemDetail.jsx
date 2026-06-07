@@ -6,7 +6,7 @@ import { useHousehold } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import { SLOT_BY_ID, CATEGORY_LABELS } from '../lib/wardrobe'
 import { ITEM_BY_ID, SUB_CATEGORY_LABELS, CATEGORY_META } from '../lib/categories'
-import ProfileMenu from '../components/ProfileMenu'
+import HeaderActions from '../components/HeaderActions'
 import IvySprig from '../components/IvySprig'
 import Eyebrow from '../components/Eyebrow'
 import styles from './ItemDetail.module.css'
@@ -474,7 +474,7 @@ export default function ItemDetail() {
             <div className={styles.title}>Not found</div>
             <IvySprig />
           </div>
-          <ProfileMenu />
+          <HeaderActions />
         </header>
         <main className={styles.body}>
           <div className={styles.error}>
@@ -522,7 +522,7 @@ export default function ItemDetail() {
           {/* Mobile-only sprig beneath the subtitle. Hidden on desktop. */}
           <IvySprig />
         </div>
-        <ProfileMenu />
+        <HeaderActions />
       </header>
 
       <main className={styles.body}>

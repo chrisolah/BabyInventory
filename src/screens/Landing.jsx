@@ -5,48 +5,28 @@ import { useAuth } from '../hooks/useAuth'
 import IvyBanner from '../components/IvyBanner'
 import styles from './Landing.module.css'
 
-// IvyDecoration is mounted by LandingLayout (the parent route element),
-// not here. That keeps the desktop ivy persistent across navigation
-// between Landing and HowItWorks instead of restarting its 9s grow
-// animation on every route change. IvyBanner stays inline because it
-// sits between the nav and hero, which a parent layout can't position.
-
-// Landing page — aligned with V1.9 addendum (2026-04-23).
+// Landing page — Option B redesign (2026-06-03).
 //
-// Framing shift vs. the pre-V1.9 copy:
-//   • The exchange is no longer pitched as a peer-to-peer, zip-code-matched
-//     marketplace. It's pitched as a three-destination pass-along hub with
-//     Sprigloop as the concierge in the middle — the user never has to
-//     coordinate with another parent directly.
-//   • Receiver opt-in gets its own section, with non-stigmatizing framing
-//     ("Open to receiving from another Sprigloop family" / "Send to a Sprigloop family").
-//     See feedback_pass_along_framing.md — we never say "families in need."
-//   • How-it-works is reshaped so the "send it on" step references the three
-//     destinations, not a nearby-family match.
+// Structure:
+//   1. Hero — split layout: settled copy left, readiness widget right
+//   2. Wishlist / registry — split with dark mock card
+//   3. Countdown / age-aware — single countdown card
+//   4. Pass-along hub — compact 3-card grid
+//   5. Final CTA — dark card
 //
-// Preserved from the previous landing: Ivy decoration components, the free-
-// for-all-families eyebrow, the features 3-up, and the quiet photo-scan
-// mention above the final CTA.
+// Removed from previous version: features 3-up, scan spotlight, opt-in,
+// mission band. Content is tighter; wishlist angle is now prominent.
 
 export default function Landing() {
   const navigate = useNavigate()
   const hubRef = useRef(null)
   const { signInAnonymously } = useAuth()
-  // Pending while the anon sign-in API call is in flight, so rapid taps
-  // on a CTA can't fire multiple sign-ins in parallel and rapid taps
-  // get visual feedback (button stays disabled briefly).
   const [starting, setStarting] = useState(false)
 
   useEffect(() => {
     track.pageViewed({ page: 'landing', referrer: document.referrer })
   }, [])
 
-  // Shared trial-entry handler. Every "Try Sprigloop" CTA on this page
-  // funnels through here so the analytics distinction (which CTA was
-  // tapped) is preserved while the actual sign-in + navigation logic is
-  // identical. On a Supabase API failure (e.g., Anonymous Sign-Ins not
-  // enabled), we fall back to the legacy /signup route so the user can
-  // still progress; the error is logged for surfacing later.
   async function startTrial(ctaName) {
     if (starting) return
     setStarting(true)
@@ -59,33 +39,18 @@ export default function Landing() {
       navigate('/signup')
       return
     }
-    // PublicRoute would redirect a freshly-authed user to /home anyway,
-    // but onboarding is the right first stop for a brand-new account so
-    // we navigate explicitly. Onboarding's own resume logic will route
-    // to /home if the user somehow already finished (shouldn't, since
-    // they were anon a tick ago).
     setStarting(false)
     navigate('/onboarding')
   }
 
-  function handleGetStarted() {
-    startTrial('get_started')
-  }
+  function handleGetStarted()  { startTrial('get_started') }
+  function handleWishlistCta() { startTrial('wishlist_cta') }
+  function handleHubCta()      { startTrial('hub_cta') }
+  function handleFinalCta()    { startTrial('final_cta') }
 
   function handleSeeHub() {
-    // Secondary hero CTA — scrolls to the pass-along hub section instead of
-    // bouncing the user straight into the trial. Curious parents browse;
-    // committed ones tap Try Sprigloop above.
     track.ctaClicked('see_pass_along_hub')
     hubRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  function handleJoinCommunity() {
-    startTrial('join_community')
-  }
-
-  function handleCreateAccount() {
-    startTrial('create_account_footer')
   }
 
   return (
@@ -104,213 +69,184 @@ export default function Landing() {
         <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
       </nav>
 
-      {/* Horizontal vine between the nav and the hero — mobile only.
-          IvyBanner's own CSS hides itself ≥ 960px (where IvyDecoration
-          handles the gutter). */}
       <IvyBanner />
 
+      {/* ── 1. Hero ── */}
       <section className={styles.hero}>
-        <div className={styles.eyebrow}>Free for all families</div>
-        <h1 className={styles.headline}>Baby clothes,<br /><em>organized</em> and shared.</h1>
-        {/* Env hook above the fold. Sits between H1 and sub so the
-            sustainability angle is visible before scroll. Names the audience
-            ("parents who'd rather...") so it doubles as a self-selection
-            line, and pairs anti-waste with pass-along in one breath. */}
-        <p className={styles.heroEnv}>Built for parents who&rsquo;d rather pass it on than throw it out.</p>
-        <p className={styles.sub}>Sprigloop is a wardrobe app for baby clothes, with a built-in way to pass them on to another family once they&rsquo;re outgrown.</p>
-        <div className={styles.heroBtns}>
-          <button className={styles.heroCta} onClick={handleGetStarted} disabled={starting}>
-            {starting ? 'Starting…' : 'Try Sprigloop free'}
-          </button>
-          <button className={styles.heroSecondaryCta} onClick={handleSeeHub}>See how pass-along works</button>
-        </div>
-        <a
-          className={styles.appStoreLink}
-          href="https://apps.apple.com/us/app/sprigloop-baby-wardrobe/id6772641313"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Also on the App Store →
-        </a>
-      </section>
+        <div className={styles.heroInner}>
+          <div className={styles.heroText}>
+            <div className={styles.eyebrow}>Free for all families</div>
+            <h1 className={styles.headline}>Baby clothes,<br /><em>organized</em> and shared.</h1>
+            <p className={styles.heroEnv}>Built for parents who&rsquo;d rather pass it on than throw it out.</p>
+            <p className={styles.sub}>Sprigloop is a wardrobe app for baby clothes, with a built-in way to pass them on to another family once they&rsquo;re outgrown.</p>
+            <div className={styles.heroBtns}>
+              <button className={styles.heroCta} onClick={handleGetStarted} disabled={starting}>
+                {starting ? 'Starting…' : 'Try Sprigloop free'}
+              </button>
+              <button className={styles.heroSecondaryCta} onClick={handleSeeHub}>
+                See how pass-along works
+              </button>
+            </div>
+            <a
+              className={styles.appStoreLink}
+              href="https://apps.apple.com/us/app/sprigloop-baby-wardrobe/id6772641313"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Also on the App Store →
+            </a>
+          </div>
 
-      <section className={styles.features}>
-        <h2 className={styles.sectionTitle}>Everything in one place</h2>
-        <p className={styles.sectionSub}>Whether you&rsquo;re expecting or already knee-deep in laundry.</p>
-        <div className={styles.featureGrid}>
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon} style={{ background: 'var(--purple-light)' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" fill="#534AB7"/><rect x="9" y="2" width="5" height="5" rx="1" fill="#534AB7"/><rect x="2" y="9" width="5" height="5" rx="1" fill="#534AB7"/><rect x="9" y="9" width="5" height="5" rx="1" fill="#AFA9EC"/></svg>
+          {/* Readiness widget — static mockup illustrating the Plan feature */}
+          <div className={styles.readinessWidget} aria-hidden="true">
+            <div className={styles.rwHeader}>OVERALL READINESS</div>
+            <div className={styles.rwPct}>62%</div>
+            <div className={styles.rwSub}>0–3M &nbsp;·&nbsp; 14 gaps flagged</div>
+            <div className={styles.rwRow}>
+              <span className={styles.rwLabel}>Clothing</span>
+              <div className={styles.rwTrack}><div className={styles.rwFill} style={{ width: '80%' }} /></div>
             </div>
-            <div className={styles.featureCardTitle}>Catalog what you own</div>
-            <div className={styles.featureCardBody}>Log items by size, category, and season. Never wonder what you have again.</div>
-          </div>
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon} style={{ background: 'var(--teal-light)' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#0F6E56" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <div className={styles.rwRow}>
+              <span className={styles.rwLabel}>Sleep</span>
+              <div className={styles.rwTrack}><div className={`${styles.rwFill} ${styles.rwFillLow}`} style={{ width: '45%' }} /></div>
             </div>
-            <div className={styles.featureCardTitle}>Plan ahead by size</div>
-            <div className={styles.featureCardBody}>Know which sizes are coming up and what you still need before you need it.</div>
-          </div>
-          {/* Pass-along card replaced "Share with your family" on 2026-04-28
-              after Chris pivoted away from animated preview strip. The bag
-              icon (handle + body silhouette) matches the bag visual used in
-              the Hub section below and in the scanFeatureMock — keeps the
-              landing's bag motif consistent throughout the page. */}
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon} style={{ background: 'var(--amber-light)' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 5.5 Q3 4.5 4 4.5 L5 4.5 Q5.6 1.8 8 1.8 Q10.4 1.8 11 4.5 L12 4.5 Q13 4.5 13 5.5 L13 13.6 Q13 14 12.6 14 L3.4 14 Q3 14 3 13.6 Z" fill="#EF9F27"/>
-                <path d="M5 4.5 Q5 2.6 8 2.6 Q11 2.6 11 4.5" stroke="#EF9F27" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
-              </svg>
+            <div className={styles.rwRow}>
+              <span className={styles.rwLabel}>Feeding</span>
+              <div className={styles.rwTrack}><div className={`${styles.rwFill} ${styles.rwFillLow}`} style={{ width: '30%' }} /></div>
             </div>
-            <div className={styles.featureCardTitle}>Pass on what&rsquo;s outgrown</div>
-            <div className={styles.featureCardBody}>Mark items outgrown and we&rsquo;ll mail a prepaid bag. Drop it in any mailbox and we&rsquo;ll pass it on to another family.</div>
+            <div className={styles.rwRow}>
+              <span className={styles.rwLabel}>Travel</span>
+              <div className={styles.rwTrack}><div className={styles.rwFill} style={{ width: '90%' }} /></div>
+            </div>
+            <div className={`${styles.rwRow} ${styles.rwRowLast}`}>
+              <span className={styles.rwLabel}>Play</span>
+              <div className={styles.rwTrack}><div className={styles.rwFill} style={{ width: '60%' }} /></div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Photo-scan spotlight ────────────────────────────────────────────
-          Promoted from the old quiet `.scanNote` near the bottom. Sits
-          between Features and How because by this point a reader knows
-          what the app does and is ready to feel "this is fast." Mockup is
-          pure inline SVG/CSS (phone frame, viewfinder corners, tag, three
-          floating field chips) — no image asset, no library. Names
-          "Scan many" explicitly so users see the batch affordance before
-          they even sign up. */}
-      <section className={styles.scanFeature}>
-        <div className={styles.scanFeatureWrap}>
-          <div className={styles.scanFeatureCopy}>
-            <div className={styles.scanFeatureEyebrow}>Built for the laundry pile</div>
-            <h2 className={styles.scanFeatureHeadline}>Snap a tag.<br />Skip the typing.</h2>
-            <p className={styles.scanFeatureBody}>
-              Point your phone at a clothing tag &mdash; Sprigloop reads the
-              brand, size, and category in seconds. Got a stack? Tap{' '}
-              <strong>Scan many</strong> and knock out the whole basket
-              without putting it down.
+      {/* ── 2. Wishlist / registry ── */}
+      <section className={styles.wishlist}>
+        <div className={styles.wishlistInner}>
+          <div className={styles.wishlistText}>
+            <div className={styles.eyebrowAmber}>Shareable wishlist</div>
+            <h2 className={styles.sectionTitle}>Your registry, minus the guesswork.</h2>
+            <p className={styles.sectionSub}>
+              Instead of a list of things you might want, Sprigloop shows exactly what you&rsquo;re
+              missing — by category, by size, by when you&rsquo;ll need it. Share the link. Family
+              picks from real gaps.
             </p>
-            <ul className={styles.scanFeatureBullets}>
-              <li>Works on most baby-clothing brands and care labels.</li>
-              <li>Edit anything before you save &mdash; we&rsquo;re a head start, not the final word.</li>
-              <li>Your photos stay on your phone. Only the extracted text is used.</li>
+            <ul className={styles.wishlistBullets}>
+              <li>No duplicate gifts</li>
+              <li>No generic suggestions</li>
+              <li>No registry account at a store you don&rsquo;t use</li>
             </ul>
+            <button className={styles.sectionBtn} onClick={handleWishlistCta} disabled={starting}>
+              {starting ? 'Starting…' : 'Try Sprigloop free'}
+            </button>
           </div>
-          <div className={styles.scanFeatureMock} aria-hidden="true">
-            <div className={styles.phoneFrame}>
-              <div className={styles.phoneNotch} />
-              <div className={styles.phoneScreen}>
-                <span className={`${styles.vfCorner} ${styles.vfTl}`} />
-                <span className={`${styles.vfCorner} ${styles.vfTr}`} />
-                <span className={`${styles.vfCorner} ${styles.vfBl}`} />
-                <span className={`${styles.vfCorner} ${styles.vfBr}`} />
-                <div className={styles.mockTag}>
-                  <div className={styles.mockTagBrand}>carter&rsquo;s</div>
-                  <div className={styles.mockTagSize}>6&ndash;9M</div>
-                  <div className={styles.mockTagCare}>100% cotton &middot; machine wash</div>
-                </div>
-                <div className={styles.mockHint}>Got it&hellip;</div>
+
+          {/* Mock wishlist card */}
+          <div className={styles.wishlistCard} aria-hidden="true">
+            <div className={styles.wcEyebrow}>OLAH&rsquo;S WISHLIST</div>
+            <div className={styles.wcTitle}>Baby Roo &mdash; 0&ndash;3M</div>
+            <div className={styles.wcSub}>9 gaps &nbsp;·&nbsp; updated today</div>
+            <div className={styles.wcItems}>
+              <div className={styles.wcItem}>
+                <span className={styles.wcName}>Sleep sacks (4)</span>
+                <span className={styles.wcBadge}>Sleep</span>
+              </div>
+              <div className={styles.wcItem}>
+                <span className={styles.wcName}>Bottle starter set</span>
+                <span className={styles.wcBadge}>Feeding</span>
+              </div>
+              <div className={styles.wcItem}>
+                <span className={styles.wcName}>Swaddles</span>
+                <span className={styles.wcBadge}>Sleep</span>
+              </div>
+              <div className={`${styles.wcItem} ${styles.wcItemLast}`}>
+                <span className={styles.wcName}>+6 more items</span>
+                <span className={styles.wcBadge}>Various</span>
               </div>
             </div>
-            <div className={`${styles.fieldChip} ${styles.chipBrand}`}>
-              <span className={styles.chipLabel}>Brand</span>
-              <span className={styles.chipValue}>Carter&rsquo;s</span>
+            <button className={styles.wcBtn} onClick={handleWishlistCta} disabled={starting}>
+              {starting ? 'Starting…' : 'Claim an item'}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3. Countdown / age-aware ── */}
+      <section className={styles.countdown}>
+        <div className={styles.countdownInner}>
+          <div className={styles.eyebrow}>Age-aware</div>
+          <h2 className={styles.sectionTitle}>Gaps show up before they matter.</h2>
+          <p className={styles.sectionSub}>
+            Sprigloop tracks your baby&rsquo;s age and flags when the next size window is
+            approaching. No scrambling when they suddenly outgrow the 0&ndash;3M pile.
+          </p>
+          <div className={styles.countdownCard}>
+            <div className={styles.ccLeft}>
+              <div className={styles.ccNum}>23</div>
+              <div className={styles.ccUnit}>days until 3&ndash;6M</div>
             </div>
-            <div className={`${styles.fieldChip} ${styles.chipSize}`}>
-              <span className={styles.chipLabel}>Size</span>
-              <span className={styles.chipValue}>6&ndash;9M</span>
-            </div>
-            <div className={`${styles.fieldChip} ${styles.chipCat}`}>
-              <span className={styles.chipLabel}>Category</span>
-              <span className={styles.chipValue}>One-pieces</span>
+            <div className={styles.ccDivider} />
+            <div className={styles.ccText}>
+              Sprigloop flags your 3&ndash;6M gaps now, while there&rsquo;s still time to fill
+              them from your wishlist or another Sprigloop family.
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Pass-along hub — the V1.9 centerpiece ───────────────────────────
-          Three destinations, one flow, Sprigloop as the concierge in the
-          middle. This replaces the old zip-code-matching "family nearby
-          claims it" section. Per the addendum: senders and receivers never
-          have to coordinate with each other — they only coordinate with us. */}
+      {/* ── 4. Pass-along hub ── */}
       <section className={styles.hub} ref={hubRef}>
-        <div className={styles.hubBand}>
-          <div className={styles.hubEyebrow}>When baby outgrows them</div>
-          <h2 className={styles.hubHeadline}>Three places your outgrown<br />clothes can go.</h2>
-          <p className={styles.hubBody}>Pick a destination and Sprigloop takes it from there. No selling, no drop-off logistics, no swapping addresses with strangers. Every bag passed on is one less in the landfill, and one less new garment manufactured to take its place.</p>
+        <div className={styles.hubInner}>
+          <div className={styles.eyebrowAmber}>Pass it on</div>
+          <h2 className={styles.sectionTitle}>When they outgrow it, we take it from there.</h2>
+          <p className={styles.sectionSub}>
+            Request a bag. Fill it when you&rsquo;re ready. Sprigloop sends it where it does the most good.
+          </p>
           <div className={styles.hubGrid}>
             <div className={styles.hubCard}>
-              <div className={styles.hubCardIcon} style={{ background: 'var(--amber-light)', color: 'var(--amber-dark)' }}>
+              <div className={styles.hubIcon} style={{ background: 'var(--amber-light)', color: 'var(--amber-dark)' }}>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="6" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M2 15c0-2.5 1.8-4 4-4s4 1.5 4 4M8 15c0-2.5 1.8-4 4-4s4 1.5 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </div>
-              <div className={styles.hubCardTitle}>Send to a Sprigloop family</div>
-              <div className={styles.hubCardBody}>Ships to Sprigloop first. We route the bag to a family who&rsquo;s opted in to receiving. If we can&rsquo;t find a match, we&rsquo;ll donate it on your behalf. Addresses stay private on both ends.</div>
+              <div className={styles.hubCardTitle}>Another Sprigloop family</div>
+              <div className={styles.hubCardBody}>Outgrown by you, needed by someone else. The cycle keeps going.</div>
             </div>
             <div className={styles.hubCard}>
-              <div className={styles.hubCardIcon} style={{ background: 'var(--purple-light)', color: 'var(--purple-dark)' }}>
+              <div className={styles.hubIcon} style={{ background: 'var(--purple-light)', color: 'var(--purple-dark)' }}>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M3 16c0-3 2.7-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </div>
               <div className={styles.hubCardTitle}>A friend or family member</div>
-              <div className={styles.hubCardBody}>Sister-in-law, best friend, coworker with a new baby. We mail you a prepaid Sprigloop bag, you fill it, write their address on the bag, and drop it in any mailbox.</div>
+              <div className={styles.hubCardBody}>Fill a Sprigloop bag, write their address on it, drop it in any mailbox.</div>
             </div>
             <div className={styles.hubCard}>
-              <div className={styles.hubCardIcon} style={{ background: 'var(--gray-100)', color: 'var(--gray-600)' }}>
+              <div className={styles.hubIcon} style={{ background: 'var(--gray-100)', color: 'var(--gray-600)' }}>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3l2 4 4 .5-3 3 .8 4.2L9 12.8 5.2 14.7 6 10.5 3 7.5 7 7l2-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
               </div>
               <div className={styles.hubCardTitle}>A charity</div>
-              <div className={styles.hubCardBody}>Local Goodwill, shelter, or nonprofit you already trust. We&rsquo;ll mail you a Sprigloop bag with prepaid postage. Write the charity&rsquo;s address on it and drop it in any mailbox.</div>
+              <div className={styles.hubCardBody}>Write the charity&rsquo;s address on the prepaid Sprigloop bag. Drop it in any mailbox.</div>
             </div>
           </div>
-          <button className={styles.hubCta} onClick={handleGetStarted} disabled={starting}>
+          <button className={styles.hubCta} onClick={handleHubCta} disabled={starting}>
             {starting ? 'Starting…' : 'Try Sprigloop free'}
           </button>
         </div>
       </section>
 
-      {/* ── Receiver opt-in — neutral framing, no "in need" language ────────
-          Per feedback_pass_along_framing: "Open to receiving from another
-          Sprigloop family" is the canonical label. Never "families in need"
-          anywhere. */}
-      <section className={styles.optIn}>
-        <div className={styles.optInEyebrow}>Open to receiving?</div>
-        <h2 className={styles.optInHeadline}>Flip a switch in your profile.<br />Get a bag from a Sprigloop family when the fit is right.</h2>
-        <p className={styles.optInBody}>Any Sprigloop household can opt in to receive outgrown clothes from another Sprigloop family. Pick sizes, pick genders, pause whenever. No applications, no listings to browse — we match you to a sender when the fit is right, and mail it.</p>
-        <div className={styles.optInRow}>
-          <div className={styles.optInBullet}>
-            <div className={styles.optInBulletNum}>01</div>
-            <div className={styles.optInBulletText}><strong>Opt in once.</strong> A toggle in your profile. Set preferences, pause anytime.</div>
-          </div>
-          <div className={styles.optInBullet}>
-            <div className={styles.optInBulletNum}>02</div>
-            <div className={styles.optInBulletText}><strong>We do the matching.</strong> When a sender picks &ldquo;Send to a Sprigloop family,&rdquo; we route the bag to one of you.</div>
-          </div>
-          <div className={styles.optInBullet}>
-            <div className={styles.optInBulletNum}>03</div>
-            <div className={styles.optInBulletText}><strong>It shows up.</strong> You get clothes your little one can actually use &mdash; no forms, no receipts, no follow-ups. And one less wardrobe ordered new.</div>
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.mission}>
-        <div className={styles.missionBand}>
-          <div className={styles.missionHeadline}>Every baby deserves a full wardrobe. Every parent deserves an easier week.</div>
-          <p className={styles.missionBody}>Babies outgrow clothes in weeks &mdash; most still have years of life left. Sprigloop keeps them moving: out of your house, into another baby&rsquo;s drawer, never into landfill. With as little friction for you as possible.</p>
-          <button className={styles.missionCta} onClick={handleJoinCommunity} disabled={starting}>
-            {starting ? 'Starting…' : 'Try Sprigloop free'}
+      {/* ── 5. Final CTA — dark card ── */}
+      <section className={styles.finalSection}>
+        <div className={styles.finalCard}>
+          <h2 className={styles.finalTitle}>Start before baby arrives.</h2>
+          <p className={styles.finalSub}>Use it through every size. Pass it on when you&rsquo;re done.</p>
+          <button className={styles.finalBtn} onClick={handleFinalCta} disabled={starting}>
+            {starting ? 'Starting…' : 'Try Sprigloop — it’s free'}
           </button>
-          <div className={styles.statRow}>
-            <div><div className={styles.statNum}>Three</div><div className={styles.statLabel}>Destinations per bag</div></div>
-            <div><div className={styles.statNum}>Free</div><div className={styles.statLabel}>Always, for all families</div></div>
-            <div><div className={styles.statNum}>Opt-in</div><div className={styles.statLabel}>Receive when you&rsquo;re ready</div></div>
-          </div>
+          <div className={styles.finalNote}>No account needed to start</div>
         </div>
-      </section>
-
-      <section className={styles.finalCta}>
-        <div className={styles.finalHeadline}>Ready to get started?</div>
-        <p className={styles.finalSub}>Organize your wardrobe, plan for what&rsquo;s next, and send outgrown clothes somewhere they&rsquo;ll be loved next, not landfilled. Free for every family. Always.</p>
-        <button className={styles.finalCtaBtn} onClick={handleCreateAccount} disabled={starting}>
-          {starting ? 'Starting…' : 'Try Sprigloop free'}
-        </button>
       </section>
     </div>
   )

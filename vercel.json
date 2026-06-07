@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+    { "source": "/wishlist/:token", "destination": "/api/wishlist/:token" },
+    { "source": "/((?!assets/|api/).*)", "destination": "/index.html" }
   ]
 }

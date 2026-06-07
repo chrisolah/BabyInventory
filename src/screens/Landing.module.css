@@ -6,29 +6,10 @@
 }
 
 /* ── Nav ── */
-/* position:relative + z-index lift the nav above the IvyBanner that sits
-   directly below it in the DOM. Combined with the banner's -32px margin-top
-   on mobile, this causes any upward-growing ivy leaves to visually tuck
-   behind the nav — the vine reads as peeking out from under the Littleloop
-   wordmark instead of crashing across it. Solid white background is what
-   actually masks the leaves behind the nav. */
 .nav {
   display: flex;
-  /* All three nav items (.logo, .navLink, .loginBtn) sit as direct flex
-     siblings here, sharing a single baseline-alignment context. An earlier
-     iteration wrapped .logo + .navLink in a .navLeft flex container with
-     justify-content: space-between on .nav, but that created a nested
-     flex-baseline calculation that left Log in visibly offset from the
-     other two. Flat layout + baseline + margin-left:auto on Log in fixes
-     it.
-
-     baseline alignment (rather than center) is what makes the wordmark
-     and the buttons share an optical baseline — Fraunces has descenders
-     that pull "sprigloop" visually lower than the DM Sans button text
-     would land if we centered the boxes instead. */
   align-items: baseline;
   gap: 18px;
-  /* Top padding carries the iOS status-bar inset (see Home.module.css). */
   padding: calc(1.25rem + env(safe-area-inset-top, 0px)) 1.5rem 1.25rem;
   border-bottom: 0.5px solid var(--gray-100);
   background: var(--white);
@@ -40,19 +21,12 @@
   font-size: 20px;
   font-weight: 500;
   color: var(--gray-900);
-  /* Match the flex-centering pattern used by .navLink and .loginBtn so
-     all three nav items resolve their vertical positions through the
-     same 44px row + inline-flex centering. Without this, the logo's
-     default line-height drops its baseline a few pixels above the
-     buttons' centered text and the row reads as misaligned. */
   display: inline-flex;
   align-items: center;
   min-height: 44px;
   line-height: 1;
 }
 .navLink {
-  /* Matches loginBtn sizing for tap-target parity (44px floor). Subtle
-     weight + color so the wordmark stays the dominant left-side element. */
   min-height: 44px;
   display: inline-flex;
   align-items: center;
@@ -66,21 +40,9 @@
   font-family: var(--font-body);
   white-space: nowrap;
 }
-.navLink:hover {
-  color: var(--teal-dark);
-}
-@media (max-width: 380px) {
-  /* iPhone SE territory — tighten the gap so wordmark + link + Log in
-     all fit without the link wrapping. Gap lives on .nav now (the
-     flattened flex container) since .navLeft was removed. */
-  .nav { gap: 12px; }
-}
+.navLink:hover { color: var(--teal-dark); }
+@media (max-width: 380px) { .nav { gap: 12px; } }
 .loginBtn {
-  /* Nav-right text-button. Padding + min-height bring the tap area to
-     iOS HIG floor (44px). Negative margin keeps the visible right edge
-     aligned with the existing nav padding. margin-left:auto pushes Log in
-     to the right edge while .logo + .navLink stay grouped on the left,
-     replacing the old justify-content:space-between + .navLeft wrapper. */
   margin-left: auto;
   min-height: 44px;
   display: inline-flex;
@@ -96,13 +58,7 @@
   font-family: var(--font-body);
 }
 
-/* ── Hero ── */
-.hero {
-  padding: 3rem 1.5rem 2rem;
-  max-width: 680px;
-  margin: 0 auto;
-  width: 100%;
-}
+/* ── Shared eyebrows ── */
 .eyebrow {
   display: inline-block;
   font-size: 12px;
@@ -111,389 +67,9 @@
   color: var(--teal-dark);
   padding: 4px 14px;
   border-radius: 999px;
-  margin-bottom: 1.5rem;
-}
-.headline {
-  font-family: var(--font-display);
-  font-size: clamp(32px, 6vw, 52px);
-  font-weight: 500;
-  line-height: 1.15;
-  color: var(--gray-900);
-  margin-bottom: 1.25rem;
-}
-.headline em {
-  font-style: italic;
-  color: var(--teal);
-}
-/* Hero env hook. Sits between H1 and sub. Intentionally tighter line-height
-   and a touch of italic to read as a tagline rather than a paragraph; teal
-   color ties it to the H1's accent without competing for size. */
-.heroEnv {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-style: italic;
-  font-weight: 400;
-  color: var(--teal-dark);
-  line-height: 1.4;
-  margin: -0.5rem 0 1rem;
-  max-width: 520px;
-}
-.sub {
-  font-size: 16px;
-  color: var(--gray-600);
-  line-height: 1.65;
-  margin-bottom: 2rem;
-  max-width: 520px;
-}
-.heroBtns {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.appStoreLink {
-  display: inline-block;
-  margin-top: 10px;
-  font-size: 13px;
-  color: var(--gray-500);
-  text-decoration: none;
-}
-.appStoreLink:hover {
-  color: var(--gray-900);
-}
-.heroCta {
-  font-size: 15px;
-  font-weight: 500;
-  font-family: var(--font-body);
-  background: var(--teal);
-  color: var(--teal-light);
-  padding: 12px 28px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-}
-.heroSecondaryCta {
-  /* min-height keeps the secondary CTA at iOS HIG floor (44px). The
-     11px padding alone produces ~42px which fails the mobile QA sweep. */
-  min-height: 44px;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: var(--font-body);
-  background: var(--white);
-  color: var(--gray-900);
-  border: 1px solid var(--gray-200);
-  padding: 11px 22px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-/* ── Features ── */
-.features {
-  padding: 2.5rem 1.5rem;
-  background: var(--gray-50);
-  max-width: 680px;
-  margin: 0 auto;
-  width: 100%;
-}
-.sectionTitle {
-  font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 500;
-  color: var(--gray-900);
-  margin-bottom: 6px;
-}
-.sectionSub {
-  font-size: 14px;
-  color: var(--gray-600);
-  margin-bottom: 1.5rem;
-}
-.featureGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
-.featureCard {
-  background: var(--white);
-  border: 0.5px solid var(--gray-200);
-  border-radius: 14px;
-  padding: 1.25rem;
-}
-.featureIcon {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-.featureCardTitle {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--gray-900);
-  margin-bottom: 5px;
-}
-.featureCardBody {
-  font-size: 13px;
-  color: var(--gray-600);
-  line-height: 1.5;
-}
-
-
-/* ── Photo-scan spotlight ────────────────────────────────────────────────
-   Two-column on desktop (copy left, mocked phone right); stacks on narrow
-   viewports. The mockup is built entirely from divs + CSS — phone frame,
-   notch, viewfinder corners, a stylized tag inside, and three floating
-   "extracted field" chips that appear to fan out from the tag. No image
-   asset, no library; bundle stays flat. */
-.scanFeature {
-  padding: 2.5rem 1.5rem 3rem;
-  max-width: 1080px;
-  margin: 0 auto;
-  width: 100%;
-}
-.scanFeatureWrap {
-  display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  gap: 3rem;
-  align-items: center;
-  background: var(--teal-light);
-  border-radius: 24px;
-  padding: 2.5rem 2.5rem 2.75rem;
-}
-@media (max-width: 760px) {
-  .scanFeatureWrap {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    padding: 2rem 1.5rem 2.25rem;
-  }
-}
-.scanFeatureCopy {
-  min-width: 0;
-}
-.scanFeatureEyebrow {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  background: var(--white);
-  color: var(--teal-dark);
-  padding: 4px 12px;
-  border-radius: 999px;
   margin-bottom: 1rem;
 }
-.scanFeatureHeadline {
-  font-family: var(--font-display);
-  font-size: 30px;
-  font-weight: 500;
-  color: var(--teal-dark);
-  line-height: 1.15;
-  margin: 0 0 0.85rem;
-  letter-spacing: -0.01em;
-}
-.scanFeatureBody {
-  font-size: 15px;
-  color: #0F6E56;
-  line-height: 1.6;
-  margin: 0 0 1.1rem;
-}
-.scanFeatureBody strong {
-  color: var(--teal-dark);
-  font-weight: 600;
-}
-.scanFeatureBullets {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.scanFeatureBullets li {
-  position: relative;
-  padding-left: 1.25rem;
-  font-size: 13.5px;
-  color: #0F6E56;
-  line-height: 1.5;
-}
-.scanFeatureBullets li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0.55em;
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--teal);
-}
-
-/* ── Mock phone illustration ── */
-.scanFeatureMock {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 380px;
-}
-.phoneFrame {
-  position: relative;
-  width: 220px;
-  height: 360px;
-  background: #1a1f2c;
-  border-radius: 32px;
-  padding: 12px;
-  box-shadow: 0 20px 40px rgba(15, 110, 86, 0.18), 0 6px 14px rgba(0, 0, 0, 0.08);
-}
-.phoneNotch {
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 14px;
-  background: #1a1f2c;
-  border-radius: 0 0 12px 12px;
-  z-index: 2;
-}
-.phoneScreen {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(155deg, #2a3142 0%, #1a1f2c 60%, #14202b 100%);
-  border-radius: 22px;
-  overflow: hidden;
-}
-/* Viewfinder corners — match the in-app camera guide's amber lock state to
-   reinforce that this is the moment of capture. */
-.vfCorner {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border: 2px solid #E6B87A;
-}
-.vfTl { top: 70px; left: 26px;  border-right: none;  border-bottom: none; border-top-left-radius: 4px;  }
-.vfTr { top: 70px; right: 26px; border-left: none;   border-bottom: none; border-top-right-radius: 4px; }
-.vfBl { bottom: 70px; left: 26px;  border-right: none; border-top: none; border-bottom-left-radius: 4px;  }
-.vfBr { bottom: 70px; right: 26px; border-left: none;  border-top: none; border-bottom-right-radius: 4px; }
-/* Mock tag — rotated slightly so it reads "casual snapshot" not "studio shot". */
-.mockTag {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-3deg);
-  width: 130px;
-  background: #FFF9EE;
-  border: 1px solid #E8DBB6;
-  border-radius: 6px;
-  padding: 14px 12px 12px;
-  font-family: var(--font-body);
-  text-align: center;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-}
-.mockTagBrand {
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 500;
-  color: #5C3A1F;
-  letter-spacing: 0.04em;
-}
-.mockTagSize {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2C2018;
-  margin-top: 4px;
-}
-.mockTagCare {
-  font-size: 8.5px;
-  color: #8B7350;
-  margin-top: 6px;
-  line-height: 1.3;
-}
-/* Bottom-of-screen "got it" status — mimics the in-app coach line. */
-.mockHint {
-  position: absolute;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
-  font-weight: 500;
-  color: #FFF9EE;
-  background: rgba(0, 0, 0, 0.45);
-  padding: 5px 12px;
-  border-radius: 999px;
-  letter-spacing: 0.02em;
-}
-
-/* Floating field chips — positioned absolutely so they look like they're
-   "extracted" from the tag and floating outward. Three chips, each pinned
-   relative to the mock-phone's bounding box. On narrow viewports we tuck
-   them tighter so the whole illustration still fits. */
-.fieldChip {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  background: var(--white);
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 0.5px solid var(--gray-200);
-  box-shadow: 0 4px 12px rgba(15, 110, 86, 0.12);
-  font-family: var(--font-body);
-  z-index: 3;
-}
-.chipLabel {
-  font-size: 9.5px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--gray-600);
-}
-.chipValue {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--gray-900);
-  margin-top: 2px;
-}
-.chipBrand {
-  top: 24%;
-  right: 6%;
-}
-.chipSize {
-  top: 50%;
-  right: 0;
-}
-.chipCat {
-  top: 76%;
-  right: 8%;
-}
-@media (max-width: 760px) {
-  .scanFeatureMock {
-    min-height: 420px;
-  }
-  .chipBrand { top: 14%; right: 4%; }
-  .chipSize  { top: 48%; right: 0;  }
-  .chipCat   { top: 82%; right: 6%; }
-}
-
-/* ── Pass-along hub ──
-   The V1.9 centerpiece. Four-destination grid that sits in place of the
-   old peer-to-peer "supply" band. Visual echo of the features section
-   (four cards in a responsive grid) but inside a warm cream-on-gray
-   containing band so it reads as a featured pitch, not a bullet list. */
-.hub {
-  padding: 2.5rem 1.5rem;
-  max-width: 680px;
-  margin: 0 auto;
-  width: 100%;
-  border-top: 0.5px solid var(--gray-100);
-}
-.hubBand {
-  background: var(--gray-50);
-  border: 0.5px solid var(--gray-200);
-  border-radius: 16px;
-  padding: 2rem;
-}
-.hubEyebrow {
+.eyebrowAmber {
   display: inline-block;
   font-size: 12px;
   font-weight: 500;
@@ -503,59 +79,24 @@
   border-radius: 999px;
   margin-bottom: 1rem;
 }
-.hubHeadline {
+
+/* ── Shared section typography ── */
+.sectionTitle {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: clamp(22px, 4vw, 30px);
   font-weight: 500;
   color: var(--gray-900);
-  line-height: 1.25;
+  line-height: 1.2;
   margin-bottom: 0.75rem;
 }
-.hubBody {
-  font-size: 14px;
+.sectionSub {
+  font-size: 15px;
   color: var(--gray-600);
-  line-height: 1.6;
+  line-height: 1.65;
   margin-bottom: 1.5rem;
+  max-width: 480px;
 }
-.hubGrid {
-  display: grid;
-  /* minmax min was 220px when there were four cards (laid out 2x2 inside the
-     ~616px band interior). With three cards, 220px forced a 2+1 orphan wrap;
-     lowering to 160px lets all three fit one row at the existing band width
-     while still stacking gracefully on mobile via auto-fit. */
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
-  margin-bottom: 1.5rem;
-}
-.hubCard {
-  background: var(--white);
-  border: 0.5px solid var(--gray-200);
-  border-radius: 12px;
-  padding: 1rem 1.1rem;
-}
-.hubCardIcon {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-.hubCardTitle {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--gray-900);
-  margin-bottom: 4px;
-}
-.hubCardBody {
-  font-size: 13px;
-  color: var(--gray-600);
-  line-height: 1.5;
-}
-.hubCta {
-  /* min-height keeps the hub CTA at iOS HIG floor (44px). The 11px
-     padding alone produces ~40px which fails the mobile QA sweep. */
+.sectionBtn {
   min-height: 44px;
   font-size: 14px;
   font-weight: 500;
@@ -568,167 +109,412 @@
   cursor: pointer;
 }
 
-/* ── Receiver opt-in ──
-   Neutral-framed section that sits directly below the hub. Three numbered
-   bullets in a single horizontal flow on desktop, stacked on mobile. No
-   containing band — reads as a continuation of the story, not a sales
-   pitch. Copy stays strictly non-stigmatizing (see
-   feedback_pass_along_framing). */
-.optIn {
-  padding: 2rem 1.5rem 2.5rem;
-  max-width: 680px;
+/* ── 1. Hero ── */
+.hero {
+  padding: 3rem 1.5rem 2.5rem;
+  max-width: 860px;
   margin: 0 auto;
   width: 100%;
 }
-.optInEyebrow {
-  display: inline-block;
-  font-size: 12px;
+.heroInner {
+  display: flex;
+  gap: 3rem;
+  align-items: center;
+}
+@media (max-width: 640px) {
+  .heroInner { flex-direction: column; gap: 2rem; }
+}
+.heroText { flex: 1; min-width: 0; }
+.headline {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 6vw, 50px);
   font-weight: 500;
-  background: var(--teal-light);
-  color: var(--teal-dark);
-  padding: 4px 14px;
-  border-radius: 999px;
+  line-height: 1.15;
+  color: var(--gray-900);
   margin-bottom: 1rem;
 }
-.optInHeadline {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 500;
-  color: var(--gray-900);
-  line-height: 1.3;
-  margin-bottom: 0.75rem;
-}
-.optInBody {
-  font-size: 14px;
-  color: var(--gray-600);
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-  max-width: 560px;
-}
-.optInRow {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
-}
-.optInBullet {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-.optInBulletNum {
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 500;
+.headline em {
+  font-style: italic;
   color: var(--teal);
-  flex-shrink: 0;
-  margin-top: 2px;
-  letter-spacing: 0.02em;
 }
-.optInBulletText {
-  font-size: 13px;
-  color: var(--gray-600);
-  line-height: 1.55;
-}
-.optInBulletText strong {
-  color: var(--gray-900);
-  font-weight: 500;
-}
-
-/* ── Environmental band ──
-   Single-stat pillar between Opt-in and Mission. Two-column on desktop
-   (big number on left, copy on right), stacked on narrow viewports so the
-   stat still leads the section vertically. Purple accent so it reads
-   distinct from the teal Mission band directly below — putting two teal
-   bands back-to-back would flatten the page rhythm. Source citation sits
-   below the body in smaller italic gray; it's there for credibility, not
-   decoration, so it stays understated. */
-/* ── Mission ── */
-.mission {
-  margin: 0 auto;
-  width: 100%;
-  max-width: 680px;
-  padding: 2rem 1.5rem;
-}
-.missionBand {
-  background: var(--teal-light);
-  border-radius: 16px;
-  padding: 2rem;
-}
-.missionHeadline {
+.heroEnv {
   font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 500;
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 400;
   color: var(--teal-dark);
-  margin-bottom: 0.75rem;
-  line-height: 1.3;
+  line-height: 1.4;
+  margin: -0.25rem 0 0.9rem;
 }
-.missionBody {
+.sub {
   font-size: 15px;
-  color: #0F6E56;
-  line-height: 1.6;
-  margin-bottom: 1.25rem;
+  color: var(--gray-600);
+  line-height: 1.65;
+  margin-bottom: 1.75rem;
+  max-width: 440px;
 }
-.missionCta {
-  /* min-height keeps the mission CTA at iOS HIG floor (44px). The 9px
-     padding alone produces ~35px which fails the mobile QA sweep. */
-  min-height: 44px;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: var(--font-body);
-  background: var(--teal);
-  color: var(--teal-light);
-  padding: 9px 20px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-}
-.statRow {
+.heroBtns {
   display: flex;
-  gap: 2rem;
+  align-items: center;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-top: 1.5rem;
 }
-.statNum {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 500;
-  color: var(--teal-dark);
-}
-.statLabel {
-  font-size: 12px;
-  color: #0F6E56;
-  margin-top: 2px;
-}
-
-/* ── Final CTA ── */
-.finalCta {
-  text-align: center;
-  padding: 3rem 1.5rem;
-  max-width: 680px;
-  margin: 0 auto;
-  width: 100%;
-  border-top: 0.5px solid var(--gray-200);
-}
-.finalHeadline {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 500;
-  color: var(--gray-900);
-  margin-bottom: 8px;
-}
-.finalSub {
-  font-size: 15px;
-  color: var(--gray-600);
-  margin-bottom: 1.5rem;
-}
-.finalCtaBtn {
+.heroCta {
+  min-height: 44px;
   font-size: 15px;
   font-weight: 500;
   font-family: var(--font-body);
   background: var(--teal);
   color: var(--teal-light);
-  padding: 13px 32px;
+  padding: 11px 28px;
   border-radius: 10px;
   border: none;
   cursor: pointer;
+}
+.heroSecondaryCta {
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: var(--white);
+  color: var(--gray-900);
+  border: 1px solid var(--gray-200);
+  padding: 11px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.appStoreLink {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--gray-500);
+  text-decoration: none;
+}
+.appStoreLink:hover { color: var(--gray-900); }
+
+/* Readiness widget */
+.readinessWidget {
+  flex-shrink: 0;
+  width: 210px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 18px;
+  padding: 18px 20px;
+}
+@media (max-width: 640px) {
+  .readinessWidget { width: 100%; }
+}
+.rwHeader {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--gray-500);
+  margin-bottom: 6px;
+}
+.rwPct {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--teal-dark);
+  line-height: 1;
+}
+.rwSub {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 3px;
+  margin-bottom: 14px;
+}
+.rwRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-top: 1px solid var(--gray-200);
+}
+.rwRowLast { /* last row — no extra style, marker for readability */ }
+.rwLabel {
+  font-size: 12px;
+  color: var(--gray-700);
+}
+.rwTrack {
+  width: 64px;
+  height: 5px;
+  background: var(--gray-200);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.rwFill {
+  height: 100%;
+  background: var(--teal);
+  border-radius: 3px;
+}
+.rwFillLow {
+  background: var(--amber);
+}
+
+/* ── 2. Wishlist ── */
+.wishlist {
+  border-top: 0.5px solid var(--gray-100);
+  padding: 3rem 1.5rem;
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+}
+.wishlistInner {
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
+}
+@media (max-width: 640px) {
+  .wishlistInner { flex-direction: column; gap: 2rem; }
+}
+.wishlistText { flex: 1; min-width: 0; }
+.wishlistBullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wishlistBullets li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 14px;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+.wishlistBullets li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--teal);
+}
+
+/* Mock wishlist card */
+.wishlistCard {
+  flex-shrink: 0;
+  width: 230px;
+  background: var(--teal-dark);
+  border-radius: 16px;
+  padding: 22px;
+}
+@media (max-width: 640px) {
+  .wishlistCard { width: 100%; }
+}
+.wcEyebrow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--teal-light);
+  margin-bottom: 4px;
+}
+.wcTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--white);
+  margin-bottom: 3px;
+}
+.wcSub {
+  font-size: 11px;
+  color: var(--teal-light);
+  margin-bottom: 14px;
+}
+.wcItems {
+  border-top: 1px solid rgba(255,255,255,0.12);
+}
+.wcItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+.wcItemLast {
+  border-bottom: none;
+}
+.wcName {
+  font-size: 13px;
+  color: var(--white);
+}
+.wcBadge {
+  font-size: 10px;
+  background: rgba(255,255,255,0.12);
+  color: var(--teal-light);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.wcBtn {
+  margin-top: 14px;
+  width: 100%;
+  min-height: 40px;
+  background: var(--teal);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+/* ── 3. Countdown ── */
+.countdown {
+  border-top: 0.5px solid var(--gray-100);
+  padding: 3rem 1.5rem;
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+}
+.countdownInner { max-width: 600px; }
+.countdownCard {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  padding: 22px 28px;
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+@media (max-width: 480px) {
+  .countdownCard { flex-direction: column; text-align: center; }
+}
+.ccLeft {
+  text-align: center;
+  min-width: 76px;
+  flex-shrink: 0;
+}
+.ccNum {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--teal);
+  line-height: 1;
+}
+.ccUnit {
+  font-size: 12px;
+  color: var(--gray-500);
+  margin-top: 4px;
+}
+.ccDivider {
+  width: 1px;
+  background: var(--gray-200);
+  align-self: stretch;
+  flex-shrink: 0;
+}
+@media (max-width: 480px) { .ccDivider { display: none; } }
+.ccText {
+  font-size: 15px;
+  color: var(--gray-600);
+  line-height: 1.65;
+}
+
+/* ── 4. Hub ── */
+.hubInner { }
+.hub {
+  border-top: 0.5px solid var(--gray-100);
+  padding: 3rem 1.5rem;
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+}
+.hubGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+@media (max-width: 560px) {
+  .hubGrid { grid-template-columns: 1fr; }
+}
+.hubCard {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 18px;
+  background: var(--white);
+}
+.hubIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.hubCardTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 5px;
+}
+.hubCardBody {
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+.hubCta {
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: var(--teal);
+  color: var(--teal-light);
+  padding: 11px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+/* ── 5. Final CTA ── */
+.finalSection {
+  padding: 3rem 1.5rem 4rem;
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+}
+.finalCard {
+  background: var(--teal-dark);
+  border-radius: 20px;
+  padding: 3.5rem 3rem;
+  text-align: center;
+}
+@media (max-width: 480px) {
+  .finalCard { padding: 2.5rem 1.75rem; }
+}
+.finalTitle {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 500;
+  color: var(--white);
+  margin-bottom: 10px;
+}
+.finalSub {
+  font-size: 16px;
+  color: var(--teal-light);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+.finalBtn {
+  min-height: 48px;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: var(--teal);
+  color: var(--white);
+  border: none;
+  padding: 13px 36px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.finalNote {
+  font-size: 13px;
+  color: var(--teal-light);
+  opacity: 0.7;
+  margin-top: 12px;
 }

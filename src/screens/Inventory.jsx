@@ -20,7 +20,7 @@ import {
   SUB_CATEGORIES_BY_CATEGORY,
   ITEM_BY_ID,
 } from '../lib/categories'
-import ProfileMenu from '../components/ProfileMenu'
+import HeaderActions from '../components/HeaderActions'
 import IvySprig from '../components/IvySprig'
 import BabySwitcher from '../components/BabySwitcher'
 import Eyebrow from '../components/Eyebrow'
@@ -854,38 +854,7 @@ export default function Inventory() {
           <IvySprig />
         </div>
         <div className={styles.headerActions}>
-          {/* Pass-along hub entry — soft-gray circle so it reads as a
-              secondary action next to the solid-teal + button. Icon is
-              a simple open-box glyph; aria-label carries the meaning for
-              screen readers. */}
-          <button
-            type="button"
-            className={styles.passBtn}
-            onClick={() => navigate('/pass-along')}
-            aria-label="Pass-along"
-          >
-            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-              <path
-                d="M2 5l6-3 6 3v6l-6 3-6-3V5z M2 5l6 3 6-3 M8 8v6"
-                stroke="currentColor"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className={styles.addBtn}
-            onClick={() => navigate('/add-item?autoScan=1')}
-            aria-label="Add item"
-          >
-            <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
-              <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
-          <ProfileMenu />
+          <HeaderActions />
         </div>
       </header>
 

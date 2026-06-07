@@ -15,7 +15,38 @@
   padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+}
+
+.headerLeft,
+.headerRight {
+  width: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.headerRight {
+  justify-content: flex-end;
+}
+
+.shareBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
   justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--gray-500);
+  transition: background 0.15s, color 0.15s;
+}
+
+.shareBtn:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
 }
 
 .titleCell {
@@ -543,6 +574,10 @@
   padding: 10px;
 }
 
+.slotCardWrapper {
+  position: relative;
+}
+
 .slotCard {
   all: unset;
   box-sizing: border-box;
@@ -561,6 +596,35 @@
 
 .slotCard:hover { background: var(--gray-50); }
 .slotCard:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }
+
+/* ── Priority star button ──────────────────────────────────── */
+.starBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 0;
+  cursor: pointer;
+  color: var(--gray-300);
+  transition: color 0.15s, background 0.15s;
+  z-index: 1;
+}
+
+.starBtn:hover {
+  color: #d97706;
+  background: var(--amber-light);
+}
+
+.starBtnActive {
+  color: #d97706;
+}
 
 .slotCardName {
   font-family: var(--font-body);

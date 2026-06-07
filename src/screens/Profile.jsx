@@ -6,6 +6,7 @@ import { useHousehold } from '../contexts/HouseholdContext'
 import { track } from '../lib/analytics'
 import IvySprig from '../components/IvySprig'
 import InviteMemberModal from '../components/InviteMemberModal'
+import HeaderActions from '../components/HeaderActions'
 import BabyFormModal from '../components/BabyFormModal'
 import Eyebrow from '../components/Eyebrow'
 import styles from './Profile.module.css'
@@ -68,9 +69,7 @@ export default function Profile() {
           {/* Mobile-only sprig beneath the title. Hidden on desktop. */}
           <IvySprig />
         </div>
-        {/* Intentionally no ProfileMenu here — we're already *on* Profile.
-            A spacer keeps the title centered in the 1fr auto 1fr grid. */}
-        <div className={styles.headerSpacer} aria-hidden="true" />
+        <HeaderActions />
       </header>
 
       <nav className={styles.tabs} role="tablist" aria-label="Profile sections">
