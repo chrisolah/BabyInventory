@@ -141,7 +141,7 @@ export default function Home() {
   )
 
   const registryCount = useMemo(
-    () => items.filter(i => i.inventory_status === 'needed').length,
+    () => items.filter(i => i.inventory_status === 'gap').length,
     [items],
   )
 
