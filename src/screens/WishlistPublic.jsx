@@ -16,7 +16,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { SLOTS, AGE_RANGES, recommendedQty } from '../lib/wardrobe'
-import { ITEMS, CATEGORY_META } from '../lib/categories'
+import { ITEMS, CATEGORY_META, CONSUMABLE_SLOT_IDS } from '../lib/categories'
 import { getWishlistProduct } from '../lib/wishlistProducts'
 import styles from './WishlistPublic.module.css'
 
@@ -78,6 +78,15 @@ export default function WishlistPublic() {
     setPageData(data)
     setClaims(data.claims || [])
   }
+
+  // Build quantity-overrides map: "slot_id:size_label" → desired_qty
+  const qtyOverridesMap = useMemo(() => {
+    const map = {}
+    for (const o of (pageData?.quantity_overrides || [])) {
+      map[`${o.slot_id}:${o.size_label || ''}`] = o.desired_qty
+    }
+    return map
+  }, [pageData])
 
   // Build a map: claimKey → { total, claimers[] }
   const claimsMap = useMemo(() => {
@@ -319,7 +328,7 @@ export default function WishlistPublic() {
           ]
           return rows.length === 0
             ? <div className={styles.emptyState}><div className={styles.emptyEmoji}>☆</div><p className={styles.emptyText}>No priority items yet.</p></div>
-            : <div className={styles.cardGrid}>{rows.map(r => <SlotCard key={`${r._type}-${r.id}`} slotType={r._type} topCategory={r.topCategory || r.top_category} slotId={r.slot_id} sizeLabel={r.size_label||null} ownedCount={r.owned_count||0} claimsMap={claimsMap} isPriority onClaim={setClaimTarget} />)}</div>
+            : <div className={styles.cardGrid}>{rows.map(r => <SlotCard key={`${r._type}-${r.id}`} slotType={r._type} topCategory={r.topCategory || r.top_category} slotId={r.slot_id} sizeLabel={r.size_label||null} ownedCount={r.owned_count||0} claimsMap={claimsMap} qtyOverridesMap={qtyOverridesMap} isPriority onClaim={setClaimTarget} />)}</div>
         })()}
 
         {/* ── Clothing ── */}
@@ -337,7 +346,7 @@ export default function WishlistPublic() {
             <div key={size}>
               {!selectedSize && <div className={styles.sizeLabel}>{size}</div>}
               <div className={styles.cardGrid}>
-                {bySize[size].map(r => <SlotCard key={r.id} slotType="clothing" topCategory="clothing" slotId={r.slot_id} sizeLabel={r.size_label} ownedCount={r.owned_count||0} claimsMap={claimsMap} isPriority={r.is_priority} onClaim={setClaimTarget} />)}
+                {bySize[size].map(r => <SlotCard key={r.id} slotType="clothing" topCategory="clothing" slotId={r.slot_id} sizeLabel={r.size_label} ownedCount={r.owned_count||0} claimsMap={claimsMap} qtyOverridesMap={qtyOverridesMap} isPriority={r.is_priority} onClaim={setClaimTarget} />)}
               </div>
             </div>
           ))
@@ -347,7 +356,7 @@ export default function WishlistPublic() {
         {selectedCat !== 'priority' && selectedCat !== 'clothing' && (() => {
           const rows = (items||[]).filter(r => r.top_category === selectedCat)
           if (rows.length === 0) return <div className={styles.emptyState}><div className={styles.emptyEmoji}>🌱</div><p className={styles.emptyText}>No gaps in this category.</p></div>
-          return <div className={styles.cardGrid}>{rows.map(r => <SlotCard key={r.id} slotType="item" topCategory={r.top_category} slotId={r.slot_id} sizeLabel={null} ownedCount={r.owned_count||0} claimsMap={claimsMap} isPriority={r.is_priority} onClaim={setClaimTarget} />)}</div>
+          return <div className={styles.cardGrid}>{rows.map(r => <SlotCard key={r.id} slotType="item" topCategory={r.top_category} slotId={r.slot_id} sizeLabel={null} ownedCount={r.owned_count||0} claimsMap={claimsMap} qtyOverridesMap={qtyOverridesMap} isPriority={r.is_priority} onClaim={setClaimTarget} />)}</div>
         })()}
       </div>
 
@@ -619,17 +628,20 @@ const PUB_CAT_COLOR = {
   health: 'red', bath: 'green',
 }
 
-function SlotCard({ slotType, topCategory, slotId, sizeLabel, ownedCount, claimsMap, isPriority, onClaim }) {
+function SlotCard({ slotType, topCategory, slotId, sizeLabel, ownedCount, claimsMap, qtyOverridesMap, isPriority, onClaim }) {
   const isClothing   = slotType === 'clothing'
+  const isConsumable = !isClothing && CONSUMABLE_SLOT_IDS.has(slotId)
   const slot         = isClothing ? CLOTHING_SLOT[slotId] : ITEM_SLOT[slotId]
   const label        = slot?.label || slotId.replace(/_/g, ' ')
   const recommended  = isClothing
     ? recommendedQty(slot, sizeLabel)
     : (slot?.recommended ?? 1)
+  const overrideKey  = `${slotId}:${sizeLabel || ''}`
+  const desiredQty   = qtyOverridesMap?.[overrideKey] ?? recommended
 
   const claimData   = claimsMap[claimKey(slotType, slotId, sizeLabel)] || { total: 0, claimers: [] }
-  const stillNeeded = Math.max(0, recommended - ownedCount - claimData.total)
-  const isCovered   = stillNeeded === 0
+  const stillNeeded = isConsumable ? 1 : Math.max(0, desiredQty - ownedCount - claimData.total)
+  const isCovered   = !isConsumable && stillNeeded === 0
 
   function handleClaim() {
     onClaim({
@@ -661,7 +673,9 @@ function SlotCard({ slotType, topCategory, slotId, sizeLabel, ownedCount, claims
         <span className={styles.cardSize}>{sizeLabel}</span>
       )}
 
-      {!isCovered ? (
+      {isConsumable ? (
+        <div className={styles.cardNeedConsumable}>Keep stocked</div>
+      ) : !isCovered ? (
         <div className={styles.cardNeed}>Need {stillNeeded} more</div>
       ) : (
         <div className={styles.cardCoveredLabel}>Covered</div>

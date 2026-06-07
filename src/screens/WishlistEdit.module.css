@@ -262,6 +262,20 @@
 
 .cardSize { font-size: 11px; color: var(--gray-400); font-weight: 500; }
 .cardNeed { font-size: 12px; font-weight: 500; color: var(--gray-700); }
+.cardNeedConsumable { font-size: 11px; font-weight: 600; color: var(--teal-600); letter-spacing: 0.02em; text-transform: uppercase; }
+.cardNeedRow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.qtyControl { display: flex; align-items: center; gap: 4px; }
+.qtyBtn {
+  width: 24px; height: 24px; border-radius: 6px;
+  border: 1.5px solid var(--gray-200); background: var(--gray-50);
+  font-size: 14px; line-height: 1; color: var(--gray-600);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+.qtyBtn:disabled { opacity: 0.35; cursor: default; }
+.qtyBtn:not(:disabled):active { background: var(--gray-100); }
+.qtyValue { font-size: 13px; font-weight: 600; color: var(--gray-800); min-width: 18px; text-align: center; }
 
 .cardControls { display: flex; gap: 5px; margin-top: 8px; }
 

@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { SLOTS, AGE_RANGES, recommendedQty } from '../lib/wardrobe'
-import { ITEMS as ITEM_DEFS, CATEGORY_META } from '../lib/categories'
+import { ITEMS as ITEM_DEFS, CATEGORY_META, CONSUMABLE_SLOT_IDS } from '../lib/categories'
 import IvySprig from '../components/IvySprig'
 import BottomNav from '../components/BottomNav'
 import styles from './WishlistEdit.module.css'
@@ -44,8 +44,9 @@ export default function WishlistEdit() {
   const [shareId, setShareId]   = useState(null)
   const [token, setToken]       = useState(null)
   const [skipSlots, setSkipSlots] = useState(new Set())
-  const [working, setWorking]   = useState(new Set())
-  const [copyDone, setCopyDone] = useState(false)
+  const [working, setWorking]       = useState(new Set())
+  const [copyDone, setCopyDone]     = useState(false)
+  const [qtyOverrides, setQtyOverrides] = useState({}) // { "slot_id:size_label": desired_qty }
   const [selectedCat, setSelectedCat] = useState('priority')
   const [selectedSize, setSelectedSize] = useState(null) // null = all sizes
   const [sellDismissed, setSellDismissed] = useState(
@@ -81,10 +82,20 @@ export default function WishlistEdit() {
       setToken(share.token)
       setSkipSlots(new Set(share.skip_slots || []))
 
-      const { data, error } = await supabase.schema(currentSchema)
-        .rpc('get_wishlist_for_share', { p_token: share.token })
+      const [{ data, error }, { data: overrideRows }] = await Promise.all([
+        supabase.schema(currentSchema).rpc('get_wishlist_for_share', { p_token: share.token }),
+        supabase.schema(currentSchema)
+          .from('registry_quantity_overrides')
+          .select('slot_id, size_label, desired_qty')
+          .eq('household_id', household.id),
+      ])
       if (!cancelled) {
         if (!error && data && !data.error) setPageData(data)
+        const map = {}
+        for (const o of overrideRows || []) {
+          map[`${o.slot_id}:${o.size_label || ''}`] = o.desired_qty
+        }
+        setQtyOverrides(map)
         setLoading(false)
       }
     }
@@ -124,6 +135,16 @@ export default function WishlistEdit() {
     })
     setTimeout(reloadGaps, 200)
   }, [saveSkips, reloadGaps])
+
+  const upsertQty = useCallback(async (slotId, sizeLabel, newQty) => {
+    const key = `${slotId}:${sizeLabel || ''}`
+    setQtyOverrides(prev => ({ ...prev, [key]: newQty }))
+    await supabase.schema(currentSchema).rpc('upsert_registry_qty_override', {
+      p_slot_id:     slotId,
+      p_size_label:  sizeLabel || null,
+      p_desired_qty: newQty,
+    })
+  }, [])
 
   async function copyLink() {
     const url = token ? `${window.location.origin}/registry/${token}` : null
@@ -262,6 +283,7 @@ export default function WishlistEdit() {
             rows={[...priorityClothing.map(r=>({...r,_type:'clothing'})), ...priorityItems.map(r=>({...r,_type:'item'}))]}
             skipSlots={skipSlots} working={working}
             onPriority={togglePriority} onToggleVisibility={toggleVisibility}
+            qtyOverrides={qtyOverrides} onQtyChange={upsertQty}
             emptyText="Star items to mark them as most needed for family and friends."
           />
         )}
@@ -270,6 +292,7 @@ export default function WishlistEdit() {
             rows={clothing} skipSlots={skipSlots} working={working}
             selectedSize={selectedSize}
             onPriority={togglePriority} onToggleVisibility={toggleVisibility}
+            qtyOverrides={qtyOverrides} onQtyChange={upsertQty}
           />
         )}
         {NON_CLOTHING_ORDER.includes(selectedCat) && (
@@ -277,6 +300,7 @@ export default function WishlistEdit() {
             rows={items.filter(r => r.top_category === selectedCat).map(r=>({...r,_type:'item'}))}
             skipSlots={skipSlots} working={working}
             onPriority={togglePriority} onToggleVisibility={toggleVisibility}
+            qtyOverrides={qtyOverrides} onQtyChange={upsertQty}
             emptyText={`No ${selectedCat} gaps yet.`}
           />
         )}
@@ -288,7 +312,7 @@ export default function WishlistEdit() {
 }
 
 // Clothing grouped by size
-function ClothingCategoryView({ rows, skipSlots, working, selectedSize, onPriority, onToggleVisibility }) {
+function ClothingCategoryView({ rows, skipSlots, working, selectedSize, onPriority, onToggleVisibility, qtyOverrides, onQtyChange }) {
   const filteredRows = selectedSize ? rows.filter(r => r.size_label === selectedSize) : rows
   const bySize = {}
   for (const r of filteredRows) {
@@ -310,6 +334,7 @@ function ClothingCategoryView({ rows, skipSlots, working, selectedSize, onPriori
               <GapCard key={row.id} row={{...row,_type:'clothing'}}
                 skipSlots={skipSlots} working={working.has(row.id)}
                 onPriority={onPriority} onToggleVisibility={onToggleVisibility}
+                qtyOverrides={qtyOverrides} onQtyChange={onQtyChange}
               />
             ))}
           </div>
@@ -319,7 +344,7 @@ function ClothingCategoryView({ rows, skipSlots, working, selectedSize, onPriori
   )
 }
 
-function CategoryView({ rows, skipSlots, working, onPriority, onToggleVisibility, emptyText }) {
+function CategoryView({ rows, skipSlots, working, onPriority, onToggleVisibility, qtyOverrides, onQtyChange, emptyText }) {
   if (rows.length === 0) return <div className={styles.empty}>{emptyText}</div>
   return (
     <div className={styles.cardGrid}>
@@ -327,6 +352,7 @@ function CategoryView({ rows, skipSlots, working, onPriority, onToggleVisibility
         <GapCard key={`${row._type}-${row.id}`} row={row}
           skipSlots={skipSlots} working={working.has(row.id)}
           onPriority={onPriority} onToggleVisibility={onToggleVisibility}
+          qtyOverrides={qtyOverrides} onQtyChange={onQtyChange}
         />
       ))}
     </div>
@@ -339,14 +365,22 @@ const CAT_COLOR = {
   health: 'red', bath: 'green',
 }
 
-function GapCard({ row, skipSlots, working, onPriority, onToggleVisibility }) {
-  const isClothing = row._type === 'clothing'
-  const slot = isClothing ? CLOTHING_SLOT[row.slot_id] : ITEM_SLOT[row.slot_id]
-  const label = slot?.label || row.slot_id
+function GapCard({ row, skipSlots, working, onPriority, onToggleVisibility, qtyOverrides, onQtyChange }) {
+  const isClothing  = row._type === 'clothing'
+  const slot        = isClothing ? CLOTHING_SLOT[row.slot_id] : ITEM_SLOT[row.slot_id]
+  const label       = slot?.label || row.slot_id
+  const isConsumable = !isClothing && CONSUMABLE_SLOT_IDS.has(row.slot_id)
   const recommended = isClothing ? recommendedQty(slot, row.size_label) : (slot?.recommended ?? 1)
-  const stillNeeded = Math.max(0, recommended - (row.owned_count || 0))
-  const hidden = skipSlots.has(row.slot_id)
-  const color = isClothing ? 'purple' : (CAT_COLOR[row.top_category] || 'gray')
+  const overrideKey = `${row.slot_id}:${row.size_label || ''}`
+  const desiredQty  = qtyOverrides?.[overrideKey] ?? recommended
+  const stillNeeded = Math.max(0, desiredQty - (row.owned_count || 0))
+  const hidden      = skipSlots.has(row.slot_id)
+  const color       = isClothing ? 'purple' : (CAT_COLOR[row.top_category] || 'gray')
+
+  function adjustQty(delta) {
+    const next = Math.max(1, desiredQty + delta)
+    if (next !== desiredQty) onQtyChange(row.slot_id, row.size_label || null, next)
+  }
 
   return (
     <div className={`${styles.card} ${hidden ? styles.cardHidden : ''} ${working ? styles.cardWorking : ''}`}>
@@ -362,9 +396,22 @@ function GapCard({ row, skipSlots, working, onPriority, onToggleVisibility }) {
           <span className={styles.cardSize}>{row.size_label}</span>
         )}
 
-        <div className={styles.cardNeed}>
-          {hidden ? 'Hidden' : `Need ${stillNeeded} more`}
-        </div>
+        {isConsumable ? (
+          <div className={styles.cardNeedConsumable}>Keep stocked</div>
+        ) : (
+          <div className={styles.cardNeedRow}>
+            {!hidden && (
+              <div className={styles.qtyControl}>
+                <button className={styles.qtyBtn} onClick={() => adjustQty(-1)} disabled={working || desiredQty <= 1} aria-label="Decrease">−</button>
+                <span className={styles.qtyValue}>{desiredQty}</span>
+                <button className={styles.qtyBtn} onClick={() => adjustQty(1)} disabled={working} aria-label="Increase">+</button>
+              </div>
+            )}
+            <div className={styles.cardNeed}>
+              {hidden ? 'Hidden' : `Need ${stillNeeded} more`}
+            </div>
+          </div>
+        )}
 
         <div className={styles.cardControls}>
           {!hidden && (

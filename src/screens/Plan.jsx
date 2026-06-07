@@ -722,7 +722,7 @@ function SlotCard({ row, onClick, gapRow, onStarToggle }) {
         <span className={styles.slotCardName}>{slot.label}</span>
         <div className={styles.slotCardMeta}>
           <span className={`${styles.slotCardCount} ${countClass}`}>
-            {ownedCount} of {recommended}
+            {slot.consumable ? 'Keep stocked' : `${ownedCount} of ${recommended}`}
           </span>
           {slot.hint && (
             <span className={styles.slotCardHint}>{' · '}{slot.hint}</span>

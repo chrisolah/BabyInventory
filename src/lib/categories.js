@@ -245,6 +245,7 @@ export const ITEMS = [
     priority: 'must_have',
     recommended: 1,
     hint: 'Disposable or reusable',
+    consumable: true,
   },
   {
     id: 'nipple_cream',
@@ -257,6 +258,7 @@ export const ITEMS = [
     recommended: 1,
     hint: null,
     fallback: true,
+    consumable: true,
   },
   {
     id: 'milk_storage',
@@ -268,6 +270,7 @@ export const ITEMS = [
     priority: 'nice_to_have',
     recommended: 1,
     hint: 'If you plan to pump and store',
+    consumable: true,
   },
 
   // Bottle feeding
@@ -411,6 +414,7 @@ export const ITEMS = [
     recommended: 1,
     hint: 'Don\'t stockpile one size — babies grow fast',
     fallback: true,
+    consumable: true,
   },
   {
     id: 'cloth_diapers',
@@ -444,6 +448,7 @@ export const ITEMS = [
     priority: 'must_have',
     recommended: 1,
     hint: null,
+    consumable: true,
   },
 
   // Changing station
@@ -480,6 +485,7 @@ export const ITEMS = [
     priority: 'must_have',
     recommended: 1,
     hint: 'Buy in bulk',
+    consumable: true,
   },
   {
     id: 'diaper_pail',
@@ -1003,6 +1009,7 @@ export const ITEMS = [
     recommended: 1,
     hint: 'Tearless formula',
     fallback: true,
+    consumable: true,
   },
   {
     id: 'baby_lotion',
@@ -1014,12 +1021,18 @@ export const ITEMS = [
     priority: 'nice_to_have',
     recommended: 1,
     hint: 'Especially in dry climates',
+    consumable: true,
   },
 ]
 
 // ── Fast lookups ──────────────────────────────────────────────────────────────
 
 export const ITEM_BY_ID = Object.fromEntries(ITEMS.map(i => [i.id, i]))
+
+// Set of slot IDs that are consumable — continuously needed, no meaningful "owned count"
+export const CONSUMABLE_SLOT_IDS = new Set(
+  ITEMS.filter(i => i.consumable).map(i => i.id)
+)
 
 // All items for a given top_category
 export const ITEMS_BY_CATEGORY = ITEMS.reduce((acc, item) => {
