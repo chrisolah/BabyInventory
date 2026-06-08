@@ -570,7 +570,7 @@ export const ITEMS = [
     keywords: ['stroller bassinet', 'pram bassinet', 'bassinet attachment', 'stroller carrycot'],
     priority: 'nice_to_have',
     recommended: 1,
-    hint: 'For flat-lay sleeping on the go',
+    hint: 'For newborns who need to lie flat',
   },
 
   // Car seats
@@ -623,14 +623,14 @@ export const ITEMS = [
   // Carriers
   {
     id: 'structured_carrier',
-    label: 'Structured carrier',
-    singular: 'Structured carrier',
+    label: 'Baby carrier',
+    singular: 'Baby carrier',
     top_category: 'travel',
     sub_category: 'carriers',
-    keywords: ['structured carrier', 'soft structured carrier', 'ssc', 'ergonomic carrier', 'ergobaby', 'lillebaby', 'baby bjorn'],
+    keywords: ['structured carrier', 'soft structured carrier', 'ssc', 'ergonomic carrier', 'ergobaby', 'lillebaby', 'baby bjorn', 'baby carrier'],
     priority: 'nice_to_have',
     recommended: 1,
-    hint: 'Easiest for everyday use',
+    hint: 'Ergobaby, BabyBjorn, Lillebaby, etc.',
     fallback: true,
   },
   {
@@ -687,14 +687,14 @@ export const ITEMS = [
   },
   {
     id: 'baby_gym',
-    label: 'Baby gym',
-    singular: 'Baby gym',
+    label: 'Activity gym',
+    singular: 'Activity gym',
     top_category: 'play',
     sub_category: 'infant_play',
     keywords: ['baby gym', 'activity gym', 'play gym', 'activity arch', 'baby arch'],
     priority: 'nice_to_have',
     recommended: 1,
-    hint: 'Great for 0-6 months',
+    hint: 'Play mat with hanging toys',
   },
   {
     id: 'bouncer_swing',
@@ -709,8 +709,8 @@ export const ITEMS = [
   },
   {
     id: 'rattles_sensory',
-    label: 'Rattles & sensory toys',
-    singular: 'Rattle or sensory toy',
+    label: 'Rattles & soft toys',
+    singular: 'Rattle or soft toy',
     top_category: 'play',
     sub_category: 'infant_play',
     keywords: ['rattle', 'sensory', 'teether', 'crinkle', 'soft toy'],
@@ -829,7 +829,7 @@ export const ITEMS = [
     keywords: ['nasal aspirator', 'bulb syringe', 'nose frida', 'snot sucker', 'nasal suction'],
     priority: 'must_have',
     recommended: 1,
-    hint: 'Babies can\'t blow their noses',
+    hint: 'NoseFrida or bulb syringe',
   },
   {
     id: 'humidifier',

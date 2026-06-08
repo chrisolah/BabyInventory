@@ -88,8 +88,8 @@ export const SLOTS = [
   },
   {
     id: 'day_tops',
-    label: 'Day tops',
-    singular: 'Day top',
+    label: 'Tops & shirts',
+    singular: 'Top or shirt',
     category: 'tops_and_bodysuits',
     // 'sweater'/'cardigan'/'hoodie' moved to the new sweaters slot below.
     // day_tops keeps t-shirts, blouses, polos, and anything top-shaped that
@@ -121,11 +121,11 @@ export const SLOTS = [
   // ── One-pieces ────────────────────────────────────────────────────────
   {
     id: 'one_pieces',
-    label: 'One-pieces',
-    singular: 'One-piece',
+    label: 'Rompers & coveralls',
+    singular: 'Romper or coverall',
     category: 'one_pieces',
     keywords: ['coverall', 'romper', 'one_piece', 'onepiece', 'jumpsuit'],
-    hint: 'Long-leg coveralls',
+    hint: 'One-piece with legs',
     recommended: 3,
     fallback: true,
   },
@@ -156,7 +156,7 @@ export const SLOTS = [
     singular: 'Overalls', // pluralia tantum
     category: 'bottoms',
     keywords: ['overall', 'overalls', 'bib pant', 'dungaree'],
-    hint: 'Bottoms with bib',
+    hint: null,
     // Overalls are functionally a bottom-with-bib (worn over a top), so
     // they live under bottoms — distinct from one_pieces which are
     // standalone garments. Newborns rarely wear them; toddlers do more.
@@ -221,10 +221,10 @@ export const SLOTS = [
   {
     id: 'sleep_gowns',
     label: 'Sleep gowns',
-    singular: 'Sleep gown',
+    singular: 'Sleep gown', // open-bottom nightgown
     category: 'sleepwear',
     keywords: ['sleep gown', 'nightgown', 'sleeper gown', 'baby gown'],
-    hint: 'Newborn nightgown',
+    hint: 'Open bottom for easy diaper changes',
     // Newborn-only essentially — bottom-open gowns make diaper changes
     // easier in the first months. Drops to zero by 6M.
     recommended: 0,
@@ -234,8 +234,8 @@ export const SLOTS = [
   // ── Outerwear ─────────────────────────────────────────────────────────
   {
     id: 'rain_gear',
-    label: 'Rain gear',
-    singular: 'Rain gear', // uncountable
+    label: 'Rain jacket & pants',
+    singular: 'Rain jacket or pants',
     category: 'outerwear',
     keywords: ['rain', 'puddle'],
     hint: null,
@@ -296,8 +296,8 @@ export const SLOTS = [
   },
   {
     id: 'shoes',
-    label: 'Shoes / booties',
-    singular: 'Shoe / bootie',
+    label: 'Shoes & booties',
+    singular: 'Shoe or bootie',
     category: 'footwear',
     // 'boot' moved to the dedicated boots slot. Shoes covers everything
     // that isn't a boot or a sock — sneakers, sandals, mary janes, dress
