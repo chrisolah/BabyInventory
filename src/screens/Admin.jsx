@@ -149,6 +149,7 @@ function HouseholdsTab({ excludeAdmins }) {
   const [rows, setRows] = useState(null)
   const [error, setError] = useState(null)
   const [expanded, setExpanded] = useState(null)
+  const [userFilter, setUserFilter] = useState('all')
 
   useEffect(() => {
     let cancelled = false
@@ -162,9 +163,7 @@ function HouseholdsTab({ excludeAdmins }) {
 
   if (error) return <div className={styles.error}>Couldn't load households: {error}</div>
   if (!rows) return <div className={styles.loading}>Loading…</div>
-  if (rows.length === 0) return <div className={styles.empty}>No households yet.</div>
-
-  const [userFilter, setUserFilter] = useState('all') // 'all' | 'accounts' | 'trial'
+  if (rows.length === 0) return <div className={styles.empty}>No households yet.</div> // 'all' | 'accounts' | 'trial'
 
   const accounts = rows.filter(h => !h.is_trial)
   const trials   = rows.filter(h => h.is_trial)
