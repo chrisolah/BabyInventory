@@ -41,8 +41,10 @@ export const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 // usually cascaded when we wipe auth.users, but we delete explicitly too so a
 // partial previous run can't leave orphan rows behind.
 //
+// email_outbox is wiped first so pg_cron never processes test-user emails.
 // events is wiped last because other writes may emit analytics rows.
 const APP_TABLES = [
+  'email_outbox',
   'clothing_items',
   'household_members',
   'babies',
@@ -54,6 +56,7 @@ const APP_TABLES = [
 // PK column name per table — needed because PostgREST refuses unbounded DELETE;
 // we pass a "where pk is not null" filter that matches every row.
 const PK_BY_TABLE = {
+  email_outbox: 'id',
   clothing_items: 'id',
   household_members: 'id',
   babies: 'id',
