@@ -1985,6 +1985,135 @@ export const GUIDES = [
       },
     ],
   },
+  {
+    slug: 'how-to-choose-a-baby-stroller',
+    title: 'How to Choose a Baby Stroller',
+    subtitle: 'Do you need two? How much does weight matter? And is overhead-bin compatibility actually worth caring about?',
+    category: ['Travel', 'Planning'],
+    tags: ['Travel', 'Stroller', 'Gear', 'Planning'],
+    date: 'June 2026',
+    readTime: '8 min',
+    description: 'A no-nonsense stroller guide that answers the questions parents actually ask — and skips the ones that don\'t matter.',
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from Consumer Reports testing, Fathercraft and BabyGearLab reviews, and parenting community feedback. It contains affiliate links to Amazon.',
+    sections: [
+      {
+        type: 'body',
+        body: 'Strollers are one of the most over-researched, over-purchased items in baby gear. Parents spend weeks comparing models, then realize six months in that their real daily life is nothing like what they planned for. This guide cuts through the noise.',
+      },
+      {
+        type: 'h2',
+        heading: 'Do you actually need two strollers?',
+        body: 'Probably not. Most families convince themselves they need a big everyday stroller and a lightweight travel stroller. In reality, the majority of families would be better served by one stroller chosen thoughtfully for their actual life.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'If you drive most places and only travel a few times a year, a full-size stroller is fine for travel too — airlines gate-check strollers for free on every major US carrier. You don\'t need a separate travel stroller for occasional trips.',
+          'If you live in a city, use public transit, or climb stairs regularly, a lightweight stroller may work as your only stroller. The tradeoff is a smaller basket, less suspension, and a less comfortable ride for longer outings.',
+          'Two strollers make sense if: you travel more than 4–5 times a year AND your everyday stroller is a heavier full-size model. Otherwise you\'re storing a second piece of gear that you\'ll use a handful of times.',
+          'The "travel system" (infant car seat + compatible stroller base) is usually the best first purchase. It gets you from the hospital through roughly 12 months, by which point you\'ll know your actual lifestyle well enough to choose a second stroller if you need one.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'How much does stroller weight actually matter?',
+        body: 'It depends almost entirely on how you get around. Weight is one of those specs that sounds important in a store and either matters enormously or barely at all in real life.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'City / transit users: weight matters a lot. If you\'re lifting a stroller onto buses, up subway stairs, or in and out of taxis multiple times a day, even 3–4 lbs makes a real difference over the course of a week. Aim for under 15 lbs if this is you.',
+          'Suburban / car-dependent families: weight matters much less. You load the stroller into a trunk once or twice a day. The difference between 17 lbs and 25 lbs is one lift. Most parents in this category overweight weight in their decision-making.',
+          'Consumer Reports defines "lightweight" as 17 lbs or under. Anything under 15 lbs is genuinely easy to carry. Most full-size strollers are 20–30 lbs.',
+          'The heavier the stroller, the better the suspension and ride quality tend to be. Lightweight strollers save your back; heavier ones save your baby\'s joints on bumpy sidewalks. Neither is universally better.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Is overhead-bin compatibility worth caring about?',
+        body: 'Mostly no — and here\'s why.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Every major US airline (American, Delta, United, Southwest, JetBlue, Alaska, Hawaiian) lets you gate-check a stroller for free. You push it to the jet bridge, they take it, and it\'s waiting for you when you land. This is the normal way to fly with a stroller.',
+          'Frontier and Spirit are the exceptions — they do not gate-check strollers for free. If you fly those airlines regularly, overhead-bin compatibility matters more.',
+          'Strollers that genuinely fit overhead bins are very few — the Stokke YOYO3, Joolz Aer, and a handful of others. They all fold to roughly 20" × 17" × 7". Most strollers marketed as "airline friendly" still need to be gate-checked.',
+          'Overhead-bin strollers cost $400–$700+. If your main reason for buying one is overhead-bin storage, that\'s expensive insurance against a minor inconvenience. Gate-checking is fast and free.',
+          'That said: if you travel frequently and your stroller is also your everyday stroller, a lightweight overhead-bin model as your single stroller is a legitimate choice. The Joolz Aer and UPPAbaby MINU V3 are excellent daily drivers that happen to also travel well.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Features that actually matter',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Fold: how fast, how many hands required, and does it stand on its own. You will fold and unfold this stroller hundreds of times. A one-hand fold isn\'t a luxury — it\'s what you need when you\'re holding the baby.',
+          'Basket size: small baskets are a daily annoyance. You need to fit a diaper bag, groceries, or your coat. Try putting something in the basket in the store.',
+          'Handlebar height: if you or your partner are tall (over 6\'0"), test whether you\'re bending forward to push. Many strollers have fixed handlebar heights that are too short for tall parents.',
+          'Seat recline: newborns need to lie flat (or near-flat) to sleep safely. Not all strollers recline fully from birth — check whether you need a bassinet attachment or infant insert for the first few months.',
+          'Canopy coverage: a full-coverage UPF 50+ canopy with a peekaboo window. You\'ll use the window constantly to check on a sleeping baby without waking them.',
+          'Suspension / wheel quality: push it over a doorstep or curb in the store. A stroller with poor suspension will shake a sleeping baby awake on every crack in the sidewalk.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Features that are overhyped',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Reversible seat direction: sounds useful, rarely matters in practice after the first few months. Most parents use it once and forget it exists.',
+          'Cup holders: they come with almost every stroller now or cost $15 as an accessory. Not a reason to choose one model over another.',
+          'Brand names: Bugaboo, UPPAbaby, and Nuna make genuinely excellent strollers — but so do Baby Jogger and GB Pockit at half the price. Buy the stroller that fits your life, not the brand that has the most strollers on your street.',
+          'The number of accessories: a large accessory ecosystem is a sign of a popular product, not a better stroller.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Which stroller for which family',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Best full-size everyday stroller: UPPAbaby Vista V3. Converts from single to double, massive basket, works with infant car seats, holds its resale value better than any stroller on the market. Expensive, but worth it if you plan to have more than one child.',
+          'Best mid-range everyday stroller: Baby Jogger City Mini GT2. All-terrain wheels, one-hand fold, works from birth with a car seat adapter. Around $350 and punches well above its price.',
+          'Best travel / lightweight as a daily driver: Joolz Aer 2 or UPPAbaby MINU V3. Both fold compactly, have a good ride for their weight, and can go in most overhead bins. The MINU V3 has better suspension; the Joolz Aer is slightly lighter.',
+          'Best budget stroller: Graco Modes Pramette. Works from birth in pram mode through toddler years, accepts most infant car seats, under $200.',
+          'Best jogging stroller: BOB Revolution Flex 3.0. Fixed front wheel for running, suspension that handles actual trails, adjustable handlebar. Not suitable as an everyday city stroller — get this only if you actually run.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The honest bottom line',
+        body: 'Buy one stroller that fits your actual life — not the life you imagine having. If you live in a suburb and drive everywhere, a heavy full-featured stroller is fine. If you live in a walkable city, prioritize weight and fold. Only buy a second stroller if you fly frequently enough that gate-checking genuinely bothers you. Most parents who own two strollers use one of them less than ten times a year.',
+      },
+      {
+        type: 'products',
+        items: [
+          { emoji: '🛻', name: 'UPPAbaby Vista V3 Stroller', note: 'Best full-size. Converts single to double, massive basket, best resale value on the market', url: 'https://www.amazon.com/s?k=UPPAbaby+Vista+V3+stroller&tag=sprigloop-20' },
+          { emoji: '🚶', name: 'Baby Jogger City Mini GT2', note: 'Best mid-range. One-hand fold, all-terrain wheels, works from birth. Around $350.', url: 'https://www.amazon.com/s?k=Baby+Jogger+City+Mini+GT2+stroller&tag=sprigloop-20' },
+          { emoji: '✈️', name: 'UPPAbaby MINU V3 Travel Stroller', note: 'Best travel stroller. Overhead-bin sized, smooth ride, works as a daily driver', url: 'https://www.amazon.com/s?k=UPPAbaby+MINU+V3+stroller&tag=sprigloop-20' },
+          { emoji: '🌿', name: 'Joolz Aer 2 Travel Stroller', note: 'Lightest of the premium travel strollers. Easy fold, good basket, fits most overhead bins', url: 'https://www.amazon.com/s?k=Joolz+Aer+2+stroller&tag=sprigloop-20' },
+          { emoji: '💰', name: 'Graco Modes Pramette', note: 'Best budget stroller. Pram mode from birth, accepts most car seats, under $200', url: 'https://www.amazon.com/s?k=Graco+Modes+Pramette+stroller&tag=sprigloop-20' },
+          { emoji: '🏃', name: 'BOB Revolution Flex 3.0', note: 'Best jogging stroller. Buy only if you actually run — too large for everyday city use', url: 'https://www.amazon.com/s?k=BOB+Revolution+Flex+3.0+jogging+stroller&tag=sprigloop-20' },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'Fathercraft — Best Travel Strollers 2026', url: 'https://fathercraft.com/best-travel-strollers/' },
+          { label: 'Consumer Reports — Best Strollers of the Year', url: 'https://www.consumerreports.org/babies-kids/strollers/best-strollers-of-the-year-a5254350204/' },
+          { label: 'Consumer Reports — Best Lightweight Strollers', url: 'https://www.consumerreports.org/babies-kids/strollers/best-lightweight-strollers-of-the-year-a9537130151/' },
+          { label: 'Safe in the Seat — Can You Take a Stroller on a Plane?', url: 'https://www.safeintheseat.com/post/can-you-take-a-stroller-on-a-plane' },
+          { label: 'MAMAZING — Travel Stroller vs Everyday Stroller', url: 'https://www.mamazing.com/blogs/guides/travel-stroller-vs-everyday-stroller' },
+          { label: 'GoodBuy Gear — Nuna MIXX vs UPPAbaby Vista V3', url: 'https://goodbuygear.com/blogs/main/uppababy-vista-vs-nuna-mixx' },
+        ],
+      },
+    ],
+  },
 ]
 
 export function getGuide(slug) {
