@@ -164,6 +164,47 @@ function HouseholdsTab({ excludeAdmins }) {
   if (!rows) return <div className={styles.loading}>Loading…</div>
   if (rows.length === 0) return <div className={styles.empty}>No households yet.</div>
 
+  const accounts = rows.filter(h => !h.is_trial)
+  const trials   = rows.filter(h => h.is_trial)
+  const convRate = rows.length > 0
+    ? Math.round((accounts.length / rows.length) * 100)
+    : 0
+
+  return (
+    <div>
+      <div className={styles.usersSplit}>
+        <div className={styles.usersSplitStat}>
+          <span className={styles.usersSplitVal}>{accounts.length}</span>
+          <span className={styles.usersSplitLabel}>accounts</span>
+        </div>
+        <div className={styles.usersSplitStat}>
+          <span className={styles.usersSplitVal}>{trials.length}</span>
+          <span className={styles.usersSplitLabel}>in trial</span>
+        </div>
+        <div className={styles.usersSplitStat}>
+          <span className={styles.usersSplitVal}>{convRate}%</span>
+          <span className={styles.usersSplitLabel}>trial → account</span>
+        </div>
+      </div>
+
+      {accounts.length > 0 && (
+        <>
+          <div className={styles.usersSectionHead}>Accounts ({accounts.length})</div>
+          <HouseholdList rows={accounts} expanded={expanded} setExpanded={setExpanded} />
+        </>
+      )}
+
+      {trials.length > 0 && (
+        <>
+          <div className={styles.usersSectionHead}>Trial — not yet signed up ({trials.length})</div>
+          <HouseholdList rows={trials} expanded={expanded} setExpanded={setExpanded} />
+        </>
+      )}
+    </div>
+  )
+}
+
+function HouseholdList({ rows, expanded, setExpanded }) {
   return (
     <ul className={styles.householdList}>
       {rows.map((h) => {
@@ -177,6 +218,7 @@ function HouseholdsTab({ excludeAdmins }) {
             >
               <div className={styles.householdName}>
                 {h.household_name || '(unnamed household)'}
+                {h.is_trial && <span className={styles.trialBadge}>trial</span>}
               </div>
               <div className={styles.householdMeta}>
                 {h.member_count} {h.member_count === 1 ? 'member' : 'members'} ·{' '}
@@ -191,7 +233,7 @@ function HouseholdsTab({ excludeAdmins }) {
             </button>
             {isOpen && (
               <div className={styles.householdDetail}>
-                <DetailRow label="Members" items={h.member_emails} fallback="(unknown email)" />
+                <DetailRow label="Members" items={h.member_emails} fallback="(no email — trial user)" />
                 <DetailRow label="Babies" items={h.baby_names} fallback="(unnamed)" />
                 <div className={styles.detailRow}>
                   <div className={styles.detailLabel}>Created</div>
