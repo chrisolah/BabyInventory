@@ -313,6 +313,12 @@
   border-right: 1px solid var(--gray-100);
 }
 .usersSplitStat:last-child { border-right: none; }
+.usersSplitStat { background: none; border-top: none; border-bottom: none; cursor: default; }
+button.usersSplitStat { cursor: pointer; transition: background 0.1s; }
+button.usersSplitStat:hover { background: var(--gray-50, #F9F9F7); }
+.usersSplitActive { background: var(--teal-50, #E1F5EE) !important; }
+.usersSplitActive .usersSplitVal { color: var(--teal-700, #085041); }
+.usersSplitActive .usersSplitLabel { color: var(--teal-600, #0F6E56); }
 .usersSplitVal {
   font-size: 26px;
   font-weight: 600;

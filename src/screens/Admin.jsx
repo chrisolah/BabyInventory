@@ -164,41 +164,56 @@ function HouseholdsTab({ excludeAdmins }) {
   if (!rows) return <div className={styles.loading}>Loading…</div>
   if (rows.length === 0) return <div className={styles.empty}>No households yet.</div>
 
+  const [userFilter, setUserFilter] = useState('all') // 'all' | 'accounts' | 'trial'
+
   const accounts = rows.filter(h => !h.is_trial)
   const trials   = rows.filter(h => h.is_trial)
   const convRate = rows.length > 0
     ? Math.round((accounts.length / rows.length) * 100)
     : 0
 
+  const visibleAccounts = userFilter !== 'trial'  ? accounts : []
+  const visibleTrials   = userFilter !== 'accounts' ? trials : []
+
   return (
     <div>
       <div className={styles.usersSplit}>
-        <div className={styles.usersSplitStat}>
+        <button
+          className={`${styles.usersSplitStat} ${userFilter === 'accounts' ? styles.usersSplitActive : ''}`}
+          onClick={() => setUserFilter(f => f === 'accounts' ? 'all' : 'accounts')}
+        >
           <span className={styles.usersSplitVal}>{accounts.length}</span>
           <span className={styles.usersSplitLabel}>accounts</span>
-        </div>
-        <div className={styles.usersSplitStat}>
+        </button>
+        <button
+          className={`${styles.usersSplitStat} ${userFilter === 'trial' ? styles.usersSplitActive : ''}`}
+          onClick={() => setUserFilter(f => f === 'trial' ? 'all' : 'trial')}
+        >
           <span className={styles.usersSplitVal}>{trials.length}</span>
           <span className={styles.usersSplitLabel}>in trial</span>
-        </div>
+        </button>
         <div className={styles.usersSplitStat}>
           <span className={styles.usersSplitVal}>{convRate}%</span>
           <span className={styles.usersSplitLabel}>trial → account</span>
         </div>
       </div>
 
-      {accounts.length > 0 && (
+      {visibleAccounts.length > 0 && (
         <>
           <div className={styles.usersSectionHead}>Accounts ({accounts.length})</div>
-          <HouseholdList rows={accounts} expanded={expanded} setExpanded={setExpanded} />
+          <HouseholdList rows={visibleAccounts} expanded={expanded} setExpanded={setExpanded} />
         </>
       )}
 
-      {trials.length > 0 && (
+      {visibleTrials.length > 0 && (
         <>
           <div className={styles.usersSectionHead}>Trial — not yet signed up ({trials.length})</div>
-          <HouseholdList rows={trials} expanded={expanded} setExpanded={setExpanded} />
+          <HouseholdList rows={visibleTrials} expanded={expanded} setExpanded={setExpanded} />
         </>
+      )}
+
+      {visibleAccounts.length === 0 && visibleTrials.length === 0 && (
+        <div className={styles.empty}>No results for this filter.</div>
       )}
     </div>
   )
