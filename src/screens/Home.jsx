@@ -406,10 +406,13 @@ function OverallTrackerCard({ pct, owned, recommended, range, ageInfo, babyName,
   }
 
   const isExpecting = ageInfo?.expecting && ageInfo.daysUntilDue != null && Math.ceil(ageInfo.daysUntilDue) > 0
+  const hasSizeUp = !isExpecting && ageInfo?.nextRange && ageInfo.daysToNextRange != null
 
-  const Tag = isExpecting ? 'button' : 'div'
+  const Tag = (isExpecting || hasSizeUp) ? 'button' : 'div'
   const tagProps = isExpecting
     ? { type: 'button', className: `${styles.trackerCard} ${styles.trackerCardClickable}`, onClick: () => navigate('/arrival-checklist') }
+    : hasSizeUp
+    ? { type: 'button', className: `${styles.trackerCard} ${styles.trackerCardClickable}`, onClick: () => navigate(`/plan?size=${encodeURIComponent(ageInfo.nextRange)}`) }
     : { className: styles.trackerCard }
 
   return (
@@ -437,7 +440,7 @@ function OverallTrackerCard({ pct, owned, recommended, range, ageInfo, babyName,
         <div className={styles.trackerCountdown}>
           <CountdownIcon type={countdown.type} />
           <span>{countdown.text}</span>
-          {countdown.type === 'due' && <span className={styles.trackerCountdownArrow}>→</span>}
+          {(countdown.type === 'due' || countdown.type === 'size') && <span className={styles.trackerCountdownArrow}>→</span>}
         </div>
       )}
     </Tag>
