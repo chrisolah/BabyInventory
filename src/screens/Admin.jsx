@@ -290,8 +290,9 @@ function Stat({ label, value }) {
 }
 
 function formatDay(iso) {
-  const d = new Date(iso)
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  const [, m, d] = iso.split('-')
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  return `${months[parseInt(m, 10) - 1]} ${parseInt(d, 10)}`
 }
 
 function timeAgo(iso) {
