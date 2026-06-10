@@ -80,6 +80,16 @@ export default function HeaderActions() {
               Add item
             </button>
 
+            <button
+              type="button"
+              role="menuitem"
+              className={styles.item}
+              onClick={() => { navigate('/registry/edit'); close() }}
+            >
+              <RegistryIcon />
+              Edit registry
+            </button>
+
             {/* Share registry — styled as the featured action */}
             <button
               type="button"
@@ -148,6 +158,15 @@ function PlusIcon() {
   return (
     <svg viewBox="0 0 14 14" width="14" height="14" fill="none" aria-hidden="true">
       <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function RegistryIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
+      <path d="M4 2h8a1 1 0 011 1v10l-5-2.5L3 13V3a1 1 0 011-1z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
     </svg>
   )
 }
