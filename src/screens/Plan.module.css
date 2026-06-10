@@ -655,12 +655,30 @@
   background: var(--white);
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s;
+  transition: background 0.15s, border-color 0.15s;
   width: 100%;
 }
 
 .slotCard:hover { background: var(--gray-50); }
 .slotCard:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }
+
+.slotCardComplete {
+  background: #E1F5EE;
+  border-color: #9FE1CB;
+}
+.slotCardComplete:hover { background: #d0eddf; }
+
+.slotCardPartial {
+  background: #FAEEDA;
+  border-color: #FAC775;
+}
+.slotCardPartial:hover { background: #f5e0bf; }
+
+.slotCardEmpty {
+  background: #FAECE7;
+  border-color: #F0997B;
+}
+.slotCardEmpty:hover { background: #f5ddd4; }
 
 /* ── Priority star button ──────────────────────────────────── */
 .starBtn {
@@ -720,9 +738,9 @@
   flex-shrink: 0;
 }
 
-.slotCountComplete { color: var(--teal-dark); }
-.slotCountGap      { color: var(--gray-600); }
-.slotCountEmpty    { color: #B8572E; }
+.slotCountComplete { color: #085041; }
+.slotCountGap      { color: #633806; }
+.slotCountEmpty    { color: #993C1D; }
 
 .slotCardHint {
   font-family: var(--font-body);

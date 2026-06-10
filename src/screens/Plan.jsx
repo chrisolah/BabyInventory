@@ -716,13 +716,18 @@ function SlotCard({ row, onClick, gapRow, onStarToggle }) {
     status === 'empty'    ? styles.slotCountEmpty    :
                             styles.slotCountGap
 
+  const cardBgClass =
+    status === 'complete' ? styles.slotCardComplete :
+    status === 'empty'    ? styles.slotCardEmpty    :
+                            styles.slotCardPartial
+
   return (
     <div className={styles.slotCardWrapper}>
-      <button type="button" className={styles.slotCard} onClick={onClick}>
+      <button type="button" className={`${styles.slotCard} ${cardBgClass}`} onClick={onClick}>
         <span className={styles.slotCardName}>{slot.label}</span>
         <div className={styles.slotCardMeta}>
           <span className={`${styles.slotCardCount} ${countClass}`}>
-            {slot.consumable ? 'Keep stocked' : `${ownedCount} of ${recommended}`}
+            {slot.consumable ? 'Keep stocked' : `${ownedCount} of ${recommended}`}{status === 'complete' && !slot.consumable && ' ✓'}
           </span>
           {slot.hint && (
             <span className={styles.slotCardHint}>{' · '}{slot.hint}</span>
