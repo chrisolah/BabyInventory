@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { SLOTS, AGE_RANGES, CATEGORY_LABELS } from '../lib/wardrobe'
@@ -37,6 +38,7 @@ const ALL_SLOT_IDS = SLOTS.map(s => s.id)
 
 export default function ShareRegistryModal({ onClose }) {
   const { household } = useHousehold()
+  const navigate = useNavigate()
   const [phase, setPhase] = useState('loading') // 'loading' | 'setup' | 'active' | 'editing'
   const [share, setShare] = useState(null)
   const [claims, setClaims] = useState([])
@@ -199,8 +201,8 @@ export default function ShareRegistryModal({ onClose }) {
   }
 
   function startEditing() {
-    setError(null)
-    setPhase('editing')
+    onClose()
+    navigate('/registry/edit')
   }
 
   function cancelEditing() {
