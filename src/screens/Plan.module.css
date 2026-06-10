@@ -550,6 +550,37 @@
   letter-spacing: 0.03em;
 }
 
+.flatGroupRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.groupAddBtn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--teal-light);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--teal-dark);
+  padding: 0;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.groupAddBtn:hover {
+  background: #c8eadc;
+}
+
+.groupAddBtn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
 /* ── Legacy coverage summary header (kept for fallback) ───── */
 .sectionHead {
   display: flex;
@@ -678,34 +709,6 @@
   border-color: #F0997B;
 }
 .slotCardEmpty:hover { background: #f5ddd4; }
-
-/* ── Zero-slot add button (coral cards only) ───────────────── */
-.slotAddBtn {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 22px;
-  height: 22px;
-  background: var(--teal);
-  border: none;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  z-index: 1;
-  transition: background 0.15s;
-}
-
-.slotAddBtn:hover {
-  background: var(--teal-dark);
-}
-
-.slotAddBtn:focus-visible {
-  outline: 2px solid var(--teal-dark);
-  outline-offset: 2px;
-}
 
 /* ── Priority star button ──────────────────────────────────── */
 .starBtn {

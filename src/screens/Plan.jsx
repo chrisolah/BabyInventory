@@ -372,6 +372,7 @@ export default function Plan() {
                   title={CATEGORY_LABELS[group.category] || group.category}
                   owned={group.owned}
                   recommended={group.recommended}
+                  onAdd={() => navigate('/add-item')}
                 />
                 <div className={styles.slotCardGrid}>
                   {group.rows.map(row => (
@@ -379,7 +380,6 @@ export default function Plan() {
                       key={row.slot.id}
                       row={row}
                       onClick={() => handleSlotTap(row.slot.id)}
-                      onAdd={() => navigate('/add-item')}
                       gapRow={clothingGapBySlotSize[`${row.slot.id}:${selectedAgeRange}`]}
                       onStarToggle={toggleGapPriority}
                     />
@@ -427,6 +427,7 @@ export default function Plan() {
                   title={SUB_CATEGORY_LABELS[group.subCat] || group.subCat}
                   owned={group.owned}
                   recommended={group.recommended}
+                  onAdd={() => navigate(`/add-item?category=${selectedCategory}`)}
                 />
                 <div className={styles.slotCardGrid}>
                   {group.rows.map(row => (
@@ -434,7 +435,6 @@ export default function Plan() {
                       key={row.slot.id}
                       row={row}
                       onClick={() => navigate(`/add-item?category=${selectedCategory}`)}
-                      onAdd={() => navigate(`/add-item?category=${selectedCategory}`)}
                       gapRow={itemGapBySlot[row.slot.id]}
                       onStarToggle={toggleGapPriority}
                     />
@@ -700,17 +700,31 @@ function CoverageSummaryCard({ pct, title, subtitle }) {
 }
 
 // ── Flat group header ─────────────────────────────────────────────────────────
-function FlatGroupHeader({ title, owned, recommended }) {
+function FlatGroupHeader({ title, owned, recommended, onAdd }) {
   return (
     <div className={styles.flatGroupHeader}>
       <span className={styles.flatGroupTitle}>{title}</span>
-      <span className={styles.flatGroupCount}>{owned} of {recommended}</span>
+      <div className={styles.flatGroupRight}>
+        <span className={styles.flatGroupCount}>{owned} of {recommended}</span>
+        {onAdd && (
+          <button
+            type="button"
+            className={styles.groupAddBtn}
+            onClick={onAdd}
+            aria-label={`Add item to ${title}`}
+          >
+            <svg viewBox="0 0 10 10" width="10" height="10" fill="none" aria-hidden="true">
+              <path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
+      </div>
     </div>
   )
 }
 
 // ── Slot card ─────────────────────────────────────────────────────────────────
-function SlotCard({ row, onClick, onAdd, gapRow, onStarToggle }) {
+function SlotCard({ row, onClick, gapRow, onStarToggle }) {
   const { slot, ownedCount, recommended, status } = row
 
   const countClass =
@@ -736,18 +750,6 @@ function SlotCard({ row, onClick, onAdd, gapRow, onStarToggle }) {
           )}
         </div>
       </button>
-      {status === 'empty' && onAdd && (
-        <button
-          type="button"
-          className={styles.slotAddBtn}
-          onClick={e => { e.stopPropagation(); onAdd() }}
-          aria-label={`Add ${slot.label}`}
-        >
-          <svg viewBox="0 0 10 10" width="10" height="10" fill="none" aria-hidden="true">
-            <path d="M5 2v6M2 5h6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
-        </button>
-      )}
       {gapRow && onStarToggle && (
         <button
           type="button"
