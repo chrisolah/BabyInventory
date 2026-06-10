@@ -2189,6 +2189,608 @@ export const GUIDES = [
       },
     ],
   },
+  {
+    slug: 'introducing-solid-foods-what-you-need',
+    title: 'Introducing Solid Foods: What You Actually Need',
+    subtitle: 'The gear, quantities, and timing — without the overpriced gadgets.',
+    description: 'A practical guide to introducing solid foods: when to start, what equipment you actually need, and which eco-friendly products are worth buying.',
+    date: 'June 2026',
+    lastmod: '2026-06-10',
+    readTime: '8 min',
+    tags: ['Feeding', 'Solids', 'Gear', 'Planning'],
+    aiDisclosure: 'This article was researched and written with AI assistance. Timing and safety guidance follows recommendations from the American Academy of Pediatrics and World Health Organization. It contains affiliate links to Amazon.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Solid food introduction is one of the most marketed milestones in babyhood. Baby food makers, puree kits, freezer trays, suction plates, silicone bibs — the gear list can feel endless. Most of it is optional. This guide covers what you actually need, when you need it, and what to skip.',
+      },
+      {
+        type: 'h2',
+        heading: 'When to start',
+        body: 'The American Academy of Pediatrics recommends introducing solid foods around 6 months — not before 4 months, and ideally not much later than 6–7 months. The signs of readiness matter more than the exact date.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Your baby can sit up with minimal support and hold their head steady. This is a hard requirement — a baby who can\'t hold their head upright can\'t eat safely.',
+          'They\'ve lost the tongue-thrust reflex. Younger babies automatically push food out of their mouths with their tongues. When this fades, they can actually move food toward the back of their mouth.',
+          'They show interest in food — watching you eat, reaching for what\'s on your plate, opening their mouth when food approaches.',
+          'They\'ve doubled their birth weight and weigh at least 13 pounds.',
+          'Starting before 4 months is associated with increased risk of obesity, food allergies, and digestive issues. The WHO recommends waiting until 6 months. If your baby seems hungry before 4 months, speak to your pediatrician — the answer is almost always more breast milk or formula, not food.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The two approaches: purees vs. baby-led weaning',
+        body: 'Both are safe and supported by research. Most families end up doing a combination.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Purees (spoon-feeding): You offer thin, smooth purees and gradually thicken the texture over weeks. Traditional approach, well-understood by pediatricians. Gives you more control over exactly what and how much the baby eats in the early stages.',
+          'Baby-led weaning (BLW): You skip purees entirely and offer soft, appropriately-sized pieces of real food from the start. Baby feeds themselves. Promotes self-regulation, reduces picky eating in some studies, and eliminates the prep step of making purees. Requires more confidence around choking (gagging is normal and different from choking) and a tolerance for mess.',
+          'Combined approach: Start with thin purees, add soft finger foods alongside them as motor skills develop around 7–8 months. This is what most families actually do, and it works well.',
+          'What both approaches have in common: start with single ingredients, wait 3–5 days before adding another new food so you can identify reactions, avoid honey before 12 months (botulism risk), avoid cow\'s milk as a main drink before 12 months, and skip added salt and sugar entirely in the first year.',
+        ],
+      },
+      {
+        type: 'note',
+        body: 'Early allergen introduction is now recommended by the AAP — particularly peanuts, eggs, tree nuts, fish, and wheat. Research (the LEAP study and others) shows that introducing allergenic foods early (around 6 months, not waiting) significantly reduces the risk of developing allergies. Talk to your pediatrician about how to introduce these safely.',
+      },
+      {
+        type: 'h2',
+        heading: 'What you actually need',
+        body: 'The gear list for solid food introduction is much shorter than the baby product industry would have you believe.',
+      },
+      {
+        type: 'table',
+        cols: ['Item', 'Do you need it?', 'Notes'],
+        rows: [
+          ['High chair', 'Yes', 'Non-negotiable. Baby needs to be upright and supported.'],
+          ['Silicone bib with pocket', 'Yes — 2–3', 'Catches food, wipes clean, lasts years'],
+          ['Soft-tip spoons', 'Yes — 2–4', 'For purees and self-feeding attempts'],
+          ['Suction bowl or plate', 'Yes — 1–2', 'Prevents plate-flipping, which is a daily occurrence'],
+          ['Baby food maker / blender', 'Optional', 'A regular blender works. Dedicated ones just take up space.'],
+          ['Freezer trays', 'Optional', 'Useful if batch-cooking purees. An ice cube tray works identically.'],
+          ['Mesh feeder', 'Optional', 'Useful for teething, letting baby gnaw frozen fruit. Not essential.'],
+          ['Squeeze pouches', 'Avoid as primary', 'Fine for travel, but teach pouch-sucking not real eating texture'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Choosing a high chair',
+        body: 'This is the one piece of gear worth spending real money on. You\'ll use it every day for 2–3 years. Cheap high chairs are wobbly, hard to clean, and fall apart. Look for these things:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Easy to clean: No fabric inserts that trap food and mold. Hard plastic or wood with a removable tray is what you actually want. Every crevice is a place for pureed sweet potato to fossilize.',
+          'Foot support: A footrest isn\'t a luxury — it gives babies a stable base to push against while learning to eat. This matters more than most parents expect.',
+          'Adjustability: A chair that grows with the child (adjustable seat height and foot rest) gets years more use than a fixed model.',
+          'The Stokke Tripp Trapp is the gold standard for longevity — made from sustainable beech wood, adjustable for newborns to adults, and used by families for a decade or more. It\'s expensive but the cost-per-year math is favorable. The IKEA ANTILOP is the budget recommendation: $25, BPA-free plastic, dishwasher-safe tray, beloved by parents worldwide for being unglamorous and bulletproof.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'What to look for in feeding gear',
+        body: 'For everything that contacts food, prioritize materials that are safe and durable:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Silicone over plastic wherever possible. 100% food-grade silicone is free of BPA, phthalates, and PVC, doesn\'t leach under heat, and can go in the dishwasher. Look for LFGB or FDA-grade certification on the label.',
+          'Stainless steel for longer-term use. Stainless bowls and cups are durable, non-reactive, and don\'t harbor bacteria the way some plastics do.',
+          'Avoid painted or decorated wooden utensils for young babies — they go in the mouth constantly and you can\'t verify paint composition.',
+          'Bibs: waterproof silicone bibs with a food-catcher pocket are the most practical for this stage. They wipe clean in seconds and handle full-bowl-dump incidents with grace. Cloth bibs need rinsing, soaking, and more laundry.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🌳',
+            name: 'Stokke Tripp Trapp High Chair',
+            note: 'Sustainable beech wood, grows from infant to adult. Best long-term value. Add the infant insert for use from birth.',
+            url: 'https://www.amazon.com/s?k=Stokke+Tripp+Trapp+high+chair&tag=sprigloop-20',
+          },
+          {
+            emoji: '🟢',
+            name: 'EZPZ Mini Mat — 100% Silicone Suction Plate',
+            note: 'Made in the USA, 100% silicone, no plastic. Suctions to the table, not a tray — harder for babies to flip. The standard recommendation.',
+            url: 'https://www.amazon.com/s?k=ezpz+mini+mat+silicone&tag=sprigloop-20',
+          },
+          {
+            emoji: '🥄',
+            name: 'Grabease Self-Feeding Utensil Set',
+            note: 'Short, choke-resistant handles designed for baby fists. BPA-free, dishwasher safe. Good for both spoon-feeding and early self-feeding.',
+            url: 'https://www.amazon.com/s?k=grabease+self+feeding+utensils+baby&tag=sprigloop-20',
+          },
+          {
+            emoji: '🧼',
+            name: 'Bumkins Waterproof Silicone Bib (3-pack)',
+            note: 'Soft silicone with a deep food-catcher pocket. Wipes clean in seconds. Replaces dozens of cloth bibs in the solid food stage.',
+            url: 'https://www.amazon.com/s?k=bumkins+silicone+bib+baby&tag=sprigloop-20',
+          },
+          {
+            emoji: '🍽️',
+            name: 'WeeSprout Glass Baby Food Containers',
+            note: 'Glass storage with leak-proof lids — safe for freezing, reheating, and no plastic touching food. Better than plastic baby food containers for batch cooking.',
+            url: 'https://www.amazon.com/s?k=weesprout+glass+baby+food+containers&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'First foods to try',
+        body: 'There\'s no required order. Focus on single ingredients, iron-rich options, and variety early.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Iron-rich foods first: Iron from breast milk decreases around 6 months just as the baby\'s stores from birth begin to deplete. Prioritize iron-rich first foods: pureed meat (chicken, beef, lamb), iron-fortified single-grain cereal, or pureed legumes.',
+          'Good early purees: pea, sweet potato, butternut squash, pear, banana, avocado, carrot. All mash or blend easily and most babies accept them readily.',
+          'Early finger foods (for BLW or combined feeding from 6–7 months): steamed broccoli florets large enough to hold, ripe banana spears, avocado slices, soft-cooked carrot sticks. Always soft enough to squish between your fingers.',
+          'What to avoid in year one: honey (botulism), added sugar and salt, cow\'s milk as a main drink (small amounts in cooking are fine), unpasteurized cheese, raw or undercooked eggs, large pieces of anything that could be a choking hazard, whole grapes, whole nuts, and raw carrots.',
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'AAP — Starting Solid Foods', url: 'https://www.healthychildren.org/English/ages-stages/baby/feeding-nutrition/Pages/Starting-Solid-Foods.aspx' },
+          { label: 'AAP — Baby-Led Weaning', url: 'https://www.healthychildren.org/English/ages-stages/baby/feeding-nutrition/Pages/Baby-Led-Weaning.aspx' },
+          { label: 'WHO — Complementary Feeding', url: 'https://www.who.int/health-topics/complementary-feeding' },
+          { label: 'LEAP Study — Early Peanut Introduction', url: 'https://www.leapstudy.co.uk/' },
+          { label: 'AAP — Choking Prevention', url: 'https://www.healthychildren.org/English/health-issues/injuries-emergencies/Pages/Choking-Prevention.aspx' },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: 'breastfeeding-supplies-checklist',
+    title: 'Breastfeeding Supplies Checklist',
+    subtitle: 'What to have ready before baby arrives — and what you can skip.',
+    description: 'A practical checklist of breastfeeding supplies — what you actually need, what to buy only after baby arrives, and what the industry oversells.',
+    date: 'June 2026',
+    lastmod: '2026-06-10',
+    readTime: '7 min',
+    tags: ['Feeding', 'Breastfeeding', 'Checklist', 'Planning'],
+    aiDisclosure: 'This article was researched and written with AI assistance. Clinical guidance draws from the American Academy of Pediatrics, La Leche League International, and CDC recommendations. It contains affiliate links to Amazon.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Breastfeeding has a short but specific gear list. Some items are genuinely useful from day one — a pump, nursing pads, nipple cream. Others are things the market sells aggressively but most parents never use. This guide sorts the two.',
+      },
+      {
+        type: 'note',
+        body: 'Under the ACA, most insurance plans are required to cover a breast pump and lactation counseling at no cost to you. Call your insurer before buying a pump — you may be entitled to one for free. This applies to most employer-sponsored plans and Medicaid. Exceptions exist for grandfathered plans.',
+      },
+      {
+        type: 'h2',
+        heading: 'The short list: buy before baby arrives',
+        body: 'These items are practical to have ready from day one — either because you\'ll use them immediately, or because you\'ll be too exhausted postpartum to shop.',
+      },
+      {
+        type: 'table',
+        cols: ['Item', 'Quantity', 'Notes'],
+        rows: [
+          ['Breast pump', '1', 'Check insurance first — may be covered'],
+          ['Nursing bras', '3–4', 'Buy 1–2 before birth; bodies change postpartum'],
+          ['Reusable nursing pads', '8–10 pairs', 'For leaking between feeds, especially first 6 weeks'],
+          ['Nipple cream / balm', '1–2 tubes', 'Lanolin or lanolin-free organic options'],
+          ['Haakaa or silicone pump', '1', 'Catches letdown from the opposite breast while nursing'],
+          ['Nursing pillow', '1', 'Boppy or Brest Friend — reduces arm strain significantly'],
+          ['Breast milk storage bags', '50–100', 'If you plan to pump and store'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Choosing a pump',
+        body: 'Insurance-covered pumps are typically hospital-grade double electric pumps — the most effective option for establishing supply. If your plan covers only basic pumps, you can often pay an upgrade fee for a better model. Here\'s what the categories mean:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Double electric pumps: Both sides simultaneously, most efficient for maintaining supply. Medela Pump In Style and Spectra S2 are the most recommended by lactation consultants. Medela has decades of clinical research behind it. Spectra is quieter and hospital-grade at a consumer price.',
+          'Wearable pumps: Elvie and Willow are hands-free and worn inside a bra. Genuinely useful for pumping while working or multitasking. Less efficient per session than a double electric — most lactation consultants recommend using a traditional pump to establish supply first, then supplementing with a wearable.',
+          'Manual pumps: Medela Harmony is the standard recommendation. Useful as a backup, for travel, or for the occasional missed feed. Not practical as a primary pump for anyone feeding frequently.',
+          'The Haakaa silicone collector is not technically a pump — it attaches via suction and catches letdown passively while you nurse on the other side. It\'s cheap, works with no effort, and many parents collect 1–3 oz per session that would otherwise be lost. Highly recommended regardless of which pump you have.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Nursing bras and pads',
+        body: 'Your body will change significantly in the weeks after birth as milk comes in. Buy 1–2 nursing bras before the baby arrives and wait to buy the rest until your supply regulates at 4–6 weeks.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'What to look for: drop-down or slide-aside cups, comfortable elastic that doesn\'t dig in, enough support for a fuller-than-usual chest, and breathable fabric. Underwire is generally not recommended while breastfeeding — it can restrict flow and contribute to plugged ducts.',
+          'Sleep bras: Many nursing parents find a soft, wireless sleep bra with nursing access helpful overnight — something to hold pads in place and provide light support without a traditional bra clasp.',
+          'Nursing pads for leaking: Reusable organic cotton or bamboo pads are the eco-friendly choice. Disposables work in a pinch but generate significant waste when you\'re going through 4–6 pairs a day. Bamboobies are the most popular reusable brand. Wash them in a lingerie bag on warm.',
+          'How long do you need pads: Most parents leak heavily for the first 4–8 weeks while supply is establishing. After that it tapers significantly, and many parents stop needing pads entirely once feeding is well-established.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Nipple care',
+        body: 'Soreness in the first 1–2 weeks is extremely common as you and your baby establish a latch. It should not be sharp or toe-curling pain — that signals a latch problem worth addressing with a lactation consultant. For everyday initial soreness:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Lanolin cream: A small amount applied after feeding creates a moist healing environment and is safe for baby to ingest — no need to wipe off before nursing. Lansinoh is the most widely recommended brand.',
+          'Organic lanolin-free options: Earth Mama Organics Nipple Butter uses organic herbs and shea butter. Safer for parents who prefer to avoid animal byproducts.',
+          'Hydrogel pads: Cooling gel pads used between feeds for severe soreness. More useful if you\'re dealing with cracked or damaged nipples rather than standard initial tenderness.',
+          'What actually fixes nipple pain: A correct latch. A lactation consultant can assess this in person and it\'s the highest-ROI intervention for breastfeeding difficulty. Most hospitals offer in-patient support; La Leche League offers free community support.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Milk storage',
+        body: 'If you plan to pump and store milk, you\'ll need storage bags and a system.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Breast milk storage bags: Pre-sterilized, lay flat to freeze (more efficient storage), and most have a pour spout for transferring to a bottle. Lansinoh and Medela are the standard brands. Label every bag with date and volume — freezer milk is FIFO (use oldest first).',
+          'How long does milk last: At room temperature 4 hours, in the fridge 4 days, in a standard freezer 6 months, in a deep freezer 12 months. The CDC publishes a safe storage guide worth bookmarking.',
+          'Reusable silicone bags: Prefix and Junobie make reusable silicone breast milk storage bags. More expensive upfront, significantly less waste over months of pumping. Wash carefully — dried milk residue in silicone requires thorough cleaning.',
+          'You do not need a bottle warmer: A bowl of warm water works identically and has one fewer gadget to clean. If you want one anyway, choose one with a temperature control rather than a timer-only model.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'What to skip or buy only if you need it',
+        body: 'These are frequently marketed to nursing parents but rarely necessary:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Nursing cover: If you want one, one is useful. Many parents find a light muslin blanket works identically and has more uses.',
+          'Nursing teas and supplements: Most have no clinical evidence of increasing supply. The things that reliably support supply are frequent feeds or pumping sessions, adequate hydration, and enough calories. Talk to your lactation consultant before spending money on supplements.',
+          'Milk storage trays: A standard ice cube tray with a lid works the same as a specialty breast milk tray.',
+          'Nursing necklaces: Designed to give baby something to fidget with during feeds. May help. A bead necklace from any shop does the same.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🤍',
+            name: 'Haakaa Silicone Breast Pump',
+            note: 'Attaches via suction, catches letdown hands-free while you nurse on the other side. 100% food-grade silicone. One of the most-recommended breastfeeding buys.',
+            url: 'https://www.amazon.com/s?k=haakaa+silicone+breast+pump&tag=sprigloop-20',
+          },
+          {
+            emoji: '🌿',
+            name: 'Bamboobies Reusable Nursing Pads (8-pack)',
+            note: 'Organic bamboo and cotton. Washable, contoured, stay in place. Far less waste than disposables over weeks of leaking.',
+            url: 'https://www.amazon.com/s?k=bamboobies+reusable+nursing+pads&tag=sprigloop-20',
+          },
+          {
+            emoji: '💚',
+            name: 'Earth Mama Organic Nipple Butter',
+            note: 'Certified organic, lanolin-free, no need to wipe off before nursing. Good option if you prefer plant-based ingredients.',
+            url: 'https://www.amazon.com/s?k=earth+mama+organic+nipple+butter&tag=sprigloop-20',
+          },
+          {
+            emoji: '🍼',
+            name: 'Spectra S2 Plus Double Electric Breast Pump',
+            note: 'Hospital-grade, whisper-quiet, closed system (no milk can enter the pump). The top lactation consultant recommendation alongside Medela.',
+            url: 'https://www.amazon.com/s?k=spectra+s2+plus+breast+pump&tag=sprigloop-20',
+          },
+          {
+            emoji: '🧊',
+            name: 'Junobie Reusable Silicone Breast Milk Storage Bags',
+            note: 'Food-grade silicone, reusable, dishwasher safe. Replaces hundreds of disposable storage bags. Better for the environment and cost-effective over time.',
+            url: 'https://www.amazon.com/s?k=junobie+reusable+silicone+breast+milk+bags&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'CDC — How to Keep Your Breast Pump Clean', url: 'https://www.cdc.gov/hygiene/personal-hygiene/breast-pump.html' },
+          { label: 'CDC — Proper Storage and Preparation of Breast Milk', url: 'https://www.cdc.gov/breastfeeding/recommendations/handling_breastmilk.htm' },
+          { label: 'AAP — Breastfeeding and the Use of Human Milk', url: 'https://publications.aap.org/pediatrics/article/150/1/e2022057988/188347' },
+          { label: 'La Leche League International — Finding a Local Leader', url: 'https://www.llli.org/get-help/' },
+          { label: 'Healthcare.gov — Breastfeeding Benefits', url: 'https://www.healthcare.gov/coverage/birth-family-planning-benefits/' },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: 'how-many-diapers-does-a-baby-go-through',
+    title: 'How Many Diapers Does a Baby Go Through?',
+    subtitle: 'Month-by-month numbers — so you know how much to buy and when to size up.',
+    description: 'Real diaper usage numbers by age and size, plus guidance on eco-friendly diaper options, sizing, and how to avoid overstocking.',
+    date: 'June 2026',
+    lastmod: '2026-06-10',
+    readTime: '6 min',
+    tags: ['Diapering', 'Planning', 'Quantities'],
+    aiDisclosure: 'This article was researched and written with AI assistance. Diaper usage ranges are drawn from pediatric nursing guidance, AAP feeding frequency data, and parent-reported data. It contains affiliate links to Amazon.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'New parents consistently overbuy newborn diapers and underbuy size 2 and 3. The math is straightforward once you know the numbers — and knowing them saves you from a closet full of diapers your baby outgrew before you opened them.',
+      },
+      {
+        type: 'h2',
+        heading: 'Usage by age and size',
+        body: 'Diaper frequency decreases as babies get older. Newborns pee and poop many times per day. By toddlerhood, a child is down to 4–6 changes per day.',
+      },
+      {
+        type: 'table',
+        cols: ['Age', 'Typical Size', 'Diapers per Day', 'Per Month'],
+        rows: [
+          ['Newborn (0–4 weeks)', 'Newborn / NB', '10–12', '310–370'],
+          ['1–2 months', 'Size 1', '8–10', '250–310'],
+          ['2–4 months', 'Size 2', '8–10', '250–310'],
+          ['4–7 months', 'Size 3', '6–8', '185–250'],
+          ['7–12 months', 'Size 3–4', '6–8', '185–250'],
+          ['12–18 months', 'Size 4', '5–7', '155–215'],
+          ['18–24 months', 'Size 5', '4–6', '125–185'],
+          ['2–3 years', 'Size 5–6', '4–5 (or potty training)', '125–155'],
+        ],
+      },
+      {
+        type: 'note',
+        body: 'Skip newborn size if your baby is likely to be larger. Babies born at 9 lbs or more often skip newborn size entirely — they arrive already fitting into size 1. If you want to be safe, buy only 1–2 packs of newborns and wait to see. You can always buy more.',
+      },
+      {
+        type: 'h2',
+        heading: 'When to size up',
+        body: 'Size is based on weight, not age. Move up when:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Your baby is at the top of the weight range listed on the package.',
+          'You\'re seeing frequent leaks or blowouts, especially around the legs or back.',
+          'The diaper leaves red marks on the baby\'s skin after removal.',
+          'You\'re struggling to fasten the tabs without stretching them.',
+          'When in doubt, go up a size. A slightly too-large diaper rarely causes problems. A too-small one causes leaks and discomfort.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Eco-friendly diaper options',
+        body: 'Conventional disposable diapers are one of the most common items in landfills — an estimated 20 billion diapers per year in the US alone. If this matters to you, there are better options.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Plant-based disposables: Made with bamboo or plant-derived materials instead of petroleum-based SAP (super-absorbent polymer). Brands like Dyper, Eco by Naty, Andy Pandy, and Bambo Nature use bamboo viscose and are free from chlorine bleaching, fragrances, latex, and TBT. They perform comparably to conventional diapers and are certified by Oeko-Tex or similar.',
+          'Cloth diapers: The most environmentally friendly option when considering lifetime impact. Modern cloth systems (GroVia, Thirsties, Esembly) use waterproof covers with absorbent inserts. Require upfront investment ($300–$500 for a full stash) and more laundry, but generate almost no ongoing waste and save significant money over 2–3 years of diapering.',
+          'Hybrid systems: Brands like GroVia offer reusable covers with both cloth inserts (for home) and disposable inserts (for travel or daycare). Good middle ground if full cloth feels like too much.',
+          'Biodegradable disposables: Some brands market compostable diapers, but home composting of soiled diapers is not safe or practical. Commercial composting facilities that accept them are very limited. "Biodegradable" in landfill conditions often doesn\'t mean much. The benefit is mainly the absence of harsh chemicals rather than end-of-life decomposition.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'How much to stock before baby arrives',
+        body: 'Resist the urge to build a massive stockpile before birth. Babies grow faster than you expect and sizes change quickly.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Newborn: 1–2 packs (or zero, if baby will likely be large). Even if needed, the newborn stage lasts only 2–4 weeks.',
+          'Size 1: 1–2 packs to start. You can order more within a day when you know baby\'s weight.',
+          'Size 2: Once your baby is clearly past newborn, buy a larger supply of size 2 — this is the highest-usage size for the first 3 months after the newborn stage.',
+          'Never buy more than a 2-month supply of any one size. Babies have growth spurts and can jump a size faster than you\'d expect.',
+          'Buying in bulk saves money only within a size range you\'re sure about. If you have a 6-month supply of size 3 and your baby sizes up in 2 months, you\'ve wasted money.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'What to look for in a diaper',
+        body: 'Not all diapers fit the same. Fit is the biggest factor in leak prevention.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Stretchy tabs: Give you more adjustment range and are gentler on sensitive skin.',
+          'Umbilical cord notch (newborn only): Many newborn diapers have a cutout so the diaper sits below the healing cord stump. Useful in the first 1–3 weeks.',
+          'Wetness indicator: A colored line on the front of the diaper changes color when wet. Very useful in the newborn stage when you\'re not sure if the diaper is actually wet. Less necessary as you develop a sense of your baby\'s feeding and elimination patterns.',
+          'Fragrance-free: Choose unscented diapers wherever possible. Fragrances are a common irritant on newborn skin and can contribute to diaper rash.',
+          'Fit over absorbency: A diaper that fits well and leaks occasionally is better than a super-absorbent diaper that blows out due to poor fit around the legs.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🌿',
+            name: 'Dyper Bamboo Diapers',
+            note: 'Plant-based bamboo viscose, free of chlorine, fragrance, latex, and TBT. Oeko-Tex certified. Subscription available. Best eco pick for parents who prefer disposable convenience.',
+            url: 'https://www.amazon.com/s?k=dyper+bamboo+diapers&tag=sprigloop-20',
+          },
+          {
+            emoji: '🍃',
+            name: 'Eco by Naty Diapers',
+            note: 'European standard for plant-based disposables. FSC-certified, EU Ecolabel, free from chlorine and fragrances. Good fit through the early sizes.',
+            url: 'https://www.amazon.com/s?k=eco+by+naty+diapers&tag=sprigloop-20',
+          },
+          {
+            emoji: '🌱',
+            name: 'GroVia Hybrid Cloth Diaper System',
+            note: 'Reusable waterproof shell with choice of cloth or compostable disposable inserts. Good starter kit for cloth-curious parents. Well-made, leak-resistant.',
+            url: 'https://www.amazon.com/s?k=grovia+hybrid+cloth+diaper&tag=sprigloop-20',
+          },
+          {
+            emoji: '🧺',
+            name: 'Esembly Cloth Diaper Starter Kit',
+            note: 'GOTS-certified organic cotton inners, OEKO-TEX certified outers. Designed as a complete system — includes everything needed to start cloth diapering.',
+            url: 'https://www.amazon.com/s?k=esembly+cloth+diaper+starter+kit&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'AAP — Diapering Your Baby', url: 'https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Diapering-Your-Baby.aspx' },
+          { label: 'EPA — Diapers: Environmental Impacts', url: 'https://www.epa.gov/sites/default/files/2017-12/documents/fullreport_-_an_examination_of_disposable_and_reusable_diapers.pdf' },
+          { label: 'Oeko-Tex — Certified Safe Products', url: 'https://www.oeko-tex.com/en/our-standards/oeko-tex-standard-100' },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: 'what-to-pack-in-a-diaper-bag',
+    title: 'What to Pack in a Diaper Bag',
+    subtitle: 'The complete list — plus what experienced parents say they wish they\'d left out.',
+    description: 'A practical packing list for a baby diaper bag, organized by age and outing length, with guidance on choosing an eco-friendly bag and avoiding common overpacking mistakes.',
+    date: 'June 2026',
+    lastmod: '2026-06-10',
+    readTime: '6 min',
+    tags: ['Travel', 'Diapering', 'Planning', 'Gear'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from pediatric safety guidelines and parent community research. It contains affiliate links to Amazon.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'New parents pack too much. The diaper bag becomes a rolling supply depot that weighs 15 pounds and contains three items you\'ll actually use. This guide gives you the real list — organized by age and outing length — and the things experienced parents say they eventually left at home.',
+      },
+      {
+        type: 'h2',
+        heading: 'The core list (0–6 months)',
+        body: 'For a typical outing with a newborn or young infant, these are the items you\'ll actually use:',
+      },
+      {
+        type: 'table',
+        cols: ['Item', 'Quantity', 'Notes'],
+        rows: [
+          ['Diapers', '1 per hour out + 2 extra', 'Minimum. Always round up.'],
+          ['Fragrance-free wipes', '20–30 wipes', 'One travel pack or refill pouch'],
+          ['Changing pad', '1', 'Foldable, waterproof. Most bags include one.'],
+          ['Diaper cream', 'Small tube', 'Only if baby has active rash'],
+          ['Spare onesie', '1–2', 'For blowouts. Pack one more than you think you need.'],
+          ['Spare pants or sleep sack', '1', 'Bottom half gets hit most in a blowout'],
+          ['Burp cloth', '2–3', 'Doubles as a bib, shade cloth, surface cleaner'],
+          ['Feeding supplies', 'Depends', 'See section below'],
+          ['Wet bag or waterproof pouch', '1', 'For soiled clothes — a sealed plastic bag works too'],
+          ['Hand sanitizer', '1 small bottle', 'For diaper changes away from a sink'],
+          ['Pacifier + case', '1–2 if used', 'Case keeps it clean in the bag'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Feeding supplies by method',
+        body: 'What you pack for feeding depends entirely on how your baby eats:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Breastfeeding: Nursing cover if you use one (or a muslin blanket), nipple pads if you\'re still leaking, and a small tube of nipple balm for longer outings. That\'s it.',
+          'Bottle feeding (pumped milk or formula): A pre-filled bottle or insulated bottle bag to keep milk cold, plus a formula dispenser if formula-feeding so you can mix on the go without carrying an open container of powder.',
+          'Combo feeding: Pack for both scenarios on longer outings. On short trips, you can usually manage with whichever is the primary method.',
+          'Starting solids (6+ months): Add a silicone bib, a pouch of baby food or small soft pieces in a container, a spoon, and a small water cup. The bag gets heavier at this stage but the diaper frequency decreases.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Scale by outing length',
+        body: 'One of the most common overpacking triggers is packing for every scenario on every trip. Calibrate to the outing:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Under 2 hours (coffee run, quick errand): 2–3 diapers, wipes, one spare outfit, pacifier. That\'s a small pouch, not a full bag.',
+          'Half day (pediatrician, park, lunch out): Full core list above. One feeding session worth of supplies.',
+          'Full day: Double the diapers, two spare outfits, two feeding sessions worth of supplies, small first aid kit.',
+          'Overnight or travel: Treat as two full-day outings. Pack a dedicated overnight bag in addition to your day bag — trying to combine them leads to chaos.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'What to leave out',
+        body: 'Items parents consistently pack and then stop packing after the first month:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Full-size items of anything. The point of a diaper bag is portability. Decant everything into travel sizes.',
+          'Toys for young babies. A newborn is not bored at the pediatrician. A 3-month-old does not need five toys in the bag. One small crinkle toy or teether is enough.',
+          'Multiple changes of clothes for you. One spare shirt (in your own bag or tucked in the diaper bag pocket) is sufficient. Blowouts rarely get on the adult holding the baby.',
+          'Baby lotion on every outing. Unless your baby has a skin condition that requires it, lotion is not a diaper-bag necessity.',
+          'A full first aid kit. A few bandages and infant Tylenol for full-day outings. Everything else stays home.',
+          'Snacks for a baby under 6 months. Breast milk and formula are the entire diet. Nothing else goes in the bag for feeding.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Choosing a diaper bag',
+        body: 'The diaper bag you choose matters less than how you pack it. That said, a few features make a genuine daily difference:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Wipe-clean lining: Essential. You will get things on the inside of this bag. A water-resistant or wipeable interior saves significant cleanup time.',
+          'A dedicated wet pocket: Waterproof, zippered, sized for soiled clothes. If your bag doesn\'t have one, a reusable wet bag solves the problem.',
+          'Stroller straps: If you use a stroller, the ability to hang the bag from the handles keeps your hands free. Stroller hooks also work.',
+          'Weight: An empty diaper bag that weighs 2+ lbs is a burden before you\'ve put anything in it. Lightweight bags matter more than they seem when you\'re also carrying an infant.',
+          'Insulated pocket: Useful if you bottle-feed — keeps bottles at temperature without a separate insulated bag.',
+          'Eco-friendly bags: Look for bags made from recycled materials (rPET) or GOTS-certified organic fabrics. Avoid bags with PVC linings — they\'re harder to recycle and contain additives you\'d rather not have around food and baby items.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'When to restock',
+        body: 'The most common diaper bag failure is running out of something because nobody restocked it. Build one habit:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'After every outing, spend 90 seconds restocking whatever you used. Check diapers, wipes, and spare clothes. This is easier than doing a full inventory before the next outing when you\'re already trying to get out the door.',
+          'Keep a small reserve at home staged near the bag: a few diapers, a travel pack of wipes, and an extra onesie that you swap in immediately after using one.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '♻️',
+            name: 'Itzy Ritzy Boss Diaper Bag Backpack',
+            note: 'Made from recycled materials, insulated bottle pocket, stroller straps included. Lightweight for its size. One of the most recommended eco-conscious diaper bags.',
+            url: 'https://www.amazon.com/s?k=itzy+ritzy+boss+plus+diaper+bag+backpack&tag=sprigloop-20',
+          },
+          {
+            emoji: '🧴',
+            name: 'ALVABABY Reusable Wet Bags (3-pack)',
+            note: 'Waterproof PUL fabric, double zipper, machine washable. Use one for soiled clothes, one for wet swimwear or wipes, one as backup. Far better than single-use plastic bags.',
+            url: 'https://www.amazon.com/s?k=alvababy+reusable+wet+bag+baby&tag=sprigloop-20',
+          },
+          {
+            emoji: '🧻',
+            name: 'Water Wipes Original — Fragrance-Free Baby Wipes',
+            note: '99.9% water and a drop of fruit extract. The most minimal ingredients of any wipe. Recommended by dermatologists for newborn skin. Biodegradable.',
+            url: 'https://www.amazon.com/s?k=waterwipes+original+baby+wipes&tag=sprigloop-20',
+          },
+          {
+            emoji: '🗂️',
+            name: 'OXO Tot Diaper Bag Organizer Insert',
+            note: 'If you use a regular tote or backpack as a diaper bag, this insert adds pockets and structure. Lets you turn any bag into a diaper bag without buying a dedicated one.',
+            url: 'https://www.amazon.com/s?k=oxo+tot+diaper+bag+organizer+insert&tag=sprigloop-20',
+          },
+          {
+            emoji: '🧽',
+            name: 'Portable Changing Pad — Foldable Waterproof',
+            note: 'Folds to the size of a wallet, wipes clean, includes a small strap to roll it up. Better than a changing pad built into a bag (it\'s thicker and more cushioned).',
+            url: 'https://www.amazon.com/s?k=portable+foldable+waterproof+changing+pad+baby&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'AAP — Diapering Your Baby', url: 'https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Diapering-Your-Baby.aspx' },
+          { label: 'AAP — Car Safety Seats: Information for Families', url: 'https://www.healthychildren.org/English/safety-prevention/on-the-go/Pages/Car-Safety-Seats-Information-for-Families.aspx' },
+        ],
+      },
+    ],
+  },
 ]
 
 export function getGuide(slug) {
