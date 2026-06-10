@@ -134,6 +134,25 @@
   color: var(--gray-400);
   margin-bottom: 16px;
 }
+/* Jump link to affiliate picks — shown in hero when guide has products */
+.picksJump {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal-dark);
+  background: var(--teal-light);
+  border-radius: 20px;
+  padding: 6px 14px;
+  text-decoration: none;
+  margin-bottom: 4px;
+  transition: background 0.15s;
+}
+.picksJump:hover {
+  background: #c8eadc;
+}
+
 .aiDisclosure {
   font-size: 12px;
   color: var(--gray-500);

@@ -73,7 +73,7 @@ function renderSection(section, i) {
 
     case 'products':
       return (
-        <div key={i} className={styles.productsBlock}>
+        <div key={i} id="picks" className={styles.productsBlock}>
           <div className={styles.productsLabel}>Sprigloop picks on Amazon</div>
           <div className={styles.productCards}>
             {section.items.map((product, pi) => (
@@ -183,6 +183,11 @@ export default function GuideDetail() {
           <h1 className={styles.h1}>{guide.title}</h1>
           <p className={styles.subtitle}>{guide.subtitle}</p>
           <div className={styles.meta}>{guide.readTime} read &nbsp;&middot;&nbsp; {guide.date}</div>
+          {guide.sections.some(s => s.type === 'products') && (
+            <a href="#picks" className={styles.picksJump}>
+              Sprigloop picks ↓
+            </a>
+          )}
         </header>
 
         <div className={styles.body}>
