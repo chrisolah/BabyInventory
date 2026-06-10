@@ -56,7 +56,17 @@ export default function HeaderActions() {
 
   return (
     <>
-      <div className={styles.root} ref={rootRef}>
+      <div className={styles.wrapper}>
+        <button
+          type="button"
+          className={styles.addBtn}
+          onClick={() => navigate('/add-item')}
+          aria-label="Add item"
+        >
+          <PlusIcon />
+        </button>
+
+        <div className={styles.root} ref={rootRef}>
         <button
           type="button"
           className={styles.btn}
@@ -134,6 +144,7 @@ export default function HeaderActions() {
             </button>
           </div>
         )}
+        </div>
       </div>
 
       {showShare  && <ShareWishlistModal  onClose={() => setShowShare(false)}  />}
