@@ -682,4 +682,5 @@ button.usersSplitStat:hover { background: var(--gray-50, #F9F9F7); }
 .eventRow:last-child { border-bottom: none; }
 .eventTime   { color: #9ca3af; font-size: 11px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .eventName   { color: #374151; font-weight: 500; word-break: break-all; }
+.eventDetail { color: #9ca3af; font-weight: 400; }
 .eventDevice { font-size: 10px; color: #d1d5db; text-align: right; }

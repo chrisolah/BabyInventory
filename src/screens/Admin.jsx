@@ -306,13 +306,27 @@ function HouseholdEventStream({ householdId }) {
 
   return (
     <div className={styles.eventStream}>
-      {events.slice(0, 80).map((e, i) => (
-        <div key={i} className={styles.eventRow}>
-          <div className={styles.eventTime}>{timeAgo(e.created_at)}</div>
-          <div className={styles.eventName}>{e.event_name}</div>
-          <div className={styles.eventDevice}>{e.device_type ?? ''}</div>
-        </div>
-      ))}
+      {events.slice(0, 80).map((e, i) => {
+        const props = e.properties ?? {}
+        const detail =
+          e.event_name === 'page_viewed'       ? (props.page ?? '') :
+          e.event_name === 'guide_read'        ? (props.slug ?? '') :
+          e.event_name === 'affiliate_link_clicked' ? (props.product ?? props.guide ?? '') :
+          e.event_name === 'item_saved'        ? (props.category ?? '') :
+          e.event_name === 'item_category_selected' ? (props.category ?? '') :
+          e.event_name === 'cta_clicked'       ? (props.cta ?? '') :
+          ''
+        return (
+          <div key={i} className={styles.eventRow}>
+            <div className={styles.eventTime}>{timeAgo(e.created_at)}</div>
+            <div className={styles.eventName}>
+              {e.event_name}
+              {detail ? <span className={styles.eventDetail}> — {detail}</span> : null}
+            </div>
+            <div className={styles.eventDevice}>{e.device_type ?? ''}</div>
+          </div>
+        )
+      })}
     </div>
   )
 }
