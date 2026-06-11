@@ -49,9 +49,9 @@ describe('recommendedQty', () => {
   })
 
   it('prefers perAge when both perAge and recommended are set', () => {
-    // Pajamas has both a flat fallback (5) and per-age overrides.
+    // Footed pajamas has both a flat fallback (5) and per-age overrides.
     // perAge['0-3M']=6 must win over the flat 5.
-    const pajamas = SLOT_BY_ID.pajamas
+    const pajamas = SLOT_BY_ID.footed_pajamas
     expect(recommendedQty(pajamas, '0-3M', 1)).toBe(pajamas.perAge['0-3M'])
     expect(recommendedQty(pajamas, '0-3M', 1)).not.toBe(pajamas.recommended)
   })
