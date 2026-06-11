@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook: blocks commits that would weaken Sprigloop's
+# Supabase config-push safety net.
+#
+# Three classes of weakening this hook catches:
+#
+#   1. Removing [api] or [auth] from supabase/config.toml. Either makes
+#      the next 'supabase config push' silently reset that area to CLI
+#      defaults — exactly the failure that took down beta + prod auth
+#      on 2026-05-04.
+#
+#   2. Editing tools/safe-config-push.sh to drop the [api]/[auth]
+#      requirement. The wrapper's REQUIRED_SECTIONS array is the
+#      runtime gate; if a future commit shrinks it, the next push
+#      could clobber.
+#
+#   3. Editing tools/safe-config-push.sh to remove the env-var
+#      validator (REQUIRED_ENV_VARS loop). Without it, a push from a
+#      shell that didn't set the per-env URL vars pushes empty values.
+#
+# This hook is intentionally noisy when it triggers — it's the last
+# line of defense. To bypass legitimately (e.g., you're rewriting the
+# wrapper), commit with --no-verify and explain in the commit message.
+#
+# Install: run tools/install-git-hooks.sh once. The repo configures
+# core.hooksPath to point at tools/git-hooks/.
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+CONFIG="$REPO_ROOT/supabase/config.toml"
+WRAPPER="$REPO_ROOT/tools/safe-config-push.sh"
+
+fail() {
+  echo "" >&2
+  echo "─────────────────────────────────────────────────────────────" >&2
+  echo "  pre-commit REFUSED" >&2
+  echo "─────────────────────────────────────────────────────────────" >&2
+  echo "$1" >&2
+  echo "" >&2
+  echo "  If this is intentional (e.g. you're rewriting the wrapper)," >&2
+  echo "  bypass with: git commit --no-verify" >&2
+  echo "  Document why in the commit message." >&2
+  echo "" >&2
+  exit 1
+}
+
+# Pull the staged content of a file (what the commit would actually
+# include), not the working-tree content. Empty string if the file is
+# not staged or being deleted.
+staged_content() {
+  local path="$1"
+  git show ":$path" 2>/dev/null || echo ""
+}
+
+# Was the file touched in this commit?
+file_staged() {
+  local path="$1"
+  git diff --cached --name-only | grep -qxF "$path"
+}
+
+# ── Guard 1: config.toml must keep [api] and [auth] section headers ──────
+if file_staged "supabase/config.toml"; then
+  CONTENT="$(staged_content supabase/config.toml)"
+  if [ -z "$CONTENT" ]; then
+    fail "supabase/config.toml is being deleted. That removes both [api] and [auth] guards in one move."
+  fi
+  for section in api auth; do
+    if ! echo "$CONTENT" | grep -qE "^[[:space:]]*\[${section}\][[:space:]]*\$"; then
+      fail "supabase/config.toml no longer has a top-level [${section}] section header.
+  Without it, 'supabase config push' resets that area to CLI defaults.
+  Comments (# [${section}]) and sub-sections like [${section}.email] do NOT count."
+    fi
+  done
+fi
+
+# ── Guard 2: wrapper must still require [api] and [auth] ──────────────────
+if file_staged "tools/safe-config-push.sh"; then
+  CONTENT="$(staged_content tools/safe-config-push.sh)"
+  if [ -z "$CONTENT" ]; then
+    fail "tools/safe-config-push.sh is being deleted. That removes the run-time guard entirely."
+  fi
+
+  # The REQUIRED_SECTIONS array must contain both "api" and "auth" as
+  # array elements. We check for the literal occurrence of the strings
+  # in array form. This is a fuzzy check, but combined with Guard 3 it
+  # makes it hard to silently weaken the wrapper without us noticing.
+  if ! echo "$CONTENT" | grep -qE 'REQUIRED_SECTIONS=.*"api"' \
+     || ! echo "$CONTENT" | grep -qE 'REQUIRED_SECTIONS=.*"auth"'; then
+    fail "tools/safe-config-push.sh REQUIRED_SECTIONS no longer enforces both \"api\" and \"auth\".
+  Both strings must appear in the REQUIRED_SECTIONS=(...) array. If you renamed
+  the array, update this hook in lockstep so we don't lose the protection."
+  fi
+
+# ── Guard 3: wrapper must still validate the per-env auth URL env vars ────
+  for var in SUPABASE_AUTH_SITE_URL SUPABASE_AUTH_PRIMARY_URL_GLOB SUPABASE_AUTH_PREVIEW_URL_GLOB; do
+    if ! echo "$CONTENT" | grep -qF "$var"; then
+      fail "tools/safe-config-push.sh no longer references $var.
+  config.toml uses env($var) interpolation; without the wrapper exporting
+  AND validating each of these, a push silently writes an empty string
+  to the dashboard. This is the failure mode that caused the 2026-05-04
+  incident."
+    fi
+  done
+
+  # The REQUIRED_ENV_VARS loop must still exist (recognized by the
+  # validator's distinctive error string). If anyone removes the loop,
+  # we lose the empty-string defense.
+  if ! echo "$CONTENT" | grep -qF "REFUSED: required env var"; then
+    fail "tools/safe-config-push.sh no longer contains the env-var-empty refusal.
+  Look for the REQUIRED_ENV_VARS loop and the 'REFUSED: required env var'
+  message — both must remain intact."
+  fi
+fi
+
+exit 0

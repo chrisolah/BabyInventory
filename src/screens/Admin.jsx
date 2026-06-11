@@ -9,7 +9,7 @@ import {
   getDailyVisits,
   getFunnelRollup,
   getHouseholdSummary,
-  getPageBreakdown,
+  getPageAuthSplit,
   getGuideBreakdown,
   getActivationFunnel,
   getTimeToFirstItem,
@@ -19,6 +19,8 @@ import {
   getCategoryDepth,
   getPassAlongFunnel,
   getReferrerBreakdown,
+  getAuthSplit,
+  getHouseholdEventStream,
   FUNNELS,
   TIME_WINDOWS,
 } from '../lib/admin'
@@ -253,6 +255,12 @@ function HouseholdList({ rows, expanded, setExpanded }) {
                   <div className={styles.detailLabel}>Created</div>
                   <div>{new Date(h.created_at).toLocaleDateString()}</div>
                 </div>
+                {!h.is_trial && (
+                  <div className={styles.detailRow}>
+                    <div className={styles.detailLabel}>Activity</div>
+                    <HouseholdEventStream householdId={h.household_id} />
+                  </div>
+                )}
               </div>
             )}
           </li>
@@ -276,6 +284,35 @@ function DetailRow({ label, items, fallback }) {
           ))}
         </ul>
       )}
+    </div>
+  )
+}
+
+function HouseholdEventStream({ householdId }) {
+  const [events, setEvents] = useState(null)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    getHouseholdEventStream({ householdId })
+      .then(data => { if (!cancelled) setEvents(data) })
+      .catch(err => { if (!cancelled) setError(err?.message ?? String(err)) })
+    return () => { cancelled = true }
+  }, [householdId])
+
+  if (error) return <div className={styles.detailEmpty}>Error loading activity</div>
+  if (!events) return <div className={styles.detailEmpty}>Loading…</div>
+  if (events.length === 0) return <div className={styles.detailEmpty}>No events yet</div>
+
+  return (
+    <div className={styles.eventStream}>
+      {events.slice(0, 80).map((e, i) => (
+        <div key={i} className={styles.eventRow}>
+          <div className={styles.eventTime}>{timeAgo(e.created_at)}</div>
+          <div className={styles.eventName}>{e.event_name}</div>
+          <div className={styles.eventDevice}>{e.device_type ?? ''}</div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -317,6 +354,7 @@ function OverviewTab({ sinceDays, excludeAdmins }) {
   const [retention, setRetention] = useState([])
   const [ttf, setTtf] = useState(null)
   const [anon, setAnon] = useState(null)
+  const [authSplit, setAuthSplit] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -327,8 +365,9 @@ function OverviewTab({ sinceDays, excludeAdmins }) {
       getRetention({ excludeAdmins }),
       getTimeToFirstItem({ excludeAdmins }),
       getAnonConversion(),
-    ]).then(([v, act, ret, t, a]) => {
-      setVisits(v); setActivation(act); setRetention(ret); setTtf(t); setAnon(a)
+      getAuthSplit({ sinceDays, excludeAdmins }),
+    ]).then(([v, act, ret, t, a, split]) => {
+      setVisits(v); setActivation(act); setRetention(ret); setTtf(t); setAnon(a); setAuthSplit(split)
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [sinceDays, excludeAdmins])
@@ -431,6 +470,37 @@ function OverviewTab({ sinceDays, excludeAdmins }) {
         </table>
       </div>
 
+      {/* Auth split — logged-in vs anonymous */}
+      {authSplit.length > 0 && (() => {
+        const li = authSplit.find(r => r.auth_state === 'logged_in') ?? { sessions: 0, users: 0, page_views: 0 }
+        const anon2 = authSplit.find(r => r.auth_state === 'anonymous') ?? { sessions: 0, users: 0, page_views: 0 }
+        const maxS = Math.max(Number(li.sessions), Number(anon2.sessions), 1)
+        return (
+          <div className={styles.overviewCard} style={{ gridColumn: 'span 2' }}>
+            <div className={styles.overviewCardTitle}>Sessions — logged in vs anonymous</div>
+            <div className={styles.authSplitList}>
+              {[
+                { label: 'Logged in', color: 'var(--teal)', row: li },
+                { label: 'Anonymous', color: '#d1d5db', row: anon2 },
+              ].map(({ label, color, row }) => (
+                <div key={label} className={styles.authSplitRow}>
+                  <div className={styles.authSplitLabel}>{label}</div>
+                  <div className={styles.authSplitBarTrack}>
+                    <div className={styles.authSplitBarFill}
+                      style={{ width: `${(Number(row.sessions)/maxS)*100}%`, background: color }} />
+                  </div>
+                  <div className={styles.authSplitNums}>
+                    <strong>{Number(row.sessions)}</strong> sessions
+                    {' · '}<strong>{Number(row.users)}</strong> users
+                    {' · '}<strong>{Number(row.page_views)}</strong> pages
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
     </div>
   )
 }
@@ -448,7 +518,7 @@ function ProductTab({ sinceDays, excludeAdmins, funnelId, onFunnelChange }) {
   useEffect(() => {
     setLoading(true)
     Promise.all([
-      getPageBreakdown({ sinceDays, excludeAdmins }),
+      getPageAuthSplit({ sinceDays, excludeAdmins }),
       getGuideBreakdown({ sinceDays: Math.max(sinceDays, 30), excludeAdmins }),
       getCategoryDepth({ excludeAdmins }),
       getPassAlongFunnel({ excludeAdmins }),
@@ -463,25 +533,39 @@ function ProductTab({ sinceDays, excludeAdmins, funnelId, onFunnelChange }) {
   if (loading) return <div className={styles.loading}>Loading…</div>
 
   const maxCat = Math.max(...cats.map(c => c.items), 1)
-  const maxPage = Math.max(...(pages||[]).map(p => Number(p.sessions)), 1)
+  const maxPage = Math.max(...(pages||[]).map(p => Number(p.total_sessions)), 1)
   const topFunnel = Number(funnelRows[0]?.sessions) || 1
 
   return (
     <div className={styles.overviewGrid}>
 
-      {/* Page breakdown */}
+      {/* Page breakdown — auth split */}
       <div className={styles.overviewCard}>
-        <div className={styles.overviewCardTitle}>Pages</div>
+        <div className={styles.overviewCardTitle}>
+          Pages
+          <span className={styles.pageLegend}>
+            <span className={styles.pageLegendTeal} /> in
+            <span className={styles.pageLegendGray} /> anon
+          </span>
+        </div>
         <div className={styles.barList}>
-          {(pages||[]).slice(0,12).map(r => (
-            <div key={r.page} className={styles.bar}>
-              <div className={styles.barLabel} style={{ width: 90, fontSize: 11 }}>{r.page}</div>
-              <div className={styles.barTrack}>
-                <div className={styles.barFill} style={{ width: `${(Number(r.sessions)/maxPage)*100}%` }} />
+          {(pages||[]).slice(0,12).map(r => {
+            const li = Number(r.logged_in_sessions)
+            const anon = Number(r.anon_sessions)
+            const total = Number(r.total_sessions)
+            const liPct = total > 0 ? (li / maxPage) * 100 : 0
+            const anonPct = total > 0 ? (anon / maxPage) * 100 : 0
+            return (
+              <div key={r.page} className={styles.bar}>
+                <div className={styles.barLabel} style={{ width: 90, fontSize: 11 }}>{r.page}</div>
+                <div className={styles.barSplit}>
+                  <div className={styles.barSplitLogin} style={{ width: `${liPct}%` }} />
+                  <div className={styles.barSplitAnon}  style={{ width: `${anonPct}%` }} />
+                </div>
+                <div className={styles.barValueSplit}>{li}<span className={styles.pct}>/{anon}</span></div>
               </div>
-              <div className={styles.barValue}>{Number(r.sessions)}</div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 

@@ -157,6 +157,51 @@ export async function getReferrerBreakdown({ sinceDays = 30, excludeAdmins = tru
   return data ?? []
 }
 
+/**
+ * Overall auth split — logged-in vs anonymous sessions/users/page_views.
+ * Returns two rows: { auth_state: 'logged_in' | 'anonymous', sessions, users, page_views, events_total }
+ */
+export async function getAuthSplit({ sinceDays = 7, excludeAdmins = true } = {}) {
+  const { data, error } = await supabase
+    .schema(currentSchema)
+    .rpc('admin_auth_split', {
+      _since_days: sinceDays,
+      _exclude_admins: excludeAdmins,
+    })
+  if (error) throw error
+  return data ?? []
+}
+
+/**
+ * Per-page auth split — logged-in vs anonymous sessions per page.
+ * Returns: { page, logged_in_sessions, anon_sessions, total_sessions }[]
+ */
+export async function getPageAuthSplit({ sinceDays = 7, excludeAdmins = true } = {}) {
+  const { data, error } = await supabase
+    .schema(currentSchema)
+    .rpc('admin_page_auth_split', {
+      _since_days: sinceDays,
+      _exclude_admins: excludeAdmins,
+    })
+  if (error) throw error
+  return data ?? []
+}
+
+/**
+ * Event stream for all members of a household (newest first, max 150).
+ * Returns: { created_at, event_name, event_group, properties, device_type, user_email }[]
+ */
+export async function getHouseholdEventStream({ householdId, limit = 150 } = {}) {
+  const { data, error } = await supabase
+    .schema(currentSchema)
+    .rpc('admin_household_event_stream', {
+      _household_id: householdId,
+      _limit: limit,
+    })
+  if (error) throw error
+  return data ?? []
+}
+
 // Time-window chips for the toolbar. `days = null` means "no upper bound" —
 // passed to the RPC as a very large number so we get everything.
 export const TIME_WINDOWS = [

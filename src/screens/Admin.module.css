@@ -630,3 +630,56 @@ button.usersSplitStat:hover { background: var(--gray-50, #F9F9F7); }
   font-size: 11px; font-family: inherit; border: 1px solid #e5e7eb;
   border-radius: 6px; padding: 2px 6px; color: #374151; background: #fff; cursor: pointer;
 }
+
+/* ── Auth split card ── */
+.authSplitList { display: flex; flex-direction: column; gap: 0; }
+.authSplitRow {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 13px;
+}
+.authSplitRow:last-child { border-bottom: none; }
+.authSplitLabel { font-size: 12px; font-weight: 600; color: #374151; }
+.authSplitBarTrack { height: 10px; background: #f3f4f6; border-radius: 5px; overflow: hidden; }
+.authSplitBarFill  { height: 100%; border-radius: 5px; transition: width 0.3s ease; }
+.authSplitNums { font-size: 12px; color: #6b7280; white-space: nowrap; }
+.authSplitNums strong { color: #111827; }
+
+/* ── Split bar (pages) ── */
+.barSplit { display: flex; height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden; gap: 1px; }
+.barSplitLogin { height: 100%; background: var(--teal); flex-shrink: 0; min-width: 0; transition: width 0.25s; }
+.barSplitAnon  { height: 100%; background: #9ca3af; flex-shrink: 0; min-width: 0; transition: width 0.25s; }
+.barValueSplit { text-align: right; font-size: 12px; font-weight: 600; color: #111827; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Pages legend */
+.pageLegend { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; font-size: 10px; color: #9ca3af; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.pageLegendTeal { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--teal); }
+.pageLegendGray { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: #9ca3af; }
+
+/* ── Event stream ── */
+.eventStream {
+  margin-top: 4px;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+  background: #fff;
+  max-height: 280px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.eventRow {
+  display: grid;
+  grid-template-columns: 60px 1fr 36px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid #f9fafb;
+  font-size: 12px;
+}
+.eventRow:last-child { border-bottom: none; }
+.eventTime   { color: #9ca3af; font-size: 11px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.eventName   { color: #374151; font-weight: 500; word-break: break-all; }
+.eventDevice { font-size: 10px; color: #d1d5db; text-align: right; }
