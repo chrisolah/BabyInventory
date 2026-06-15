@@ -10,6 +10,7 @@ import {
   ITEMS_BY_SUB_CATEGORY,
   SUB_CATEGORIES_BY_CATEGORY,
   SUB_CATEGORY_LABELS,
+  getItemSlot,
 } from '../lib/categories'
 import HeaderActions from '../components/HeaderActions'
 import IvySprig from '../components/IvySprig'
@@ -440,7 +441,6 @@ export default function AddItem() {
           // ── Clothing path (unchanged) ──────────────────────────────────
           const fields = {
             category,
-            slot_id: itemType || null,
             item_type: itemType,
             size_label: sizeLabel,
             condition: mode === 'owned' ? (condition || null) : null,
@@ -505,7 +505,6 @@ export default function AddItem() {
         } else {
           // ── Non-clothing path ──────────────────────────────────────────
           const fields = {
-            slot_id: catItemType || null,   // must match gap row slot_id for owned_count to work
             top_category: topCategory,
             sub_category: subCategory,
             item_type: catItemType,
@@ -549,6 +548,7 @@ export default function AddItem() {
             } catch { /* silent — item saves without photo */ }
           }
 
+          const matchedSlot = getItemSlot(fields)
           const { error: insertErr } = await supabase
             .schema(currentSchema)
             .from('items')
@@ -556,6 +556,7 @@ export default function AddItem() {
               id: itemId,
               household_id: household.id,
               baby_id: currentBaby?.id ?? null,
+              slot_id: matchedSlot?.id || null,
               ...fields,
               inventory_status: mode,
               name: null,

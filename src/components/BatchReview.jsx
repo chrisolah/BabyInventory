@@ -3,7 +3,7 @@ import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { useUpgradeGate } from '../contexts/UpgradeGateContext'
 import { SLOTS, SLOT_BY_ID, AGE_RANGES, CATEGORY_LABELS } from '../lib/wardrobe'
-import { CATEGORY_META, SUB_CATEGORY_LABELS, ITEMS } from '../lib/categories'
+import { CATEGORY_META, SUB_CATEGORY_LABELS, ITEMS, getItemSlot } from '../lib/categories'
 import { track } from '../lib/analytics'
 import styles from './BatchReview.module.css'
 
@@ -313,10 +313,12 @@ export default function BatchReview({
       let row, table
       if (mode === 'item') {
         table = 'items'
+        const matchedSlot = getItemSlot(it.fields)
         row = {
           id:               itemId,
           household_id:     household.id,
           baby_id:          babyId,
+          slot_id:          matchedSlot?.id || null,
           top_category:     it.fields.top_category,
           sub_category:     it.fields.sub_category || null,
           item_type:        it.fields.item_type,
