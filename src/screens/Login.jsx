@@ -1,9 +1,26 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
+import { SignInWithApple } from '@capacitor-community/apple-sign-in'
 import { supabase } from '../lib/supabase'
 import { track } from '../lib/analytics'
 import MarketingFooter from '../components/MarketingFooter'
 import styles from './Login.module.css'
+
+// ── Nonce helpers (same pattern as NativeWelcome) ─────────────────────────
+function generateRawNonce() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const bytes = crypto.getRandomValues(new Uint8Array(32))
+  return Array.from(bytes).map(b => chars[b % chars.length]).join('')
+}
+
+async function sha256Hex(str) {
+  const data = new TextEncoder().encode(str)
+  const hash = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+const IS_IOS = Capacitor.getPlatform() === 'ios'
 
 // Whitelist for ?next= post-auth redirects. We only honour same-origin paths
 // that begin with '/' and don't try to escape (no '//' or 'http'). Everything
@@ -32,6 +49,7 @@ export default function Login() {
   // 'magic'    = email-only, we send a 6-digit code, user enters it to sign in
   const [method, setMethod] = useState('password')
   const [loading, setLoading] = useState(false)
+  const [appleLoading, setAppleLoading] = useState(false)
   // Magic-link code-entry state. When non-null we're on the code-entry screen
   // and `code` is what the user typed. Recovery is NOT handled here anymore —
   // the recovery code-entry lives on /reset-password (unguarded route) so the
@@ -53,6 +71,46 @@ export default function Login() {
       codeInputRef.current.focus()
     }
   }, [codeStep])
+
+  async function handleAppleSignIn() {
+    if (appleLoading || loading) return
+    setAppleLoading(true)
+    setError(null)
+    track.ctaClicked('login_apple_sign_in')
+
+    try {
+      const rawNonce = generateRawNonce()
+      const hashedNonce = await sha256Hex(rawNonce)
+
+      const { response } = await SignInWithApple.authorize({
+        clientId: 'com.sprigloop.app',
+        redirectURI: 'https://sprigloop.com',
+        scopes: 'email name',
+        nonce: hashedNonce,
+      })
+
+      const { error: authError } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: response.identityToken,
+        nonce: rawNonce,
+      })
+
+      if (authError) throw authError
+
+      track.loginCompleted('apple')
+      navigate(nextPath)
+    } catch (err) {
+      const msg = err?.message ?? ''
+      if (msg.toLowerCase().includes('cancel') || err?.code === 'ERR_CANCELED') {
+        // User tapped Cancel — silent dismiss
+      } else {
+        setError('Sign in with Apple failed. Please try again.')
+        console.error('Apple sign-in error:', err)
+      }
+    } finally {
+      setAppleLoading(false)
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -254,6 +312,23 @@ export default function Login() {
         <div className={styles.logo}>sprigloop</div>
         <h1 className={styles.title}>Welcome back</h1>
         <p className={styles.sub}>Log in to your account.</p>
+
+        {IS_IOS && (
+          <>
+            <button
+              className={styles.appleBtn}
+              onClick={handleAppleSignIn}
+              disabled={appleLoading || loading}
+              type="button"
+            >
+              <svg className={styles.appleLogo} viewBox="0 0 17 20" fill="currentColor" aria-hidden="true">
+                <path d="M16.2 13.9c-.3.8-.6 1.5-1.1 2.2-.6.9-1.1 1.5-1.5 1.8-.6.6-1.2.9-1.9.9-.5 0-1.1-.1-1.7-.4-.7-.3-1.3-.4-1.8-.4-.6 0-1.2.1-1.9.4-.7.3-1.2.4-1.6.5-.7 0-1.3-.3-2-.9-.5-.4-1-1-1.6-1.9-.6-.9-1.1-2-1.5-3.3C.3 11.4 0 10 0 8.6c0-1.5.3-2.9 1-4 .5-.9 1.1-1.6 2-2.2.8-.5 1.7-.8 2.6-.8.5 0 1.2.2 2 .5.8.3 1.3.5 1.5.5.2 0 .7-.2 1.6-.5.9-.3 1.6-.5 2.2-.5 1.6.1 2.8.8 3.6 2-1.4.9-2.1 2.1-2.1 3.7 0 1.2.4 2.2 1.3 3 .4.4.8.7 1.3.9l-.8 1.7zM12.1 0c0 .9-.3 1.8-.9 2.6-.7.9-1.6 1.5-2.6 1.4V3.7c0-.9.4-1.8 1-2.6.3-.4.7-.7 1.3-1 .5-.2 1-.4 1.5-.4L12.1 0z" />
+              </svg>
+              {appleLoading ? 'Signing in…' : 'Continue with Apple'}
+            </button>
+            <div className={styles.divider}><span>or</span></div>
+          </>
+        )}
 
         <div className={styles.methodToggle}>
           <button

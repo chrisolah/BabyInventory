@@ -105,6 +105,45 @@
   font-weight: 500;
 }
 
+/* Sign in with Apple — black button per Apple HIG. Sits between the primary
+   CTA and the text-style "Log in" so it reads as a distinct auth path. */
+.appleBtn {
+  width: 100%;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.appleBtn:disabled { opacity: 0.6; cursor: default; }
+
+.appleLogo {
+  width: 17px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.errorMsg {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 /* Tertiary: smaller, muted — for secondary actions like "Find a registry"
    that gift-givers might need but aren't the primary user journey. */
 .tertiary {
