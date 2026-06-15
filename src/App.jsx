@@ -396,13 +396,13 @@ function AppRoutes() {
   )
 }
 
-export default function App() {
 // Redirect old /wishlist/:token share links to /registry/:token
 function WishlistTokenRedirect() {
   const { token } = useParams()
   return <Navigate to={`/registry/${token}`} replace />
 }
 
+export default function App() {
   // ErrorBoundary wraps EVERYTHING — including AuthProvider — so a render
   // throw anywhere in the tree (auth listener side-effects, RouterProvider
   // internals, deep component bugs) gets caught and shown a graceful
