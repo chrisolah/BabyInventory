@@ -2,11 +2,7 @@
    Lives inside LandingLayout so it inherits the marketing nav + footer. */
 
 .page {
-<<<<<<< HEAD
   min-height: calc(100vh - 64px); /* allow for nav height */
-=======
-  min-height: calc(100vh - 64px);
->>>>>>> dev
   display: flex;
   justify-content: center;
   padding: 3rem 1.25rem 4rem;
@@ -20,11 +16,7 @@
   gap: 2rem;
 }
 
-<<<<<<< HEAD
 /* ─── Header ─── */
-=======
-/* Header */
->>>>>>> dev
 .header {
   display: flex;
   flex-direction: column;
@@ -47,11 +39,7 @@
   line-height: 1.5;
 }
 
-<<<<<<< HEAD
 /* ─── Search form ─── */
-=======
-/* Search form */
->>>>>>> dev
 .searchForm {
   display: flex;
   flex-direction: column;
@@ -75,10 +63,7 @@
   background: var(--white);
   outline: none;
   transition: border-color 0.15s;
-<<<<<<< HEAD
   /* Remove browser's default search cancel button style on WebKit */
-=======
->>>>>>> dev
   -webkit-appearance: none;
   appearance: none;
 }
@@ -91,10 +76,7 @@
   border-color: var(--teal);
 }
 
-<<<<<<< HEAD
 /* Hide browser's own × clear button — we don't use it */
-=======
->>>>>>> dev
 .searchInput::-webkit-search-cancel-button {
   -webkit-appearance: none;
 }
@@ -125,11 +107,7 @@
   color: var(--gray-500);
 }
 
-<<<<<<< HEAD
 /* ─── Error ─── */
-=======
-/* Error */
->>>>>>> dev
 .errorMsg {
   padding: 12px 14px;
   border-radius: 8px;
@@ -138,11 +116,7 @@
   font-size: 14px;
 }
 
-<<<<<<< HEAD
 /* ─── Results ─── */
-=======
-/* Results */
->>>>>>> dev
 .results {
   display: flex;
   flex-direction: column;
@@ -179,11 +153,7 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-<<<<<<< HEAD
   min-width: 0; /* allow text truncation */
-=======
-  min-width: 0;
->>>>>>> dev
 }
 
 .cardHousehold {
@@ -229,11 +199,7 @@
   color: var(--white);
 }
 
-<<<<<<< HEAD
 /* ─── Empty state ─── */
-=======
-/* Empty state */
->>>>>>> dev
 .empty {
   display: flex;
   flex-direction: column;
@@ -254,17 +220,10 @@
   color: var(--gray-500);
 }
 
-<<<<<<< HEAD
 /* ─── "Have a link already?" callout ─── */
 .callout {
   padding: 14px 16px;
   background: var(--teal-light-bg, #f0faf6);
-=======
-/* "Have a link already?" callout */
-.callout {
-  padding: 14px 16px;
-  background: #f0faf6;
->>>>>>> dev
   border-radius: 10px;
 }
 
@@ -279,11 +238,7 @@
   color: var(--gray-500);
 }
 
-<<<<<<< HEAD
 /* ─── Footer nudge ─── */
-=======
-/* Footer nudge */
->>>>>>> dev
 .footer {
   border-top: 1px solid var(--gray-200);
   padding-top: 1.25rem;
@@ -308,11 +263,7 @@
   text-underline-offset: 2px;
 }
 
-<<<<<<< HEAD
 /* ─── Mobile ─── */
-=======
-/* Mobile */
->>>>>>> dev
 @media (max-width: 480px) {
   .page {
     padding: 2rem 1rem 3rem;

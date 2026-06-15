@@ -1,31 +1,13 @@
 {
   "rewrites": [
-<<<<<<< HEAD
     { "source": "/wishlist/:token", "destination": "/api/wishlist/:token" },
     { "source": "/((?!assets/|api/|\\.well-known/).*)", "destination": "/index.html" }
-=======
-    {
-      "source": "/wishlist/:token",
-      "destination": "/api/wishlist/:token"
-    },
-    {
-      "source": "/((?!assets/|api/|\\.well-known/).*)",
-      "destination": "/index.html"
-    }
->>>>>>> dev
   ],
   "headers": [
     {
       "source": "/.well-known/apple-app-site-association",
       "headers": [
-<<<<<<< HEAD
         { "key": "Content-Type", "value": "application/json" }
-=======
-        {
-          "key": "Content-Type",
-          "value": "application/json"
-        }
->>>>>>> dev
       ]
     }
   ]

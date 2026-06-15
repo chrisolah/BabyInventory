@@ -4,7 +4,6 @@
       {
         "appIDs": ["2936765JG5.com.sprigloop.app"],
         "components": [
-<<<<<<< HEAD
           {
             "/": "/registry/*",
             "comment": "Public registry share links open in the app"
@@ -13,10 +12,6 @@
             "/": "/find-registry",
             "comment": "Registry search page opens in the app"
           }
-=======
-          { "/": "/registry/*", "comment": "Public registry share links open in the app" },
-          { "/": "/find-registry", "comment": "Registry search page opens in the app" }
->>>>>>> dev
         ]
       }
     ]

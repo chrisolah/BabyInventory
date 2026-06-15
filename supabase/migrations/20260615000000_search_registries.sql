@@ -2,12 +2,7 @@
 -- Callable by anon + authenticated roles so gift-givers can find registries
 -- without an account. Returns only households that have at least one active
 -- wishlist_shares row (i.e. the parent intentionally shared their registry).
-<<<<<<< HEAD
 -- Search matches household name OR any member's display name (case-insensitive).
-=======
--- Search matches only on member display names (first or last name).
--- Household name and baby names appear in results but are NOT searchable.
->>>>>>> dev
 -- Empty query string returns all active-share households (paginated to 20).
 
 CREATE OR REPLACE FUNCTION beta.search_registries(_query text)
@@ -51,10 +46,7 @@ AS $$
   LEFT JOIN beta.babies b ON b.household_id = h.id
   WHERE (
     _query = ''
-<<<<<<< HEAD
     OR h.name ILIKE '%' || _query || '%'
-=======
->>>>>>> dev
     OR EXISTS (
       SELECT 1
       FROM beta.household_members hm2
