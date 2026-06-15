@@ -105,8 +105,13 @@
   font-weight: 500;
 }
 
+<<<<<<< HEAD
 /* Tertiary: smaller, muted — for secondary actions like "Find a registry"
    that gift-givers might need but aren't the primary user journey. */
+=======
+/* Tertiary: smaller, muted — for gift-givers who need "Find a registry"
+   but aren't the primary user journey. */
+>>>>>>> dev
 .tertiary {
   min-height: 44px;
   border: none;

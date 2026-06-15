@@ -5,7 +5,11 @@ import { track } from '../lib/analytics'
 import styles from './FindRegistry.module.css'
 
 // Public search page — no auth required.
+<<<<<<< HEAD
 // Gift-givers find a household's registry by name (household or parent).
+=======
+// Gift-givers find a household's registry by parent name.
+>>>>>>> dev
 // Reads ?q= from the URL so deep-links like /find-registry?q=Johnson work.
 export default function FindRegistry() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -56,13 +60,19 @@ export default function FindRegistry() {
     e.preventDefault()
     const q = query.trim()
     if (q.length < 2) return
+<<<<<<< HEAD
     // Update URL so the search is shareable and back-nav works
+=======
+>>>>>>> dev
     setSearchParams(q ? { q } : {}, { replace: false })
   }
 
   function handleChange(e) {
     setQuery(e.target.value)
+<<<<<<< HEAD
     // Clear results if the input is emptied
+=======
+>>>>>>> dev
     if (!e.target.value.trim()) setResults(null)
   }
 
@@ -75,7 +85,11 @@ export default function FindRegistry() {
         <div className={styles.header}>
           <h1 className={styles.title}>Find a registry</h1>
           <p className={styles.subtitle}>
+<<<<<<< HEAD
             Search by family name or parent name to find a Sprigloop registry.
+=======
+            Search by a parent's name to find their Sprigloop registry.
+>>>>>>> dev
           </p>
         </div>
 
@@ -87,8 +101,13 @@ export default function FindRegistry() {
               type="search"
               value={query}
               onChange={handleChange}
+<<<<<<< HEAD
               placeholder="e.g. Johnson family or Sarah Johnson"
               aria-label="Search registries"
+=======
+              placeholder="e.g. Sarah Johnson"
+              aria-label="Search registries by parent name"
+>>>>>>> dev
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
@@ -116,7 +135,11 @@ export default function FindRegistry() {
               <div className={styles.empty}>
                 <p className={styles.emptyTitle}>No registries found for "{searchParams.get('q')}"</p>
                 <p className={styles.emptyHint}>
+<<<<<<< HEAD
                   Try searching by the parent's first or last name, or the family name.
+=======
+                  Try searching by a first name, last name, or both.
+>>>>>>> dev
                 </p>
               </div>
             ) : (

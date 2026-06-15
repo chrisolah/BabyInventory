@@ -505,6 +505,7 @@ export default function AddItem() {
         } else {
           // ── Non-clothing path ──────────────────────────────────────────
           const fields = {
+            slot_id: catItemType || null,   // must match gap row slot_id for owned_count to work
             top_category: topCategory,
             sub_category: subCategory,
             item_type: catItemType,
