@@ -58,9 +58,6 @@ export default function Landing() {
       <nav className={styles.nav}>
         <div className={styles.navTop}>
           <div className={styles.logo}>sprigloop</div>
-          <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
-        </div>
-        <div className={styles.navLinks}>
           <button
             className={styles.navLink}
             onClick={() => {
@@ -79,6 +76,9 @@ export default function Landing() {
           >
             Guides
           </button>
+          <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
+        </div>
+        <div className={styles.navLinks}>
           <button
             className={styles.findRegistryBtn}
             onClick={() => {
