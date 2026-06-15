@@ -159,10 +159,11 @@ export default function ItemDetail() {
       // Single signing call per item — fast enough that we don't bother
       // batching with the next fetch. Errors degrade silently to no
       // photo block (logged so a flaky bucket issue is debuggable).
-      if (data?.garment_photo_path) {
+      const photoPath = data?.garment_photo_path ?? data?.item_photo_path ?? null
+      if (photoPath) {
         const { data: signed, error: signErr } = await supabase.storage
           .from('garment-photos')
-          .createSignedUrl(data.garment_photo_path, 60 * 60)
+          .createSignedUrl(photoPath, 60 * 60)
         if (cancelled) return
         if (signErr) {
           // eslint-disable-next-line no-console
@@ -257,11 +258,12 @@ export default function ItemDetail() {
     // bucket-level issue is debuggable. Done BEFORE the row delete
     // so we still have the path on hand and the user's session
     // matches the path's household for the RLS check.
-    if (item.garment_photo_path) {
+    const deletePhotoPath = item.garment_photo_path ?? item.item_photo_path ?? null
+    if (deletePhotoPath) {
       try {
         const { error: storageErr } = await supabase.storage
           .from('garment-photos')
-          .remove([item.garment_photo_path])
+          .remove([deletePhotoPath])
         if (storageErr) {
           // eslint-disable-next-line no-console
           console.warn('garment photo delete failed', storageErr)

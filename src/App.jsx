@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useParams } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { usePushNotifications } from './hooks/usePushNotifications'
@@ -354,6 +354,8 @@ function AppRoutes() {
           Full recipient UI in task #15; WishlistPublic is currently a
           placeholder that confirms the link resolves correctly. */}
       <Route path="/registry/:token" element={<WishlistPublic />} />
+      {/* Legacy share URLs used /wishlist/:token — redirect to /registry/:token */}
+      <Route path="/wishlist/:token" element={<WishlistTokenRedirect />} />
       {/* All authed routes share ProtectedLayout so HouseholdProvider stays
           mounted across navigation. Adding a new authed screen? Add it as a
           child of this route, not as its own top-level <Route>. */}
@@ -395,6 +397,12 @@ function AppRoutes() {
 }
 
 export default function App() {
+// Redirect old /wishlist/:token share links to /registry/:token
+function WishlistTokenRedirect() {
+  const { token } = useParams()
+  return <Navigate to={`/registry/${token}`} replace />
+}
+
   // ErrorBoundary wraps EVERYTHING — including AuthProvider — so a render
   // throw anywhere in the tree (auth listener side-effects, RouterProvider
   // internals, deep component bugs) gets caught and shown a graceful

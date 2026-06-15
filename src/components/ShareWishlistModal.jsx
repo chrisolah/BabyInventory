@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { SLOTS, AGE_RANGES, CATEGORY_LABELS } from '../lib/wardrobe'
@@ -35,8 +36,9 @@ const SLOT_GROUPS = SLOT_GROUP_ORDER
 
 const ALL_SLOT_IDS = SLOTS.map(s => s.id)
 
-export default function ShareWishlistModal({ onClose }) {
+export default function ShareRegistryModal({ onClose }) {
   const { household } = useHousehold()
+  const navigate = useNavigate()
   const [phase, setPhase] = useState('loading') // 'loading' | 'setup' | 'active' | 'editing'
   const [share, setShare] = useState(null)
   const [claims, setClaims] = useState([])
@@ -79,7 +81,7 @@ export default function ShareWishlistModal({ onClose }) {
       populateFormFromShare(active)
       const { data: claimsData } = await supabase
         .schema(currentSchema)
-        .from('wishlist_claims')
+        .from('registry_claims')
         .select('*')
         .eq('share_id', active.id)
         .order('claimed_at', { ascending: true })
@@ -188,7 +190,7 @@ export default function ShareWishlistModal({ onClose }) {
     setPhase('setup')
   }
 
-  const shareUrl = share ? `${window.location.origin}/wishlist/${share.token}` : ''
+  const shareUrl = share ? `${window.location.origin}/registry/${share.token}` : ''
 
   async function copyLink() {
     try {
@@ -199,8 +201,8 @@ export default function ShareWishlistModal({ onClose }) {
   }
 
   function startEditing() {
-    setError(null)
-    setPhase('editing')
+    onClose()
+    navigate('/registry/edit')
   }
 
   function cancelEditing() {
@@ -220,9 +222,9 @@ export default function ShareWishlistModal({ onClose }) {
       <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="swm-title">
         <div className={styles.modalHead}>
           <div className={styles.modalTitle} id="swm-title">
-            {phase === 'active'  ? 'Wishlist link'       :
-             phase === 'editing' ? 'Edit wishlist link'  :
-                                   'Share your wishlist'}
+            {phase === 'active'  ? 'Registry link'       :
+             phase === 'editing' ? 'Edit registry link'  :
+                                   'Share your registry'}
           </div>
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">×</button>
         </div>
@@ -487,7 +489,7 @@ function SharedForm({
         >
           {saving
             ? (isEditing ? 'Saving…' : 'Creating…')
-            : (isEditing ? 'Save changes' : 'Create wishlist link')}
+            : (isEditing ? 'Save changes' : 'Create registry link')}
         </button>
         {onCancel && (
           <button type="button" className={styles.cancelBtn} onClick={onCancel} disabled={saving}>
@@ -532,7 +534,7 @@ const SHARE_BUTTONS = [
     label: 'Share',
     icon: '↗',
     available: () => typeof navigator !== 'undefined' && !!navigator.share,
-    action: (url, msg) => navigator.share({ title: 'Baby Wishlist', text: msg, url }),
+    action: (url, msg) => navigator.share({ title: 'Baby Registry', text: msg, url }),
   },
   {
     id: 'sms',
@@ -553,7 +555,7 @@ const SHARE_BUTTONS = [
     label: 'Email',
     icon: '✉️',
     available: () => true,
-    action: (url, msg) => { window.open(`mailto:?subject=${encodeURIComponent('Baby Wishlist')}&body=${encodeURIComponent(msg + '\n\n' + url)}`) },
+    action: (url, msg) => { window.open(`mailto:?subject=${encodeURIComponent('Baby Registry')}&body=${encodeURIComponent(msg + '\n\n' + url)}`) },
   },
   {
     id: 'facebook',
@@ -616,7 +618,7 @@ function ActiveView({
           className={styles.linkInput}
           value={shareUrl}
           onFocus={e => e.target.select()}
-          aria-label="Wishlist share URL"
+          aria-label="Registry share URL"
         />
         <button
           type="button"
@@ -631,8 +633,8 @@ function ActiveView({
       <div className={styles.shareRow}>
         {SHARE_BUTTONS.filter(b => b.available()).map(btn => {
           const msg = share.message
-            ? `${share.message}\n\nView our wishlist:`
-            : 'View our baby wishlist:'
+            ? `${share.message}\n\nView our registry:`
+            : 'View our baby registry:'
           return (
             <button
               key={btn.id}

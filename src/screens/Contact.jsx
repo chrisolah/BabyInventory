@@ -49,6 +49,7 @@ export default function Contact() {
         >
           sprigloop
         </button>
+        <button className={styles.signupBtn} onClick={() => navigate('/signup')}>Join</button>
         <button className={styles.loginBtn} onClick={() => navigate('/login')}>
           Log in
         </button>
