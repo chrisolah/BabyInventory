@@ -37,7 +37,7 @@
   }
   .navTop { display: contents; }
   .navLinks { display: contents; border: none; padding: 0; }
-  .loginBtn { margin-left: auto; }
+  .loginBtn { margin-left: auto; order: 99; }
 }
 
 .logo {
