@@ -13,20 +13,19 @@
   background: var(--white);
   border-bottom: 0.5px solid var(--gray-200);
   padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
 }
 
-.headerLeft,
-.headerRight {
-  width: 44px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
+.headerLeft {
+  /* spacer — keeps title centered */
 }
 
 .headerRight {
+  display: flex;
+  align-items: center;
   justify-content: flex-end;
 }
 
@@ -202,38 +201,62 @@
 }
 
 .catChip {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 5px;
-  padding: 7px 14px;
-  min-height: 36px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: 999px;
-  color: var(--gray-600);
-  cursor: pointer;
-  white-space: nowrap;
+  padding: 10px 8px 9px;
+  width: 70px;
   flex-shrink: 0;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.catChip:hover {
+  font-family: var(--font-body);
   background: var(--gray-50);
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
 }
+.catChip:active { transform: scale(0.96); }
+
+.catChip_teal   { background: var(--teal-light); }
+.catChip_blue   { background: #E8F3FE; }
+.catChip_amber  { background: var(--amber-light); }
+.catChip_gray   { background: var(--gray-100); }
+.catChip_purple { background: var(--purple-light); }
+.catChip_coral  { background: #FEECE8; }
+.catChip_red    { background: #FEECEC; }
+.catChip_green  { background: #E6F7EE; }
 
 .catChipActive {
-  background: var(--teal-dark);
-  border-color: var(--teal-dark);
-  color: var(--white);
+  border-color: var(--teal);
+  box-shadow: 0 2px 8px rgba(8, 80, 65, 0.18);
 }
 
-.catChipActive:hover {
-  background: var(--teal-dark);
-  color: var(--white);
+.catChipActive:hover { border-color: var(--teal); }
+
+.catChipIcon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
 }
+.catChipIcon_teal   { background: var(--teal); }
+.catChipIcon_blue   { background: #3B82F6; }
+.catChipIcon_amber  { background: var(--amber); }
+.catChipIcon_gray   { background: var(--gray-400); }
+.catChipIcon_purple { background: var(--purple); }
+.catChipIcon_coral  { background: #E05C3A; }
+.catChipIcon_red    { background: #DC3030; }
+.catChipIcon_green  { background: #1A9E5A; }
+
+.catChipLabel {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--gray-700);
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+.catChipActive .catChipLabel { color: var(--teal-dark); font-weight: 600; }
 
 .catChipSoon {
   opacity: 0.55;
@@ -280,6 +303,29 @@
 }
 
 /* Coming-soon placeholder for non-clothing categories */
+/* ── Wishlist share banner ── */
+.wishlistShareBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: var(--teal-light);
+  border: none;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  transition: opacity 0.15s;
+}
+.wishlistShareBanner:hover { opacity: 0.88; }
+.wishlistShareIcon { font-size: 20px; flex-shrink: 0; }
+.wishlistShareText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.wishlistShareTitle { font-size: 14px; font-weight: 500; color: var(--teal-dark); }
+.wishlistShareSub   { font-size: 12px; color: #0F6E56; }
+.wishlistShareArrow { font-size: 16px; color: var(--teal-dark); flex-shrink: 0; }
+
 .comingSoonCard {
   margin-top: 32px;
   padding: 36px 24px;
@@ -349,33 +395,35 @@
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  padding: 6px 14px;
+  padding: 6px 16px;
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 500;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: 999px;
+  background: var(--gray-50);
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
   color: var(--gray-600);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.12s, color 0.12s, border-color 0.12s, box-shadow 0.12s;
 }
 
 .ageChip:hover {
-  background: var(--gray-50);
+  background: var(--gray-100);
 }
 
 .ageChipSelected {
-  background: var(--teal-dark);
-  border-color: var(--teal-dark);
-  color: var(--white);
+  background: var(--teal-light);
+  border-color: var(--teal);
+  color: var(--teal-dark);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(8, 80, 65, 0.14);
 }
 
 .ageChipSelected:hover {
-  background: var(--teal-dark);
-  color: var(--white);
+  background: var(--teal-light);
+  color: var(--teal-dark);
 }
 
 .ageChipPast { opacity: 0.5; }
@@ -416,6 +464,22 @@
 @media (prefers-reduced-motion: reduce) {
   .sprout, .sproutStem { animation: none; }
 }
+
+/* ── Plan guide link ───────────────────────────────────────── */
+.planGuideLink {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal-dark);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  padding: 2px 0 10px;
+  opacity: 0.8;
+}
+.planGuideLink:hover { opacity: 1; }
 
 /* ── Coverage summary card ─────────────────────────────────── */
 .summaryCard {
@@ -484,6 +548,37 @@
   font-weight: 600;
   color: var(--gray-400);
   letter-spacing: 0.03em;
+}
+
+.flatGroupRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.groupAddBtn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--teal-light);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--teal-dark);
+  padding: 0;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.groupAddBtn:hover {
+  background: #c8eadc;
+}
+
+.groupAddBtn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
 }
 
 /* ── Legacy coverage summary header (kept for fallback) ───── */
@@ -590,12 +685,30 @@
   background: var(--white);
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s;
+  transition: background 0.15s, border-color 0.15s;
   width: 100%;
 }
 
 .slotCard:hover { background: var(--gray-50); }
 .slotCard:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }
+
+.slotCardComplete {
+  background: #E1F5EE;
+  border-color: #9FE1CB;
+}
+.slotCardComplete:hover { background: #d0eddf; }
+
+.slotCardPartial {
+  background: #FAEEDA;
+  border-color: #FAC775;
+}
+.slotCardPartial:hover { background: #f5e0bf; }
+
+.slotCardEmpty {
+  background: #FAECE7;
+  border-color: #F0997B;
+}
+.slotCardEmpty:hover { background: #f5ddd4; }
 
 /* ── Priority star button ──────────────────────────────────── */
 .starBtn {
@@ -655,9 +768,9 @@
   flex-shrink: 0;
 }
 
-.slotCountComplete { color: var(--teal-dark); }
-.slotCountGap      { color: var(--gray-600); }
-.slotCountEmpty    { color: #B8572E; }
+.slotCountComplete { color: #085041; }
+.slotCountGap      { color: #633806; }
+.slotCountEmpty    { color: #993C1D; }
 
 .slotCardHint {
   font-family: var(--font-body);
@@ -736,3 +849,20 @@
 }
 
 .wishAddBtn:hover { background: var(--gray-50); }
+
+/* ── Arrival checklist banner ── */
+.arrivalBannerWrap { width: 100%; }
+.arrivalBanner {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--teal-dark) 0%, #1d9e75 100%);
+  border: none; border-radius: 14px; cursor: pointer; font-family: var(--font-body);
+  text-align: left; transition: opacity 0.12s; box-sizing: border-box;
+}
+.arrivalBanner:hover { opacity: 0.92; }
+.arrivalBannerIcon { font-size: 20px; flex-shrink: 0; }
+.arrivalBannerText { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.arrivalBannerTitle { font-size: 13px; font-weight: 600; color: #fff; }
+.arrivalBannerSub { font-size: 11px; color: rgba(255,255,255,0.75); }
+.arrivalBannerArrow { font-size: 16px; color: rgba(255,255,255,0.7); flex-shrink: 0; }

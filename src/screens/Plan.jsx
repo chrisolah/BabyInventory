@@ -23,6 +23,7 @@ import Eyebrow from '../components/Eyebrow'
 import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
 import HeaderActions from '../components/HeaderActions'
+import ShareRegistryModal from '../components/ShareWishlistModal'
 import styles from './Plan.module.css'
 
 // Plan — the "wish list + guide" hub. Route: /plan
@@ -39,16 +40,29 @@ const PRIORITY_LABEL = {
 
 // Category selector shown at the top. "clothing" is live; others are
 // coming soon and show a disabled/greyed treatment when tapped.
+// Maps each plan category to its relevant guide slug.
+// Used to surface a soft "Read our guide" link below each coverage summary card.
+const CATEGORY_GUIDE_SLUGS = {
+  clothing:  'baby-clothing-guide',
+  sleep:     'newborn-safe-sleep-setup',
+  feeding:   'bottle-feeding-newborn-what-you-need',
+  diapering: 'cloth-vs-disposable-diapers',
+  travel:    'choosing-a-car-seat',
+  play:      'baby-toys-first-year-by-age',
+  health:    'newborn-health-kit-what-to-have',
+  bath:      'how-to-bathe-a-newborn',
+}
+
 const PLAN_CATEGORIES = [
-  { id: 'clothing',  label: 'Clothing',  live: true, icon: ClothingNavIcon },
-  { id: 'sleep',     label: 'Sleep',     live: true, icon: SleepNavIcon },
-  { id: 'feeding',   label: 'Feeding',   live: true, icon: FeedingNavIcon },
-  { id: 'diapering', label: 'Diapering', live: true, icon: DiaperNavIcon },
-  { id: 'travel',    label: 'Travel',    live: true, icon: TravelNavIcon },
-  { id: 'play',      label: 'Play',      live: true, icon: PlayNavIcon },
-  { id: 'health',    label: 'Health',    live: true, icon: HealthNavIcon },
-  { id: 'bath',      label: 'Bath',      live: true, icon: BathNavIcon },
-  { id: 'wishlist',  label: 'Wishlist',  live: true, icon: WishlistNavIcon },
+  { id: 'clothing',  label: 'Clothing',  live: true, icon: ClothingNavIcon, color: 'teal'   },
+  { id: 'sleep',     label: 'Sleep',     live: true, icon: SleepNavIcon,    color: 'blue'   },
+  { id: 'feeding',   label: 'Feeding',   live: true, icon: FeedingNavIcon,  color: 'amber'  },
+  { id: 'diapering', label: 'Diapering', live: true, icon: DiaperNavIcon,   color: 'gray'   },
+  { id: 'travel',    label: 'Travel',    live: true, icon: TravelNavIcon,   color: 'purple' },
+  { id: 'play',      label: 'Play',      live: true, icon: PlayNavIcon,     color: 'coral'  },
+  { id: 'health',    label: 'Health',    live: true, icon: HealthNavIcon,   color: 'red'    },
+  { id: 'bath',      label: 'Bath',      live: true, icon: BathNavIcon,     color: 'green'  },
+  { id: 'registry',  label: 'Registry',  live: true, icon: RegistryNavIcon, color: 'teal'   },
 ]
 
 const CATEGORY_ORDER = [
@@ -76,6 +90,7 @@ export default function Plan() {
   } = useHousehold()
 
   const [selectedCategory, setSelectedCategory] = useState('clothing')
+  const [showShareModal, setShowShareModal] = useState(false)
   const [selectedAgeRange, setSelectedAgeRange] = useState(null)
 
   // Initialize age range from baby's DOB. Read ?size= query param to
@@ -256,17 +271,24 @@ export default function Plan() {
 
       {/* Category selector — horizontal scroll row (mobile) */}
       <div className={styles.catRow}>
-        {PLAN_CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            type="button"
-            className={`${styles.catChip} ${selectedCategory === cat.id ? styles.catChipActive : ''}`}
-            onClick={() => setSelectedCategory(cat.id)}
-            aria-label={cat.label}
-          >
-            {cat.label}
-          </button>
-        ))}
+        {PLAN_CATEGORIES.map(cat => {
+          const active = selectedCategory === cat.id
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              className={`${styles.catChip} ${styles[`catChip_${cat.color}`]} ${active ? styles.catChipActive : ''}`}
+              onClick={() => cat.id === 'registry' ? navigate('/registry/edit') : setSelectedCategory(cat.id)}
+              aria-label={cat.label}
+              aria-pressed={active}
+            >
+              <div className={`${styles.catChipIcon} ${styles[`catChipIcon_${cat.color}`]}`}>
+                <cat.icon />
+              </div>
+              <span className={styles.catChipLabel}>{cat.label}</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Desktop two-column layout */}
@@ -279,7 +301,7 @@ export default function Plan() {
               key={cat.id}
               type="button"
               className={`${styles.catSidebarItem} ${selectedCategory === cat.id ? styles.catSidebarItemActive : ''}`}
-              onClick={() => setSelectedCategory(cat.id)}
+              onClick={() => cat.id === 'registry' ? navigate('/registry/edit') : setSelectedCategory(cat.id)}
               aria-label={cat.label}
             >
               <span className={styles.catSidebarIcon}><cat.icon /></span>
@@ -290,6 +312,24 @@ export default function Plan() {
 
         {/* Right: main content */}
       <main className={styles.body}>
+        {/* Arrival checklist banner — pre-birth, inside body for correct width */}
+        {ageInfo?.expecting && ageInfo?.daysUntilDue != null && ageInfo.daysUntilDue > 0 && (
+          <button
+            type="button"
+            className={styles.arrivalBanner}
+            onClick={() => navigate('/arrival-checklist')}
+          >
+            <span className={styles.arrivalBannerIcon}>🍼</span>
+            <div className={styles.arrivalBannerText}>
+              <span className={styles.arrivalBannerTitle}>Arrival checklist</span>
+              <span className={styles.arrivalBannerSub}>
+                {Math.ceil(ageInfo.daysUntilDue)} days to go — see what you need before day one
+              </span>
+            </div>
+            <span className={styles.arrivalBannerArrow}>→</span>
+          </button>
+        )}
+
         {!itemsLoading && selectedAgeRange && selectedCategory === 'clothing' && (
           <>
             {/* Age-range chip navbar */}
@@ -323,6 +363,7 @@ export default function Plan() {
               title="Clothing wardrobe"
               subtitle={`${coverageSummary.owned} of ${coverageSummary.recommended} items · ${selectedAgeRange}`}
             />
+            <PlanGuideLink category="clothing" navigate={navigate} />
 
             {/* Category groups — flat, non-collapsible */}
             {coverageByCategory.map(group => (
@@ -331,6 +372,7 @@ export default function Plan() {
                   title={CATEGORY_LABELS[group.category] || group.category}
                   owned={group.owned}
                   recommended={group.recommended}
+                  onAdd={() => navigate('/add-item')}
                 />
                 <div className={styles.slotCardGrid}>
                   {group.rows.map(row => (
@@ -349,15 +391,16 @@ export default function Plan() {
           </>
         )}
 
-        {!itemsLoading && selectedCategory === 'wishlist' && (
-          <WishlistView
+        {!itemsLoading && selectedCategory === 'registry' && (
+          <RegistryView
             items={babyFilteredItems.filter(it => it.inventory_status === 'needed')}
             onItemTap={(id) => navigate(`/item/${id}`)}
             onAddWish={() => navigate('/add-item?mode=needed')}
+            onShare={() => { setShowShareModal(true); track.ctaClicked('plan_registry_share') }}
           />
         )}
 
-        {!itemsLoading && !isClothing && selectedCategory !== 'wishlist' && (
+        {!itemsLoading && !isClothing && selectedCategory !== 'registry' && (
           <>
             {/* Coverage summary card */}
             <CoverageSummaryCard
@@ -365,6 +408,7 @@ export default function Plan() {
               title={`${PLAN_CATEGORIES.find(c => c.id === selectedCategory)?.label || ''} checklist`}
               subtitle={`${catCoverageSummary.owned} of ${catCoverageSummary.recommended} items`}
             />
+            <PlanGuideLink category={selectedCategory} navigate={navigate} />
 
             {catCoverageBySubCat.length === 0 && (
               <div className={styles.comingSoonCard}>
@@ -383,6 +427,7 @@ export default function Plan() {
                   title={SUB_CATEGORY_LABELS[group.subCat] || group.subCat}
                   owned={group.owned}
                   recommended={group.recommended}
+                  onAdd={() => navigate(`/add-item?category=${selectedCategory}`)}
                 />
                 <div className={styles.slotCardGrid}>
                   {group.rows.map(row => (
@@ -415,6 +460,7 @@ export default function Plan() {
       </div>
 
       <BottomNav />
+      {showShareModal && <ShareRegistryModal onClose={() => setShowShareModal(false)} />}
 
     </div>
   )
@@ -488,7 +534,7 @@ function BathNavIcon() {
   )
 }
 
-function WishlistNavIcon() {
+function RegistryNavIcon() {
   return (
     <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
       <path d="M5 3h10a1 1 0 011 1v12l-6-3-6 3V4a1 1 0 011-1z"
@@ -497,7 +543,7 @@ function WishlistNavIcon() {
   )
 }
 
-// ── Wishlist view — all needed items across every category ────────────────────
+// ── Registry view — all needed items across every category ────────────────────
 const WISHLIST_CATEGORY_ORDER = [
   'clothing', 'sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath',
 ]
@@ -506,7 +552,7 @@ const WISHLIST_CATEGORY_LABEL = {
   travel: 'Travel', play: 'Play', health: 'Health', bath: 'Bath',
 }
 
-function WishlistView({ items, onItemTap, onAddWish }) {
+function RegistryView({ items, onItemTap, onAddWish, onShare }) {
   // Group by top_category
   const grouped = {}
   for (const item of items) {
@@ -518,10 +564,20 @@ function WishlistView({ items, onItemTap, onAddWish }) {
 
   return (
     <div>
+      {/* Share banner — always visible at top of registry view */}
+      <button type="button" className={styles.wishlistShareBanner} onClick={onShare}>
+        <span className={styles.wishlistShareIcon}>🔗</span>
+        <div className={styles.wishlistShareText}>
+          <span className={styles.wishlistShareTitle}>Share with family &amp; friends</span>
+          <span className={styles.wishlistShareSub}>They&rsquo;ll see exactly what you still need</span>
+        </div>
+        <span className={styles.wishlistShareArrow}>→</span>
+      </button>
+
       {items.length === 0 && (
         <div className={styles.comingSoonCard}>
           <div className={styles.comingSoonEmoji}>📋</div>
-          <div className={styles.comingSoonTitle}>Your wishlist is empty</div>
+          <div className={styles.comingSoonTitle}>Your registry is empty</div>
           <p className={styles.comingSoonBody}>Add items you still need to track them here.</p>
         </div>
       )}
@@ -549,7 +605,7 @@ function WishlistView({ items, onItemTap, onAddWish }) {
         </section>
       ))}
       <button type="button" className={styles.wishAddBtn} onClick={onAddWish}>
-        + Add to wishlist
+        + Add to registry
       </button>
     </div>
   )
@@ -602,6 +658,24 @@ function Sprout() {
   )
 }
 
+// ── Plan guide link — soft contextual guide surfacing ─────────────────────────
+// Shown below each category's coverage summary card. Only renders when a
+// relevant guide exists for the category. Intentionally subtle — teal text
+// link, no card chrome, no visual weight that competes with the coverage data.
+function PlanGuideLink({ category, navigate }) {
+  const slug = CATEGORY_GUIDE_SLUGS[category]
+  if (!slug) return null
+  return (
+    <button
+      type="button"
+      className={styles.planGuideLink}
+      onClick={() => { track.guidePlanLinkClicked?.({ slug, category }); navigate(`/guides/${slug}`) }}
+    >
+      📖 Read our guide for this category →
+    </button>
+  )
+}
+
 // ── Coverage summary card ─────────────────────────────────────────────────────
 function CoverageSummaryCard({ pct, title, subtitle }) {
   return (
@@ -626,11 +700,25 @@ function CoverageSummaryCard({ pct, title, subtitle }) {
 }
 
 // ── Flat group header ─────────────────────────────────────────────────────────
-function FlatGroupHeader({ title, owned, recommended }) {
+function FlatGroupHeader({ title, owned, recommended, onAdd }) {
   return (
     <div className={styles.flatGroupHeader}>
       <span className={styles.flatGroupTitle}>{title}</span>
-      <span className={styles.flatGroupCount}>{owned} of {recommended}</span>
+      <div className={styles.flatGroupRight}>
+        <span className={styles.flatGroupCount}>{owned} of {recommended}</span>
+        {onAdd && (
+          <button
+            type="button"
+            className={styles.groupAddBtn}
+            onClick={onAdd}
+            aria-label={`Add item to ${title}`}
+          >
+            <svg viewBox="0 0 10 10" width="10" height="10" fill="none" aria-hidden="true">
+              <path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -644,13 +732,18 @@ function SlotCard({ row, onClick, gapRow, onStarToggle }) {
     status === 'empty'    ? styles.slotCountEmpty    :
                             styles.slotCountGap
 
+  const cardBgClass =
+    status === 'complete' ? styles.slotCardComplete :
+    status === 'empty'    ? styles.slotCardEmpty    :
+                            styles.slotCardPartial
+
   return (
     <div className={styles.slotCardWrapper}>
-      <button type="button" className={styles.slotCard} onClick={onClick}>
+      <button type="button" className={`${styles.slotCard} ${cardBgClass}`} onClick={onClick}>
         <span className={styles.slotCardName}>{slot.label}</span>
         <div className={styles.slotCardMeta}>
           <span className={`${styles.slotCardCount} ${countClass}`}>
-            {ownedCount} of {recommended}
+            {slot.consumable ? 'Keep stocked' : `${ownedCount} of ${recommended}`}{status === 'complete' && !slot.consumable && ' ✓'}
           </span>
           {slot.hint && (
             <span className={styles.slotCardHint}>{' · '}{slot.hint}</span>

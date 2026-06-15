@@ -4,7 +4,7 @@
 // actions into one consistent entry point:
 //
 //   + Add item         → /add-item
-//   🔗 Share wishlist  → opens ShareWishlistModal
+//   🔗 Share registry  → opens ShareWishlistModal
 //   👋 Invite someone  → opens InviteMemberModal
 //   👤 Profile         → /profile
 //   ── divider ──
@@ -56,7 +56,17 @@ export default function HeaderActions() {
 
   return (
     <>
-      <div className={styles.root} ref={rootRef}>
+      <div className={styles.wrapper}>
+        <button
+          type="button"
+          className={styles.addBtn}
+          onClick={() => navigate('/add-item')}
+          aria-label="Add item"
+        >
+          <PlusIcon />
+        </button>
+
+        <div className={styles.root} ref={rootRef}>
         <button
           type="button"
           className={styles.btn}
@@ -80,7 +90,17 @@ export default function HeaderActions() {
               Add item
             </button>
 
-            {/* Share wishlist — styled as the featured action */}
+            <button
+              type="button"
+              role="menuitem"
+              className={styles.item}
+              onClick={() => { navigate('/registry/edit'); close() }}
+            >
+              <RegistryIcon />
+              Edit registry
+            </button>
+
+            {/* Share registry — styled as the featured action */}
             <button
               type="button"
               role="menuitem"
@@ -88,7 +108,7 @@ export default function HeaderActions() {
               onClick={() => { setShowShare(true); close() }}
             >
               <ShareIcon />
-              Share wishlist
+              Share registry
             </button>
 
             <button
@@ -124,6 +144,7 @@ export default function HeaderActions() {
             </button>
           </div>
         )}
+        </div>
       </div>
 
       {showShare  && <ShareWishlistModal  onClose={() => setShowShare(false)}  />}
@@ -148,6 +169,15 @@ function PlusIcon() {
   return (
     <svg viewBox="0 0 14 14" width="14" height="14" fill="none" aria-hidden="true">
       <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function RegistryIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
+      <path d="M4 2h8a1 1 0 011 1v10l-5-2.5L3 13V3a1 1 0 011-1z"
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
     </svg>
   )
 }
