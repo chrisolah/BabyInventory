@@ -58,13 +58,31 @@ export default function Landing() {
       <nav className={styles.nav}>
         <div className={styles.logo}>sprigloop</div>
         <button
-          className={styles.navLink}
+          className={`${styles.navLink} ${styles.navLinkCollapse}`}
           onClick={() => {
             track.ctaClicked('nav_how_it_works')
             navigate('/how-it-works')
           }}
         >
           How it works
+        </button>
+        <button
+          className={`${styles.navLink} ${styles.navLinkCollapse}`}
+          onClick={() => {
+            track.ctaClicked('nav_guides')
+            navigate('/guides')
+          }}
+        >
+          Guides
+        </button>
+        <button
+          className={styles.findRegistryBtn}
+          onClick={() => {
+            track.ctaClicked('nav_find_registry')
+            navigate('/find-registry')
+          }}
+        >
+          Find a registry
         </button>
         <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
       </nav>
@@ -145,6 +163,18 @@ export default function Landing() {
             <button className={styles.sectionBtn} onClick={handleWishlistCta} disabled={starting}>
               {starting ? 'Starting…' : 'Try Sprigloop free'}
             </button>
+            <p className={styles.findRegistryHint}>
+              Looking for someone&rsquo;s registry?{' '}
+              <button
+                className={styles.findRegistryHintLink}
+                onClick={() => {
+                  track.ctaClicked('wishlist_section_find_registry')
+                  navigate('/find-registry')
+                }}
+              >
+                Find it here →
+              </button>
+            </p>
           </div>
 
           {/* Mock wishlist card */}
