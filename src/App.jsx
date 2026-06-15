@@ -32,6 +32,7 @@ import Plan from './screens/Plan'
 import Profile from './screens/Profile'
 import AcceptInvite from './screens/AcceptInvite'
 import WishlistPublic from './screens/WishlistPublic'
+import FindRegistry from './screens/FindRegistry'
 import Admin from './screens/Admin'
 import IvyDecoration from './components/IvyDecoration'
 import LandingLayout from './components/LandingLayout'
@@ -263,6 +264,10 @@ function AppRoutes() {
             footer (which links back to them, intentionally circular). */}
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
+        {/* /find-registry — public registry search. Gift-givers can find a
+            household's registry by parent name without needing the direct share link.
+            Inside LandingLayout so it inherits marketing nav + footer. */}
+        <Route path="/find-registry" element={<FindRegistry />} />
       </Route>
       {/* /welcome — the native app's entry for logged-out users: a focused
           get-started screen instead of the marketing Landing. Outside
