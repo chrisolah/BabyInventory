@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { track } from '../lib/analytics'
 import { useAuth } from '../hooks/useAuth'
@@ -6,46 +6,34 @@ import { GUIDES } from '../lib/guides'
 import IvyBanner from '../components/IvyBanner'
 import styles from './Guides.module.css'
 
-const PREP_SLUGS = [
-  'how-much-does-a-newborn-need',
-  'when-does-baby-outgrow-each-size',
-  'baby-registry-what-you-actually-need',
-  'how-to-organize-baby-clothes-by-size',
-  'what-to-do-with-outgrown-baby-clothes',
-  'certified-vs-generic-baby-products',
-  'baby-clothing-guide',
-  'baby-gear-splurge-vs-save',
-  'how-to-build-your-baby-registry',
-  'what-you-need-before-baby-arrives',
-  'how-much-does-a-baby-cost-first-year',
-  'how-much-to-save-before-baby-arrives',
+const TABS = [
+  { label: 'All',        tag: null },
+  { label: 'How-tos',   tag: 'How To' },
+  { label: 'Planning',  tag: 'Planning' },
+  { label: 'Sleep',     tag: 'Sleep' },
+  { label: 'Feeding',   tag: 'Feeding' },
+  { label: 'Gear',      tag: 'Gear' },
+  { label: 'Clothing',  tag: 'Clothing' },
+  { label: 'Diapering', tag: 'Diapering' },
 ]
 
-const CATEGORY_SLUGS = [
-  'newborn-safe-sleep-setup',
-  'bottle-feeding-newborn-what-you-need',
-  'cloth-vs-disposable-diapers',
-  'choosing-a-car-seat',
-  'baby-toys-first-year-by-age',
-  'newborn-health-kit-what-to-have',
-  'how-to-bathe-a-newborn',
-]
+const TYPE_CLASS = {
+  'How to':      styles.typeHowTo,
+  'Checklist':   styles.typeChecklist,
+  'Buying guide': styles.typeBuyingGuide,
+}
 
-const guidesBySlug = Object.fromEntries(GUIDES.map(g => [g.slug, g]))
+function guideType(guide) {
+  if (guide.tags.includes('How To')) return 'How to'
+  if (guide.tags.includes('Checklist')) return 'Checklist'
+  return 'Buying guide'
+}
 
-const newGuides        = [...GUIDES].slice(-3).reverse()
-const prepGuides      = PREP_SLUGS.map(s => guidesBySlug[s]).filter(Boolean)
-const categoryGuides  = CATEGORY_SLUGS.map(s => guidesBySlug[s]).filter(Boolean)
-
-function GuideCard({ guide, onClick, isNew }) {
+function GuideCard({ guide, onClick }) {
+  const type = guideType(guide)
   return (
     <button className={styles.card} onClick={onClick}>
-      <div className={styles.cardTags}>
-        {isNew && <span className={styles.newBadge}>New</span>}
-        {guide.tags.map(t => (
-          <span key={t} className={styles.tag}>{t}</span>
-        ))}
-      </div>
+      <span className={`${styles.typePill} ${TYPE_CLASS[type]}`}>{type}</span>
       <h2 className={styles.cardTitle}>{guide.title}</h2>
       <p className={styles.cardDesc}>{guide.description}</p>
       <div className={styles.cardMeta}>{guide.readTime} read &nbsp;&middot;&nbsp; {guide.date}</div>
@@ -56,6 +44,8 @@ function GuideCard({ guide, onClick, isNew }) {
 export default function Guides() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const [activeTab, setActiveTab] = useState(null)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     track.pageViewed({ page: 'guides', referrer: document.referrer })
@@ -73,9 +63,21 @@ export default function Guides() {
     }
   }, [])
 
-  function goTo(slug) {
-    navigate(`/guides/${slug}`)
-  }
+  const filtered = useMemo(() => {
+    let list = GUIDES
+    if (activeTab) {
+      list = list.filter(g => g.tags.includes(activeTab))
+    }
+    if (query.trim()) {
+      const q = query.toLowerCase()
+      list = list.filter(g =>
+        g.title.toLowerCase().includes(q) ||
+        (g.subtitle || '').toLowerCase().includes(q) ||
+        (g.description || '').toLowerCase().includes(q)
+      )
+    }
+    return list
+  }, [activeTab, query])
 
   return (
     <div className={styles.page}>
@@ -109,29 +111,53 @@ export default function Guides() {
           </p>
         </header>
 
-        {/* New guides strip */}
-        <div className={styles.groupLabel}>New</div>
-        <section className={styles.newStrip}>
-          {newGuides.map(guide => (
-            <GuideCard key={guide.slug} guide={guide} onClick={() => goTo(guide.slug)} isNew />
-          ))}
-        </section>
+        {/* Search */}
+        <div className={styles.searchWrap}>
+          <svg className={styles.searchIcon} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M13 13l3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <input
+            className={styles.searchInput}
+            type="search"
+            placeholder="Search guides…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+          />
+        </div>
 
-        {/* Group 1 — Prep & Planning */}
-        <div className={styles.groupLabel}>Prep &amp; Planning</div>
-        <section className={styles.grid}>
-          {prepGuides.map(guide => (
-            <GuideCard key={guide.slug} guide={guide} onClick={() => goTo(guide.slug)} />
+        {/* Filter tabs */}
+        <div className={styles.tabRow}>
+          {TABS.map(t => (
+            <button
+              key={t.label}
+              className={`${styles.tab} ${activeTab === t.tag ? styles.tabActive : ''}`}
+              onClick={() => setActiveTab(t.tag)}
+            >
+              {t.label}
+            </button>
           ))}
-        </section>
+        </div>
 
-        {/* Group 2 — By Category */}
-        <div className={styles.groupLabel} style={{ marginTop: '2.5rem' }}>By Category</div>
-        <section className={styles.categoryGrid}>
-          {categoryGuides.map(guide => (
-            <GuideCard key={guide.slug} guide={guide} onClick={() => goTo(guide.slug)} />
-          ))}
-        </section>
+        {/* Count */}
+        <div className={styles.countLabel}>
+          {filtered.length} {filtered.length === 1 ? 'guide' : 'guides'}
+        </div>
+
+        {/* Guide grid */}
+        {filtered.length > 0 ? (
+          <div className={styles.grid}>
+            {filtered.map(guide => (
+              <GuideCard
+                key={guide.slug}
+                guide={guide}
+                onClick={() => navigate(`/guides/${guide.slug}`)}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className={styles.empty}>No guides match your search.</p>
+        )}
       </article>
     </div>
   )
