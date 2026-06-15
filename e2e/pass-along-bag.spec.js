@@ -59,10 +59,42 @@ test('pass-along: ItemDetail "Pass on" creates a draft and attaches the item', a
   await expect(page.getByText(/items in the bag/i)).toBeVisible()
   await expect(page.getByText(/PassAlongBrand/)).toBeVisible()
 
-  // UI confirms: bag page renders a reference code and the item is in the bag.
-  // The URL itself (/pass-along/:id) proves a draft batch was created.
-  // PassAlongBrand visible on the batch page proves the item was attached.
-  // Both are already asserted above — no DB query needed.
+  // ── Service-role assertions on the data ──────────────────────────────
+  // Find the household this user belongs to so we can scope queries.
+  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 50 })
+  const u = users.users.find(x => x.email?.toLowerCase() === email.toLowerCase())
+  expect(u).toBeTruthy()
+
+  const { data: memberships } = await admin
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', u.id)
+  expect(memberships?.length).toBe(1)
+  const householdId = memberships[0].household_id
+
+  const { data: batches, error: bErr } = await admin
+    .from('pass_along_batches')
+    .select('id, status, destination_type, reference_code, household_id')
+    .eq('household_id', householdId)
+  expect(bErr).toBeNull()
+  expect(batches?.length, 'expected exactly one draft batch').toBe(1)
+  const batch = batches[0]
+  expect(batch.status).toBe('draft')
+  expect(batch.destination_type).toBe('family') // ItemDetail.handleSendOn defaults
+  expect(batch.reference_code, 'reference_code must be auto-generated').toBeTruthy()
+
+  // The item should now be linked to the batch with inventory_status='pass_along'
+  // and pre_bag_inventory_status capturing its prior 'owned' state (so removing
+  // it from the bag later restores it correctly — migration 022).
+  const { data: items } = await admin
+    .from('clothing_items')
+    .select('id, inventory_status, pass_along_batch_id, pre_bag_inventory_status, item_type')
+    .eq('household_id', householdId)
+  expect(items?.length).toBe(1)
+  const item = items[0]
+  expect(item.inventory_status).toBe('pass_along')
+  expect(item.pass_along_batch_id).toBe(batch.id)
+  expect(item.pre_bag_inventory_status).toBe('owned')
 })
 
 test('pass-along: starting a second item from ItemDetail joins the SAME draft (single-draft rule)', async ({ page }) => {
@@ -75,7 +107,6 @@ test('pass-along: starting a second item from ItemDetail joins the SAME draft (s
   // Add two items, distinguished by unique brand strings (no name field
   // exists, so brand is the user-controlled row identifier).
   await addOwnedItem(page, { itemType: 'bodysuits', size: '6-9M', brand: 'FirstBrand' })
-
   await page.goto('/inventory')
   await addOwnedItem(page, { itemType: 'bodysuits', size: '6-9M', brand: 'SecondBrand' })
 
@@ -99,6 +130,27 @@ test('pass-along: starting a second item from ItemDetail joins the SAME draft (s
   await expect(page.getByText(/FirstBrand/)).toBeVisible()
   await expect(page.getByText(/SecondBrand/)).toBeVisible()
 
-  // Single-draft rule verified by UI: same URL for both items, and both
-  // brands visible on that one batch page. No DB query needed.
+  // And the data should show one batch with two items.
+  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 50 })
+  const u = users.users.find(x => x.email?.toLowerCase() === email.toLowerCase())
+  const { data: memberships } = await admin
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', u.id)
+  const householdId = memberships[0].household_id
+
+  const { data: batches } = await admin
+    .from('pass_along_batches')
+    .select('id, status')
+    .eq('household_id', householdId)
+  expect(batches?.length, 'should still be exactly one draft batch').toBe(1)
+  expect(batches[0].status).toBe('draft')
+
+  const { data: bagItems } = await admin
+    .from('clothing_items')
+    .select('id, inventory_status, pass_along_batch_id')
+    .eq('household_id', householdId)
+    .eq('inventory_status', 'pass_along')
+  expect(bagItems?.length, 'both items should be in the bag').toBe(2)
+  expect(bagItems.every(i => i.pass_along_batch_id === batches[0].id)).toBe(true)
 })

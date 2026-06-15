@@ -45,18 +45,6 @@ const NAV_TABS = [
     ),
   },
   {
-    id: 'guides',
-    label: 'Guides',
-    path: '/guides',
-    match: (p) => p.startsWith('/guides'),
-    icon: (
-      <svg viewBox="0 0 20 20" width="22" height="22" fill="none" aria-hidden="true">
-        <path d="M4 4h12v13H4z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-        <path d="M7 8h6M7 11h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
     id: 'pass-along',
     label: 'Pass Along',
     path: '/pass-along',

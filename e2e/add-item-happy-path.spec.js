@@ -60,11 +60,28 @@ test('signup → onboard → add item → item appears in inventory', async ({ p
   await expect(page.getByRole('button', { name: /go to my inventory/i })).toBeVisible()
   await page.getByRole('button', { name: /go to my inventory/i }).click()
 
-  // Now on /home — navigate directly to /add-item.
-  // The OwnedEmptyState CTA adds ?autoScan=1 which auto-launches TagScanner
-  // and blocks the save button in Playwright. Going direct avoids that.
+  // Now on /home — the empty-state card deep-links to /inventory.
   await expect(page).toHaveURL(/\/home/)
-  await page.goto('/add-item')
+  await page.getByRole('button', { name: /start your inventory/i }).click()
+
+  // ── Inventory: empty state, follow CTA to /add-item ─────────────────────
+  await expect(page).toHaveURL(/\/inventory/)
+
+  // Wait for the loading spinner to clear so we know the queries finished.
+  // Then surface useful context if the empty-state CTA isn't there:
+  // either the inventory errored out (likely migration 006 not applied) or
+  // the page rendered something we don't expect.
+  await expect(page.getByText(/loading…/i)).toHaveCount(0, { timeout: 10000 })
+
+  const errorBanner = page.locator('text=/couldn.t load your inventory/i')
+  if (await errorBanner.count()) {
+    throw new Error(
+      `/inventory rendered an error banner — most likely migration 006_clothing_items.sql ` +
+      `is not applied to the test schema. Banner text: "${await errorBanner.first().innerText()}"`
+    )
+  }
+
+  await page.getByRole('button', { name: /add first item/i }).click()
 
   // ── Add item form ──────────────────────────────────────────────────────
   await expect(page).toHaveURL(/\/add-item/)

@@ -8,8 +8,9 @@
 /* ── Nav (matches Landing) ── */
 .nav {
   display: flex;
-  align-items: baseline;
-  gap: 18px;
+  justify-content: space-between;
+  align-items: center;
+  /* Top padding carries the iOS status-bar inset (see Home.module.css). */
   padding: calc(1.25rem + env(safe-area-inset-top, 0px)) 1.5rem 1.25rem;
   border-bottom: 0.5px solid var(--gray-100);
   background: var(--white);
@@ -33,38 +34,6 @@
   align-items: center;
   line-height: 1;
 }
-.navLink {
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 4px;
-  font-size: 13px;
-  color: var(--gray-600);
-  font-weight: 500;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-body);
-  white-space: nowrap;
-}
-.navLink:hover { color: var(--teal-dark); }
-.signupBtn {
-  margin-left: auto;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 14px;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: var(--font-body);
-  background: none;
-  border: 1px solid var(--teal);
-  color: var(--teal-dark);
-  border-radius: 8px;
-  cursor: pointer;
-}
-.signupBtn:hover { background: var(--teal-light); }
-@media (max-width: 480px) { .signupBtn { display: none; } }
 .loginBtn {
   min-height: 44px;
   display: inline-flex;

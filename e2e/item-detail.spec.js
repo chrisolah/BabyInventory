@@ -13,12 +13,26 @@
 // involve cross-table writes.
 
 import { test, expect } from '@playwright/test'
+import { admin } from './support/db.js'
 import {
   freshEmail,
   signUpWithPassword,
   blastThroughOnboardingToHome,
   addOwnedItem,
 } from './support/helpers.js'
+
+// Find the household for a user we just created. Returns the id.
+async function householdIdFor(email) {
+  const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 50 })
+  const u = users.users.find(x => x.email?.toLowerCase() === email.toLowerCase())
+  expect(u, `expected user ${email}`).toBeTruthy()
+  const { data: members } = await admin
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', u.id)
+  expect(members?.length).toBe(1)
+  return members[0].household_id
+}
 
 test('item detail: edit an item, save, see updated values in inventory', async ({ page }) => {
   const email = freshEmail()
@@ -78,19 +92,28 @@ test('item detail: Tuck away → Move back to Owned round trip', async ({ page }
   await page.getByRole('button', { name: /^tuck away$/i }).click()
   await expect(page).toHaveURL(/\/inventory/)
 
-  // Re-open the same item. The action bar now shows "Move back to Owned"
-  // (not "Tuck away") — this is the UI signal that status flipped to kept.
+  // Verify status='kept' on the row via service role.
+  const householdId = await householdIdFor(email)
+  let { data: items } = await admin
+    .from('clothing_items')
+    .select('id, inventory_status, item_type')
+    .eq('household_id', householdId)
+  expect(items?.length).toBe(1)
+  expect(items[0].inventory_status).toBe('kept')
+
+  // Re-open the same item to exercise Move back. The action bar now shows
+  // "Move back to Owned" instead of "Tuck away" because canReturnToOwned
+  // is true for kept items.
   await page.goto(itemUrl)
   await expect(page.getByRole('button', { name: /move back to owned/i })).toBeVisible()
-  await expect(page.getByRole('button', { name: /^tuck away$/i })).toHaveCount(0)
-
   await page.getByRole('button', { name: /move back to owned/i }).click()
   await expect(page).toHaveURL(/\/inventory/)
 
-  // Re-open and confirm "Tuck away" is back (status returned to owned).
-  await page.goto(itemUrl)
-  await expect(page.getByRole('button', { name: /^tuck away$/i })).toBeVisible()
-  await expect(page.getByRole('button', { name: /move back to owned/i })).toHaveCount(0)
+  ;({ data: items } = await admin
+    .from('clothing_items')
+    .select('id, inventory_status')
+    .eq('household_id', householdId))
+  expect(items[0].inventory_status).toBe('owned')
 })
 
 test('item detail: delete removes the row + lands on /inventory', async ({ page }) => {
@@ -102,8 +125,6 @@ test('item detail: delete removes the row + lands on /inventory', async ({ page 
   await addOwnedItem(page, { itemType: 'bodysuits', size: '6-9M', brand: 'DeleteBrand' })
 
   await page.getByText(/DeleteBrand/).first().click()
-  await expect(page).toHaveURL(/\/item\/[0-9a-f-]+/)
-  const itemUrl = page.url()
   // Page action label is "Delete item" (not "Delete"); regex is anchored.
   await page.getByRole('button', { name: /^delete item$/i }).click()
 
@@ -115,9 +136,12 @@ test('item detail: delete removes the row + lands on /inventory', async ({ page 
   await page.getByRole('button', { name: /^delete item$/i }).last().click()
 
   await expect(page).toHaveURL(/\/inventory/, { timeout: 10000 })
-  // UI confirms the item is gone — brand text no longer in inventory.
   await expect(page.getByText(/DeleteBrand/)).toHaveCount(0)
-  // Navigating back to the item URL should 404 / redirect, not show the item.
-  await page.goto(itemUrl)
-  await expect(page.getByText(/DeleteBrand/)).toHaveCount(0)
+
+  const householdId = await householdIdFor(email)
+  const { data: items } = await admin
+    .from('clothing_items')
+    .select('id')
+    .eq('household_id', householdId)
+  expect(items?.length, 'item should be hard-deleted').toBe(0)
 })

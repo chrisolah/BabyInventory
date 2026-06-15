@@ -22,7 +22,7 @@
   /* Top padding carries the iOS status-bar inset (see Home.module.css). */
   padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
   display: grid;
-  grid-template-columns: minmax(92px, 1fr) auto minmax(92px, 1fr);
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 8px;
 }
@@ -38,9 +38,17 @@
    pin to columns 2 and 3 explicitly. Breakpoint matches the codebase's
    tablet threshold (Home/BabyFormModal/InviteMemberModal/TagScanner all
    pivot at 600px). */
-/* titleCell always in center column, actions always on right */
-.titleCell { grid-column: 2; }
-.headerActions { grid-column: 3; }
+@media (min-width: 600px) {
+  .header {
+    grid-template-columns: minmax(92px, 1fr) auto minmax(92px, 1fr);
+  }
+  .titleCell {
+    grid-column: 2;
+  }
+  .headerActions {
+    grid-column: 3;
+  }
+}
 
 /* Right-side action cluster — keeps Add and Logout grouped. */
 .headerActions {
@@ -1007,66 +1015,34 @@
   }
 }
 
-/* ── Category tile chips — card style matching Home grid ── */
 .catChip {
-  display: flex;
-  flex-direction: column;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 10px 8px 9px;
-  width: 70px;
-  flex-shrink: 0;
+  padding: 7px 14px;
+  min-height: 36px;
   font-family: var(--font-body);
-  background: var(--gray-50);
-  border: 1.5px solid transparent;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
-}
-.catChip:active { transform: scale(0.96); }
-
-/* Per-color background tints (unselected) */
-.catChip_teal   { background: var(--teal-light); }
-.catChip_blue   { background: #E8F3FE; }
-.catChip_amber  { background: var(--amber-light); }
-.catChip_gray   { background: var(--gray-100); }
-.catChip_purple { background: var(--purple-light); }
-.catChip_coral  { background: #FEECE8; }
-.catChip_red    { background: #FEECEC; }
-.catChip_green  { background: #E6F7EE; }
-
-/* Selected: teal border + shadow lift */
-.catChipActive {
-  border-color: var(--teal);
-  box-shadow: 0 2px 8px rgba(8, 80, 65, 0.18);
-}
-
-/* Icon wrap */
-.catChipIcon {
-  width: 32px; height: 32px;
-  border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  color: #fff;
-}
-.catChipIcon_teal   { background: var(--teal); }
-.catChipIcon_blue   { background: #3B82F6; }
-.catChipIcon_amber  { background: var(--amber); }
-.catChipIcon_gray   { background: var(--gray-400); }
-.catChipIcon_purple { background: var(--purple); }
-.catChipIcon_coral  { background: #E05C3A; }
-.catChipIcon_red    { background: #DC3030; }
-.catChipIcon_green  { background: #1A9E5A; }
-
-/* Label */
-.catChipLabel {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--gray-700);
-  line-height: 1.2;
-  text-align: center;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  color: var(--gray-600);
+  cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.catChipActive .catChipLabel { color: var(--teal-dark); font-weight: 600; }
+
+.catChip:hover {
+  background: var(--gray-50);
+}
+
+.catChipActive {
+  background: var(--teal-dark);
+  border-color: var(--teal-dark);
+  color: var(--white);
+}
 
 /* ── Wish list tab ────────────────────────────────────────── */
 /* Age-range chip navbar. Horizontally scrollable on narrow screens; padding
@@ -1088,38 +1064,38 @@
 .ageNav::-webkit-scrollbar { display: none; }
 
 .ageChip {
+  /* min-height keeps each chip at iOS HIG floor (44px). Was ~31px tall
+     until 2026-04-28. inline-flex centers the label vertically. */
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  padding: 6px 16px;
+  padding: 6px 14px;
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 500;
-  background: var(--gray-50);
-  border: 1.5px solid var(--gray-200);
-  border-radius: 10px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
   color: var(--gray-600);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: background 0.12s, color 0.12s, border-color 0.12s, box-shadow 0.12s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .ageChip:hover {
-  background: var(--gray-100);
+  background: var(--gray-50);
 }
 
 .ageChipSelected {
-  background: var(--teal-light);
-  border-color: var(--teal);
-  color: var(--teal-dark);
-  font-weight: 600;
-  box-shadow: 0 2px 6px rgba(8, 80, 65, 0.14);
+  background: var(--teal-dark);
+  border-color: var(--teal-dark);
+  color: var(--white);
 }
 
 .ageChipSelected:hover {
-  background: var(--teal-light);
-  color: var(--teal-dark);
+  background: var(--teal-dark);
+  color: var(--white);
 }
 
 .ageChipPast {

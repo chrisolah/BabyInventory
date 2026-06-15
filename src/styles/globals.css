@@ -59,10 +59,7 @@ body[data-trial-banner="visible"] {
    rubber-band overscroll, and no accidental text selection on controls.
    Real text content and form fields stay selectable. */
 html, body {
-  /* Allow vertical overscroll so rubber-band bounce works on iOS and
-     pull-to-refresh works on mobile web. Only block horizontal to
-     prevent accidental sideways jank on gesture-heavy pages. */
-  overscroll-behavior-x: none;
+  overscroll-behavior: none;
   touch-action: manipulation;
 }
 

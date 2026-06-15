@@ -15,7 +15,6 @@ import BabySwitcher from '../components/BabySwitcher'
 import HeaderActions from '../components/HeaderActions'
 import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
-import ShareRegistryModal from '../components/ShareWishlistModal'
 import styles from './Home.module.css'
 
 // Category hub configuration — all 8 categories are now live with real
@@ -49,16 +48,6 @@ export default function Home() {
     itemsLoading,
   } = useHousehold()
   const [status, setStatus] = useState('checking')
-  const [showShareModal, setShowShareModal] = useState(false)
-  // One-time registry prompt: show once per household after setup
-  const [showRegistryPrompt, setShowRegistryPrompt] = useState(() => {
-    try { return !localStorage.getItem('sl_registry_prompt_dismissed') } catch { return false }
-  })
-
-  function dismissRegistryPrompt() {
-    try { localStorage.setItem('sl_registry_prompt_dismissed', '1') } catch {}
-    setShowRegistryPrompt(false)
-  }
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] ?? ''
 
@@ -140,8 +129,8 @@ export default function Home() {
     [items],
   )
 
-  const registryCount = useMemo(
-    () => items.filter(i => i.inventory_status === 'gap').length,
+  const wishlistCount = useMemo(
+    () => items.filter(i => i.inventory_status === 'needed').length,
     [items],
   )
 
@@ -205,8 +194,8 @@ export default function Home() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <div className={styles.brand}>Sprigloop</div>
-        <div className={styles.sprigCenter}>
+        <div className={styles.brandWrap}>
+          <div className={styles.brand}>Sprigloop</div>
           <IvySprig />
         </div>
         <div className={styles.headerActions}>
@@ -238,7 +227,6 @@ export default function Home() {
             range={ageInfo.currentRange}
             ageInfo={ageInfo}
             babyName={ageAnchor?.name ?? null}
-            navigate={navigate}
           />
         )}
 
@@ -323,55 +311,14 @@ export default function Home() {
           })}
         </div>
         {/* Stat cards */}
-        {/* One-time registry share prompt — shown once, dismissed permanently */}
-        {showRegistryPrompt && !itemsLoading && totalOwnedCount > 0 && (
-          <div className={styles.wishlistPrompt}>
-            <div className={styles.wishlistPromptIcon}>🔗</div>
-            <div className={styles.wishlistPromptBody}>
-              <div className={styles.wishlistPromptTitle}>Share your registry with family and friends</div>
-              <div className={styles.wishlistPromptSub}>They&rsquo;ll see exactly what you still need — no guessing, no duplicates.</div>
-            </div>
-            <div className={styles.wishlistPromptActions}>
-              <button
-                type="button"
-                className={styles.wishlistPromptBtn}
-                onClick={() => { dismissRegistryPrompt(); setShowShareModal(true); track.ctaClicked('home_registry_prompt_share') }}
-              >
-                Share
-              </button>
-              <button type="button" className={styles.wishlistPromptDismiss} onClick={dismissRegistryPrompt} aria-label="Dismiss">×</button>
-            </div>
-          </div>
-        )}
-
-        {/* Registry two-card row */}
-        <div className={styles.wishlistCardRow}>
-          <button
-            type="button"
-            className={styles.wishlistActionCard}
-            onClick={() => { navigate('/registry/edit'); track.ctaClicked('home_edit_registry') }}
-          >
-            <div className={styles.wishlistActionTitle}>Edit registry</div>
-            <div className={styles.wishlistActionSub}>Smart registry built from what you own</div>
-          </button>
-          <button
-            type="button"
-            className={`${styles.wishlistActionCard} ${styles.wishlistActionCardShare}`}
-            onClick={() => { setShowShareModal(true); track.ctaClicked('home_share_registry_card') }}
-          >
-            <div className={styles.wishlistActionTitle}>Share registry</div>
-            <div className={styles.wishlistActionSub}>Knows what you have. Shows what you need.</div>
-          </button>
-        </div>
-
         <div className={styles.statsRow}>
           <div className={styles.statCard}>
             <div className={styles.statValue}>{itemsLoading ? '—' : totalOwnedCount}</div>
             <div className={styles.statLabel}>items tracked</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statValue}>{itemsLoading ? '—' : registryCount}</div>
-            <div className={styles.statLabel}>on registry</div>
+            <div className={styles.statValue}>{itemsLoading ? '—' : wishlistCount}</div>
+            <div className={styles.statLabel}>on wishlist</div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.statValue}>{itemsLoading ? '—' : outgrownCount}</div>
@@ -381,14 +328,13 @@ export default function Home() {
       </main>
 
       <BottomNav />
-      {showShareModal && <ShareRegistryModal onClose={() => setShowShareModal(false)} />}
 
     </div>
   )
 }
 
 // ── Overall tracker card ──────────────────────────────────────────────────
-function OverallTrackerCard({ pct, owned, recommended, range, ageInfo, babyName, navigate }) {
+function OverallTrackerCard({ pct, owned, recommended, range, ageInfo, babyName }) {
   // Build the countdown line based on ageInfo state.
   let countdown = null
   if (ageInfo?.expecting && ageInfo.daysUntilDue != null) {
@@ -405,18 +351,8 @@ function OverallTrackerCard({ pct, owned, recommended, range, ageInfo, babyName,
     }
   }
 
-  const isExpecting = ageInfo?.expecting && ageInfo.daysUntilDue != null && Math.ceil(ageInfo.daysUntilDue) > 0
-  const hasSizeUp = !isExpecting && ageInfo?.nextRange && ageInfo.daysToNextRange != null
-
-  const Tag = (isExpecting || hasSizeUp) ? 'button' : 'div'
-  const tagProps = isExpecting
-    ? { type: 'button', className: `${styles.trackerCard} ${styles.trackerCardClickable}`, onClick: () => navigate('/arrival-checklist') }
-    : hasSizeUp
-    ? { type: 'button', className: `${styles.trackerCard} ${styles.trackerCardClickable}`, onClick: () => navigate(`/plan?size=${encodeURIComponent(ageInfo.nextRange)}`) }
-    : { className: styles.trackerCard }
-
   return (
-    <Tag {...tagProps}>
+    <div className={styles.trackerCard}>
       <div className={styles.trackerTop}>
         <div className={styles.trackerLeft}>
           <div className={styles.trackerPct}>{pct}%</div>
@@ -440,10 +376,9 @@ function OverallTrackerCard({ pct, owned, recommended, range, ageInfo, babyName,
         <div className={styles.trackerCountdown}>
           <CountdownIcon type={countdown.type} />
           <span>{countdown.text}</span>
-          {(countdown.type === 'due' || countdown.type === 'size') && <span className={styles.trackerCountdownArrow}>→</span>}
         </div>
       )}
-    </Tag>
+    </div>
   )
 }
 

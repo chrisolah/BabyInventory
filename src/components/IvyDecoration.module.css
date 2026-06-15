@@ -14,7 +14,7 @@
 .ivy {
   position: fixed;
   bottom: 0;
-  left: max(8px, calc(25vw - 240px));
+  left: calc(25vw - 240px);
   width: 140px;
   height: 100vh;
   pointer-events: none;

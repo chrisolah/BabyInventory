@@ -268,7 +268,7 @@ function renderWelcomeEmail(c: WelcomeCtx): string {
 <body style="margin:0;padding:0;background-color:#F9F9F7;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#2C2C2A;-webkit-font-smoothing:antialiased;">
 
   <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">
-    Baby prep, all in one place. Here's where to start.
+    A simple home for your baby's wardrobe. Here's what you can do first.
   </div>
 
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F9F9F7;">
@@ -312,7 +312,7 @@ function renderWelcomeEmail(c: WelcomeCtx): string {
           <tr>
             <td style="padding:10px 32px 0 32px;">
               <p style="margin:0;font-family:'Fraunces',Georgia,'Times New Roman',serif;font-size:17px;font-style:italic;color:#085041;line-height:1.4;">
-                Baby prep, all in one place.
+                A simple home for your baby's wardrobe.
               </p>
             </td>
           </tr>
@@ -321,10 +321,10 @@ function renderWelcomeEmail(c: WelcomeCtx): string {
           <tr>
             <td style="padding:18px 32px 4px 32px;">
               <p style="margin:0 0 14px 0;font-size:16px;line-height:1.65;color:#5F5E5A;">
-                Thanks for joining. Getting ready for a baby is a lot. Clothes that outgrow overnight, gear you need before you know what you need, duplicate gifts nobody coordinated, things you meant to pass on.
+                Thanks for joining. Baby clothes pile up fast. By month four you're staring at a bin of 3-6m onesies wondering if anyone you know has a newborn coming.
               </p>
               <p style="margin:0;font-size:16px;line-height:1.65;color:#5F5E5A;">
-                Sprigloop helps you stay on top of all of it — tracking what you have, planning what's still missing, sharing a registry with family, and passing on what your little one has outgrown.
+                Sprigloop keeps all of it organized in one place. What fits today, what's coming up next, what's ready to pass along. So you stop buying duplicates, stop missing the right size window, and have a clean way to hand things off when they're outgrown.
               </p>
             </td>
           </tr>
@@ -342,10 +342,10 @@ function renderWelcomeEmail(c: WelcomeCtx): string {
           <tr>
             <td style="padding:14px 32px 0 32px;">
               <p style="margin:0 0 4px 0;font-size:15px;font-weight:500;color:#2C2C2A;">
-                Scan any tag — clothing or gear.
+                Track everything in seconds.
               </p>
               <p style="margin:0;font-size:15px;line-height:1.6;color:#5F5E5A;">
-                Point your camera at any tag or label and Sprigloop reads the brand, size, and category in seconds. Works on onesies, sleep sacks, strollers, bottles, monitors — anything with a label.
+                Snap a photo of the tag and we'll log the brand, size, and category for you. Check at a glance what's fitting now and what's coming up.
               </p>
             </td>
           </tr>
@@ -354,39 +354,15 @@ function renderWelcomeEmail(c: WelcomeCtx): string {
           <tr>
             <td style="padding:16px 32px 0 32px;">
               <p style="margin:0 0 4px 0;font-size:15px;font-weight:500;color:#2C2C2A;">
-                Plan what you still need.
+                Share with the family.
               </p>
               <p style="margin:0;font-size:15px;line-height:1.6;color:#5F5E5A;">
-                Sprigloop tracks coverage across 8 categories — clothing, sleep, feeding, travel, and more. See exactly what's missing before the next size arrives. If you have a due date set, tap the countdown card for your day-1 readiness checklist.
+                Co-parents, grandparents, anyone helping out. Invite them and you'll all see and update the same wardrobe from your own phones.
               </p>
             </td>
           </tr>
 
           <!-- Feature 3 -->
-          <tr>
-            <td style="padding:16px 32px 0 32px;">
-              <p style="margin:0 0 4px 0;font-size:15px;font-weight:500;color:#2C2C2A;">
-                Share a registry that shows real gaps.
-              </p>
-              <p style="margin:0;font-size:15px;line-height:1.6;color:#5F5E5A;">
-                Your registry is built from what you actually own — so every item on it is a real gap, not a guess. Share one link with family and friends. They see exactly what you need by category and size, and can claim items without duplicating. No store account needed on their end.
-              </p>
-            </td>
-          </tr>
-
-          <!-- Feature 4 -->
-          <tr>
-            <td style="padding:16px 32px 0 32px;">
-              <p style="margin:0 0 4px 0;font-size:15px;font-weight:500;color:#2C2C2A;">
-                Share with co-parents and family.
-              </p>
-              <p style="margin:0;font-size:15px;line-height:1.6;color:#5F5E5A;">
-                Invite a partner, grandparent, or anyone helping out. You'll all see and update the same household from your own phones.
-              </p>
-            </td>
-          </tr>
-
-          <!-- Feature 5 -->
           <tr>
             <td style="padding:16px 32px 22px 32px;">
               <p style="margin:0 0 4px 0;font-size:15px;font-weight:500;color:#2C2C2A;">
@@ -458,19 +434,17 @@ function renderWelcomeEmailText(c: WelcomeCtx): string {
   return [
     `Welcome to Sprigloop, ${c.firstName}.`,
     ``,
-    `Baby prep, all in one place.`,
+    `A simple home for your baby's wardrobe.`,
     ``,
-    `Thanks for joining. Getting ready for a baby is a lot — clothes that outgrow overnight, gear you need before you know what you need, duplicate gifts nobody coordinated.`,
+    `Thanks for joining. Baby clothes pile up fast. By month four you're staring at a bin of 3-6m onesies wondering if anyone you know has a newborn coming.`,
     ``,
-    `Sprigloop helps you stay on top of all of it: tracking what you have, planning what's still missing, sharing a registry with family, and passing on what your little one has outgrown.`,
+    `Sprigloop keeps all of it organized in one place. What fits today, what's coming up next, what's ready to pass along. So you stop buying duplicates, stop missing the right size window, and have a clean way to hand things off when they're outgrown.`,
     ``,
     `Here's what you can do first:`,
     ``,
-    `  • Scan any tag — clothing or gear. Point your camera at any label and we read the brand, size, and category in seconds.`,
-    `  • Plan what you still need. Track coverage across 8 categories. If you have a due date set, tap the countdown card for your day-1 readiness checklist.`,
-    `  • Share a registry that shows real gaps. One link, no store account needed. Family sees exactly what you need and can claim items without duplicating.`,
-    `  • Share with co-parents and family. Everyone sees and updates the same household from their own phones.`,
-    `  • Pass it on without the friction. Request a prepaid bag, fill it, drop it in any mailbox.`,
+    `  • Track everything in seconds. Snap a photo of the tag and we'll log the brand, size, and category for you.`,
+    `  • Share with the family. Invite co-parents and grandparents to see and update the same wardrobe from their phones.`,
+    `  • Pass it on without the friction. Send outgrown items to another Sprigloop family or a local charity.`,
     ``,
     `Open Sprigloop:`,
     c.homeUrl,

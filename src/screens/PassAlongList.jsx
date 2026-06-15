@@ -263,7 +263,7 @@ export default function PassAlongList() {
               ? `${batches.length} bag${batches.length === 1 ? '' : 's'} passed along`
               : 'Pass clothes on'}
           </div>
-
+          <IvySprig />
         </div>
         <HeaderActions />
       </header>

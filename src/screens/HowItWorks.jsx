@@ -78,9 +78,6 @@ export default function HowItWorks() {
         >
           sprigloop
         </button>
-        <button className={styles.navLink} onClick={() => navigate('/how-it-works')}>How it works</button>
-        <button className={styles.navLink} onClick={() => navigate('/guides')}>Guides</button>
-        <button className={styles.signupBtn} onClick={() => navigate('/signup')}>Join</button>
         <button className={styles.loginBtn} onClick={() => navigate('/login')}>
           Log in
         </button>
@@ -94,43 +91,39 @@ export default function HowItWorks() {
           <div className={styles.eyebrow}>Free for all families</div>
           <h1 className={styles.h1}>How Sprigloop <em>works</em>.</h1>
           <p className={styles.lede}>
-            Sprigloop helps you track what your baby has, plan what&rsquo;s coming,
-            share a registry with family and friends, and pass on what they outgrow. Here&rsquo;s
-            how each step works.
+            Sprigloop is a free baby clothes inventory app. You add what your baby owns,
+            organize it by size, and pass on what they outgrow to another Sprigloop family.
+            Here&rsquo;s how each step works.
           </p>
         </header>
 
         <section className={styles.step}>
           <div className={styles.stepNum}>01</div>
-          <h2 className={styles.h2}>Add everything your baby has</h2>
+          <h2 className={styles.h2}>Add your baby&rsquo;s clothes to your inventory</h2>
           <p>
-            Point your phone at any tag or label and Sprigloop pulls out the brand, size,
-            and category for you. Clothing, gear, feeding equipment — if it has a tag,
-            you can scan it. Or type the details in by hand for anything that doesn&rsquo;t.
+            Take a photo of a clothing tag and Sprigloop pulls out the brand, size, and
+            category for you. Or type the details in by hand. Either way, every onesie,
+            jacket, and pair of pants ends up as a row in your baby clothes inventory.
           </p>
           <p>
             You can build the whole list in one evening or chip away at it one item at a time.
-            The photo-scan flow lets you stack scans before reviewing, so seeding a full
-            pile of 40 items takes about five minutes.
+            The photo-scan flow lets you stack scans in a row before reviewing, so seeding a
+            closet of 40 items takes about five minutes.
           </p>
         </section>
 
         <section className={styles.step}>
           <div className={styles.stepNum}>02</div>
-          <h2 className={styles.h2}>Plan ahead and share your registry</h2>
+          <h2 className={styles.h2}>Track and organize baby clothes by size</h2>
           <p>
-            The Plan tab tracks your baby&rsquo;s age across 8 categories — clothing, sleep,
-            feeding, travel, play, and more — and flags gaps before the next size window
-            arrives. You&rsquo;ll see a countdown to the next size and exactly what&rsquo;s
-            missing, so there&rsquo;s no last-minute scramble when they suddenly outgrow
-            the 0&ndash;3M pile.
+            Sprigloop groups every item by size and age range, so you always know what fits
+            now, what&rsquo;s a few months out, and what your baby has already outgrown.
+            Filter by size, brand, or category. Plan ahead for the next size before you spend
+            on something you don&rsquo;t actually need.
           </p>
           <p>
-            From your Plan, you can generate a shareable registry in one tap. Family and
-            friends get a link that shows real gaps — by category, by size — and can claim
-            items without duplicating. No store account, no generic registry suggestions,
-            no duplicate onesies. If more than one parent or caregiver uses the app,
-            household sharing keeps everyone on the same page automatically.
+            If more than one parent or caregiver shares the same wardrobe, household sharing
+            keeps everyone on the same page without lists going back and forth.
           </p>
         </section>
 
@@ -266,15 +259,6 @@ export default function HowItWorks() {
           </details>
 
           <details className={styles.faqItem}>
-            <summary>Can I share a registry with family and friends?</summary>
-            <p>
-              Yes. From the Plan tab, you can generate a shareable link that shows your
-              real gaps by category and size. Anyone with the link can see what&rsquo;s
-              needed and claim items. No store account required on their end.
-            </p>
-          </details>
-
-          <details className={styles.faqItem}>
             <summary>Do I have to photograph every item?</summary>
             <p>
               No. The photo-scan flow speeds things up, but you can also type items in by
@@ -319,17 +303,17 @@ export default function HowItWorks() {
             '@type': 'HowTo',
             name: 'How Sprigloop works',
             description:
-              'Track what your baby has, plan what is coming, share a registry with family and friends, and pass on what they outgrow.',
+              'A free baby clothes inventory app: add what your baby owns, organize it by size, and pass on what they outgrow.',
             step: [
               {
                 '@type': 'HowToStep',
-                name: 'Add everything your baby has',
-                text: 'Point your phone at any tag or label — clothing, gear, feeding equipment — and Sprigloop extracts the brand, size, and category. Or type the details in by hand.',
+                name: 'Add your inventory',
+                text: 'Take a photo of a clothing tag and Sprigloop extracts the brand, size, and category. Or type the details in by hand.',
               },
               {
                 '@type': 'HowToStep',
-                name: 'Plan ahead and share your registry',
-                text: 'The Plan tab tracks gaps across 8 categories and flags what is missing before the next size window hits. Share a registry link so family and friends can claim real gaps without duplicating.',
+                name: 'Track and organize by size',
+                text: "Sprigloop groups every item by size and age range, so you always know what fits now, what's coming up, and what your baby has already outgrown.",
               },
               {
                 '@type': 'HowToStep',
@@ -377,14 +361,6 @@ export default function HowItWorks() {
                 acceptedAnswer: {
                   '@type': 'Answer',
                   text: 'Yes. You can choose donation as the destination directly, or it is the fallback if no opted-in Sprigloop family is a match.',
-                },
-              },
-              {
-                '@type': 'Question',
-                name: 'Can I share a registry with family and friends?',
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: 'Yes. From the Plan tab you can generate a shareable link that shows your real gaps by category and size. Anyone with the link can claim items without a store account.',
                 },
               },
               {

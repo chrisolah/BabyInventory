@@ -1,39 +1,7 @@
 /* Matches the 36×36 footprint of the ProfileMenu it replaces. */
 
-/* Outer flex row: + button | ⋮ button */
-.wrapper {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
 .root {
   position: relative;
-}
-
-/* Persistent + add-item button */
-.addBtn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--teal);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #fff;
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-
-.addBtn:hover {
-  background: var(--teal-dark);
-}
-
-.addBtn:focus-visible {
-  outline: 2px solid var(--teal);
-  outline-offset: 2px;
 }
 
 .btn {

@@ -848,6 +848,10 @@ export default function Inventory() {
             ~85px for the title). */}
         <div className={styles.titleCell}>
           <div className={styles.title}>{title}</div>
+          {/* Tiny mobile-only vine under the wardrobe name. IvySprig hides
+              itself on desktop (≥ 960px) where the gutter IvyDecoration
+              carries the decoration instead. */}
+          <IvySprig />
         </div>
         <div className={styles.headerActions}>
           <HeaderActions />
@@ -980,24 +984,17 @@ export default function Inventory() {
 
       {/* Category selector — horizontal scroll row (mobile) */}
       <div className={styles.catRow}>
-        {INVENTORY_CATEGORIES.map(cat => {
-          const active = selectedTopCategory === cat.id
-          return (
-            <button
-              key={cat.id}
-              type="button"
-              className={`${styles.catChip} ${styles[`catChip_${cat.color}`]} ${active ? styles.catChipActive : ''}`}
-              onClick={() => cat.id === 'wishlist' ? navigate('/registry/edit') : setSelectedTopCategory(cat.id)}
-              aria-label={cat.label}
-              aria-pressed={active}
-            >
-              <div className={`${styles.catChipIcon} ${styles[`catChipIcon_${cat.color}`]}`}>
-                <cat.icon />
-              </div>
-              <span className={styles.catChipLabel}>{cat.label}</span>
-            </button>
-          )
-        })}
+        {INVENTORY_CATEGORIES.map(cat => (
+          <button
+            key={cat.id}
+            type="button"
+            className={`${styles.catChip} ${selectedTopCategory === cat.id ? styles.catChipActive : ''}`}
+            onClick={() => setSelectedTopCategory(cat.id)}
+            aria-label={cat.label}
+          >
+            {cat.label}
+          </button>
+        ))}
       </div>
 
       {/* Desktop two-column layout */}
@@ -1010,7 +1007,7 @@ export default function Inventory() {
               key={cat.id}
               type="button"
               className={`${styles.catSidebarItem} ${selectedTopCategory === cat.id ? styles.catSidebarItemActive : ''}`}
-              onClick={() => cat.id === 'wishlist' ? navigate('/registry/edit') : setSelectedTopCategory(cat.id)}
+              onClick={() => setSelectedTopCategory(cat.id)}
               aria-label={cat.label}
             >
               <span className={styles.catSidebarIcon}><cat.icon /></span>
@@ -1728,15 +1725,15 @@ function WishlistNavIcon() {
 }
 
 const INVENTORY_CATEGORIES = [
-  { id: 'clothing',  label: 'Clothing',  icon: ClothingNavIcon,  color: 'teal'   },
-  { id: 'sleep',     label: 'Sleep',     icon: SleepNavIcon,     color: 'blue'   },
-  { id: 'feeding',   label: 'Feeding',   icon: FeedingNavIcon,   color: 'amber'  },
-  { id: 'diapering', label: 'Diapering', icon: DiaperNavIcon,    color: 'gray'   },
-  { id: 'travel',    label: 'Travel',    icon: TravelNavIcon,    color: 'purple' },
-  { id: 'play',      label: 'Play',      icon: PlayNavIcon,      color: 'coral'  },
-  { id: 'health',    label: 'Health',    icon: HealthNavIcon,    color: 'red'    },
-  { id: 'bath',      label: 'Bath',      icon: BathNavIcon,      color: 'green'  },
-  { id: 'wishlist',  label: 'Registry',  icon: WishlistNavIcon,  color: 'teal'   },
+  { id: 'clothing',  label: 'Clothing',  icon: ClothingNavIcon },
+  { id: 'sleep',     label: 'Sleep',     icon: SleepNavIcon },
+  { id: 'feeding',   label: 'Feeding',   icon: FeedingNavIcon },
+  { id: 'diapering', label: 'Diapering', icon: DiaperNavIcon },
+  { id: 'travel',    label: 'Travel',    icon: TravelNavIcon },
+  { id: 'play',      label: 'Play',      icon: PlayNavIcon },
+  { id: 'health',    label: 'Health',    icon: HealthNavIcon },
+  { id: 'bath',      label: 'Bath',      icon: BathNavIcon },
+  { id: 'wishlist',  label: 'Wishlist',  icon: WishlistNavIcon },
 ]
 
 // ── Non-clothing item card ────────────────────────────────────────────────
