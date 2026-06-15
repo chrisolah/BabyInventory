@@ -70,6 +70,15 @@ export default function NativeWelcome() {
         <button className={styles.secondary} onClick={() => navigate('/login')}>
           Log in
         </button>
+        <button
+          className={styles.tertiary}
+          onClick={() => {
+            track.ctaClicked('native_welcome_find_registry')
+            navigate('/find-registry')
+          }}
+        >
+          Find a registry
+        </button>
       </div>
     </div>
   )

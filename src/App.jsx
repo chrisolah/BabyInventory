@@ -36,6 +36,7 @@ import AcceptInvite from './screens/AcceptInvite'
 import WishlistPublic from './screens/WishlistPublic'
 import WishlistEdit from './screens/WishlistEdit'
 import ArrivalChecklist from './screens/ArrivalChecklist'
+import FindRegistry from './screens/FindRegistry'
 import Admin from './screens/Admin'
 import IvyDecoration from './components/IvyDecoration'
 import LandingLayout from './components/LandingLayout'
@@ -321,6 +322,10 @@ function AppRoutes() {
             footer (which links back to them, intentionally circular). */}
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
+        {/* /find-registry — public registry search. Gift-givers can find a
+            household's registry by name without needing the direct share link.
+            Inside LandingLayout so it inherits marketing nav + footer. */}
+        <Route path="/find-registry" element={<FindRegistry />} />
       </Route>
       {/* Guides routes use GuidesLayout which renders AppShell for authed
           users (sidebar stays visible) and marketing chrome for public

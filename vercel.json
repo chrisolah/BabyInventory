@@ -1,6 +1,14 @@
 {
   "rewrites": [
     { "source": "/wishlist/:token", "destination": "/api/wishlist/:token" },
-    { "source": "/((?!assets/|api/).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|api/|\\.well-known/).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/.well-known/apple-app-site-association",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json" }
+      ]
+    }
   ]
 }

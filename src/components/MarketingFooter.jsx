@@ -21,6 +21,7 @@ export default function MarketingFooter() {
         <nav className={styles.nav} aria-label="Footer navigation">
           <Link to="/about" className={styles.link}>About</Link>
           <Link to="/contact" className={styles.link}>Contact</Link>
+          <Link to="/find-registry" className={styles.link}>Find a registry</Link>
           <Link to="/privacy" className={styles.link}>Privacy</Link>
           <Link to="/terms" className={styles.link}>Terms</Link>
         </nav>
