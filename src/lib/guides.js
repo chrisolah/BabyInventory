@@ -2791,6 +2791,1037 @@ export const GUIDES = [
       },
     ],
   },
+
+  // ── How-To Guide 1: How to Swaddle ──────────────────────────────────────
+  {
+    slug: 'how-to-swaddle-a-baby',
+    title: 'How to Swaddle a Baby',
+    subtitle: 'Step-by-step technique, when to stop, hip safety, and which products make it easier.',
+    description: 'Swaddling reduces crying and improves sleep in the newborn period — but only when done correctly. Here is the safe technique, the safety rules, and when to stop.',
+    date: 'June 2026',
+    lastmod: '2026-06-15',
+    readTime: '6 min',
+    tags: ['How To', 'Newborn', 'Sleep'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from AAP guidelines, pediatric sleep research, and International Hip Dysplasia Institute guidance. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Swaddling mimics the snug environment of the womb and triggers a calming reflex in newborns. When done correctly, it reduces crying, extends sleep, and prevents the startle reflex from waking a sleeping baby. When done incorrectly, it can restrict hip development or increase suffocation risk. This guide gives you the safe technique and the research behind it.',
+      },
+      {
+        type: 'note',
+        body: 'The AAP recommends stopping swaddling as soon as your baby shows any signs of rolling — typically around 2 months, sometimes earlier. A swaddled baby who rolls to their stomach cannot push up to free their airway.',
+      },
+      {
+        type: 'h2',
+        heading: 'The science behind swaddling',
+        body: 'A 2002 study in Pediatrics found that swaddled infants cried significantly less and had longer periods of quiet sleep than unswaddled infants. The mechanism is the Moro (startle) reflex: newborns have an involuntary response to perceived falling that causes them to fling their arms outward, which frequently wakes them from sleep. Swaddling suppresses this reflex. Research also shows swaddled newborns have lower cortisol (stress hormone) levels and more stable heart rates during painful procedures like heel sticks.',
+      },
+      {
+        type: 'h2',
+        heading: 'What you need',
+        body: 'A square muslin or cotton blanket, at least 40x40 inches. Smaller blankets come unwrapped. Stretchy jersey knit works for smaller babies but loses effectiveness faster as babies grow stronger.',
+      },
+      {
+        type: 'h2',
+        heading: 'How to swaddle: the diamond technique',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Lay the blanket flat in a diamond shape. Fold the top corner down about 6 inches to create a straight edge at the top.',
+          'Place baby on their back with their neck on that folded edge and shoulders just below it. Their head should be above the blanket.',
+          'Hold baby\'s right arm gently against their body. Pull the left side of the blanket across their chest and tuck it snugly under their left side and back.',
+          'Fold the bottom corner up over baby\'s feet and tuck it into the top of the wrap across their chest.',
+          'Hold baby\'s left arm against their body. Pull the right side of the blanket across their chest and tuck the remaining fabric underneath them.',
+          'The fit should be snug enough that the blanket stays in place but loose enough that you can slip two fingers between the blanket and baby\'s chest.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Hip safety: the critical rule',
+        body: 'Swaddling with straight, extended legs can cause or worsen hip dysplasia — a condition where the ball of the hip joint does not fit properly in the socket. The International Hip Dysplasia Institute estimates that improper swaddling may be a contributing factor in hip dysplasia cases.',
+      },
+      {
+        type: 'note',
+        body: 'Always swaddle with hips loose. Baby\'s legs should be able to bend up and out at the hips (the "frog" position) inside the swaddle. The upper body should be snug; the lower body should have room to move. Never wrap legs straight and tight.',
+      },
+      {
+        type: 'h2',
+        heading: 'When to stop swaddling',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Stop immediately when baby shows any sign of rolling — attempting to roll, rolling to their side, or pushing up during tummy time with more strength. The AAP advises transition as soon as these signs appear, which is typically 2 months but can be earlier.',
+          'Most babies transition between 2–4 months. By 4 months, the Moro reflex has naturally diminished and swaddling is less necessary.',
+          'Transition to a sleep sack (wearable blanket) with arms free. Many families use a transitional product like the Love to Dream Swaddle UP that allows one arm out, then both out.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Velcro and zip swaddles vs. blankets',
+        body: 'Pre-made swaddles with velcro or zipper closures (Halo SleepSack Swaddle, Love to Dream, Ollie Swaddle) are significantly easier to use in the dark at 3am and come undone less easily. The tradeoff is cost — they run $25–$45 each. Most parents end up with a combination: blanket swaddles for the first weeks, a structured swaddle for nights.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🤍',
+            name: 'aden + anais Classic Muslin Swaddle Blankets (4-pack)',
+            note: 'Large enough (47x47") to actually stay wrapped; gets softer with every wash',
+            url: 'https://www.amazon.com/s?k=aden+anais+muslin+swaddle+blankets+4+pack&tag=sprigloop-20',
+          },
+          {
+            emoji: '🌙',
+            name: 'Halo SleepSack Swaddle (Newborn)',
+            note: 'Velcro wings keep the swaddle secure; hip-healthy certified by the IHDI',
+            url: 'https://www.amazon.com/s?k=halo+sleepsack+swaddle+newborn&tag=sprigloop-20',
+          },
+          {
+            emoji: '💛',
+            name: 'Love to Dream Swaddle UP (Stage 1)',
+            note: 'Arms-up position reduces startle reflex; great for transition when one wing comes off',
+            url: 'https://www.amazon.com/s?k=love+to+dream+swaddle+up+stage+1&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'AAP — Swaddling: Is It Safe?', url: 'https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Swaddling-Is-it-Safe.aspx' },
+          { label: 'Pediatrics (2002) — Calming Effect of Swaddling', url: 'https://publications.aap.org/pediatrics/article-abstract/110/5/e68/62568' },
+          { label: 'International Hip Dysplasia Institute — Hip-Healthy Swaddling', url: 'https://hipdysplasia.org/developmental-dysplasia-of-the-hip/hip-healthy-swaddling/' },
+          { label: 'AAP — Safe Sleep Recommendations', url: 'https://www.aap.org/en/patient-care/safe-sleep/' },
+          { label: 'Journal of Pediatrics — Swaddling and Hip Dysplasia', url: 'https://www.jpeds.com/article/S0022-3476(14)00601-0/fulltext' },
+        ],
+      },
+    ],
+  },
+
+  // ── How-To Guide 2: Tummy Time ───────────────────────────────────────────
+  {
+    slug: 'how-to-do-tummy-time',
+    title: 'How to Do Tummy Time (and Why It Matters)',
+    subtitle: 'When to start, how long, what to do if your baby hates it, and the developmental research behind it.',
+    description: 'Tummy time is the foundation of motor development in infancy. Here is when to start, how to build up to 30 minutes a day, and how to make it work for a baby who resists it.',
+    date: 'June 2026',
+    lastmod: '2026-06-15',
+    readTime: '6 min',
+    tags: ['How To', 'Newborn', 'Development'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from AAP guidance, CDC developmental milestones research, and peer-reviewed pediatric occupational therapy literature. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Since the AAP launched the "Back to Sleep" campaign in 1994 — which reduced SIDS deaths by more than 50% — babies spend far more time on their backs than previous generations did. The tradeoff is that they now need intentional tummy time to build the neck, shoulder, and core strength that back-sleeping doesn\'t develop. The AAP now recommends tummy time starting from the first day home from the hospital.',
+      },
+      {
+        type: 'h2',
+        heading: 'Why tummy time matters',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Strengthens neck and shoulder muscles needed to hold the head up, roll over, sit, crawl, and eventually walk.',
+          'Prevents positional plagiocephaly (flat head syndrome), which has increased significantly since the Back to Sleep campaign. The AAP reports that 1 in 5 babies now have some degree of skull flattening — tummy time is the primary prevention.',
+          'Develops proprioception (body awareness) and the sensory processing skills needed for later coordination.',
+          'A 2020 study in Physical & Occupational Therapy in Pediatrics found that babies who received more tummy time reached motor milestones — rolling, sitting, crawling — significantly earlier than those who had less.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'When to start',
+        body: 'From day one at home, according to the AAP — as long as your baby\'s umbilical cord stump has not caused skin irritation. Even 2–3 minutes of tummy time per session in the first weeks is beneficial. Many parents wait until the cord falls off (1–3 weeks), which is also fine.',
+      },
+      {
+        type: 'h2',
+        heading: 'How much tummy time by age',
+      },
+      {
+        type: 'table',
+        cols: ['Age', 'Daily goal', 'Session length'],
+        rows: [
+          ['0–1 month', '5–10 minutes total', '2–3 minutes, several times a day'],
+          ['1–2 months', '10–20 minutes total', '3–5 minutes per session'],
+          ['2–3 months', '20–30 minutes total', '5–10 minutes per session'],
+          ['3–4 months', '30+ minutes total', 'Baby should tolerate longer stretches'],
+          ['4+ months', 'As much as possible', 'Baby is usually rolling and moving freely'],
+        ],
+      },
+      {
+        type: 'note',
+        body: 'Tummy time only counts when baby is awake and supervised. Never leave a baby on their tummy unsupervised or for sleep. The safe sleep position is always on their back.',
+      },
+      {
+        type: 'h2',
+        heading: 'How to do it: positions and techniques',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Classic floor tummy time: Place baby chest-down on a firm, flat surface. Get down at their eye level with a high-contrast toy or your face to give them something to look at and lift toward.',
+          'Chest-to-chest: Recline in a chair at about 45 degrees and place baby tummy-down on your chest. This is the easiest starting position for very young babies and still counts as tummy time.',
+          'Lap tummy time: Drape baby face-down across your lap with their head just past your knees. One hand on their back for support. Great for short sessions and easy diaper changes.',
+          'Tummy time on a rolled towel or Boppy: Place a tightly rolled towel or a nursing pillow under baby\'s chest and upper arms. This elevates their upper body and makes it easier to lift their head.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'What to do if your baby hates tummy time',
+        body: 'Most newborns dislike tummy time at first. This is normal and not a reason to skip it — it means the muscles are weak and need the work. Strategies that help:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Start with chest-to-chest tummy time on a parent\'s chest rather than the floor. Most babies tolerate this more easily.',
+          'Do it after a diaper change, not after feeding (tummy time on a full stomach causes spit-up).',
+          'Keep sessions short and frequent. Two minutes five times a day is better than ten minutes once.',
+          'Get on the floor at their eye level. A face to look at is more motivating than the carpet.',
+          'Place a small mirror in front of them — babies are drawn to faces, including their own reflection.',
+          'Tolerance typically improves rapidly. A baby who screams after 30 seconds at 2 weeks will usually manage 5 minutes comfortably by 6 weeks if you keep at it daily.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Milestones tummy time supports',
+      },
+      {
+        type: 'table',
+        cols: ['Milestone', 'Typical age', 'Tummy time role'],
+        rows: [
+          ['Lifts head briefly', '1 month', 'Direct result of neck strengthening'],
+          ['Holds head at 45 degrees', '2 months', 'Sustained neck and shoulder strength'],
+          ['Holds head at 90 degrees', '3–4 months', 'Full neck control, precursor to rolling'],
+          ['Rolls front to back', '3–5 months', 'Core and shoulder strength required'],
+          ['Rolls back to front', '4–6 months', 'Full body coordination'],
+          ['Sits independently', '6–8 months', 'Core strength built through months of tummy time'],
+          ['Crawling', '7–10 months', 'Arm, shoulder, and core strength from tummy time'],
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🌈',
+            name: 'Infantino Twist and Fold Activity Gym and Play Mat',
+            note: 'High-contrast patterns on the mat give babies visual targets to lift toward during tummy time',
+            url: 'https://www.amazon.com/s?k=infantino+twist+fold+activity+gym+play+mat&tag=sprigloop-20',
+          },
+          {
+            emoji: '🪞',
+            name: 'Sassy Tummy Time Floor Mirror',
+            note: 'Babies are motivated by faces — including their own. Keeps them engaged long enough to build tolerance.',
+            url: 'https://www.amazon.com/s?k=sassy+tummy+time+floor+mirror&tag=sprigloop-20',
+          },
+          {
+            emoji: '🤱',
+            name: 'Boppy Original Nursing Pillow',
+            note: 'Doubles as a tummy time prop — place under chest and arms to elevate baby and reduce strain',
+            url: 'https://www.amazon.com/s?k=boppy+original+nursing+pillow&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'AAP — Back to Sleep, Tummy to Play', url: 'https://www.healthychildren.org/English/ages-stages/baby/sleep/Pages/The-Importance-of-Tummy-Time.aspx' },
+          { label: 'CDC — Important Milestones: Your Baby By Two Months', url: 'https://www.cdc.gov/ncbddd/actearly/milestones/milestones-2mo.html' },
+          { label: 'Physical & Occupational Therapy in Pediatrics (2020) — Tummy time and motor development', url: 'https://www.tandfonline.com/doi/abs/10.1080/01942638.2019.1616589' },
+          { label: 'AAP — Positional Skull Deformities and Tummy Time', url: 'https://publications.aap.org/pediatrics/article/135/1/e26/33685' },
+          { label: 'CHOP — Tummy Time: Why It Matters', url: 'https://www.chop.edu/news/health-tip/tummy-time-why-it-matters' },
+        ],
+      },
+    ],
+  },
+
+  // ── How-To Guide 3: Baby Carrier Safety ─────────────────────────────────
+  {
+    slug: 'how-to-use-a-baby-carrier-safely',
+    title: 'How to Use a Baby Carrier Safely',
+    subtitle: 'TICKS guidelines, hip positioning, carrier types by age, and the forward-facing question answered.',
+    description: 'Babywearing keeps babies calmer and frees your hands — but position matters for airway safety and hip development. Here is the research and the right technique.',
+    date: 'June 2026',
+    lastmod: '2026-06-15',
+    readTime: '7 min',
+    tags: ['How To', 'Gear', 'Newborn'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from CPSC safety guidelines, International Hip Dysplasia Institute recommendations, and peer-reviewed babywearing research. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Babywearing — carrying a baby in a carrier or sling — has been practiced across cultures for thousands of years, and the research supports it. Studies show that babies who are carried more cry less, have better physiological regulation, and show stronger attachment outcomes. But position matters: an incorrectly worn carrier can restrict airway or cause hip dysplasia. The TICKS guidelines, developed by the UK Sling Safety Campaign, give you everything you need to know in five checkpoints.',
+      },
+      {
+        type: 'h2',
+        heading: 'The TICKS safety checklist',
+        body: 'Run through this every time you put your baby in a carrier, especially in the newborn period when babies have limited head control.',
+      },
+      {
+        type: 'table',
+        cols: ['Letter', 'What it means', 'How to check'],
+        rows: [
+          ['T — Tight', 'Carrier is snug, no sagging', 'Baby should not be able to slump; fabric should support them fully'],
+          ['I — In view', 'Baby\'s face is always visible', 'You should see baby\'s face without moving fabric or leaning forward'],
+          ['C — Close enough to kiss', 'Baby\'s head is close to your chin', 'Tilt your head down — you should be able to kiss the top of their head'],
+          ['K — Keep chin off chest', 'Baby\'s chin is not compressed to chest', 'Two fingers should fit between chin and chest; chin-to-chest blocks airway'],
+          ['S — Supported back', 'Baby\'s back is supported in natural curve', 'Back should be straight or in gentle C-curve; no slumping forward'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Hip positioning: the M position',
+        body: 'The International Hip Dysplasia Institute recommends the "M position" (also called the frog position or seat-in position) for all baby carriers. In this position, baby\'s thighs are spread around the carrier with knees higher than the bottom, forming an M shape when viewed from the front.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'The carrier seat should extend from knee to knee — not just supporting the bottom but the full thigh. A narrow carrier that only supports the bottom allows legs to dangle and puts strain on hip joints.',
+          'Knees should be at or above bottom level. If knees are lower than the bottom, the carrier is not providing proper hip support.',
+          'The IHDI has certified specific carriers as "hip-healthy" — structured carriers from Ergobaby, Tula, Lillebaby, and others with wide bases consistently appear on this list.',
+          'Carriers that are not hip-healthy for newborns: bag-style slings, cradle carries, and narrow-based carriers designed as budget options.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Carrier types and when to use them',
+      },
+      {
+        type: 'table',
+        cols: ['Carrier type', 'Best for', 'Learning curve', 'Notes'],
+        rows: [
+          ['Structured SSC (soft structured carrier)', 'Newborn through toddler', 'Low', 'Most versatile; requires correct insert for newborns under ~11 lbs'],
+          ['Ring sling', 'Newborn through toddler', 'Medium', 'Quick on/off; one-shoulder so not ideal for long carries'],
+          ['Stretchy wrap', 'Newborn through 15–20 lbs', 'Medium-high', 'Very snug for newborns; too stretchy for heavier babies'],
+          ['Woven wrap', 'All ages', 'High', 'Most supportive and adjustable; significant learning curve'],
+          ['Meh dai (Asian-inspired carrier)', 'Newborn through toddler', 'Medium', 'Cross between wrap and SSC; adjustable without clips'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The forward-facing question',
+        body: 'Forward-facing carrying (baby facing outward) is popular but has meaningful drawbacks supported by research. In a forward-facing carry, baby\'s back is against the carrier, legs dangle without hip support, and there is no support for the natural spinal curve. A 2013 study found elevated cortisol levels in forward-facing carried babies compared to in-facing carried babies in the same carriers.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Most major babywearing organizations and the IHDI advise limiting forward-facing carries and preferring inward-facing for young babies.',
+          'If you do use a forward-facing position, use a carrier specifically designed for it (like the Ergobaby 360 or Lillebaby Complete) that maintains hip positioning, and limit the duration.',
+          'A hip carry or back carry is a better option for an older baby who wants to see the world — both maintain proper positioning.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The research on babywearing',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'A 1986 randomized controlled trial in Pediatrics found that babies who were carried in soft carriers for at least 3 additional hours per day cried 43% less overall and 54% less during evening hours.',
+          'Research on kangaroo mother care (skin-to-skin carrying in hospital) shows improved temperature regulation, heart rate stability, weight gain, and reduced mortality in premature infants.',
+          'A 2012 study in Pediatrics found secure attachment — a predictor of emotional health and social development — was associated with more frequent physical contact including carrying.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🦘',
+            name: 'Ergobaby Omni 360 All-Position Baby Carrier',
+            note: 'Newborn-ready without insert, IHDI hip-healthy certified, 4 carry positions including back carry',
+            url: 'https://www.amazon.com/s?k=ergobaby+omni+360+baby+carrier&tag=sprigloop-20',
+          },
+          {
+            emoji: '💚',
+            name: 'LILLEbaby Complete All Seasons Carrier',
+            note: 'Six carry positions, lumbar support panel, IHDI certified — frequently recommended for plus-size parents',
+            url: 'https://www.amazon.com/s?k=lillebaby+complete+all+seasons+carrier&tag=sprigloop-20',
+          },
+          {
+            emoji: '🤍',
+            name: 'Solly Baby Wrap (Stretchy Wrap)',
+            note: 'Lightweight TENCEL fabric — cooler than cotton wraps; great for the newborn period',
+            url: 'https://www.amazon.com/s?k=solly+baby+wrap+carrier&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'UK Sling Safety Campaign — TICKS Guidelines', url: 'https://babyslingsafety.co.uk/' },
+          { label: 'International Hip Dysplasia Institute — Baby Carriers', url: 'https://hipdysplasia.org/developmental-dysplasia-of-the-hip/prevention/baby-carriers-seats-and-other-equipment/' },
+          { label: 'Pediatrics (1986) — Effect of Carrying on Infant Crying', url: 'https://publications.aap.org/pediatrics/article-abstract/77/5/641/57138' },
+          { label: 'Hunziker & Barr (1986) — Increased Carrying Reduces Infant Crying', url: 'https://pubmed.ncbi.nlm.nih.gov/3517799/' },
+          { label: 'Pediatrics (2012) — Attachment and Physical Contact', url: 'https://publications.aap.org/pediatrics/article-abstract/130/5/e1065/30437' },
+          { label: 'CPSC — Baby Sling Safety Guidelines', url: 'https://www.cpsc.gov/content/cpsc-urges-parents-to-use-caution-when-using-baby-slings' },
+        ],
+      },
+    ],
+  },
+
+  // ── How-To Guide 4: Car Seat Installation ───────────────────────────────
+  {
+    slug: 'how-to-install-a-car-seat',
+    title: 'How to Install a Car Seat Correctly',
+    subtitle: 'LATCH vs. seat belt installation, rear-facing rules, the 1-inch test, and how to get it inspected for free.',
+    description: 'NHTSA data shows that 59% of car seats are installed incorrectly. Here is the correct installation method, the rear-facing guidelines, and where to get your installation verified.',
+    date: 'June 2026',
+    lastmod: '2026-06-15',
+    readTime: '7 min',
+    tags: ['How To', 'Gear', 'Safety'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from NHTSA guidelines, AAP car seat recommendations, and Consumer Reports car seat safety research. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Car crashes are the leading cause of injury death for children ages 1–13 in the United States. A correctly installed and used car seat reduces the risk of death in a crash by 71% for infants and 54% for toddlers compared to seat belts alone. NHTSA data shows that nearly 59% of car seats are used incorrectly in some way — mostly installation errors. This guide walks through the correct installation and the most common mistakes.',
+      },
+      {
+        type: 'note',
+        body: 'Every infant should ride rear-facing from birth. The AAP recommends keeping children rear-facing until they reach the maximum height or weight limit of their rear-facing car seat — not until age 2, as older guidance stated. Rear-facing is safer at every age because it distributes crash forces across the whole body rather than concentrating them on the neck and spine.',
+      },
+      {
+        type: 'h2',
+        heading: 'LATCH vs. seat belt installation',
+        body: 'Most car seats can be installed two ways: using the LATCH system (Lower Anchors and Tethers for Children) built into your vehicle, or using the vehicle seat belt. Both methods, when done correctly, are equally safe according to NHTSA testing.',
+      },
+      {
+        type: 'table',
+        cols: ['Method', 'When to use', 'Weight limit'],
+        rows: [
+          ['LATCH (lower anchors)', 'When lower anchors are accessible and not hidden under upholstery', 'Lower anchor limit is on the vehicle door jamb sticker — often 65 lbs combined (seat + child)'],
+          ['Seat belt', 'When LATCH weight limit is exceeded, or lower anchors are hard to access', 'No combined weight limit'],
+          ['Top tether', 'Always use when forward-facing — attaches to anchor behind rear seat', 'Required for all forward-facing installations'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Rear-facing installation: step by step',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Read your car seat manual and your vehicle owner\'s manual. Installation steps vary by seat and vehicle.',
+          'Position the seat at the correct angle. Most infant seats have an angle indicator — a bubble level or line that confirms proper recline. Newborns need a more reclined angle (approximately 45 degrees) to keep the airway open. As babies grow and gain head control, the angle can be more upright.',
+          'Thread LATCH connectors through the correct belt path (marked on the seat) and click into lower anchors in your vehicle. Pull the strap tight.',
+          'Or thread the seat belt through the correct belt path and buckle it. Then lock the seat belt using your vehicle\'s locking mechanism — often pressing the belt all the way out and letting it retract, or using a locking clip if provided.',
+          'Perform the 1-inch test: grab the seat at the belt path and try to move it side to side and front to back. If it moves more than 1 inch in any direction, it is not installed correctly. Tighten until it passes.',
+          'Harness straps should come from at or below baby\'s shoulders when rear-facing. Pinch the strap at the shoulder — if you can pinch any slack, the harness is too loose.',
+          'Chest clip should be positioned at armpit level, not on the stomach or neck.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The most common installation mistakes',
+      },
+      {
+        type: 'table',
+        cols: ['Mistake', 'Why it matters', 'How to fix'],
+        rows: [
+          ['Harness too loose', 'Allows baby to move forward in a crash', 'Pinch test at shoulder — no slack'],
+          ['Chest clip in wrong position', 'Stomach position can cause abdominal injury; neck position can cause asphyxiation', 'Clip should sit at armpit level'],
+          ['Seat moves more than 1 inch', 'Seat shifts in crash instead of staying in position', 'Tighten LATCH or lock seat belt'],
+          ['Wrong recline angle', 'Too upright compresses airway in newborns; too flat can cause forward pitch', 'Use built-in angle indicator'],
+          ['Aftermarket accessories', 'Pads, mirrors, and strap covers not tested with the seat can affect crash performance', 'Use only accessories included with the seat'],
+          ['Exceeding weight/height limits', 'Seat design is only tested within its limits', 'Transition to next seat type when limits are reached'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Get your installation inspected — for free',
+        body: 'NHTSA operates a national network of certified Child Passenger Safety Technicians (CPSTs) who will inspect your installation for free, no appointment needed at most locations. This is one of the most valuable free resources available to new parents.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Find a free inspection station at nhtsa.gov/child-safety/car-seats or call 1-888-327-4236.',
+          'Fire stations, police stations, hospitals, and dedicated inspection events are common locations.',
+          'Bring the car seat manual, your vehicle, and the seat installed as you normally use it — technicians will show you exactly what to correct.',
+          'Schedule before your due date. Inspection events book up, and you cannot leave the hospital without a properly installed infant seat.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'When to transition car seats',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Infant seat to convertible: when baby reaches the rear-facing weight or height limit of the infant seat (typically 30–35 lbs or when head is within 1 inch of the top). Keep rear-facing in the convertible seat.',
+          'Rear-facing to forward-facing: only when baby has outgrown the rear-facing weight or height limit of the convertible seat — not at a specific age.',
+          'Forward-facing to booster: when child outgrows the forward-facing weight or height limit (typically 65 lbs or when ears reach the top of the seat).',
+          'Booster to seat belt only: when seat belt fits correctly without a booster — lap belt across upper thighs, shoulder belt across chest and shoulder. This is typically around 4\'9" tall, usually between ages 8–12.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🚗',
+            name: 'Chicco KeyFit 35 Infant Car Seat',
+            note: 'Consistently top-rated by Consumer Reports; SuperCinch LATCH system and level indicator make installation straightforward',
+            url: 'https://www.amazon.com/s?k=chicco+keyfit+35+infant+car+seat&tag=sprigloop-20',
+          },
+          {
+            emoji: '🔄',
+            name: 'Graco Extend2Fit Convertible Car Seat',
+            note: 'Extended rear-facing to 50 lbs; 4-position extension panel adds 5 inches of legroom so babies can stay rear-facing longer',
+            url: 'https://www.amazon.com/s?k=graco+extend2fit+convertible+car+seat&tag=sprigloop-20',
+          },
+          {
+            emoji: '🔧',
+            name: 'Locking Clip for Car Seat Belt Installation',
+            note: 'Required for vehicles with non-locking seat belts; check your vehicle manual to see if needed',
+            url: 'https://www.amazon.com/s?k=car+seat+locking+clip+installation&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'NHTSA — Car Seats and Booster Seats', url: 'https://www.nhtsa.gov/equipment/car-seats-and-booster-seats' },
+          { label: 'AAP — Car Seats: Information for Families', url: 'https://www.healthychildren.org/English/safety-prevention/on-the-go/Pages/Car-Safety-Seats-Information-for-Families.aspx' },
+          { label: 'NHTSA — Child Restraint Use Survey (59% misuse statistic)', url: 'https://www.nhtsa.gov/sites/nhtsa.gov/files/documents/cr-misuse-study-report.pdf' },
+          { label: 'NHTSA — Find a Car Seat Inspection Station', url: 'https://www.nhtsa.gov/child-safety/car-seats' },
+          { label: 'Consumer Reports — Best Infant Car Seats', url: 'https://www.consumerreports.org/babies-kids/car-seats/best-infant-car-seats-of-the-year-a7088444370/' },
+          { label: 'AAP — Rear-Facing Car Seats for Infants and Toddlers', url: 'https://www.healthychildren.org/English/safety-prevention/on-the-go/Pages/Rear-Facing-Car-Seats-for-Infants-Toddlers.aspx' },
+        ],
+      },
+    ],
+  },
+
+  // ── How-To Guide 5: Introducing a Bottle ────────────────────────────────
+  {
+    slug: 'how-to-introduce-a-bottle',
+    title: 'How to Introduce a Bottle to a Breastfed Baby',
+    subtitle: 'When to start, paced feeding technique, how to handle bottle refusal, and what the research says about nipple confusion.',
+    description: 'Most breastfeeding parents will eventually need their baby to take a bottle. Here is the timing, the technique, and what to do when a baby refuses.',
+    date: 'June 2026',
+    lastmod: '2026-06-15',
+    readTime: '6 min',
+    tags: ['How To', 'Feeding'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from AAP breastfeeding guidelines, lactation consultant literature, and peer-reviewed infant feeding research. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Most breastfeeding families reach a point where they need their baby to take a bottle — returning to work, a medical procedure, needing a break, or building a freezer supply. The transition is easy for some babies and genuinely difficult for others. Timing, technique, and the right equipment matter more than most parents realize, and starting with the right approach avoids weeks of frustration.',
+      },
+      {
+        type: 'h2',
+        heading: 'When to introduce a bottle',
+        body: 'Lactation consultants and the AAP generally recommend waiting until breastfeeding is well-established — typically 3–4 weeks — before introducing a bottle. Introducing too early can interfere with establishing milk supply, which depends on consistent demand. Waiting too long (past 6–8 weeks) increases the likelihood of bottle refusal as babies become more opinionated about feeding method.',
+      },
+      {
+        type: 'note',
+        body: 'If you need to bottle-feed before 3 weeks for medical or practical reasons, use paced bottle feeding (described below) to minimize any effect on breastfeeding. The evidence on "nipple confusion" is mixed — some babies transition easily at any age, others show preference early. The 3–4 week window is a guideline, not a hard rule.',
+      },
+      {
+        type: 'h2',
+        heading: 'Paced bottle feeding: the technique that protects breastfeeding',
+        body: 'Standard bottle feeding allows milk to flow freely with gravity, which can cause a baby to take in more milk than they need and faster than they would at the breast. Paced bottle feeding mimics the breast more closely and prevents overfeeding.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Hold baby in a more upright position (30–45 degrees), not lying flat. This slows the flow and requires active sucking.',
+          'Use a slow-flow (Level 1) nipple, even as baby grows. Slow flow requires the same effort as breastfeeding. Fast-flow nipples deliver milk with minimal work — babies quickly learn to prefer the easier option.',
+          'Hold the bottle horizontal (parallel to the floor), not tilted up. Baby has to work to get the milk flowing, just as they do at the breast.',
+          'Allow baby to draw the nipple into their mouth rather than pushing the bottle in. Touch the nipple to their lips and wait.',
+          'Pause every few minutes by tilting the bottle down so the nipple empties. This mimics the natural pauses at the breast and prevents the overfeeding that comes from constant flow.',
+          'Watch for satiety cues — turning away, slowing sucks, releasing the nipple — and stop when they appear, even if there is milk left in the bottle.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Which bottle to use',
+        body: 'There is no single bottle that works for every baby. The shape, nipple design, and flow rate all affect whether a breastfed baby will accept it. Commonly recommended options:',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Comotomo: wide, soft silicone base that baby can hold like a breast; wide nipple requires a similar latch to breastfeeding.',
+          'Dr. Brown\'s Natural Flow: vented design prevents air ingestion, reducing gas and colic symptoms; Level 1 nipple is genuinely slow.',
+          'Nanobebe: breast-shaped design that maintains milk temperature more evenly during feeding.',
+          'Phillips Avent Natural: wide base, soft nipple; many parents report good acceptance.',
+          'Try one bottle at a time rather than buying a set of each — acceptance is highly individual.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'How to handle bottle refusal',
+        body: 'Bottle refusal is common, especially when introduced after 6–8 weeks. It is frustrating but manageable with consistent approach.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Have someone other than the breastfeeding parent offer the bottle. Babies can smell their parent and know the breast is available — they\'ll hold out.',
+          'Try when baby is not very hungry (30–45 minutes after a feeding) so they are willing to experiment rather than frustrated and demanding.',
+          'Warm the nipple in warm water before offering — room temperature silicone feels different from a breast.',
+          'Try different bottle positions: some babies accept a bottle while facing outward toward a window; others accept it while being walked.',
+          'Be patient. Most bottle-refusing babies accept a bottle within a few days to a week of consistent daily attempts. Offering the bottle once, having it refused, and not trying again the next day is the most common way families get stuck.',
+          'If refusal persists past 2 weeks of daily attempts, consult a lactation consultant who specializes in feeding aversion.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'How much breast milk to put in the bottle',
+        body: 'Breastfed babies regulate their intake differently than formula-fed babies. Research by Dr. Kent et al. (2006) found that breastfed babies take an average of 3–4 oz per feeding after the first month, and this amount stays relatively stable from 1–6 months — unlike formula-fed babies whose volumes increase. This means you don\'t need to keep increasing bottle size as baby grows.',
+      },
+      {
+        type: 'note',
+        body: 'Start with 2–3 oz per bottle session when practicing. Offering less prevents waste and pressure to finish. You can always prepare more.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🍼',
+            name: 'Comotomo Natural Feel Baby Bottle (2-pack)',
+            note: 'Wide silicone base mimics breast shape; best-reviewed bottle for breastfed baby acceptance',
+            url: 'https://www.amazon.com/s?k=comotomo+natural+feel+baby+bottle+2+pack&tag=sprigloop-20',
+          },
+          {
+            emoji: '🍼',
+            name: "Dr. Brown's Natural Flow Anti-Colic Bottle Newborn Set",
+            note: 'Vented design reduces gas; Level 1 nipple is genuinely slow-flow; includes bottle brush',
+            url: "https://www.amazon.com/s?k=dr+browns+natural+flow+anti-colic+bottle+newborn+set&tag=sprigloop-20",
+          },
+          {
+            emoji: '❄️',
+            name: 'Lansinoh Breastmilk Storage Bags (100-count)',
+            note: 'Pre-sterilized, double-sealed; lay flat to freeze so bags stack efficiently',
+            url: 'https://www.amazon.com/s?k=lansinoh+breastmilk+storage+bags+100+count&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'AAP — Breastfeeding and the Use of Human Milk', url: 'https://publications.aap.org/pediatrics/article/129/3/e827/31785' },
+          { label: 'Kent et al. (2006) — Volume and Frequency of Breastfeedings', url: 'https://pubmed.ncbi.nlm.nih.gov/16831893/' },
+          { label: 'La Leche League — Returning to Work and Bottle Introduction', url: 'https://llli.org/breastfeeding-info/pumping-and-bottle-feeding/' },
+          { label: 'Journal of Human Lactation — Paced Bottle Feeding', url: 'https://journals.sagepub.com/doi/10.1177/0890334417695451' },
+          { label: 'UNICEF UK — Introducing Bottles', url: 'https://www.unicef.org.uk/babyfriendly/introducing-bottles/' },
+        ],
+      },
+    ],
+  },
+
+  // ── How-To Guide 6: Breast Pump ─────────────────────────────────────────
+  {
+    slug: 'how-to-use-a-breast-pump',
+    title: 'How to Use a Breast Pump',
+    subtitle: 'Flange sizing, settings, when to pump, how to build supply, and milk storage guidelines.',
+    description: 'The most underknown fact about breast pumping is that flange size determines everything. Here is the correct fit, the right technique, and the storage rules that keep expressed milk safe.',
+    date: 'June 2026',
+    lastmod: '2026-06-15',
+    readTime: '8 min',
+    tags: ['How To', 'Feeding'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from CDC breast milk storage guidelines, Academy of Breastfeeding Medicine protocols, and peer-reviewed lactation research. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Most parents who struggle with pumping are dealing with a problem that has a simple root cause: the wrong flange size. A flange (the funnel-shaped piece that goes against the breast) that fits incorrectly causes pain, reduces output, and can contribute to clogged ducts. Getting the fit right is the single highest-leverage change most parents can make to their pumping experience.',
+      },
+      {
+        type: 'h2',
+        heading: 'Flange sizing: the most important thing nobody told you',
+        body: 'The flange should fit the nipple, not the breast. The inside diameter of the flange tunnel should be large enough that your nipple moves freely without friction, but not so large that significant areola tissue is pulled in.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Your nipple should move freely inside the tunnel with minimal friction. If you see friction marks, redness, or feel pain, the flange is too small.',
+          'Significant areola tissue should not be pulled into the tunnel — just the nipple and a small amount of base tissue. If most of your areola disappears into the tunnel, the flange is too large.',
+          'Most pumps ship with 24mm and 27mm flanges. Many lactation consultants report that these sizes fit only a minority of parents — 13mm, 15mm, 17mm, 19mm, and 21mm are all commonly needed.',
+          'Measure your nipple diameter in millimeters (a ruler or nipple ruler works), then add 2–3mm for the correct flange size. Example: 18mm nipple diameter → 20–21mm flange.',
+          'Nipples can change size during the breastfeeding journey — recheck your fit if pumping comfort or output changes.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Understanding pump settings',
+        body: 'Most hospital-grade and consumer double electric pumps have two settings: suction strength (vacuum) and cycle speed (how many sucks per minute). They also have two modes: stimulation (letdown) and expression.',
+      },
+      {
+        type: 'table',
+        cols: ['Mode', 'Cycle speed', 'Suction', 'Purpose'],
+        rows: [
+          ['Stimulation / letdown', 'Fast (80–120 cycles/min)', 'Low', 'Triggers the letdown reflex; use for first 2 minutes of session'],
+          ['Expression', 'Slow (40–60 cycles/min)', 'Higher', 'Extracts milk after letdown; use for remainder of session'],
+        ],
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Start every session in stimulation mode for 1–2 minutes until letdown occurs (you\'ll feel tingling or see milk flowing).',
+          'Switch to expression mode and increase suction to the highest comfortable level — not the highest possible level. Pain reduces letdown and output.',
+          'Sessions should last 15–20 minutes when building supply, or 10–15 minutes once supply is established and you are pumping to maintain it.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'When to pump and how often',
+      },
+      {
+        type: 'table',
+        cols: ['Situation', 'When to pump', 'Frequency'],
+        rows: [
+          ['Exclusively breastfeeding, returning to work', 'Start 2–4 weeks before return; pump after one morning feeding daily to build freezer stash', '1x/day to build stash'],
+          ['Exclusively pumping', 'Every 2–3 hours, including once overnight, for first 3 months', '8–12x/day initially'],
+          ['Supplementing breastfeeding', 'After or instead of feedings baby does not latch for', 'Match feeding frequency'],
+          ['Back at work, baby at home', 'Pump at work whenever baby would normally feed — approximately every 3 hours', '2–4x during work hours'],
+          ['Increasing low supply', 'Power pumping: 20 min on, 10 min off, 10 min on, 10 min off, 10 min on — once daily for a week', '1x/day power pump + regular feeds'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Breast milk storage guidelines (CDC)',
+        body: 'The CDC publishes specific guidelines for safe breast milk storage. These are the current recommendations as of 2022.',
+      },
+      {
+        type: 'table',
+        cols: ['Location', 'Temperature', 'Maximum storage time'],
+        rows: [
+          ['Room temperature', 'Up to 77°F (25°C)', '4 hours (ideal); up to 6 hours if very clean conditions'],
+          ['Refrigerator', '40°F (4°C) or colder', '4 days (ideal); up to 6 days in clean conditions'],
+          ['Freezer (self-contained)', '0°F (-18°C)', '6 months (ideal); up to 12 months acceptable'],
+          ['Deep freezer', '-4°F (-20°C)', '12 months'],
+          ['Previously frozen, thawed in fridge', 'Refrigerator temp', '24 hours; do not refreeze'],
+        ],
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Store milk in 2–4 oz portions to minimize waste from thawing. You can always thaw more.',
+          'Label every bag with the date expressed. Use oldest milk first (FIFO — first in, first out).',
+          'Freeze bags flat to save space. Once frozen, they stack like files.',
+          'Thaw frozen milk in the refrigerator overnight or by holding the bag under warm running water. Never use a microwave — it creates hot spots and destroys antibodies.',
+          'Freshly expressed milk can be added to already-refrigerated milk, but cool it first — do not add warm milk to cold.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Pumping parts cleaning',
+        body: 'The CDC and AAP provide specific guidance on cleaning pump parts that many parents do not know about.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Wash pump parts that come into contact with breast milk (flanges, bottles, valves, membranes) after every use in hot soapy water or the dishwasher top rack.',
+          'Rinse well — soap residue can affect milk flavor.',
+          'Air dry on a clean paper towel or drying rack — not a dish towel, which can transfer bacteria.',
+          'Sanitize (sterilize) once daily for babies under 3 months, premature babies, or immunocompromised babies. Sanitizing is optional for healthy term babies over 3 months.',
+          'Tubing that connects to the motor should not need cleaning unless milk enters it. If it does, replace tubing — it cannot be sterilized effectively.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🫙',
+            name: 'Spectra S2 Plus Hospital-Grade Breast Pump',
+            note: 'Most recommended pump by lactation consultants; closed system prevents milk contamination; quiet motor',
+            url: 'https://www.amazon.com/s?k=spectra+s2+plus+breast+pump&tag=sprigloop-20',
+          },
+          {
+            emoji: '📏',
+            name: 'Maymom Nipple Ruler for Flange Sizing',
+            note: 'Measures nipple diameter accurately so you can order the correct flange size',
+            url: 'https://www.amazon.com/s?k=nipple+ruler+flange+sizing+breast+pump&tag=sprigloop-20',
+          },
+          {
+            emoji: '❄️',
+            name: 'Lansinoh Breastmilk Storage Bags (100-count)',
+            note: 'Pre-sterilized, double-sealed, lay flat to freeze — the most-used storage bag brand',
+            url: 'https://www.amazon.com/s?k=lansinoh+breastmilk+storage+bags+100+count&tag=sprigloop-20',
+          },
+          {
+            emoji: '🧴',
+            name: 'Medela Quick Clean Breast Pump Wipes',
+            note: 'Useful for cleaning pump parts at work when a sink is not nearby',
+            url: 'https://www.amazon.com/s?k=medela+quick+clean+breast+pump+wipes&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'CDC — Breast Milk Storage and Preparation', url: 'https://www.cdc.gov/breastfeeding/recommendations/handling_breastmilk.htm' },
+          { label: 'Academy of Breastfeeding Medicine — Clinical Protocol #8: Pumping', url: 'https://www.bfmed.org/abm-protocol-8' },
+          { label: 'CDC — How to Keep Your Breast Pump Kit Clean', url: 'https://www.cdc.gov/breastfeeding/recommendations/pump_toolkit/breast-pump-toolkit.html' },
+          { label: 'La Leche League International — Expressing and Storing Breast Milk', url: 'https://llli.org/breastfeeding-info/pumping-and-bottle-feeding/' },
+          { label: 'Powe et al. (2011) — Optimal Vacuum for Breast Pumping', url: 'https://pubmed.ncbi.nlm.nih.gov/21746745/' },
+        ],
+      },
+    ],
+  },
+
+  // ── How-To Guide 7: Sleep Cues and Wake Windows ─────────────────────────
+  {
+    slug: 'baby-sleep-cues-and-wake-windows',
+    title: "How to Read Your Baby's Sleep Cues and Wake Windows",
+    subtitle: 'Early vs. late cues, wake windows by age, why overtiredness makes sleep harder, and what the research says.',
+    description: "Reading a baby's sleep cues before they get overtired is one of the most effective ways to improve infant sleep. Here is what to watch for and the wake window science behind it.",
+    date: 'June 2026',
+    lastmod: '2026-06-15',
+    readTime: '7 min',
+    tags: ['How To', 'Sleep', 'Newborn'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from peer-reviewed infant sleep research, AAP sleep guidelines, and pediatric sleep medicine literature. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'One of the most counterintuitive things about infant sleep is that an overtired baby is harder to get to sleep — not easier. When babies miss their sleep window, cortisol and adrenaline release as the body fights fatigue. The result is a wired, fussy baby who cries more, takes longer to settle, and sleeps less deeply. Reading early sleep cues and understanding how long your baby can comfortably stay awake is the foundation of everything else in infant sleep.',
+      },
+      {
+        type: 'h2',
+        heading: 'Early sleep cues (act on these)',
+        body: 'These appear when your baby is getting tired but before the overtired window. This is the time to start a wind-down routine.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Decreased activity — baby slows down, movements become less vigorous',
+          'Quieting — less vocalizing, calmer demeanor',
+          'Looking away or losing interest in toys or faces',
+          'Staring blankly or glazed look',
+          'Yawning (one of the most reliable early cues)',
+          'Rubbing eyes or ears',
+          'Facial grimacing or eyebrow raising',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Late sleep cues (you have missed the window)',
+        body: 'These appear when baby has already entered the overtired state. Getting them to sleep now is possible but harder.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Fussiness that escalates to crying',
+          'Arching the back',
+          'Clenching fists',
+          'Hyper-alert or "second wind" behavior — suddenly looks bright-eyed and active after clear tiredness signs',
+          'Inconsolable crying that cannot be soothed by normal means',
+        ],
+      },
+      {
+        type: 'note',
+        body: 'The goal is to catch early cues and begin the sleep routine before late cues appear. Over time, you will learn your specific baby\'s particular early signals — they vary. Some babies rub ears; others stare. The pattern is consistent once you know it.',
+      },
+      {
+        type: 'h2',
+        heading: 'Wake windows: the research behind them',
+        body: 'A "wake window" is the amount of time a baby can comfortably stay awake between sleep periods before becoming overtired. The concept is grounded in research on infant sleep pressure (homeostatic sleep drive) and circadian rhythm development. Newborns have very short windows because their sleep pressure builds quickly and their circadian system is not yet developed. As babies age, their wake windows lengthen as the circadian system matures and naps consolidate.',
+      },
+      {
+        type: 'table',
+        cols: ['Age', 'Wake window', 'Naps per day', 'Notes'],
+        rows: [
+          ['0–4 weeks', '45–60 minutes', '4–6', 'Very short windows; newborns may only be awake for feeding + diaper change before next sleep'],
+          ['1–2 months', '60–90 minutes', '4–5', 'Wake windows starting to lengthen; watch carefully for early cues'],
+          ['2–3 months', '60–90 minutes', '4–5', 'Windows vary; some babies show first longer stretches of nighttime sleep'],
+          ['3–4 months', '90 minutes–2 hours', '3–4', 'Sleep regression common around 4 months as circadian rhythm develops'],
+          ['4–6 months', '1.5–2.5 hours', '3', 'Nap consolidation begins; 3-nap schedule emerging'],
+          ['6–8 months', '2–3 hours', '2–3', 'Transition from 3 to 2 naps often occurs here'],
+          ['8–12 months', '2.5–3.5 hours', '2', 'Most babies on 2-nap schedule; wake window before bed slightly longer'],
+          ['12–18 months', '4–6 hours', '1–2', 'Transition to 1 nap often occurs between 14–18 months'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The 4-month sleep regression',
+        body: 'Around 3.5–4 months, almost all babies go through a significant sleep change. This is not a regression — it is a developmental progression. Baby\'s sleep architecture permanently changes from two sleep stages (active and quiet) to four stages mirroring adult sleep cycles. The transition between sleep cycles (every 45 minutes) becomes more noticeable and many babies begin waking between cycles who previously slept through them. Understanding that this is permanent and developmental — not a phase that passes back to the newborn pattern — helps parents respond appropriately.',
+      },
+      {
+        type: 'h2',
+        heading: 'Wind-down routines and sleep associations',
+        body: 'Research on infant sleep consistently shows that predictable pre-sleep routines improve sleep onset and duration. A 2009 study in the journal Sleep found that a consistent bedtime routine reduced night wakings and improved sleep duration in infants and toddlers. The routine does not need to be long — 10–15 minutes is sufficient.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Keep the routine consistent: same steps, same order, same environment cues (dim lights, white noise on, sleep sack on).',
+          'Feed should come at the beginning of the routine, not at the very end if possible — this avoids a feed-to-sleep association that makes it harder for babies to resettle overnight without feeding.',
+          'Common effective routines: feed → diaper change → dim lights → book or song → sleep sack → into sleep space.',
+          'White noise at 65–70 dB (the level of a running shower) masks household sounds and extends sleep. A 1990 study found that 80% of newborns fell asleep within 5 minutes of white noise being introduced versus 25% in the control group.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🔊',
+            name: 'LectroFan Classic White Noise Machine',
+            note: 'Non-looping fan and white noise options; consistently recommended by pediatric sleep consultants',
+            url: 'https://www.amazon.com/s?k=lectrofan+classic+white+noise+machine&tag=sprigloop-20',
+          },
+          {
+            emoji: '🌙',
+            name: 'Hatch Rest Baby Sound Machine and Night Light',
+            note: 'Combines white noise, nightlight, and time-to-rise clock; app controlled so you can dim or adjust without entering the room',
+            url: 'https://www.amazon.com/s?k=hatch+rest+baby+sound+machine+night+light&tag=sprigloop-20',
+          },
+          {
+            emoji: '🛌',
+            name: 'Yoofoss Organic Cotton Sleep Sack (0.5 TOG)',
+            note: 'Sleep sack as a sleep-onset cue — the same one every time signals sleep is coming',
+            url: 'https://www.amazon.com/dp/B0BMLT3M13/?tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'Sleep (2009) — Effect of Bedtime Routine on Infant Sleep', url: 'https://academic.oup.com/sleep/article/32/5/599/2454' },
+          { label: 'Archives of Disease in Childhood (1990) — White Noise and Newborn Sleep', url: 'https://adc.bmj.com/content/65/8/888' },
+          { label: 'AAP — Healthy Sleep Habits: How Many Hours Does Your Child Need?', url: 'https://www.healthychildren.org/English/healthy-living/sleep/Pages/healthy-sleep-habits-how-many-hours-does-your-child-need.aspx' },
+          { label: 'Mindell et al. (2015) — Bedtime Routines for Young Children', url: 'https://pubmed.ncbi.nlm.nih.gov/25835243/' },
+          { label: 'Sadeh et al. (2009) — Sleep and the Family', url: 'https://pubmed.ncbi.nlm.nih.gov/19445782/' },
+          { label: 'Johnson et al. (2018) — Infant Sleep and Cortisol', url: 'https://pubmed.ncbi.nlm.nih.gov/29609119/' },
+        ],
+      },
+    ],
+  },
+
+  // ── How-To Guide 8: Diaper Care Products ────────────────────────────────
+  {
+    slug: 'how-to-use-diaper-care-products',
+    title: 'How and When to Use Diaper Care Products',
+    subtitle: 'Diaper rash cream, wipes, baby powder, and barrier treatments — what the research says about each.',
+    description: 'Most parents have several products in the diaper bag they are not completely sure how to use. Here is the evidence on what works, what to avoid, and when each product is actually needed.',
+    date: 'June 2026',
+    lastmod: '2026-06-15',
+    readTime: '6 min',
+    tags: ['How To', 'Diapering', 'Newborn'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from AAP guidance, American Academy of Dermatology recommendations, and peer-reviewed pediatric dermatology research. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Diaper rash affects up to 35% of infants at any given time, making it one of the most common conditions in the first two years of life. Most cases are preventable and treatable with the right products used correctly. The challenge is that the diaper care aisle has grown into a confusing array of creams, powders, sprays, and wipes — many marketed aggressively but backed by minimal evidence. This guide gives you what the research actually supports.',
+      },
+      {
+        type: 'h2',
+        heading: 'Understanding diaper rash',
+        body: 'Most diaper rash (irritant contact dermatitis) is caused by prolonged skin contact with urine and stool, which breaks down the skin\'s natural barrier. Moisture softens the skin; friction damages it; the enzymes and bacteria in stool cause further irritation. Secondary yeast infection (Candida) is common — recognizable by its bright red color with satellite spots extending beyond the main rash area — and requires antifungal treatment rather than standard barrier cream.',
+      },
+      {
+        type: 'h2',
+        heading: 'Diaper rash cream: what to use and when',
+        body: 'The AAP and American Academy of Dermatology both recommend zinc oxide as the first-line treatment and prevention for diaper rash. Zinc oxide creates a physical barrier between skin and moisture, promotes healing, and has antimicrobial properties.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Apply a thick layer at every diaper change when rash is present — you should not be able to see skin through it. Thin application provides little barrier effect.',
+          'For prevention, apply a thin layer at each change if your baby is prone to rash, particularly during illness (loose stools dramatically increase rash risk) or antibiotic use.',
+          'Do not wipe zinc oxide cream off completely at every change — if the area is not soiled, simply add a fresh layer on top. Aggressive wiping to remove cream damages already-irritated skin.',
+          'Aquaphor Baby Healing Ointment (petrolatum-based) is an effective alternative for mild rash prevention — creates a barrier without zinc oxide.',
+          'For a rash that is not improving after 3–4 days of zinc oxide treatment, or that has satellite spots, consult your pediatrician — a yeast infection requires an antifungal treatment (clotrimazole or miconazole).',
+        ],
+      },
+      {
+        type: 'table',
+        cols: ['Product type', 'Active ingredient', 'Best for', 'When to use'],
+        rows: [
+          ['Zinc oxide cream (thick)', 'Zinc oxide 10–40%', 'Active rash treatment', 'Every change until rash resolves; thick layer'],
+          ['Petrolatum barrier (Aquaphor)', 'Petrolatum', 'Prevention and mild rash', 'Every change for sensitive skin; good for newborns'],
+          ['Antifungal cream', 'Clotrimazole or miconazole', 'Yeast-caused rash', 'With pediatrician guidance; 3x/day'],
+          ['Corn starch powder', 'Corn starch', 'Reducing friction and moisture in skin folds', 'Use sparingly; keep away from face'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Baby powder: what the research says',
+        body: 'The AAP advises against using talcum powder (talc-based baby powder) on infants. Talc can be inhaled — baby powder clouds release fine particles that can cause respiratory distress and, with repeated exposure, lung damage. The International Agency for Research on Cancer classifies talc used in the genital area as possibly carcinogenic. Johnson & Johnson settled billions of dollars in litigation related to talc-based products and has discontinued talc-based baby powder in most markets.',
+      },
+      {
+        type: 'note',
+        body: 'If you want to use a powder to reduce friction and moisture in skin folds (a legitimate use), corn starch is safer than talc. Apply by shaking a small amount into your hand first, never directly onto baby, and keep away from baby\'s face and airway.',
+      },
+      {
+        type: 'h2',
+        heading: 'Wipes: what to look for and avoid',
+        body: 'Baby wipes vary significantly in formulation. The most common irritants in wipes are fragrance, alcohol, and preservatives (particularly methylisothiazolinone and bronopol, which are common sensitizers in diaper wipes according to the Contact Dermatitis journal).',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Choose fragrance-free wipes. Fragrance is the single most common contact allergen in baby skincare products according to the American Academy of Dermatology.',
+          'Avoid alcohol-containing wipes — alcohol dries and irritates skin, especially during active rash.',
+          'Water wipes (99%+ water with minimal other ingredients) are the gentlest option and recommended by most pediatric dermatologists for newborns and babies with sensitive skin or active rash.',
+          'For newborns in the first weeks, plain warm water on a soft cloth is the most gentle option and what the AAP recommends.',
+          'Pre-moistened wipes are more convenient than cloth + water for most parents, and research does not show a meaningful difference in rash rates between them when fragrance-free wipes are used.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'How to change a diaper to minimize rash risk',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Change diapers frequently — every 2–3 hours for newborns, and immediately after any stool. Prolonged contact with stool is the primary cause of rash.',
+          'Pat dry rather than rubbing — friction on wet skin contributes to irritation.',
+          'Allow skin to air dry for 1–2 minutes before applying cream and closing the diaper. Even brief air exposure helps.',
+          'If using cloth diapers, extra-absorbent inserts and washing with fragrance-free detergent reduce rash risk significantly.',
+          'Blow-drying on the lowest setting from 6+ inches away is a faster alternative to air drying for active rash — used by many pediatric dermatologists.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'When to see a doctor',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Rash is not improving after 4–7 days of zinc oxide treatment.',
+          'Bright red rash with satellite spots beyond the main area (yeast infection).',
+          'Rash has blisters, open sores, or pustules.',
+          'Baby has a fever alongside the rash.',
+          'Rash extends into skin folds (intertrigo — common and sometimes harder to treat).',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🧴',
+            name: 'Desitin Maximum Strength Diaper Rash Cream (40% Zinc Oxide)',
+            note: '40% zinc oxide — highest concentration available over the counter; the standard recommendation for active rash',
+            url: 'https://www.amazon.com/s?k=desitin+maximum+strength+diaper+rash+cream+40+percent+zinc+oxide&tag=sprigloop-20',
+          },
+          {
+            emoji: '💛',
+            name: 'Aquaphor Baby Healing Ointment (14 oz)',
+            note: 'Petrolatum barrier; excellent for prevention and sensitive newborn skin; fragrance-free',
+            url: 'https://www.amazon.com/s?k=aquaphor+baby+healing+ointment+14+oz&tag=sprigloop-20',
+          },
+          {
+            emoji: '🌊',
+            name: 'WaterWipes Baby Wipes (540 count)',
+            note: '99.9% water; recommended by pediatric dermatologists for newborns and babies with sensitive skin or active rash',
+            url: 'https://www.amazon.com/s?k=waterwipes+baby+wipes+540+count&tag=sprigloop-20',
+          },
+          {
+            emoji: '🍃',
+            name: 'Pampers Sensitive Fragrance-Free Baby Wipes',
+            note: 'Fragrance-free, alcohol-free; good everyday wipe for babies without active rash',
+            url: 'https://www.amazon.com/s?k=pampers+sensitive+fragrance+free+baby+wipes&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'AAP — Diaper Rash', url: 'https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Diaper-Rash.aspx' },
+          { label: 'American Academy of Dermatology — Diaper Rash: Diagnosis and Treatment', url: 'https://www.aad.org/public/diseases/a-z/diaper-rash-treatment' },
+          { label: 'Pediatric Dermatology (2018) — Treatment of Diaper Dermatitis', url: 'https://onlinelibrary.wiley.com/doi/10.1111/pde.13504' },
+          { label: 'Contact Dermatitis — Preservatives as Contact Allergens in Baby Wipes', url: 'https://onlinelibrary.wiley.com/doi/10.1111/cod.12045' },
+          { label: 'AAP — Baby Powder Warning', url: 'https://www.healthychildren.org/English/ages-stages/baby/bathing-skin-care/Pages/Baby-Powder-A-Potentially-Dangerous-Product.aspx' },
+          { label: 'IARC — Talc Classification', url: 'https://monographs.iarc.who.int/list-of-classifications' },
+          { label: 'Blume-Peytavi et al. (2016) — Skin Care Practices for Newborns and Infants', url: 'https://pubmed.ncbi.nlm.nih.gov/26886100/' },
+        ],
+      },
+    ],
+  },
 ]
 
 export function getGuide(slug) {
