@@ -204,6 +204,83 @@
   margin-top: 4px;
 }
 
+/* ── Gift-giver info card ──────────────────────────────────── */
+.infoCard {
+  position: relative;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.infoDismiss {
+  position: absolute; top: 10px; right: 10px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(0,0,0,0.06); border: none;
+  font-size: 15px; color: #6b7280; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-family: inherit; line-height: 1; transition: background 0.12s;
+}
+.infoDismiss:hover { background: rgba(0,0,0,0.12); }
+.infoTitle {
+  font-family: Georgia, serif; font-size: 13px; font-weight: 600;
+  color: #065f46; margin-bottom: 4px; padding-right: 24px;
+}
+.infoBody {
+  font-size: 12px; color: #374151; line-height: 1.5; margin: 0;
+}
+
+/* ── Category chip row ─────────────────────────────────────── */
+.catRow { display: flex; overflow-x: auto; scrollbar-width: none; background: #fff; border-bottom: 0.5px solid #e5e7eb; }
+.catRow::-webkit-scrollbar { display: none; }
+.catRowInner { display: flex; gap: 8px; flex-shrink: 0; padding: 12px 1rem 10px; width: 100%; max-width: 680px; margin: 0 auto; }
+.catChip {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 8px 8px; width: 70px; flex-shrink: 0;
+  background: #f9fafb; border: 1.5px solid transparent;
+  border-radius: 14px; cursor: pointer; font-family: inherit; position: relative;
+  transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+}
+.catChip:active { transform: scale(0.96); }
+.catChip_amber  { background: #fffbeb; }
+.catChip_purple { background: #ede9fe; }
+.catChip_blue   { background: #eff6ff; }
+.catChip_gray   { background: #f3f4f6; }
+.catChip_coral  { background: #fff1ee; }
+.catChip_red    { background: #fff1f1; }
+.catChip_green  { background: #f0fdf4; }
+.catChipActive { border-color: #2D8C6E; box-shadow: 0 2px 8px rgba(8,80,65,0.18); }
+.catChipIcon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #fff; }
+.catChipIcon_amber  { background: #d97706; }
+.catChipIcon_purple { background: #7c3aed; }
+.catChipIcon_blue   { background: #2563eb; }
+.catChipIcon_gray   { background: #6b7280; }
+.catChipIcon_coral  { background: #e05c3a; }
+.catChipIcon_red    { background: #dc2626; }
+.catChipIcon_green  { background: #16a34a; }
+.catChipLabel { font-size: 10px; font-weight: 500; color: #374151; text-align: center; white-space: nowrap; line-height: 1.2; }
+.catChipActive .catChipLabel { color: #065f46; font-weight: 600; }
+.catChipBadge {
+  position: absolute; top: -5px; right: -4px;
+  background: #2D8C6E; color: #fff; font-size: 9px; font-weight: 600;
+  min-width: 16px; height: 16px; border-radius: 999px; padding: 0 4px;
+  display: flex; align-items: center; justify-content: center; border: 1.5px solid #fff;
+}
+/* ── Size sub-nav ──────────────────────────────────────────── */
+.sizeNav { background: #fff; border-bottom: 0.5px solid #e5e7eb; overflow-x: auto; scrollbar-width: none; }
+.sizeNav::-webkit-scrollbar { display: none; }
+.sizeNavInner { display: flex; gap: 6px; padding: 8px 1rem; max-width: 680px; margin: 0 auto; width: 100%; }
+.sizeChipNav {
+  min-height: 36px; display: inline-flex; align-items: center;
+  padding: 4px 14px; font-size: 13px; font-weight: 500; font-family: inherit;
+  background: #f3f4f6; border: 1.5px solid #e5e7eb;
+  border-radius: 10px; color: #6b7280; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.sizeChipNavActive { background: #e6f5f0; border-color: #2D8C6E; color: #065f46; font-weight: 600; }
+/* ── Size label ────────────────────────────────────────────── */
+.sizeLabel { display: inline-flex; font-size: 11px; font-weight: 600; color: #065f46; background: #d1fae5; padding: 3px 10px; border-radius: 999px; margin: 10px 0 6px; }
+
 /* ── Main body ─────────────────────────────────────────────── */
 .body {
   flex: 1;
@@ -346,18 +423,35 @@
 
 /* ── Slot card ─────────────────────────────────────────────── */
 .card {
-  background: #f9fafb;
-  border: 0.5px solid #e5e7eb;
-  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardCovered {
+  opacity: 0.55;
+}
+
+/* ── Color band ── */
+.cardBand { height: 5px; width: 100%; flex-shrink: 0; }
+.band_purple { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+.band_blue   { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.band_amber  { background: linear-gradient(90deg, #d97706, #fbbf24); }
+.band_teal   { background: linear-gradient(90deg, #2D8C6E, #4ABDA0); }
+.band_gray   { background: linear-gradient(90deg, #6b7280, #9ca3af); }
+.band_coral  { background: linear-gradient(90deg, #e05c3a, #f59d7a); }
+.band_red    { background: linear-gradient(90deg, #dc2626, #f87171); }
+.band_green  { background: linear-gradient(90deg, #16a34a, #4ade80); }
+
+.cardBody {
   padding: 12px 12px 10px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.cardCovered {
-  background: #f9fafb;
-  opacity: 0.6;
+  flex: 1;
 }
 
 .cardTop {
@@ -407,6 +501,14 @@
   color: #374151;
 }
 
+.cardNeedConsumable {
+  font-size: 11px;
+  font-weight: 600;
+  color: #2D8C6E;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
 .cardCoveredLabel {
   font-size: 12px;
   color: #2D8C6E;
@@ -431,22 +533,34 @@
 }
 
 .claimBtn {
-  margin-top: 6px;
+  margin-top: 8px;
   width: 100%;
   padding: 8px 0;
-  min-height: 36px;
+  min-height: 32px;
   background: #2D8C6E;
   color: #fff;
   border: none;
   border-radius: 8px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   font-family: var(--font-body, system-ui, sans-serif);
   cursor: pointer;
   transition: opacity 0.15s;
 }
 
 .claimBtn:hover { opacity: 0.88; }
+
+/* Subtle "Buy on Amazon" link below Claim button on each card */
+.buyLink {
+  display: block;
+  text-align: center;
+  font-size: 11px;
+  color: #718096;
+  text-decoration: none;
+  margin-top: 5px;
+  padding: 2px 0;
+}
+.buyLink:hover { color: #2D8C6E; text-decoration: underline; }
 
 /* ── Empty state ───────────────────────────────────────────── */
 .emptyState {
@@ -754,9 +868,61 @@
   color: #6b7280;
   line-height: 1.5;
   max-width: 280px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
+/* Product recommendation in claim confirmation */
+.sheetProduct {
+  background: #F7F5F0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  text-align: left;
+  width: 100%;
+  max-width: 280px;
+}
+.sheetProductLabel {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+.sheetProductLink {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #2D8C6E;
+  text-decoration: none;
+  margin-bottom: 3px;
+  line-height: 1.4;
+}
+.sheetProductLink:hover { text-decoration: underline; }
+.sheetProductNote {
+  font-size: 11px;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+.sheetDoneBtns {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.sheetUndoBtn {
+  font-size: 13px;
+  color: #9ca3af;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body, system-ui, sans-serif);
+  padding: 4px 0;
+  text-decoration: underline;
+}
+.sheetUndoBtn:hover { color: #374151; }
 .sheetCloseBtn {
   padding: 13px 40px;
   min-height: 44px;

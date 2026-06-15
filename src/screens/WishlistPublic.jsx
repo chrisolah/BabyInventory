@@ -1,5 +1,5 @@
-// Public wishlist recipient page. No auth required.
-// Route: /wishlist/:token
+// Public registry recipient page. No auth required.
+// Route: /registry/:token
 //
 // Loads via the get_wishlist_for_share security-definer RPC (anon-callable).
 // Claims submitted via claim_wishlist_item RPC — also anon-callable.
@@ -16,8 +16,32 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { SLOTS, AGE_RANGES, recommendedQty } from '../lib/wardrobe'
-import { ITEMS, CATEGORY_META } from '../lib/categories'
+import { ITEMS, CATEGORY_META, CONSUMABLE_SLOT_IDS } from '../lib/categories'
+import { getWishlistProduct } from '../lib/wishlistProducts'
 import styles from './WishlistPublic.module.css'
+
+// ── Category icons + nav (matches RegistryEdit) ───────────────────────────────
+function ClothingIcon() { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M2 6l4-2 4 2 4-2 4 2v10H2V6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg> }
+function SleepIcon()    { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M3 10a7 7 0 0012.6-4.2A7 7 0 003 10z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg> }
+function FeedingIcon()  { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M8 3v3a2 2 0 002 2h0a2 2 0 002-2V3M10 8v9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg> }
+function DiaperIcon()   { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><rect x="2" y="5" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="1.4"/><path d="M2 10h16" stroke="currentColor" strokeWidth="1.4"/></svg> }
+function TravelIcon()   { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><rect x="3" y="8" width="14" height="8" rx="1" stroke="currentColor" strokeWidth="1.4"/><path d="M7 8V6a1 1 0 011-1h4a1 1 0 011 1v2" stroke="currentColor" strokeWidth="1.4"/></svg> }
+function PlayIcon()     { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.4"/><path d="M8 7l5 3-5 3V7z" fill="currentColor"/></svg> }
+function HealthIcon()   { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> }
+function BathIcon()     { return <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M3 11h14v2a5 5 0 01-14 0v-2z" stroke="currentColor" strokeWidth="1.4"/><path d="M5 11V7a2 2 0 014 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg> }
+function PriorityIcon() { return <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor"><path d="M10 2l2.4 4.9 5.4.8-3.9 3.8.9 5.3L10 14.4l-4.8 2.4.9-5.3L2.2 7.7l5.4-.8L10 2z"/></svg> }
+
+const WISHLIST_CATS = [
+  { id: 'priority',  label: 'Priority',  icon: PriorityIcon,  color: 'amber'  },
+  { id: 'clothing',  label: 'Clothing',  icon: ClothingIcon,  color: 'purple' },
+  { id: 'sleep',     label: 'Sleep',     icon: SleepIcon,     color: 'blue'   },
+  { id: 'feeding',   label: 'Feeding',   icon: FeedingIcon,   color: 'amber'  },
+  { id: 'diapering', label: 'Diapering', icon: DiaperIcon,    color: 'gray'   },
+  { id: 'travel',    label: 'Travel',    icon: TravelIcon,    color: 'purple' },
+  { id: 'play',      label: 'Play',      icon: PlayIcon,      color: 'coral'  },
+  { id: 'health',    label: 'Health',    icon: HealthIcon,    color: 'red'    },
+  { id: 'bath',      label: 'Bath',      icon: BathIcon,      color: 'green'  },
+]
 
 // Build slot label lookup maps once
 const CLOTHING_SLOT = Object.fromEntries(SLOTS.map(s => [s.id, s]))
@@ -35,6 +59,9 @@ export default function WishlistPublic() {
   const [claims, setClaims] = useState([])
   // { slotId, slotType, sizeLabel, label, maxQty } — null = sheet closed
   const [claimTarget, setClaimTarget] = useState(null)
+  const [selectedCat, setSelectedCat] = useState('priority')
+  const [giftInfoDismissed, setGiftInfoDismissed] = useState(false)
+  const [selectedSize, setSelectedSize] = useState(null)
 
   useEffect(() => {
     load()
@@ -51,6 +78,15 @@ export default function WishlistPublic() {
     setPageData(data)
     setClaims(data.claims || [])
   }
+
+  // Build quantity-overrides map: "slot_id:size_label" → desired_qty
+  const qtyOverridesMap = useMemo(() => {
+    const map = {}
+    for (const o of (pageData?.quantity_overrides || [])) {
+      map[`${o.slot_id}:${o.size_label || ''}`] = o.desired_qty
+    }
+    return map
+  }, [pageData])
 
   // Build a map: claimKey → { total, claimers[] }
   const claimsMap = useMemo(() => {
@@ -97,6 +133,26 @@ export default function WishlistPublic() {
     return { ok: true }
   }
 
+  async function submitUnclaim(claimerName, quantity) {
+    const target = claimTarget
+    await supabase
+      .schema(currentSchema)
+      .rpc('unclaim_wishlist_item', {
+        p_token:        token,
+        p_slot_id:      target.slotId,
+        p_slot_type:    target.slotType,
+        p_size_label:   target.sizeLabel || null,
+        p_claimer_name: claimerName,
+      })
+    // Remove the claim from local state regardless of RPC result
+    setClaims(prev => prev.filter(c =>
+      !(c.slot_id === target.slotId &&
+        c.slot_type === target.slotType &&
+        (c.size_label || '') === (target.sizeLabel || '') &&
+        c.claimer_name === claimerName)
+    ))
+  }
+
   if (loading) {
     return (
       <div className={styles.centered}>
@@ -110,7 +166,7 @@ export default function WishlistPublic() {
     return (
       <div className={styles.notFound}>
         <SprigMark size={48} />
-        <h1 className={styles.notFoundTitle}>This wishlist isn&rsquo;t available</h1>
+        <h1 className={styles.notFoundTitle}>This registry isn&rsquo;t available</h1>
         <p className={styles.notFoundSub}>
           The link may have expired or been deactivated by the family.
         </p>
@@ -137,9 +193,9 @@ export default function WishlistPublic() {
           </a>
         </div>
         <div className={styles.heroBody}>
-          <div className={styles.heroEyebrow}>Baby Wishlist</div>
+          <div className={styles.heroEyebrow}>Baby Registry</div>
           <h1 className={styles.heroTitle}>
-            {household?.name ? `${household.name}'s Wishlist` : 'Baby Wishlist'}
+            {household?.name ? `${household.name}'s Registry` : 'Baby Registry'}
           </h1>
           <div className={styles.heroMeta}>
             {babies?.map((b, i) => (
@@ -190,40 +246,118 @@ export default function WishlistPublic() {
         </div>
       )}
 
+      {/* ── Category chip nav ─────────────────────────────────── */}
+      <div className={styles.catRow}>
+        <div className={styles.catRowInner}>
+          {WISHLIST_CATS.map(cat => {
+            // compute badge count
+            let count = 0
+            if (cat.id === 'priority') {
+              count = [...(clothing||[]), ...(items||[])].filter(r => r.is_priority).length
+            } else if (cat.id === 'clothing') {
+              count = (clothing||[]).filter(r => {
+                const slot = CLOTHING_SLOT[r.slot_id]
+                const rec = recommendedQty(slot, r.size_label)
+                const k = claimKey('clothing', r.slot_id, r.size_label)
+                return Math.max(0, rec - (r.owned_count||0) - (claimsMap[k]?.total||0)) > 0
+              }).length
+            } else {
+              count = (items||[]).filter(r => {
+                if (r.top_category !== cat.id) return false
+                const slot = ITEM_SLOT[r.slot_id]
+                const rec = slot?.recommended ?? 1
+                const k = claimKey('item', r.slot_id, null)
+                return Math.max(0, rec - (r.owned_count||0) - (claimsMap[k]?.total||0)) > 0
+              }).length
+            }
+            const active = selectedCat === cat.id
+            return (
+              <button key={cat.id} type="button"
+                className={`${styles.catChip} ${styles[`catChip_${cat.color}`]} ${active ? styles.catChipActive : ''}`}
+                onClick={() => { setSelectedCat(cat.id); setSelectedSize(null) }}
+                aria-pressed={active}
+              >
+                <div className={`${styles.catChipIcon} ${styles[`catChipIcon_${cat.color}`]}`}><cat.icon /></div>
+                <span className={styles.catChipLabel}>{cat.label}</span>
+                {count > 0 && <span className={styles.catChipBadge}>{count}</span>}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ── Size sub-nav for clothing ──────────────────────────── */}
+      {selectedCat === 'clothing' && (() => {
+        const availSizes = AGE_RANGES.filter(s => (clothing||[]).some(r => r.size_label === s))
+        if (availSizes.length < 2) return null
+        return (
+          <div className={styles.sizeNav}>
+            <div className={styles.sizeNavInner}>
+              <button className={`${styles.sizeChipNav} ${!selectedSize ? styles.sizeChipNavActive : ''}`}
+                onClick={() => setSelectedSize(null)}>All</button>
+              {availSizes.map(size => (
+                <button key={size}
+                  className={`${styles.sizeChipNav} ${selectedSize === size ? styles.sizeChipNavActive : ''}`}
+                  onClick={() => setSelectedSize(selectedSize === size ? null : size)}>{size}</button>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
       <div className={styles.body}>
-        {/* ── Priority section ──────────────────────────────────── */}
-        {showPriority && (
-          <PrioritySection
-            clothing={clothing} items={items}
-            claimsMap={claimsMap}
-            onClaim={setClaimTarget}
-          />
-        )}
-
-        {/* ── Clothing by age-range groups ─────────────────────── */}
-        {clothing?.length > 0 && (
-          <ClothingSection
-            clothing={clothing}
-            claimsMap={claimsMap}
-            onClaim={setClaimTarget}
-          />
-        )}
-
-        {/* ── Non-clothing by category ──────────────────────────── */}
-        {items?.length > 0 && (
-          <NonClothingSection
-            items={items}
-            claimsMap={claimsMap}
-            onClaim={setClaimTarget}
-          />
-        )}
-
-        {!clothing?.length && !items?.length && (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyEmoji}>🌱</div>
-            <p className={styles.emptyText}>Nothing on the wishlist yet.</p>
+        {/* ── Gift-giver info card ── */}
+        {!giftInfoDismissed && (
+          <div className={styles.infoCard}>
+            <button className={styles.infoDismiss} onClick={() => setGiftInfoDismissed(true)} aria-label="Dismiss">×</button>
+            <div className={styles.infoTitle}>This registry is a little different</div>
+            <p className={styles.infoBody}>
+              It&rsquo;s built from what {household?.name ? `the ${household.name}'s` : 'the family'}{' '}
+              already own — so every item here is a real gap, not a guess.
+              Quantities show exactly how many are still needed, and claiming an item
+              coordinates with other gift-givers automatically.
+            </p>
           </div>
         )}
+
+        {/* ── Priority ── */}
+        {selectedCat === 'priority' && (() => {
+          const rows = [
+            ...(clothing||[]).filter(r => r.is_priority).map(r => ({...r, _type:'clothing', topCategory:'clothing'})),
+            ...(items||[]).filter(r => r.is_priority).map(r => ({...r, _type:'item'})),
+          ]
+          return rows.length === 0
+            ? <div className={styles.emptyState}><div className={styles.emptyEmoji}>☆</div><p className={styles.emptyText}>No priority items yet.</p></div>
+            : <div className={styles.cardGrid}>{rows.map(r => <SlotCard key={`${r._type}-${r.id}`} slotType={r._type} topCategory={r.topCategory || r.top_category} slotId={r.slot_id} sizeLabel={r.size_label||null} ownedCount={r.owned_count||0} claimsMap={claimsMap} qtyOverridesMap={qtyOverridesMap} isPriority onClaim={setClaimTarget} />)}</div>
+        })()}
+
+        {/* ── Clothing ── */}
+        {selectedCat === 'clothing' && (() => {
+          const filtered = (clothing||[]).filter(r => !selectedSize || r.size_label === selectedSize)
+          const bySize = {}
+          for (const r of filtered) {
+            const s = r.size_label || 'No size'
+            if (!bySize[s]) bySize[s] = []
+            bySize[s].push(r)
+          }
+          const sizes = AGE_RANGES.filter(s => bySize[s]?.length > 0)
+          if (sizes.length === 0) return <div className={styles.emptyState}><div className={styles.emptyEmoji}>👕</div><p className={styles.emptyText}>No clothing gaps.</p></div>
+          return sizes.map(size => (
+            <div key={size}>
+              {!selectedSize && <div className={styles.sizeLabel}>{size}</div>}
+              <div className={styles.cardGrid}>
+                {bySize[size].map(r => <SlotCard key={r.id} slotType="clothing" topCategory="clothing" slotId={r.slot_id} sizeLabel={r.size_label} ownedCount={r.owned_count||0} claimsMap={claimsMap} qtyOverridesMap={qtyOverridesMap} isPriority={r.is_priority} onClaim={setClaimTarget} />)}
+              </div>
+            </div>
+          ))
+        })()}
+
+        {/* ── Non-clothing categories ── */}
+        {selectedCat !== 'priority' && selectedCat !== 'clothing' && (() => {
+          const rows = (items||[]).filter(r => r.top_category === selectedCat)
+          if (rows.length === 0) return <div className={styles.emptyState}><div className={styles.emptyEmoji}>🌱</div><p className={styles.emptyText}>No gaps in this category.</p></div>
+          return <div className={styles.cardGrid}>{rows.map(r => <SlotCard key={r.id} slotType="item" topCategory={r.top_category} slotId={r.slot_id} sizeLabel={null} ownedCount={r.owned_count||0} claimsMap={claimsMap} qtyOverridesMap={qtyOverridesMap} isPriority={r.is_priority} onClaim={setClaimTarget} />)}</div>
+        })()}
       </div>
 
       <footer className={styles.footer}>
@@ -244,6 +378,7 @@ export default function WishlistPublic() {
         <ClaimSheet
           target={claimTarget}
           onSubmit={submitClaim}
+          onUnclaim={submitUnclaim}
           onClose={() => setClaimTarget(null)}
         />
       )}
@@ -297,6 +432,7 @@ function PrioritySection({ clothing, items, claimsMap, onClaim }) {
             <SlotCard
               key={`c-${row.id}`}
               slotType="clothing"
+              topCategory="clothing"
               slotId={row.slot_id}
               sizeLabel={row.size_label}
               ownedCount={row.owned_count || 0}
@@ -309,6 +445,7 @@ function PrioritySection({ clothing, items, claimsMap, onClaim }) {
             <SlotCard
               key={`i-${row.id}`}
               slotType="item"
+              topCategory={row.top_category}
               slotId={row.slot_id}
               sizeLabel={null}
               ownedCount={row.owned_count || 0}
@@ -388,6 +525,7 @@ function SizeGroup({ size, rows, claimsMap, onClaim }) {
             <SlotCard
               key={row.id}
               slotType="clothing"
+              topCategory="clothing"
               slotId={row.slot_id}
               sizeLabel={row.size_label}
               ownedCount={row.owned_count || 0}
@@ -407,9 +545,10 @@ function SizeGroup({ size, rows, claimsMap, onClaim }) {
 const NON_CLOTHING_ORDER = ['sleep', 'feeding', 'diapering', 'travel', 'play', 'health', 'bath']
 
 function NonClothingSection({ items, claimsMap, onClaim }) {
-  // Hide fully-covered slots — gift-givers only need to see what's still needed.
-  // owned_count comes from the RPC; recommended comes from the JS catalog.
+  // Hide fully-covered non-consumable slots — gift-givers only need to see what's still needed.
   const visibleItems = items.filter(r => {
+    const isConsumable = CONSUMABLE_SLOT_IDS.has(r.slot_id)
+    if (isConsumable) return true
     const slot = ITEM_SLOT[r.slot_id]
     const rec  = slot?.recommended ?? 1
     const k    = claimKey('item', r.slot_id, null)
@@ -477,6 +616,7 @@ function CategoryGroup({ cat, rows, claimsMap, onClaim }) {
             <SlotCard
               key={row.id}
               slotType="item"
+              topCategory={row.top_category || cat}
               slotId={row.slot_id}
               sizeLabel={null}
               ownedCount={row.owned_count || 0}
@@ -493,17 +633,26 @@ function CategoryGroup({ cat, rows, claimsMap, onClaim }) {
 
 // ── Slot card ─────────────────────────────────────────────────────────────────
 
-function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriority, onClaim }) {
+const PUB_CAT_COLOR = {
+  clothing: 'purple', sleep: 'blue', feeding: 'amber',
+  diapering: 'gray', travel: 'purple', play: 'coral',
+  health: 'red', bath: 'green',
+}
+
+function SlotCard({ slotType, topCategory, slotId, sizeLabel, ownedCount, claimsMap, qtyOverridesMap, isPriority, onClaim }) {
   const isClothing   = slotType === 'clothing'
+  const isConsumable = !isClothing && CONSUMABLE_SLOT_IDS.has(slotId)
   const slot         = isClothing ? CLOTHING_SLOT[slotId] : ITEM_SLOT[slotId]
   const label        = slot?.label || slotId.replace(/_/g, ' ')
   const recommended  = isClothing
     ? recommendedQty(slot, sizeLabel)
     : (slot?.recommended ?? 1)
+  const overrideKey  = `${slotId}:${sizeLabel || ''}`
+  const desiredQty   = qtyOverridesMap?.[overrideKey] ?? recommended
 
   const claimData   = claimsMap[claimKey(slotType, slotId, sizeLabel)] || { total: 0, claimers: [] }
-  const stillNeeded = Math.max(0, recommended - ownedCount - claimData.total)
-  const isCovered   = stillNeeded === 0
+  const stillNeeded = isConsumable ? 1 : Math.max(0, desiredQty - ownedCount - claimData.total)
+  const isCovered   = !isConsumable && stillNeeded === 0
 
   function handleClaim() {
     onClaim({
@@ -515,8 +664,12 @@ function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriori
     })
   }
 
+  const bandColor = topCategory ? (PUB_CAT_COLOR[topCategory] || 'gray') : (slotType === 'clothing' ? 'purple' : 'gray')
+
   return (
     <div className={`${styles.card} ${isCovered ? styles.cardCovered : ''}`}>
+      <div className={`${styles.cardBand} ${styles[`band_${bandColor}`]}`} />
+      <div className={styles.cardBody}>
       <div className={styles.cardTop}>
         <span className={styles.cardLabel}>{label}</span>
         {isPriority && !isCovered && (
@@ -531,7 +684,9 @@ function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriori
         <span className={styles.cardSize}>{sizeLabel}</span>
       )}
 
-      {!isCovered ? (
+      {isConsumable ? (
+        <div className={styles.cardNeedConsumable}>Keep stocked</div>
+      ) : !isCovered ? (
         <div className={styles.cardNeed}>Need {stillNeeded} more</div>
       ) : (
         <div className={styles.cardCoveredLabel}>Covered</div>
@@ -548,23 +703,41 @@ function SlotCard({ slotType, slotId, sizeLabel, ownedCount, claimsMap, isPriori
       )}
 
       {!isCovered && (
-        <button type="button" className={styles.claimBtn} onClick={handleClaim}>
-          Claim {stillNeeded > 1 ? 'one' : 'it'}
-        </button>
+        <>
+          <button type="button" className={styles.claimBtn} onClick={handleClaim}>
+            Claim
+          </button>
+          {(() => {
+            const product = getWishlistProduct(slotId)
+            return product ? (
+              <a
+                href={product.url}
+                className={styles.buyLink}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+              >
+                Sprigloop pick →
+              </a>
+            ) : null
+          })()}
+        </>
       )}
+      </div>{/* cardBody */}
     </div>
   )
 }
 
 // ── Claim sheet ───────────────────────────────────────────────────────────────
 
-function ClaimSheet({ target, onSubmit, onClose }) {
+function ClaimSheet({ target, onSubmit, onUnclaim, onClose }) {
   const [name, setName] = useState('')
   const [anon, setAnon] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [submitting, setSubmitting] = useState(false)
+  const [undoing, setUndoing] = useState(false)
   const [error, setError] = useState(null)
   const [done, setDone] = useState(false)
+  const [claimedName, setClaimedName] = useState('')
 
   const maxQty = target.maxQty || 1
   const canSubmit = anon || name.trim().length > 0
@@ -578,11 +751,19 @@ function ClaimSheet({ target, onSubmit, onClose }) {
     setSubmitting(false)
     if (!result.ok) {
       setError(result.error === 'share_not_found'
-        ? 'This wishlist is no longer active.'
+        ? 'This registry is no longer active.'
         : 'Something went wrong. Try again.')
       return
     }
+    setClaimedName(anon ? 'Anonymous' : name.trim())
     setDone(true)
+  }
+
+  async function handleUndo() {
+    setUndoing(true)
+    await onUnclaim(claimedName, quantity)
+    setUndoing(false)
+    onClose()
   }
 
   function onBackdropClick(e) {
@@ -602,9 +783,36 @@ function ClaimSheet({ target, onSubmit, onClose }) {
             </div>
             <p className={styles.sheetDoneSub}>
               You claimed {quantity > 1 ? `${quantity}× ` : ''}{target.label}.{' '}
-              {anon ? 'Your name is hidden from the family.' : 'The family will see your name.'}
+              {anon ? 'Your name is hidden from the parents.' : 'The parents will see your name.'}
             </p>
-            <button type="button" className={styles.sheetCloseBtn} onClick={onClose}>Done</button>
+            {(() => {
+              const product = getWishlistProduct(target.slotId)
+              return product ? (
+                <div className={styles.sheetProduct}>
+                  <div className={styles.sheetProductLabel}>Sprigloop pick</div>
+                  <a
+                    href={product.url}
+                    className={styles.sheetProductLink}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                  >
+                    {product.name} →
+                  </a>
+                  <div className={styles.sheetProductNote}>{product.note}</div>
+                </div>
+              ) : null
+            })()}
+            <div className={styles.sheetDoneBtns}>
+              <button type="button" className={styles.sheetCloseBtn} onClick={onClose}>Done</button>
+              <button
+                type="button"
+                className={styles.sheetUndoBtn}
+                onClick={handleUndo}
+                disabled={undoing}
+              >
+                {undoing ? 'Removing…' : 'Undo claim'}
+              </button>
+            </div>
           </div>
         ) : (
           <>
@@ -641,7 +849,7 @@ function ClaimSheet({ target, onSubmit, onClose }) {
                 <span className={`${styles.anonCheck} ${anon ? styles.anonCheckOn : ''}`}>
                   {anon ? '✓' : ''}
                 </span>
-                <span className={styles.anonLabel}>Give anonymously — hide my name from the family</span>
+                <span className={styles.anonLabel}>Give anonymously — hide my name from the parents</span>
               </button>
 
               {maxQty > 1 && (
@@ -666,7 +874,7 @@ function ClaimSheet({ target, onSubmit, onClose }) {
                 className={styles.sheetSubmit}
                 disabled={!canSubmit || submitting}
               >
-                {submitting ? 'Claiming…' : `Claim ${quantity > 1 ? `${quantity}× ` : ''}${target.label.split(' · ')[0]}`}
+                {submitting ? 'Claiming…' : 'Claim'}
               </button>
               {!canSubmit && (
                 <p className={styles.sheetHint}>Enter your name or gift anonymously.</p>
