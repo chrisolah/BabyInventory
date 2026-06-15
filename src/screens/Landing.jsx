@@ -56,35 +56,39 @@ export default function Landing() {
   return (
     <div className={styles.page}>
       <nav className={styles.nav}>
-        <div className={styles.logo}>sprigloop</div>
-        <button
-          className={`${styles.navLink} ${styles.navLinkCollapse}`}
-          onClick={() => {
-            track.ctaClicked('nav_how_it_works')
-            navigate('/how-it-works')
-          }}
-        >
-          How it works
-        </button>
-        <button
-          className={`${styles.navLink} ${styles.navLinkCollapse}`}
-          onClick={() => {
-            track.ctaClicked('nav_guides')
-            navigate('/guides')
-          }}
-        >
-          Guides
-        </button>
-        <button
-          className={styles.findRegistryBtn}
-          onClick={() => {
-            track.ctaClicked('nav_find_registry')
-            navigate('/find-registry')
-          }}
-        >
-          Find a registry
-        </button>
-        <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
+        <div className={styles.navTop}>
+          <div className={styles.logo}>sprigloop</div>
+          <button className={styles.loginBtn} onClick={() => navigate('/login')}>Log in</button>
+        </div>
+        <div className={styles.navLinks}>
+          <button
+            className={styles.navLink}
+            onClick={() => {
+              track.ctaClicked('nav_how_it_works')
+              navigate('/how-it-works')
+            }}
+          >
+            How it works
+          </button>
+          <button
+            className={styles.navLink}
+            onClick={() => {
+              track.ctaClicked('nav_guides')
+              navigate('/guides')
+            }}
+          >
+            Guides
+          </button>
+          <button
+            className={styles.findRegistryBtn}
+            onClick={() => {
+              track.ctaClicked('nav_find_registry')
+              navigate('/find-registry')
+            }}
+          >
+            Find a registry
+          </button>
+        </div>
       </nav>
 
       <IvyBanner />

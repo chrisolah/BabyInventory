@@ -6,16 +6,40 @@
 }
 
 /* ── Nav ── */
+/* Mobile: two-row layout — logo+login on top, links below */
 .nav {
-  display: flex;
-  align-items: baseline;
-  gap: 18px;
-  padding: calc(1.25rem + env(safe-area-inset-top, 0px)) 1.5rem 1.25rem;
+  padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 1.5rem 0;
   border-bottom: 0.5px solid var(--gray-100);
   background: var(--white);
   position: relative;
   z-index: 2;
 }
+.navTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+}
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-top: 0.5px solid var(--gray-100);
+  padding: 0.5rem 0;
+}
+/* Desktop: collapse into a single row */
+@media (min-width: 501px) {
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: calc(1.25rem + env(safe-area-inset-top, 0px)) 1.5rem 1.25rem;
+  }
+  .navTop { display: contents; }
+  .navLinks { display: contents; border: none; padding: 0; }
+  .loginBtn { margin-left: auto; }
+}
+
 .logo {
   font-family: var(--font-display);
   font-size: 20px;
@@ -41,9 +65,6 @@
   white-space: nowrap;
 }
 .navLink:hover { color: var(--teal-dark); }
-/* Hide secondary nav links on small screens to keep nav clean for gift-givers */
-@media (max-width: 500px) { .navLinkCollapse { display: none; } }
-@media (max-width: 380px) { .nav { gap: 12px; } }
 
 .findRegistryBtn {
   min-height: 36px;
@@ -67,7 +88,6 @@
 }
 
 .loginBtn {
-  margin-left: auto;
   min-height: 44px;
   display: inline-flex;
   align-items: center;
