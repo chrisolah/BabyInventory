@@ -1144,3 +1144,17 @@ export const PRIORITY_LABEL = {
 }
 
 export const PRIORITY_ORDER = ['must_have', 'nice_to_have', 'low_priority']
+
+// Slots that are consumable (used up and replenished, not durable goods).
+// Used in WishlistEdit and ArrivalChecklist to flag items differently.
+export const CONSUMABLE_SLOT_IDS = new Set([
+  'disposable_diapers',
+  'swim_diapers',
+  'wipes',
+  'nursing_pads',
+  'nipple_cream',
+  'milk_storage',
+  'diaper_rash_cream',
+  'baby_wash_shampoo',
+  'baby_lotion',
+])
