@@ -41,7 +41,7 @@ const RELATED_GUIDES = {
   'how-to-use-diaper-care-products': ['cloth-vs-disposable-diapers', 'how-many-diapers-does-a-baby-go-through', 'what-to-pack-in-a-diaper-bag'],
 }
 
-function renderSection(section, i) {
+function renderSection(section, i, slug) {
   switch (section.type) {
     case 'lede':
       return <p key={i} className={styles.lede}>{section.body}</p>
@@ -248,7 +248,7 @@ export default function GuideDetail() {
         </header>
 
         <div className={styles.body}>
-          {guide.sections.map((section, i) => renderSection(section, i))}
+          {guide.sections.map((section, i) => renderSection(section, i, slug))}
         </div>
 
         {(() => {
