@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { useUpgradeGate } from '../contexts/UpgradeGateContext'
 import { track } from '../lib/analytics'
-import { SLOTS, SLOT_BY_ID, AGE_RANGES } from '../lib/wardrobe'
+import { SLOTS, SLOT_BY_ID, AGE_RANGES, getSlotForItem } from '../lib/wardrobe'
 import {
   ITEMS_BY_SUB_CATEGORY,
   SUB_CATEGORIES_BY_CATEGORY,
@@ -485,6 +485,7 @@ export default function AddItem() {
             } catch { /* silent — item saves without photo */ }
           }
 
+          const clothingSlot = getSlotForItem(fields)
           const { error: insertErr } = await supabase
             .schema(currentSchema)
             .from('clothing_items')
@@ -492,6 +493,7 @@ export default function AddItem() {
               id: itemId,
               household_id: household.id,
               baby_id: currentBaby?.id ?? null,
+              slot_id: clothingSlot?.id || null,
               ...fields,
               inventory_status: mode,
               name: null,

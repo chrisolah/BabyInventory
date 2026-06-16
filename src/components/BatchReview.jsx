@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { useUpgradeGate } from '../contexts/UpgradeGateContext'
-import { SLOTS, SLOT_BY_ID, AGE_RANGES, CATEGORY_LABELS } from '../lib/wardrobe'
+import { SLOTS, SLOT_BY_ID, AGE_RANGES, CATEGORY_LABELS, getSlotForItem } from '../lib/wardrobe'
 import { CATEGORY_META, SUB_CATEGORY_LABELS, ITEMS, getItemSlot } from '../lib/categories'
 import { track } from '../lib/analytics'
 import styles from './BatchReview.module.css'
@@ -355,10 +355,15 @@ export default function BatchReview({
         }
       } else {
         table = 'clothing_items'
+        const clothingSlot = getSlotForItem({
+          item_type: it.fields.item_type,
+          category:  it.fields.category,
+        })
         row = {
           id:                 itemId,
           household_id:       household.id,
           baby_id:            babyId,
+          slot_id:            clothingSlot?.id || null,
           category:           it.fields.category,
           item_type:          it.fields.item_type,
           size_label:         it.fields.size_label,
