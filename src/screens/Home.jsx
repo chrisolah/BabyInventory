@@ -521,44 +521,50 @@ const CATEGORY_DISPLAY = {
   health: 'Health', bath: 'Bath',
 }
 
-// Color scheme matches the category grid on Home
-const CATEGORY_COLOR = {
-  clothing: 'Teal', sleep: '_blue', feeding: '_amber', diapering: '_gray',
-  travel: '_purple', play: '_coral', health: '_red', bath: '_green',
-}
+function buildRecentDisplay(item) {
+  const rawType = item.item_type || null
+  const slotLabel = rawType ? rawType.replace(/_/g, ' ') : null
 
-function getRecentItemLabel(item) {
-  if (item.name) return item.name
-  if (item.item_type) return item.item_type.replace(/_/g, ' ')
-  if (item.brand) return item.brand
-  if (item.top_category) return CATEGORY_DISPLAY[item.top_category] || item.top_category
-  return 'Item'
+  let primary, primarySource
+  if (item.name) { primary = item.name; primarySource = 'name' }
+  else if (item.brand) { primary = item.brand; primarySource = 'brand' }
+  else if (slotLabel) { primary = slotLabel; primarySource = 'slot' }
+  else { primary = CATEGORY_DISPLAY[item.top_category] || 'Item'; primarySource = 'fallback' }
+
+  const metaParts = []
+  if (primarySource !== 'brand' && item.brand) metaParts.push(item.brand)
+  if (primarySource !== 'slot' && slotLabel) metaParts.push(slotLabel)
+
+  return { primary, meta: metaParts.join(' · ') }
 }
 
 function RecentItem({ item, navigate }) {
   const photoUrl = item.garment_signed_url || item.item_photo_signed_url
-  const colorSuffix = CATEGORY_COLOR[item.top_category] || '_gray'
-  const cardClass = `${styles.recentCard} ${styles[`recentCard${colorSuffix}`]}`
+  const sizeLabel = item.size_label || null
+  const { primary, meta } = buildRecentDisplay(item)
 
   return (
     <button
       type="button"
-      className={cardClass}
+      className={styles.recentCard}
       onClick={() => navigate(`/item/${item.id}`)}
+      aria-label={`Open ${primary}`}
     >
-      {photoUrl
-        ? <img src={photoUrl} alt="" className={styles.recentCardPhoto} />
-        : <div className={styles.recentCardPlaceholder}>
-            <span className={`${styles.recentCardIcon} ${styles[`recentIcon${colorSuffix}`]}`} aria-hidden="true">
-              {(CATEGORY_DISPLAY[item.top_category] || 'I')[0]}
-            </span>
+      <div className={styles.recentCardPhotoWrap} aria-hidden="true">
+        {photoUrl ? (
+          <>
+            <img src={photoUrl} alt="" className={styles.recentCardPhoto} loading="lazy" />
+            {sizeLabel && <span className={styles.recentCardSizeBadge}>{sizeLabel}</span>}
+          </>
+        ) : (
+          <div className={styles.recentCardPlaceholder}>
+            <span className={styles.recentCardSizeCentered}>{sizeLabel || '—'}</span>
           </div>
-      }
-      <div className={styles.recentCardBody}>
-        <div className={styles.recentCardName}>{getRecentItemLabel(item)}</div>
-        {item.size_label && (
-          <div className={styles.recentCardSize}>{item.size_label}</div>
         )}
+      </div>
+      <div className={styles.recentCardBody}>
+        <div className={styles.recentCardName}>{primary}</div>
+        {meta && <div className={styles.recentCardMeta}>{meta}</div>}
       </div>
     </button>
   )

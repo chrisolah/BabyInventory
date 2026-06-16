@@ -662,100 +662,110 @@
   align-items: center;
 }
 
+/* Grid — mirrors Inventory.itemCardGrid */
 .recentGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
 }
 
-/* Base card */
+/* Card — mirrors Inventory.itemCard exactly */
 .recentCard {
+  all: unset;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  border: 0.5px solid var(--gray-200);
   border-radius: 12px;
   overflow: hidden;
-  border: none;
+  background: var(--white);
   cursor: pointer;
-  font-family: var(--font-body);
   text-align: left;
-  padding: 0;
-  transition: opacity 0.12s;
-  aspect-ratio: 3 / 4;
-  background: var(--gray-100);
+  transition: background 0.15s;
+  width: 100%;
 }
 
-.recentCard:active { opacity: 0.8; }
+.recentCard:hover { background: var(--gray-50); }
 
-/* Category color variants — backgrounds match the category grid */
-.recentCardTeal   { background: var(--teal-light); }
-.recentCard_blue  { background: #E8F3FE; }
-.recentCard_amber { background: var(--amber-light); }
-.recentCard_gray  { background: var(--gray-100); }
-.recentCard_purple { background: var(--purple-light); }
-.recentCard_coral { background: #FEECE8; }
-.recentCard_red   { background: #FEECEC; }
-.recentCard_green { background: #E6F7EE; }
+.recentCard:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
 
-/* Photo fills the card, label overlays at the bottom */
+/* Square photo area — mirrors Inventory.itemCardPhotoWrap */
+.recentCardPhotoWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
 .recentCardPhoto {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  flex: 1;
 }
 
-/* Placeholder (no photo) — letter centered in colored card */
+/* Teal placeholder — mirrors Inventory.itemCardPlaceholder */
 .recentCardPlaceholder {
-  flex: 1;
+  width: 100%;
+  height: 100%;
+  background: var(--teal-light);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.recentCardIcon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  text-transform: uppercase;
+.recentCardSizeCentered {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal-dark);
+  letter-spacing: 0.2px;
 }
 
-/* Icon color variants — match icon backgrounds from category grid */
-.recentIconTeal    { background: var(--teal); color: #fff; }
-.recentIcon_blue   { background: #3B82F6; color: #fff; }
-.recentIcon_amber  { background: var(--amber); color: #fff; }
-.recentIcon_gray   { background: var(--gray-400); color: #fff; }
-.recentIcon_purple { background: var(--purple); color: #fff; }
-.recentIcon_coral  { background: #E05C3A; color: #fff; }
-.recentIcon_red    { background: #DC3030; color: #fff; }
-.recentIcon_green  { background: #1A9E5A; color: #fff; }
+/* Size badge overlaid on photo — mirrors Inventory.itemCardSizeBadge */
+.recentCardSizeBadge {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--white);
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 5px;
+  padding: 1px 5px;
+  line-height: 1.5;
+  pointer-events: none;
+}
 
-/* Text label at the bottom of each card */
+/* Text body — mirrors Inventory.itemCardBody / itemCardName / itemCardMeta */
 .recentCardBody {
-  padding: 5px 6px 6px;
-  flex-shrink: 0;
+  padding: 8px 9px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
 }
 
 .recentCardName {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--gray-900);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
-  text-transform: capitalize;
+  line-height: 1.4;
 }
 
-.recentCardSize {
-  font-size: 10px;
-  color: var(--gray-500);
-  margin-top: 1px;
+.recentCardMeta {
+  font-size: 11px;
+  color: var(--gray-400);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .recentMoreBtn {
