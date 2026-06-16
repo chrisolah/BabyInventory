@@ -404,7 +404,7 @@ export default function Home() {
                 View all
               </button>
             </div>
-            <div className={styles.recentList}>
+            <div className={styles.recentGrid}>
               {recentItems.map(item => (
                 <RecentItem key={item.id} item={item} navigate={navigate} />
               ))}
@@ -514,53 +514,52 @@ function CountdownIcon({ type }) {
   )
 }
 
-// ── Recently Added item row ───────────────────────────────────────────────
-// Mirrors the buildItemDisplay logic from Inventory.jsx inline so we don't
-// need to import or move that utility. Falls through name → brand → category.
+// ── Recently Added grid card ──────────────────────────────────────────────
 const CATEGORY_DISPLAY = {
   clothing: 'Clothing', sleep: 'Sleep', feeding: 'Feeding',
   diapering: 'Diapering', travel: 'Travel', play: 'Play',
   health: 'Health', bath: 'Bath',
 }
 
+// Color scheme matches the category grid on Home
+const CATEGORY_COLOR = {
+  clothing: 'Teal', sleep: '_blue', feeding: '_amber', diapering: '_gray',
+  travel: '_purple', play: '_coral', health: '_red', bath: '_green',
+}
+
 function getRecentItemLabel(item) {
   if (item.name) return item.name
-  if (item.brand) return item.brand
   if (item.item_type) return item.item_type.replace(/_/g, ' ')
+  if (item.brand) return item.brand
   if (item.top_category) return CATEGORY_DISPLAY[item.top_category] || item.top_category
   return 'Item'
 }
 
-function getRecentItemMeta(item) {
-  const parts = []
-  if (item.size_label) parts.push(item.size_label)
-  if (item.brand && item.name) parts.push(item.brand)
-  if (item.top_category) parts.push(CATEGORY_DISPLAY[item.top_category] || item.top_category)
-  return parts.slice(0, 2).join(' · ')
-}
-
 function RecentItem({ item, navigate }) {
+  const photoUrl = item.garment_signed_url || item.item_photo_signed_url
+  const colorSuffix = CATEGORY_COLOR[item.top_category] || '_gray'
+  const cardClass = `${styles.recentCard} ${styles[`recentCard${colorSuffix}`]}`
+
   return (
     <button
       type="button"
-      className={styles.recentItem}
+      className={cardClass}
       onClick={() => navigate(`/item/${item.id}`)}
     >
-      <div className={styles.recentThumb}>
-        {(item.garment_signed_url || item.item_photo_signed_url)
-          ? <img src={item.garment_signed_url || item.item_photo_signed_url} alt="" className={styles.recentThumbImg} />
-          : <span className={styles.recentThumbPlaceholder} aria-hidden="true">
+      {photoUrl
+        ? <img src={photoUrl} alt="" className={styles.recentCardPhoto} />
+        : <div className={styles.recentCardPlaceholder}>
+            <span className={`${styles.recentCardIcon} ${styles[`recentIcon${colorSuffix}`]}`} aria-hidden="true">
               {(CATEGORY_DISPLAY[item.top_category] || 'I')[0]}
             </span>
-        }
+          </div>
+      }
+      <div className={styles.recentCardBody}>
+        <div className={styles.recentCardName}>{getRecentItemLabel(item)}</div>
+        {item.size_label && (
+          <div className={styles.recentCardSize}>{item.size_label}</div>
+        )}
       </div>
-      <div className={styles.recentItemBody}>
-        <div className={styles.recentItemName}>{getRecentItemLabel(item)}</div>
-        <div className={styles.recentItemMeta}>{getRecentItemMeta(item)}</div>
-      </div>
-      <svg className={styles.recentChevron} viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
-        <path d="M5.5 3.5L10 8l-4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
     </button>
   )
 }
