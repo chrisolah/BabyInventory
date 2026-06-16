@@ -547,8 +547,8 @@ function RecentItem({ item, navigate }) {
       onClick={() => navigate(`/item/${item.id}`)}
     >
       <div className={styles.recentThumb}>
-        {item.photo_url
-          ? <img src={item.photo_url} alt="" className={styles.recentThumbImg} />
+        {(item.garment_signed_url || item.item_photo_path)
+          ? <img src={item.garment_signed_url || item.item_photo_path} alt="" className={styles.recentThumbImg} />
           : <span className={styles.recentThumbPlaceholder} aria-hidden="true">
               {(CATEGORY_DISPLAY[item.top_category] || 'I')[0]}
             </span>
