@@ -258,7 +258,8 @@ export default function Home() {
         <div className={styles.grid}>
           {CATEGORIES.map(cat => {
             if (cat.id === 'clothing') {
-              const pct = Math.round((clothingCoverage.owned / clothingCoverage.recommended) * 100)
+              const covForPct = currentRangeCoverage ?? clothingCoverage
+              const pct = Math.round((covForPct.owned / Math.max(covForPct.recommended, 1)) * 100)
               return (
                 <button
                   key={cat.id}
