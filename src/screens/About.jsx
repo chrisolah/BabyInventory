@@ -143,8 +143,15 @@ export default function About() {
               onClick={() => navigate('/')}
             >
               start an inventory
-            </button>{' '}
-            or{' '}
+            </button>
+            , read the{' '}
+            <button
+              className={styles.ctaInlineLink}
+              onClick={() => navigate('/guides')}
+            >
+              new parent guides
+            </button>
+            , or{' '}
             <button
               className={styles.ctaInlineLink}
               onClick={() => navigate('/contact')}

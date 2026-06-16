@@ -6,6 +6,41 @@ import { getGuide } from '../lib/guides'
 import IvyBanner from '../components/IvyBanner'
 import styles from './GuideDetail.module.css'
 
+const RELATED_GUIDES = {
+  'how-much-does-a-newborn-need': ['when-does-baby-outgrow-each-size', 'baby-clothing-guide', 'newborn-safe-sleep-setup'],
+  'when-does-baby-outgrow-each-size': ['how-to-organize-baby-clothes-by-size', 'what-to-do-with-outgrown-baby-clothes', 'baby-clothing-guide'],
+  'what-to-do-with-outgrown-baby-clothes': ['when-does-baby-outgrow-each-size', 'how-to-organize-baby-clothes-by-size', 'baby-clothing-guide'],
+  'baby-registry-what-you-actually-need': ['how-to-build-your-baby-registry', 'what-you-need-before-baby-arrives', 'how-much-does-a-newborn-need'],
+  'how-to-organize-baby-clothes-by-size': ['when-does-baby-outgrow-each-size', 'what-to-do-with-outgrown-baby-clothes', 'baby-clothing-guide'],
+  'baby-gear-splurge-vs-save': ['certified-vs-generic-baby-products', 'how-to-choose-a-baby-stroller', 'choosing-a-car-seat'],
+  'how-to-build-your-baby-registry': ['baby-registry-what-you-actually-need', 'what-you-need-before-baby-arrives', 'how-much-does-a-baby-cost-first-year'],
+  'baby-clothing-guide': ['when-does-baby-outgrow-each-size', 'how-to-organize-baby-clothes-by-size', 'how-much-does-a-newborn-need'],
+  'newborn-safe-sleep-setup': ['baby-sleep-cues-and-wake-windows', 'how-to-swaddle-a-baby', 'how-much-does-a-newborn-need'],
+  'bottle-feeding-newborn-what-you-need': ['how-to-introduce-a-bottle', 'breastfeeding-supplies-checklist', 'introducing-solid-foods-what-you-need'],
+  'cloth-vs-disposable-diapers': ['how-many-diapers-does-a-baby-go-through', 'what-to-pack-in-a-diaper-bag', 'how-to-use-diaper-care-products'],
+  'choosing-a-car-seat': ['how-to-install-a-car-seat', 'certified-vs-generic-baby-products', 'baby-gear-splurge-vs-save'],
+  'baby-toys-first-year-by-age': ['how-to-do-tummy-time', 'how-to-use-a-baby-carrier-safely', 'baby-gear-splurge-vs-save'],
+  'newborn-health-kit-what-to-have': ['how-to-bathe-a-newborn', 'newborn-safe-sleep-setup', 'how-much-does-a-newborn-need'],
+  'how-to-bathe-a-newborn': ['newborn-health-kit-what-to-have', 'how-to-do-tummy-time', 'how-much-does-a-newborn-need'],
+  'certified-vs-generic-baby-products': ['choosing-a-car-seat', 'baby-gear-splurge-vs-save', 'how-to-choose-a-baby-stroller'],
+  'what-you-need-before-baby-arrives': ['how-much-does-a-newborn-need', 'baby-registry-what-you-actually-need', 'how-much-does-a-baby-cost-first-year'],
+  'how-much-does-a-baby-cost-first-year': ['how-much-to-save-before-baby-arrives', 'what-you-need-before-baby-arrives', 'baby-gear-splurge-vs-save'],
+  'how-much-to-save-before-baby-arrives': ['how-much-does-a-baby-cost-first-year', 'baby-gear-splurge-vs-save', 'what-you-need-before-baby-arrives'],
+  'how-to-choose-a-baby-stroller': ['baby-gear-splurge-vs-save', 'certified-vs-generic-baby-products', 'how-to-use-a-baby-carrier-safely'],
+  'introducing-solid-foods-what-you-need': ['breastfeeding-supplies-checklist', 'bottle-feeding-newborn-what-you-need', 'how-to-introduce-a-bottle'],
+  'breastfeeding-supplies-checklist': ['how-to-use-a-breast-pump', 'bottle-feeding-newborn-what-you-need', 'introducing-solid-foods-what-you-need'],
+  'how-many-diapers-does-a-baby-go-through': ['cloth-vs-disposable-diapers', 'what-to-pack-in-a-diaper-bag', 'how-to-use-diaper-care-products'],
+  'what-to-pack-in-a-diaper-bag': ['how-many-diapers-does-a-baby-go-through', 'cloth-vs-disposable-diapers', 'how-to-use-diaper-care-products'],
+  'how-to-swaddle-a-baby': ['newborn-safe-sleep-setup', 'baby-sleep-cues-and-wake-windows', 'how-much-does-a-newborn-need'],
+  'how-to-do-tummy-time': ['baby-toys-first-year-by-age', 'how-to-bathe-a-newborn', 'how-to-use-a-baby-carrier-safely'],
+  'how-to-use-a-baby-carrier-safely': ['baby-gear-splurge-vs-save', 'how-to-do-tummy-time', 'certified-vs-generic-baby-products'],
+  'how-to-install-a-car-seat': ['choosing-a-car-seat', 'certified-vs-generic-baby-products', 'baby-gear-splurge-vs-save'],
+  'how-to-introduce-a-bottle': ['bottle-feeding-newborn-what-you-need', 'breastfeeding-supplies-checklist', 'introducing-solid-foods-what-you-need'],
+  'how-to-use-a-breast-pump': ['breastfeeding-supplies-checklist', 'how-to-introduce-a-bottle', 'bottle-feeding-newborn-what-you-need'],
+  'baby-sleep-cues-and-wake-windows': ['newborn-safe-sleep-setup', 'how-to-swaddle-a-baby', 'how-much-does-a-newborn-need'],
+  'how-to-use-diaper-care-products': ['cloth-vs-disposable-diapers', 'how-many-diapers-does-a-baby-go-through', 'what-to-pack-in-a-diaper-bag'],
+}
+
 function renderSection(section, i) {
   switch (section.type) {
     case 'lede':
@@ -141,9 +176,31 @@ export default function GuideDetail() {
     document.title = `${guide.title} — Sprigloop Guides`
     descMeta?.setAttribute('content', guide.description)
 
+    const jsonLd = document.createElement('script')
+    jsonLd.type = 'application/ld+json'
+    jsonLd.id = 'guide-jsonld'
+    jsonLd.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: guide.title,
+      description: guide.description,
+      datePublished: guide.lastmod,
+      dateModified: guide.lastmod,
+      author: { '@type': 'Organization', name: 'Sprigloop', url: 'https://sprigloop.com' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Sprigloop',
+        url: 'https://sprigloop.com',
+        logo: { '@type': 'ImageObject', url: 'https://sprigloop.com/favicon.svg' },
+      },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': `https://sprigloop.com/guides/${guide.slug}` },
+    })
+    document.head.appendChild(jsonLd)
+
     return () => {
       document.title = prevTitle
       if (prevDesc != null) descMeta?.setAttribute('content', prevDesc)
+      document.getElementById('guide-jsonld')?.remove()
     }
   }, [guide, slug])
 
@@ -193,6 +250,28 @@ export default function GuideDetail() {
         <div className={styles.body}>
           {guide.sections.map((section, i) => renderSection(section, i))}
         </div>
+
+        {(() => {
+          const relatedSlugs = RELATED_GUIDES[slug] || []
+          const relatedGuides = relatedSlugs.map(s => getGuide(s)).filter(Boolean)
+          if (!relatedGuides.length) return null
+          return (
+            <div className={styles.relatedSection}>
+              <div className={styles.relatedLabel}>Related guides</div>
+              <div className={styles.relatedList}>
+                {relatedGuides.map(g => (
+                  <button key={g.slug} className={styles.relatedCard} onClick={() => navigate(`/guides/${g.slug}`)}>
+                    <div className={styles.relatedTags}>
+                      {g.tags.slice(0, 2).map(t => <span key={t} className={styles.relatedTag}>{t}</span>)}
+                    </div>
+                    <div className={styles.relatedTitle}>{g.title}</div>
+                    <div className={styles.relatedMeta}>{g.readTime} read</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
 
         <div className={styles.footer}>
           <div className={styles.footerCta}>

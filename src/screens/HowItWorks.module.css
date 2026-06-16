@@ -292,3 +292,45 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Guides section */
+.guidesSection {
+  border-top: 0.5px solid var(--gray-100);
+  padding: 2.5rem 0 1rem;
+}
+.guidesSection p {
+  color: var(--gray-600);
+  margin: 0 0 1.25rem;
+}
+.guidesLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.guidesLink {
+  all: unset;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--teal-dark);
+  cursor: pointer;
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--gray-100);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+.guidesLink:hover { color: var(--teal); }
+.guidesLinkAll {
+  all: unset;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-500);
+  cursor: pointer;
+  padding: 10px 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+.guidesLinkAll:hover { color: var(--gray-700); }

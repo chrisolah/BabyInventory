@@ -271,7 +271,35 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── 5. Final CTA — dark card ── */}
+      {/* ── 5. New parent guides ── */}
+      <section className={styles.guidesStrip}>
+        <div className={styles.guidesStripInner}>
+          <div className={styles.eyebrow}>Free guides</div>
+          <h2 className={styles.guidesStripTitle}>New parent guides from Sprigloop</h2>
+          <div className={styles.guidesStripGrid}>
+            <button className={styles.guidesPill} onClick={() => navigate('/guides/how-much-does-a-newborn-need')}>
+              How Much Does a Newborn Actually Need?
+            </button>
+            <button className={styles.guidesPill} onClick={() => navigate('/guides/when-does-baby-outgrow-each-size')}>
+              When Does Baby Outgrow Each Size?
+            </button>
+            <button className={styles.guidesPill} onClick={() => navigate('/guides/baby-registry-what-you-actually-need')}>
+              Baby Registry: What You Actually Need
+            </button>
+            <button className={styles.guidesPill} onClick={() => navigate('/guides/newborn-safe-sleep-setup')}>
+              Newborn Safe Sleep Setup
+            </button>
+            <button className={styles.guidesPill} onClick={() => navigate('/guides/baby-gear-splurge-vs-save')}>
+              Baby Gear: Splurge vs. Save
+            </button>
+            <button className={styles.guidesPillMore} onClick={() => navigate('/guides')}>
+              All guides &rarr;
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 6. Final CTA — dark card ── */}
       <section className={styles.finalSection}>
         <div className={styles.finalCard}>
           <h2 className={styles.finalTitle}>Start before baby arrives.</h2>

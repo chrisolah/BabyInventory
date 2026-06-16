@@ -293,6 +293,28 @@ export default function HowItWorks() {
           </details>
         </section>
 
+        <section className={styles.guidesSection}>
+          <h2 className={styles.h2}>New parent guides</h2>
+          <p>Practical guides to help you plan for what you actually need.</p>
+          <div className={styles.guidesLinks}>
+            <button className={styles.guidesLink} onClick={() => navigate('/guides/how-much-does-a-newborn-need')}>
+              How Much Does a Newborn Actually Need? &rarr;
+            </button>
+            <button className={styles.guidesLink} onClick={() => navigate('/guides/when-does-baby-outgrow-each-size')}>
+              When Does Baby Outgrow Each Size? &rarr;
+            </button>
+            <button className={styles.guidesLink} onClick={() => navigate('/guides/baby-registry-what-you-actually-need')}>
+              Baby Registry: What You Actually Need &rarr;
+            </button>
+            <button className={styles.guidesLink} onClick={() => navigate('/guides/what-you-need-before-baby-arrives')}>
+              What You Need Before Baby Arrives &rarr;
+            </button>
+            <button className={styles.guidesLinkAll} onClick={() => navigate('/guides')}>
+              Browse all guides &rarr;
+            </button>
+          </div>
+        </section>
+
         <section className={styles.finalCta}>
           <h2 className={styles.h2}>Start your inventory today.</h2>
           <p>Free for every family. No app to install. Sprigloop runs in your browser.</p>
