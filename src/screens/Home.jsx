@@ -50,6 +50,7 @@ export default function Home() {
   } = useHousehold()
   const [status, setStatus] = useState('checking')
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showAllRecent, setShowAllRecent] = useState(false)
   // One-time registry prompt: show once per household after setup
   const [showRegistryPrompt, setShowRegistryPrompt] = useState(() => {
     try { return !localStorage.getItem('sl_registry_prompt_dismissed') } catch { return false }
@@ -144,6 +145,17 @@ export default function Home() {
     () => items.filter(i => i.inventory_status === 'gap').length,
     [items],
   )
+
+  // Recently added — items already arrive sorted by created_at DESC from
+  // HouseholdContext. We include all tracked statuses (owned, outgrown,
+  // tucked_away, kept, pass_along) so the user sees what they just scanned
+  // regardless of what they tagged it as. Registry gaps excluded — those
+  // weren't "added" by the user.
+  const recentItemsAll = useMemo(
+    () => items.filter(i => i.inventory_status !== 'gap').slice(0, 25),
+    [items],
+  )
+  const recentItems = showAllRecent ? recentItemsAll : recentItemsAll.slice(0, 5)
 
   // Coverage for each of the 7 non-clothing categories.
   const catCoverages = useMemo(() => {
@@ -378,6 +390,38 @@ export default function Home() {
             <div className={styles.statLabel}>outgrown</div>
           </div>
         </div>
+
+        {/* Recently Added strip */}
+        {!itemsLoading && recentItemsAll.length > 0 && (
+          <div className={styles.recentSection}>
+            <div className={styles.recentHeader}>
+              <span className={styles.recentTitle}>Recently Added</span>
+              <button
+                type="button"
+                className={styles.recentViewAll}
+                onClick={() => navigate('/inventory?sort=recent')}
+              >
+                View all
+              </button>
+            </div>
+            <div className={styles.recentList}>
+              {recentItems.map(item => (
+                <RecentItem key={item.id} item={item} navigate={navigate} />
+              ))}
+            </div>
+            {recentItemsAll.length > 5 && (
+              <button
+                type="button"
+                className={styles.recentMoreBtn}
+                onClick={() => setShowAllRecent(v => !v)}
+              >
+                {showAllRecent
+                  ? 'Show less'
+                  : `Show ${Math.min(recentItemsAll.length - 5, 20)} more`}
+              </button>
+            )}
+          </div>
+        )}
       </main>
 
       <BottomNav />
@@ -467,6 +511,57 @@ function CountdownIcon({ type }) {
       <rect x="1" y="5.5" width="14" height="5" rx="1.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.3" />
       <path d="M4 5.5V7.5M7 5.5V8.5M10 5.5V7.5M13 5.5V8.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
+  )
+}
+
+// ── Recently Added item row ───────────────────────────────────────────────
+// Mirrors the buildItemDisplay logic from Inventory.jsx inline so we don't
+// need to import or move that utility. Falls through name → brand → category.
+const CATEGORY_DISPLAY = {
+  clothing: 'Clothing', sleep: 'Sleep', feeding: 'Feeding',
+  diapering: 'Diapering', travel: 'Travel', play: 'Play',
+  health: 'Health', bath: 'Bath',
+}
+
+function getRecentItemLabel(item) {
+  if (item.name) return item.name
+  if (item.brand) return item.brand
+  if (item.item_type) return item.item_type.replace(/_/g, ' ')
+  if (item.top_category) return CATEGORY_DISPLAY[item.top_category] || item.top_category
+  return 'Item'
+}
+
+function getRecentItemMeta(item) {
+  const parts = []
+  if (item.size_label) parts.push(item.size_label)
+  if (item.brand && item.name) parts.push(item.brand)
+  if (item.top_category) parts.push(CATEGORY_DISPLAY[item.top_category] || item.top_category)
+  return parts.slice(0, 2).join(' · ')
+}
+
+function RecentItem({ item, navigate }) {
+  return (
+    <button
+      type="button"
+      className={styles.recentItem}
+      onClick={() => navigate(`/item/${item.id}`)}
+    >
+      <div className={styles.recentThumb}>
+        {item.photo_url
+          ? <img src={item.photo_url} alt="" className={styles.recentThumbImg} />
+          : <span className={styles.recentThumbPlaceholder} aria-hidden="true">
+              {(CATEGORY_DISPLAY[item.top_category] || 'I')[0]}
+            </span>
+        }
+      </div>
+      <div className={styles.recentItemBody}>
+        <div className={styles.recentItemName}>{getRecentItemLabel(item)}</div>
+        <div className={styles.recentItemMeta}>{getRecentItemMeta(item)}</div>
+      </div>
+      <svg className={styles.recentChevron} viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
+        <path d="M5.5 3.5L10 8l-4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
   )
 }
 

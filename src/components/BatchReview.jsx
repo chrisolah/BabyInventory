@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { useUpgradeGate } from '../contexts/UpgradeGateContext'
@@ -89,6 +90,7 @@ export default function BatchReview({
   // 'item' = non-clothing visual item scan
   mode = 'tag',
 }) {
+  const navigate = useNavigate()
   const { household, currentBaby, babies, reloadItems } = useHousehold()
   const { requireRealAccount } = useUpgradeGate()
 
@@ -106,6 +108,9 @@ export default function BatchReview({
   const [saving, setSaving]         = useState(false)
   const [savedCount, setSavedCount] = useState(0)
   const [saveError, setSaveError]   = useState(null)
+  // When the full batch saves successfully, hold the count here so we can
+  // show the success panel before calling onComplete (which tears down the overlay).
+  const [doneCount, setDoneCount]   = useState(null)
 
   // Block accidental browser refresh / tab-close while unsaved items exist.
   // On mobile web, pull-to-refresh triggers beforeunload and this prevents
@@ -424,16 +429,57 @@ export default function BatchReview({
     // does after a successful single-item insert.
     reloadItems?.()
 
-    // If the entire batch is now drained, hand off to the parent's
-    // onComplete handler (which closes the review and fires the
-    // grandparent toast). Otherwise stay on review and let the parent
-    // know via onPartialSave so the toast still fires for the chunk
-    // we did save.
+    // If the entire batch is now drained, show the success panel before
+    // calling onComplete so the user has a chance to tap "Review items"
+    // rather than jumping straight back to the camera. Otherwise stay on
+    // review and let the parent know via onPartialSave so the toast still
+    // fires for the chunk we did save.
     if (remaining.length === 0) {
-      onComplete?.(savedIds.length)
+      setDoneCount(savedIds.length)
     } else {
       onPartialSave?.(savedIds.length)
     }
+  }
+
+  // Success panel — shown after all items save. Lets the user navigate to
+  // recently-added view or dismiss (go back to camera / close scanner).
+  if (doneCount !== null) {
+    return (
+      <div className={styles.overlay} role="dialog" aria-modal="true" aria-labelledby="br-done-title">
+        <div className={styles.donePanel}>
+          <div className={styles.doneIcon} aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+              <circle cx="24" cy="24" r="22" fill="var(--teal)" opacity="0.12" />
+              <circle cx="24" cy="24" r="22" stroke="var(--teal)" strokeWidth="1.5" />
+              <path d="M14 24l7 7 13-13" stroke="var(--teal)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <h1 id="br-done-title" className={styles.doneTitle}>
+            {doneCount} item{doneCount === 1 ? '' : 's'} added
+          </h1>
+          <p className={styles.doneSub}>
+            They're in your inventory now. Want to review and edit what you just scanned?
+          </p>
+          <button
+            type="button"
+            className={styles.primaryBtn}
+            onClick={() => {
+              onComplete?.(doneCount)
+              navigate('/inventory?sort=recent')
+            }}
+          >
+            Review items you just added →
+          </button>
+          <button
+            type="button"
+            className={styles.secondaryBtn}
+            onClick={() => onComplete?.(doneCount)}
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    )
   }
 
   // Confirm-discard dialog gets full-screen treatment because the

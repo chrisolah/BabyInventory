@@ -628,3 +628,140 @@
   font-family: var(--font-body); transition: opacity 0.12s;
 }
 .trackerCardClickable:hover { opacity: 0.92; }
+
+/* ── Recently Added strip ──────────────────────────────────────────── */
+
+.recentSection {
+  margin-top: 20px;
+}
+
+.recentHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.recentTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.recentViewAll {
+  background: none;
+  border: none;
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.recentList {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--gray-200);
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.recentItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--white);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  min-height: 56px;
+  transition: background 0.1s;
+  width: 100%;
+}
+
+.recentItem:active {
+  background: var(--gray-50);
+}
+
+.recentThumb {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.5px solid var(--gray-200);
+}
+
+.recentThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.recentThumbPlaceholder {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-400);
+  text-transform: uppercase;
+}
+
+.recentItemBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.recentItemName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recentItemMeta {
+  font-size: 12px;
+  color: var(--gray-400);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recentChevron {
+  flex-shrink: 0;
+  color: var(--gray-300);
+}
+
+.recentMoreBtn {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  background: none;
+  border: 0.5px solid var(--gray-200);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal);
+  cursor: pointer;
+  font-family: var(--font-body);
+  min-height: 44px;
+  transition: background 0.1s;
+}
+
+.recentMoreBtn:hover {
+  background: var(--gray-50);
+}

@@ -563,6 +563,47 @@
   max-width: 280px;
 }
 
+/* ── Success / done panel ─────────────────────────────────────────── */
+
+.donePanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  gap: 12px;
+  text-align: center;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.doneIcon {
+  margin-bottom: 8px;
+}
+
+.doneTitle {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.doneSub {
+  font-size: 14px;
+  color: var(--gray-500);
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+
+.donePanel .primaryBtn {
+  margin-top: 4px;
+}
+
+.donePanel .secondaryBtn {
+  width: 100%;
+}
+
 .confirmBox {
   margin: auto;
   max-width: 360px;
