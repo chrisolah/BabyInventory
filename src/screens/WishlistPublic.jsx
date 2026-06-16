@@ -230,10 +230,10 @@ export default function WishlistPublic() {
                 {[...skipCats].map(c => CAT_LABEL[c] || c).join(', ')} — no gifts needed here!
               </div>
             )}
-            {skipSlots.length > 0 && (
+            {skipSlots.filter(id => CLOTHING_SLOT[id]).length > 0 && (
               <div className={skipCats.size > 0 ? styles.skipLine : ''}>
                 <strong>Clothing types covered:</strong>{' '}
-                {skipSlots.map(id => CLOTHING_SLOT[id]?.label || id).join(', ')} — these won&rsquo;t appear below.
+                {skipSlots.filter(id => CLOTHING_SLOT[id]).map(id => CLOTHING_SLOT[id].label).join(', ')} — these won&rsquo;t appear below.
               </div>
             )}
             {skipSizes.length > 0 && (
