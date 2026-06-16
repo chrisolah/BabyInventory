@@ -86,6 +86,21 @@ export async function getPageBreakdown({ sinceDays = 7, excludeAdmins = true } =
 }
 
 /**
+ * Daily guide read counts for the Guides tab chart.
+ * Returns: { day: string, reads: number, unique_readers: number }[]
+ */
+export async function getGuideReadsByDay({ sinceDays = 30, excludeAdmins = true } = {}) {
+  const { data, error } = await supabase
+    .schema(currentSchema)
+    .rpc('admin_guide_reads_daily', {
+      _since_days: sinceDays,
+      _exclude_admins: excludeAdmins,
+    })
+  if (error) throw error
+  return data ?? []
+}
+
+/**
  * Per-guide reads and affiliate clicks.
  */
 export async function getGuideBreakdown({ sinceDays = 30, excludeAdmins = true } = {}) {

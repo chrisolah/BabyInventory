@@ -11,6 +11,7 @@ import {
   getHouseholdSummary,
   getPageAuthSplit,
   getGuideBreakdown,
+  getGuideReadsByDay,
   getActivationFunnel,
   getTimeToFirstItem,
   getAnonConversion,
@@ -24,6 +25,9 @@ import {
   FUNNELS,
   TIME_WINDOWS,
 } from '../lib/admin'
+import { GUIDES } from '../lib/guides'
+
+const GUIDE_TITLE = Object.fromEntries(GUIDES.map(g => [g.slug, g.title]))
 import styles from './Admin.module.css'
 
 export default function Admin() {
@@ -114,6 +118,7 @@ export default function Admin() {
             ['overview', 'Overview'],
             ['users',    'Users'],
             ['product',  'Product'],
+            ['guides',   'Guides'],
           ].map(([id, label]) => (
             <button
               key={id}
@@ -139,6 +144,9 @@ export default function Admin() {
               funnelId={funnelId}
               onFunnelChange={setFunnelId}
             />
+          )}
+          {tab === 'guides' && (
+            <GuidesTab sinceDays={window.days} excludeAdmins={excludeAdmins} />
           )}
         </div>
       </main>
@@ -327,6 +335,165 @@ function HouseholdEventStream({ householdId }) {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ── Guides tab ───────────────────────────────────────────────────────────────
+function GuidesTab({ sinceDays, excludeAdmins }) {
+  const [breakdown, setBreakdown] = useState(null)
+  const [daily, setDaily] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([
+      getGuideBreakdown({ sinceDays: Math.max(sinceDays, 30), excludeAdmins }),
+      getGuideReadsByDay({ sinceDays: Math.max(sinceDays, 30), excludeAdmins }),
+    ]).then(([b, d]) => {
+      setBreakdown(b); setDaily(d)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [sinceDays, excludeAdmins])
+
+  if (loading) return <div className={styles.loading}>Loading…</div>
+
+  const totalReads      = (breakdown || []).reduce((s, g) => s + Number(g.reads), 0)
+  const totalUnique     = (breakdown || []).reduce((s, g) => s + Number(g.unique_readers), 0)
+  const totalAffiliate  = (breakdown || []).reduce((s, g) => s + Number(g.affiliate_clicks), 0)
+  const guidesWithReads = (breakdown || []).filter(g => Number(g.reads) > 0).length
+  const topGuide        = breakdown?.[0]
+  const maxReads        = Math.max(...(breakdown || []).map(g => Number(g.reads)), 1)
+  const maxDaily        = Math.max(...(daily || []).map(d => Number(d.reads)), 1)
+
+  const affiliateGuides = (breakdown || [])
+    .filter(g => Number(g.affiliate_clicks) > 0)
+    .sort((a, b) => Number(b.affiliate_clicks) - Number(a.affiliate_clicks))
+
+  return (
+    <div className={styles.overviewGrid}>
+
+      {/* Summary row — span 2 */}
+      <div className={styles.overviewCard} style={{ gridColumn: 'span 2' }}>
+        <div className={styles.overviewCardTitle}>Guide performance (last {sinceDays <= 30 ? '30' : sinceDays}d)</div>
+        <div className={styles.northStar} style={{ marginTop: 8 }}>
+          <div className={styles.nsCard}>
+            <div className={styles.nsStat}>{totalReads.toLocaleString()}</div>
+            <div className={styles.nsLabel}>Total reads</div>
+          </div>
+          <div className={styles.nsDivider} />
+          <div className={styles.nsCard}>
+            <div className={styles.nsStat}>{totalUnique.toLocaleString()}</div>
+            <div className={styles.nsLabel}>Unique readers</div>
+          </div>
+          <div className={styles.nsDivider} />
+          <div className={styles.nsCard}>
+            <div className={styles.nsStat}>{guidesWithReads}</div>
+            <div className={styles.nsLabel}>Guides read</div>
+          </div>
+          <div className={styles.nsDivider} />
+          <div className={styles.nsCard}>
+            <div className={styles.nsStat}>{totalAffiliate}</div>
+            <div className={styles.nsLabel}>Affiliate clicks</div>
+          </div>
+          {topGuide && <>
+            <div className={styles.nsDivider} />
+            <div className={styles.nsCard} style={{ flex: 2 }}>
+              <div className={styles.nsStat} style={{ fontSize: 14, fontWeight: 500 }}>
+                {GUIDE_TITLE[topGuide.slug] || topGuide.slug}
+              </div>
+              <div className={styles.nsLabel}>Top guide — {topGuide.reads} reads</div>
+            </div>
+          </>}
+        </div>
+      </div>
+
+      {/* Reads over time — span 2 */}
+      <div className={styles.overviewCard} style={{ gridColumn: 'span 2' }}>
+        <div className={styles.overviewCardTitle}>Guide reads over time</div>
+        {daily && daily.length > 0 ? (
+          <div className={styles.barList}>
+            {daily.map(r => (
+              <div key={r.day} className={styles.bar}>
+                <div className={styles.barLabel}>{formatDay(r.day)}</div>
+                <div className={styles.barTrack}>
+                  <div className={styles.barFill} style={{ width: `${(Number(r.reads) / maxDaily) * 100}%` }} />
+                </div>
+                <div className={styles.barValue}>{Number(r.reads)}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.empty}>No guide reads in this window yet.</div>
+        )}
+      </div>
+
+      {/* Per-guide leaderboard */}
+      <div className={styles.overviewCard} style={{ gridColumn: 'span 2' }}>
+        <div className={styles.overviewCardTitle}>All guides — reads ranking</div>
+        {breakdown && breakdown.length > 0 ? (
+          <div className={styles.guideLeaderboard}>
+            {breakdown.map((g, i) => {
+              const pct = Math.round((Number(g.reads) / maxReads) * 100)
+              const ctr = Number(g.reads) > 0
+                ? Math.round((Number(g.affiliate_clicks) / Number(g.reads)) * 100)
+                : 0
+              return (
+                <div key={g.slug} className={styles.guideRow}>
+                  <div className={styles.guideRank}>{i + 1}</div>
+                  <div className={styles.guideInfo}>
+                    <div className={styles.guideTitle}>
+                      {GUIDE_TITLE[g.slug] || g.slug}
+                    </div>
+                    <div className={styles.guideBar}>
+                      <div className={styles.guideBarFill} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  <div className={styles.guideStats}>
+                    <span className={styles.guideStat}>{Number(g.reads)} reads</span>
+                    <span className={styles.guideStat}>{Number(g.unique_readers)} uniq</span>
+                    {Number(g.affiliate_clicks) > 0 && (
+                      <span className={styles.guideStatAffiliate}>
+                        {Number(g.affiliate_clicks)} clicks · {ctr}% CTR
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className={styles.empty}>No guide reads recorded yet.</div>
+        )}
+      </div>
+
+      {/* Affiliate performance */}
+      {affiliateGuides.length > 0 && (
+        <div className={styles.overviewCard}>
+          <div className={styles.overviewCardTitle}>Affiliate clicks by guide</div>
+          <table className={styles.growthTable}>
+            <thead>
+              <tr><th>Guide</th><th>Reads</th><th>Clicks</th><th>CTR</th></tr>
+            </thead>
+            <tbody>
+              {affiliateGuides.map(g => {
+                const ctr = Number(g.reads) > 0
+                  ? Math.round((Number(g.affiliate_clicks) / Number(g.reads)) * 100)
+                  : 0
+                return (
+                  <tr key={g.slug}>
+                    <td style={{ fontSize: 11 }}>{GUIDE_TITLE[g.slug] || g.slug}</td>
+                    <td>{Number(g.reads)}</td>
+                    <td>{Number(g.affiliate_clicks)}</td>
+                    <td>{ctr}%</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
     </div>
   )
 }
@@ -522,7 +689,6 @@ function OverviewTab({ sinceDays, excludeAdmins }) {
 // ── Product tab ───────────────────────────────────────────────────────────────
 function ProductTab({ sinceDays, excludeAdmins, funnelId, onFunnelChange }) {
   const [pages, setPages] = useState(null)
-  const [guides, setGuides] = useState(null)
   const [cats, setCats] = useState([])
   const [passAlong, setPassAlong] = useState([])
   const [funnelRows, setFunnelRows] = useState([])
@@ -533,13 +699,12 @@ function ProductTab({ sinceDays, excludeAdmins, funnelId, onFunnelChange }) {
     setLoading(true)
     Promise.all([
       getPageAuthSplit({ sinceDays, excludeAdmins }),
-      getGuideBreakdown({ sinceDays: Math.max(sinceDays, 30), excludeAdmins }),
       getCategoryDepth({ excludeAdmins }),
       getPassAlongFunnel({ excludeAdmins }),
       getFunnelRollup(funnelId, { sinceDays, excludeAdmins }),
       getReferrerBreakdown({ sinceDays, excludeAdmins }),
-    ]).then(([p, g, c, pa, f, ref]) => {
-      setPages(p); setGuides(g); setCats(c); setPassAlong(pa); setFunnelRows(f); setReferrers(ref)
+    ]).then(([p, c, pa, f, ref]) => {
+      setPages(p); setCats(c); setPassAlong(pa); setFunnelRows(f); setReferrers(ref)
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [sinceDays, excludeAdmins, funnelId])
@@ -628,7 +793,7 @@ function ProductTab({ sinceDays, excludeAdmins, funnelId, onFunnelChange }) {
         </div>
       </div>
 
-      {/* Pass-along + Guides */}
+      {/* Pass-along funnel */}
       <div className={styles.overviewCard}>
         <div className={styles.overviewCardTitle}>Pass-along funnel</div>
         <table className={styles.growthTable}>
@@ -641,21 +806,6 @@ function ProductTab({ sinceDays, excludeAdmins, funnelId, onFunnelChange }) {
             ))}
           </tbody>
         </table>
-
-        {guides && guides.length > 0 && <>
-          <div className={styles.overviewCardTitle} style={{ marginTop: 20 }}>Guide reads (30d)</div>
-          <table className={styles.growthTable}>
-            <thead><tr><th>Guide</th><th>Reads</th><th>Clicks</th></tr></thead>
-            <tbody>
-              {guides.slice(0,8).map(g => (
-                <tr key={g.slug}>
-                  <td style={{ fontSize: 11 }}>{g.slug}</td>
-                  <td>{g.reads}</td><td>{g.affiliate_clicks}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>}
       </div>
 
       {/* Traffic sources */}
