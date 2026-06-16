@@ -662,10 +662,10 @@
   align-items: center;
 }
 
-/* Grid — mirrors Inventory.itemCardGrid */
+/* Grid — 4 columns, same as category grid on desktop. Fixed count so rows always fill. */
 .recentGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 

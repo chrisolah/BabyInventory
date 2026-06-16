@@ -152,10 +152,10 @@ export default function Home() {
   // regardless of what they tagged it as. Registry gaps excluded — those
   // weren't "added" by the user.
   const recentItemsAll = useMemo(
-    () => items.filter(i => i.inventory_status !== 'gap').slice(0, 25),
+    () => items.filter(i => i.inventory_status !== 'gap').slice(0, 24),
     [items],
   )
-  const recentItems = showAllRecent ? recentItemsAll : recentItemsAll.slice(0, 5)
+  const recentItems = showAllRecent ? recentItemsAll : recentItemsAll.slice(0, 8)
 
   // Coverage for each of the 7 non-clothing categories.
   const catCoverages = useMemo(() => {
@@ -410,7 +410,7 @@ export default function Home() {
                 <RecentItem key={item.id} item={item} navigate={navigate} />
               ))}
             </div>
-            {recentItemsAll.length > 5 && (
+            {recentItemsAll.length > 8 && (
               <button
                 type="button"
                 className={styles.recentMoreBtn}
@@ -418,7 +418,7 @@ export default function Home() {
               >
                 {showAllRecent
                   ? 'Show less'
-                  : `Show ${Math.min(recentItemsAll.length - 5, 20)} more`}
+                  : `Show ${recentItemsAll.length - 8} more`}
               </button>
             )}
           </div>
