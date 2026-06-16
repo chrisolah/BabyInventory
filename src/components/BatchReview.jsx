@@ -106,6 +106,23 @@ export default function BatchReview({
   const [saving, setSaving]         = useState(false)
   const [savedCount, setSavedCount] = useState(0)
   const [saveError, setSaveError]   = useState(null)
+
+  // Block accidental browser refresh / tab-close while unsaved items exist.
+  // On mobile web, pull-to-refresh triggers beforeunload and this prevents
+  // losing the entire scanned batch. Capacitor's WKWebView doesn't fire
+  // beforeunload on native refresh, so the CSS overscroll-behavior:none on
+  // the overlay handles that side.
+  useEffect(() => {
+    const guard = (e) => {
+      if (items.length > 0 && !saving) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', guard)
+    return () => window.removeEventListener('beforeunload', guard)
+  }, [items.length, saving])
+
   // Tracks confirmation dialog for trashing the whole batch from the
   // back-arrow / "Discard" link. Single-row trash happens inline without
   // a confirm — the batch has enough redundancy that yanking one row is
