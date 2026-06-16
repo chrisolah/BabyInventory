@@ -237,15 +237,23 @@ export function HouseholdProvider({ children }) {
         return
       }
 
-      // Resolve signed photo URLs for clothing items that have a garment photo.
-      // URLs expire after 1 hour; acceptable for v1.
+      // Resolve signed photo URLs for all items that have a photo path.
+      // Both clothing_items (garment_photo_path) and beta.items (item_photo_path)
+      // store paths in the same 'garment-photos' bucket. Batch all paths in one
+      // createSignedUrls call to avoid two round-trips. URLs expire after 1 hour.
       const clothingRows = clothingResult.data || []
-      const photoPaths = clothingRows.map(r => r.garment_photo_path).filter(Boolean)
+      const categoryRows = categoryResult.data || []
+
+      const allPhotoPaths = [
+        ...clothingRows.map(r => r.garment_photo_path),
+        ...categoryRows.map(r => r.item_photo_path),
+      ].filter(Boolean)
+
       let urlByPath = new Map()
-      if (photoPaths.length > 0) {
+      if (allPhotoPaths.length > 0) {
         const { data: signed } = await supabase.storage
           .from('garment-photos')
-          .createSignedUrls(photoPaths, 60 * 60)
+          .createSignedUrls(allPhotoPaths, 60 * 60)
         if (Array.isArray(signed)) {
           for (const s of signed) {
             if (s?.path && s?.signedUrl && !s?.error) {
@@ -266,11 +274,17 @@ export function HouseholdProvider({ children }) {
           : {}),
       }))
 
-      // Category items (beta.items) already have top_category set
-      const categoryRows = categoryResult.data || []
+      // Category items (beta.items) already have top_category set.
+      // Attach signed URLs for any that have item_photo_path.
+      const categoryWithMeta = categoryRows.map(r => ({
+        ...r,
+        ...(r.item_photo_path
+          ? { item_photo_signed_url: urlByPath.get(r.item_photo_path) || null }
+          : {}),
+      }))
 
       // Merge and sort by created_at descending
-      const merged = [...clothingWithMeta, ...categoryRows].sort(
+      const merged = [...clothingWithMeta, ...categoryWithMeta].sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at),
       )
 
