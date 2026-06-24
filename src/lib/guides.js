@@ -3822,6 +3822,566 @@ export const GUIDES = [
       },
     ],
   },
+
+  // ── Guide 23: Baby Mattress Worth the Splurge? ──────────────────────────
+  {
+    slug: 'is-a-baby-mattress-worth-the-splurge',
+    title: 'Is a Baby Mattress Worth Breaking the Bank For?',
+    subtitle: 'What actually matters for safe sleep — and where expensive marketing ends and real safety begins.',
+    description: 'Firmness, certifications, and the press test: what you need to know before buying a crib mattress — and why price alone is not a proxy for safety.',
+    date: 'June 2026',
+    lastmod: '2026-06-24',
+    readTime: '6 min',
+    tags: ['Sleep', 'Safety', 'Gear'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from AAP safe sleep guidelines, CPSC crib mattress requirements, GREENGUARD Gold certification standards, and Consumer Reports testing. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: "Baby mattress marketing wants you to believe that $300 is the price of safe sleep. It isn't. A $100 crib mattress can be just as safe — or safer — than a $400 one. The things that actually protect your baby cost far less than the premium branding suggests. Here's what matters, what doesn't, and how to pick confidently without overspending.",
+      },
+      {
+        type: 'h2',
+        heading: 'The one thing that matters most: firmness',
+        body: "The American Academy of Pediatrics is clear: babies should sleep on a firm, flat surface. Soft mattresses — ones that conform to a baby's face or body — are a significant SIDS and suffocation risk. This is the single most safety-relevant characteristic of a crib mattress, and it has nothing to do with price.",
+      },
+      {
+        type: 'note',
+        body: "The press test: press firmly on the center and edge of the mattress with your palm. It should feel firm and spring back immediately. If it conforms to your hand and stays indented, it's too soft. Do this in the store — or at home before you finalize a purchase.",
+      },
+      {
+        type: 'h2',
+        heading: 'The crib fit matters as much as the mattress itself',
+        body: "A mattress that doesn't fill the crib snugly creates a gap where a baby can become wedged. CPSC guidelines require that a properly fitting crib mattress leave no more than two fingers of space between the mattress edge and the crib rail. If you can fit more than two fingers, the mattress is too small for that crib — and it's a safety hazard regardless of how well-made it is.",
+      },
+      {
+        type: 'h2',
+        heading: 'Certifications worth looking for',
+      },
+      {
+        type: 'table',
+        cols: ['Certification', 'What it means', 'Worth it?'],
+        rows: [
+          ['GREENGUARD Gold', 'Low chemical emissions — the mattress off-gasses at safe levels for babies who breathe close to the surface for 12+ hours a day', 'Yes — meaningful for infant health'],
+          ['CertiPUR-US', 'Foam made without ozone depleters, heavy metals, or prohibited flame retardants', 'Yes — relevant if foam is used'],
+          ['GOTS (Global Organic Textile Standard)', 'Organic fibers in cover; regulated third-party certification', 'Nice to have, not essential'],
+          ['GOLS (Global Organic Latex Standard)', 'Organic latex content verified', 'Relevant only if latex mattress'],
+          ['"Organic" with no certification', 'Marketing claim; no third-party verification required', 'Meaningless — ignore it'],
+          ['"Antimicrobial" or "antibacterial"', 'Chemical treatment; not safety-relevant and can be irritating', 'Skip — not a safety feature'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Dual-firmness: the feature that actually saves money',
+        body: 'Many crib mattresses are two-sided: a firmer infant side and a slightly softer toddler side you flip to around 12 months. If you plan to use the crib through toddlerhood, this is a genuinely useful feature — you get two mattresses for one price. Look for it as a specific labeled feature, not just a thicker mattress.',
+      },
+      {
+        type: 'h2',
+        heading: 'What you do not need to pay for',
+      },
+      {
+        type: 'bullets',
+        items: [
+          "Cooling gel or temperature-regulating foam. There's no evidence these improve sleep safety, and a fitted sheet covers most of these features anyway.",
+          "Premium brand names. Sealy, Graco, and Moonlight Slumber mattresses test as well as Newton or Naturepedic at a fraction of the cost in Consumer Reports evaluations.",
+          'Organic covers at $350+. A GREENGUARD Gold-certified mattress at $150 does more for air quality than a brand-name organic mattress with no third-party emission testing.',
+          'Waterproofing claims on the mattress itself. Use a waterproof mattress protector — it does the job and you can wash it.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'What a safe, good mattress actually costs',
+        body: "You can find a firm, GREENGUARD Gold-certified, dual-sided crib mattress for $100–$180. That's the sweet spot. Under $80, quality control gets inconsistent. Over $200, you're mostly paying for branding. The Newton Wovenaire at $300+ has legitimate breathability research behind it, but for most families, a certified foam or coil mattress at $120–$150 is the sensible choice.",
+      },
+      {
+        type: 'note',
+        body: 'Never buy a used crib mattress. A mattress that has softened with use — or one whose history you don\'t know — poses a SIDS risk. This is one of the few baby items that should always be purchased new. For everything else, see our guide on what\'s worth buying secondhand.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🛏️',
+            name: 'Graco Premium Foam Crib and Toddler Mattress',
+            note: 'GREENGUARD Gold certified, dual-sided, firm infant side — best value pick under $120',
+            url: 'https://www.amazon.com/s?k=graco+premium+foam+crib+toddler+mattress+greenguard&tag=sprigloop-20',
+          },
+          {
+            emoji: '🌿',
+            name: 'Naturepedic Lightweight Classic Crib Mattress',
+            note: 'GOTS organic, GREENGUARD Gold, coil core — top pick if you want certified organic at a reasonable price',
+            url: 'https://www.amazon.com/s?k=naturepedic+lightweight+classic+crib+mattress&tag=sprigloop-20',
+          },
+          {
+            emoji: '🌊',
+            name: 'Newton Baby Original Crib Mattress',
+            note: 'Breathable Wovenaire core, 100% washable, GREENGUARD Gold — premium pick with breathability research',
+            url: 'https://www.amazon.com/s?k=newton+baby+original+crib+mattress&tag=sprigloop-20',
+          },
+          {
+            emoji: '🛡️',
+            name: 'Waterproof Crib Mattress Protector (2-pack)',
+            note: 'Buy two — one on, one in the wash. Changes the equation on a blowout at 2am.',
+            url: 'https://www.amazon.com/s?k=waterproof+crib+mattress+protector+fitted+2+pack&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'AAP — Safe Sleep Guidelines', url: 'https://www.aap.org/en/patient-care/safe-sleep/' },
+          { label: 'CPSC — Crib Mattress Safety Requirements', url: 'https://www.cpsc.gov/Business--Manufacturing/Business-Education/Business-Guidance/Cribs' },
+          { label: 'GREENGUARD Gold Certification', url: 'https://www.ul.com/resources/greenguard-certification' },
+          { label: 'Consumer Reports — Best Crib Mattresses', url: 'https://www.consumerreports.org/babies-kids/crib-mattresses/best-crib-mattresses-of-the-year-a1055341816/' },
+          { label: 'AAP — SIDS and Other Sleep-Related Infant Deaths', url: 'https://publications.aap.org/pediatrics/article/150/1/e2022057990/188304' },
+          { label: 'Healthline — Newton Baby Mattress Review', url: 'https://www.healthline.com/health/baby/newton-baby-mattress-review' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 24: Do You Need a Baby Monitor? ───────────────────────────────
+  {
+    slug: 'do-you-need-a-baby-monitor',
+    title: 'Do You Need a Baby Monitor — and Which Kind?',
+    subtitle: 'Audio, video, and breathing monitors compared — what the research says, what parents actually use, and what you can skip.',
+    description: "Baby monitor marketing has become an anxiety-driven arms race. Here's what different monitor types actually do, what the AAP recommends for healthy full-term babies, and how to choose without overspending.",
+    date: 'June 2026',
+    lastmod: '2026-06-24',
+    readTime: '5 min',
+    tags: ['Sleep', 'Safety', 'Gear'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from AAP safe sleep guidance, FDA device classifications, and published research on infant monitoring. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: "If your bedroom is next to the nursery, you may not need a monitor at all — newborns are loud. If you have a larger home or sleep heavily, a monitor gives real peace of mind. The question most parents skip: which kind? The answer depends on your living situation, sleep style, and risk tolerance — not on which monitor has the most five-star reviews.",
+      },
+      {
+        type: 'h2',
+        heading: 'The three types',
+      },
+      {
+        type: 'table',
+        cols: ['Type', 'What it does', 'Best for', 'Typical cost'],
+        rows: [
+          ['Audio only', 'Transmits sound when baby makes noise', 'Small homes, light sleepers, parents who want simple', '$25–$60'],
+          ['Video', 'Audio + live video feed, usually with night vision and app', 'Most families — visual check without entering the room', '$80–$200'],
+          ['Breathing / pulse ox (wearable)', 'Tracks breathing rate or oxygen levels, alerts if reading drops', 'NICU graduates, premature babies, specific medical advice', '$300+'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'What the AAP actually says about breathing monitors',
+        body: "The American Academy of Pediatrics does not recommend cardiorespiratory or pulse oximetry monitors for healthy, full-term babies as a way to reduce SIDS risk. The evidence shows no benefit for this population, and monitors can generate false alarms that cause significant parental anxiety without improving outcomes. The AAP's safe sleep environment guidelines — firm surface, no loose bedding, back to sleep, room-sharing without bed-sharing — are the evidence-backed SIDS reduction tools.",
+      },
+      {
+        type: 'note',
+        body: "If your baby was premature, had a NICU stay, or has a specific medical condition, your pediatrician may recommend a monitoring device as part of a care plan. That's a different conversation from general consumer monitor marketing.",
+      },
+      {
+        type: 'h2',
+        heading: 'The Owlet situation',
+        body: "Owlet's Smart Sock 3 is marketed as a wellness device, not a medical one — the FDA sent a warning letter about earlier models making medical claims without clearance. Owlet later released the BabySat, which received FDA 510(k) clearance as a prescription pulse oximeter. The BabySat is a real medical device; the consumer Smart Sock is a wellness product that measures the same metrics but with wellness-only labeling. Neither is recommended by the AAP for healthy full-term babies, but they are meaningfully different products.",
+      },
+      {
+        type: 'h2',
+        heading: 'What most parents actually need',
+      },
+      {
+        type: 'bullets',
+        items: [
+          "If your home is small or you're a light sleeper: audio monitor or nothing. You will hear your baby.",
+          'If your home is larger or you want to visually check without going in: video monitor. The Infant Optics DXR-8 Pro and Nanit Pro are consistently top-rated; both use dedicated radio frequencies rather than WiFi streaming, which means no subscription and fewer connectivity issues.',
+          'If you have strong anxiety about SIDS or your baby has medical risk factors: talk to your pediatrician before buying a breathing monitor. An informed conversation is more useful than a consumer device.',
+          "Skip monitors that require a monthly subscription to access basic features — the core function of a monitor shouldn't be paywalled.",
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'WiFi streaming vs dedicated frequency',
+        body: 'Video monitors fall into two camps. WiFi-connected monitors stream to an app on your phone and often to a parent unit — convenient, but dependent on your internet connection and subject to app subscriptions (Nanit charges monthly for trend data). Dedicated DECT or FHSS frequency monitors (like Infant Optics) connect parent unit to camera directly — no WiFi, no subscription, no lag. Both work well; the choice is about ecosystem preference.',
+      },
+      {
+        type: 'h2',
+        heading: 'When you might not need one at all',
+      },
+      {
+        type: 'bullets',
+        items: [
+          "Studio apartment or small home where you can hear clearly from anywhere: skip it.",
+          "Newborn sleeping in your room per AAP room-sharing guidelines for the first 6 months: a monitor is redundant.",
+          "If you're a light sleeper who wakes at every sound anyway: a monitor just gives you more sounds to wake at.",
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '📹',
+            name: 'Infant Optics DXR-8 Pro Video Baby Monitor',
+            note: 'Dedicated FHSS frequency, no WiFi required, no subscription — the most recommended video monitor by parents and Consumer Reports',
+            url: 'https://www.amazon.com/s?k=infant+optics+dxr-8+pro+video+baby+monitor&tag=sprigloop-20',
+          },
+          {
+            emoji: '🌙',
+            name: 'Nanit Pro Smart Baby Monitor',
+            note: 'WiFi-based with excellent app and breathing motion tracking (non-wearable, camera-based); subscription required for trend data',
+            url: 'https://www.amazon.com/s?k=nanit+pro+smart+baby+monitor&tag=sprigloop-20',
+          },
+          {
+            emoji: '🔊',
+            name: 'VTech DM221 DECT 6.0 Audio Baby Monitor',
+            note: "Best audio-only option — DECT 6.0, two-way talk, vibrating sound alert, no WiFi, under $30. If you don't need video, this is all you need.",
+            url: 'https://www.amazon.com/s?k=vtech+dm221+audio+baby+monitor&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'AAP — Safe Sleep Recommendations', url: 'https://www.aap.org/en/patient-care/safe-sleep/' },
+          { label: 'AAP — Home Cardiorespiratory Monitor Use (Policy Statement)', url: 'https://publications.aap.org/pediatrics/article/122/1/232/70893' },
+          { label: 'FDA — Warning Letter to Owlet Care', url: 'https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/owlet-care-inc-614931-10072021' },
+          { label: 'Consumer Reports — Best Baby Monitors', url: 'https://www.consumerreports.org/babies-kids/baby-monitors/best-baby-monitors-of-the-year-a1239087270/' },
+          { label: 'Pediatrics — SIDS and Other Sleep-Related Deaths (AAP Policy)', url: 'https://publications.aap.org/pediatrics/article/150/1/e2022057990/188304' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 25: Secondhand vs New ─────────────────────────────────────────
+  {
+    slug: 'what-to-buy-secondhand-vs-new',
+    title: "What's Actually Worth Buying Secondhand vs. New",
+    subtitle: "A clear breakdown of what's safe, smart, and worth it to buy used — and the short list of things that should always be new.",
+    description: "Secondhand baby gear can save you thousands. But some items carry real safety risks when bought used. Here's the breakdown.",
+    date: 'June 2026',
+    lastmod: '2026-06-24',
+    readTime: '6 min',
+    tags: ['Planning', 'Safety'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from CPSC safety guidelines, AAP recommendations, and NHTSA car seat policy. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: "Baby gear is used for months, not years. A bouncer that a previous family used for four months is functionally new — and available for a fraction of the price. But some baby items carry real safety risks when bought used, and the short list of things that should always be new is worth knowing cold before you hit a Facebook Marketplace listing.",
+      },
+      {
+        type: 'h2',
+        heading: 'Always buy new',
+      },
+      {
+        type: 'table',
+        cols: ['Item', 'Why new only'],
+        rows: [
+          ['Car seat', "No way to verify crash history. A seat involved in a moderate or severe crash may have internal damage invisible to the eye. Expired seats (check the label — most expire 6–10 years from manufacture) should be destroyed, not resold. This is not a negotiable one."],
+          ['Crib mattress', 'Soft, worn mattress surfaces are a SIDS risk. A used mattress may have degraded well past what\'s visible. Buy new — see our mattress guide for how to do it without overspending.'],
+          ['Crib or bassinet (if older than 2012)', 'Pre-2012 cribs may not meet current CPSC safety standards. Drop-side cribs — banned in 2011 — are still circulating secondhand. Always check the CPSC recall database before accepting any used crib.'],
+          ['Bike helmet or baby helmet', 'Same logic as car seats: invisible structural damage from a single impact means the helmet no longer protects properly.'],
+          ['Breast pump (open system)', 'Open-system pumps — where milk can contact motor components — are single-user devices by FDA classification. Internal parts cannot be fully sterilized. Closed-system pumps can be safely shared with new parts; check the model before buying used.'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: "Great to buy secondhand",
+      },
+      {
+        type: 'bullets',
+        items: [
+          "Clothing — the single best secondhand category. Babies outgrow sizes in weeks. A 6-month onesie worn four times is indistinguishable from new after washing. Sprigloop families pass along outgrown clothing to families with younger babies — it's how the platform works.",
+          "Bouncers and swings — check for recalls (CPSC database), ensure all parts are present and straps intact, and test the motion mechanism. A $15 Fisher-Price bouncer works identically to a new one.",
+          'Baby carriers and wraps — inspect stitching and buckles carefully; avoid anything with fraying or signs of UV degradation. Ring slings and woven wraps hold up well over time.',
+          'Strollers — no crash-history concern like car seats; verify the fold mechanism, brakes, and harness before buying. Check recalls.',
+          'Play mats and activity gyms — wash covers before use; inspect any hanging toys for loose parts or broken attachment points.',
+          'Bouncers, Boppys, and nursing pillows — wash all covers; inspect foam for compression or breakdown.',
+          'High chairs — full cleaning required; check harness and tray mechanism. Avoid models with recalls.',
+          'Swaddles, muslin blankets, and soft toys — machine washable, low risk, excellent secondhand value.',
+        ],
+      },
+      {
+        type: 'note',
+        body: 'Before buying any used gear, check the CPSC recall database at cpsc.gov/recalls. Filter by product type. If a model appears, check whether the specific unit is affected. Many recalls offer free repair kits — worth checking even for items you already own.',
+      },
+      {
+        type: 'h2',
+        heading: 'Use your judgment on these',
+      },
+      {
+        type: 'bullets',
+        items: [
+          "Baby bathtubs — fine secondhand if structurally intact and you can clean them thoroughly. Avoid if there's mold in crevices that can't be reached.",
+          'Jumpers and exersaucers — check all joints and weight limits. If anything wobbles or a seat pivot feels loose, skip it.',
+          'White noise machines and small electronics — test before paying. Check the cord for damage. Otherwise fine.',
+          "Breast pumps (closed system) — Spectra S1/S2, Medela Pump in Style (with motor protection), and Elvie are closed-system pumps. Replace all parts that contact milk (flanges, tubing, valves, membranes) and you're using a new pump functionally.",
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Where to find secondhand baby gear',
+        body: 'Facebook Marketplace and local buy-nothing groups are the best sources for large gear. ThredUp, Poshmark, and eBay work well for clothing. Sprigloop connects families with outgrown clothing from other local families — built specifically for the clothing pass-along cycle that makes the first two years more manageable.',
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'CPSC — Recalls Database', url: 'https://www.cpsc.gov/Recalls' },
+          { label: 'NHTSA — Car Seat Replacement After a Crash', url: 'https://www.nhtsa.gov/sites/nhtsa.gov/files/documents/crashedreplacement_final.pdf' },
+          { label: 'FDA — Breast Pump Classifications (Single vs Multi-User)', url: 'https://www.fda.gov/medical-devices/breast-pumps/single-use-vs-multiple-user-breast-pumps' },
+          { label: 'CPSC — Crib Safety Standards (2011 rule)', url: 'https://www.cpsc.gov/Business--Manufacturing/Business-Education/Business-Guidance/Cribs' },
+          { label: 'AAP — Car Seat Safety', url: 'https://www.healthychildren.org/English/safety-prevention/on-the-go/Pages/Car-Safety-Seats-Information-for-Families.aspx' },
+          { label: 'Safe Kids Worldwide — When to Replace a Car Seat', url: 'https://www.safekids.org/tip/when-replace-car-seat' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 26: Baby Stuff You'll Never Use ───────────────────────────────
+  {
+    slug: 'baby-stuff-youll-never-use',
+    title: "Baby Stuff You'll Buy and Never Use",
+    subtitle: 'The items that fill up registries and collect dust — and what to do instead.',
+    description: 'A candid look at the most commonly regretted baby purchases: what parents buy, why they rarely use it, and what actually works instead.',
+    date: 'June 2026',
+    lastmod: '2026-06-24',
+    readTime: '6 min',
+    tags: ['Planning', 'Gear'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from parenting surveys, pediatric guidance, and consumer research. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: "Every new parent ends up with a closet full of things that seemed essential before the baby arrived and gathered dust after. Some items are category misfires. Some are genuine safety problems dressed up as solutions. And some just get replaced by something free you already own. Here's the honest list.",
+      },
+      {
+        type: 'h2',
+        heading: 'Newborn shoes',
+        body: "Newborns do not walk. They do not need shoes. Shoes fall off constantly, serve no protective function, and are hard to put on a squirming infant. Socks do everything a shoe does for a non-walking baby, better. The one exception: photo props. Buy them secondhand if you want the photo.",
+      },
+      {
+        type: 'h2',
+        heading: 'Crib bumpers',
+        body: "Not just useless — actively dangerous. Crib bumpers have been linked to infant suffocation deaths, and the AAP has warned against them for years. As of 2022, the CPSC banned the sale of crib bumpers in the United States. They still appear secondhand. Do not use them.",
+      },
+      {
+        type: 'h2',
+        heading: 'Sleep positioners and infant loungers (for unsupervised sleep)',
+        body: "Products like the Dock-a-Tot are sold as infant loungers and photographed with sleeping babies — but the AAP and CPSC are explicit: no soft bedding, positioning devices, or inclined sleepers in a baby's sleep space. Loungers are fine for supervised awake time. Using one as a sleep surface is a suffocation risk.",
+      },
+      {
+        type: 'h2',
+        heading: 'Wipe warmer',
+        body: 'The idea: warm wipes so baby doesn\'t startle. The reality: wipes dry out faster in a warmer, the "warm" effect lasts about two seconds, and babies adapt to room-temperature wipes within days. The device costs $25–$40, takes up counter space, and most parents stop using it within a month. Your hand held over the wipe for five seconds does the same job.',
+      },
+      {
+        type: 'h2',
+        heading: 'Dedicated diaper pail',
+        body: "The Diaper Genie and similar products market themselves as odor-containment systems. In practice, the effectiveness varies by diaper type and how often you empty it, the refill cartridges are an ongoing cost, and many parents conclude a regular trash can with a lid — emptied daily — works equally well. If you have a large home and carry diapers far to dispose of them, a pail near the changing area makes sense. Otherwise it's an added expense for marginal benefit.",
+      },
+      {
+        type: 'h2',
+        heading: 'Baby food maker',
+        body: "A dedicated baby food processor — appliances that steam and blend in one unit — costs $50–$100 and does exactly what a regular blender does. The 'baby' label adds nothing functional. If you make homemade baby food, your existing blender handles it. If you don't plan to make homemade baby food, this item has a use-window of a few months and no second career.",
+      },
+      {
+        type: 'h2',
+        heading: 'UV bottle sterilizer',
+        body: "UV sterilizers are fast and convenient, but the CDC and AAP both note that sterilizing baby bottles is not necessary for healthy full-term babies in homes with safe tap water. Washing thoroughly in hot soapy water — or running through the dishwasher — is sufficient. Sterilization is recommended when a baby is premature or immunocompromised, or during illness. For most families, the $50–$150 device solves a problem that doesn't exist.",
+      },
+      {
+        type: 'h2',
+        heading: 'Elaborate swaddle products with proprietary systems',
+        body: "Velcro swaddle wraps and specialty swaddle blankets with built-in systems can be useful for parents who struggle to swaddle with a regular muslin blanket. But they solve a skill problem that most parents master in a few days, and babies outgrow swaddles by 2–3 months when they start rolling. Five muslin swaddle blankets at $20 for a 4-pack outlast and out-multipurpose any proprietary swaddle system.",
+      },
+      {
+        type: 'h2',
+        heading: 'Changing table (standalone furniture)',
+        body: "A dedicated changing table is a large, single-purpose piece of furniture that becomes a storage shelf the moment your child is out of diapers. Most families find a changing pad ($25) on top of a dresser they already own works identically. You get storage underneath, the dresser keeps serving a purpose after potty training, and you save $100–$300.",
+      },
+      {
+        type: 'h2',
+        heading: 'Nursing cover',
+        body: "Many breastfeeding parents buy nursing covers and use them twice. Babies dislike having their heads covered. Covers are hard to manage one-handed while latching. Most parents find a loose shirt or light muslin blanket draped over one shoulder works better. If you want coverage, a large muslin swaddle already in your stash does the job.",
+      },
+      {
+        type: 'h2',
+        heading: 'The pattern',
+        body: "Most of these items share a structure: a problem that sounds real in marketing, a solution with a dedicated product, and a simpler free or low-cost alternative that works just as well. The exception is anything with a genuine safety concern — bumpers and sleep positioners — where the product causes harm rather than just being unnecessary.",
+      },
+      {
+        type: 'note',
+        body: 'Building your registry? Our guide on what a baby actually needs — by category, with real quantities — helps you focus on the items that genuinely matter for the first three months.',
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'AAP — Safe Sleep Environment', url: 'https://www.aap.org/en/patient-care/safe-sleep/' },
+          { label: 'CPSC — Crib Bumper Ban (2022)', url: 'https://www.cpsc.gov/Newsroom/News-Releases/2022/CPSC-Bans-Crib-Bumpers' },
+          { label: 'CDC — How to Clean, Sanitize, and Store Infant Feeding Items', url: 'https://www.cdc.gov/hygiene/personal-hygiene/infant-feeding-items.html' },
+          { label: 'AAP — Sterilizing Bottles', url: 'https://www.healthychildren.org/English/ages-stages/baby/feeding-nutrition/Pages/Cleaning-Infant-Feeding-Items.aspx' },
+          { label: 'Consumer Reports — Infant Lounger Safety Warning', url: 'https://www.consumerreports.org/babies-kids/infant-sleep/infant-lounger-safety-what-parents-need-to-know-a1200793419/' },
+          { label: 'What to Expect — Baby Registry Must-Haves vs. Skips', url: 'https://www.whattoexpect.com/baby-products/baby-registry/registry-must-haves-or-not' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 27: Do You Need a Bottle Warmer? ──────────────────────────────
+  {
+    slug: 'do-you-need-a-bottle-warmer',
+    title: 'Do You Need a Bottle Warmer? (And 5 Other Baby Gadgets, Honestly Evaluated)',
+    subtitle: 'Six common baby gadgets — bottle warmer, wipe warmer, white noise machine, baby food maker, diaper pail, UV sterilizer — and a straight verdict on each.',
+    description: 'A gadget-by-gadget breakdown of six common baby purchases: what they actually do, what works just as well for less, and the one that genuinely earns its place.',
+    date: 'June 2026',
+    lastmod: '2026-06-24',
+    readTime: '7 min',
+    tags: ['Gear', 'Planning'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from pediatric guidance, CDC infant care recommendations, and consumer testing. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: "The baby gear industry is very good at selling solutions to problems that already have solutions. Here are six gadgets you'll see on every registry guide, evaluated without the marketing language — with a verdict on each.",
+      },
+      {
+        type: 'h2',
+        heading: '1. Bottle warmer',
+        body: "Bottle warmers heat refrigerated or frozen breast milk or formula to feeding temperature. Most use steam or water bath heating. They range from $25 to $70 and include models that claim to preserve nutrients (there's no meaningful difference at the temperatures used for warming).",
+      },
+      {
+        type: 'bullets',
+        items: [
+          'The free alternative: a mug or bowl of hot tap water. Submerge the bottle for 2–5 minutes. Works identically and costs nothing.',
+          'Microwaving is the one thing to avoid — it creates hot spots that can burn a baby\'s mouth even when the bottle feels fine from the outside.',
+          'If you formula-feed and mix fresh, warming is optional — formula mixed with warm water skips the step entirely.',
+          'The case for buying one: if you\'re pumping and refrigerating breast milk, and especially if you\'re managing nighttime feedings solo, a bottle warmer in the nursery beats walking to the kitchen. The Born Free Bottle Warmer and Kiinde Kozii are consistently well-reviewed for even heating.',
+          'Verdict: skip it unless you anticipate high-volume nighttime bottle warming. A mug of hot water works.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: '2. Wipe warmer',
+        body: 'Wipe warmers keep a stack of diaper wipes at body temperature so baby doesn\'t startle during changes.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Wipes dry out faster in a warmer — most models include a sponge to compensate, which you have to keep wet.',
+          'The effect is temporary: warm when it comes out, room temperature by the time it reaches the baby.',
+          'Babies adapt to room-temperature wipes in days.',
+          'The free alternative: hold the wipe in your fist for 10 seconds before use. Done.',
+          'Verdict: skip. This is the gadget most parents mention regretting.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: '3. White noise machine',
+        body: "White noise machines play continuous sound — static, fan, rain, ocean — at a consistent volume. They're used for infant sleep and nap extension.",
+      },
+      {
+        type: 'bullets',
+        items: [
+          'The research here is solid. A 1990 study in Archives of Disease in Childhood found white noise helped 80% of babies fall asleep within 5 minutes vs 25% in the control group. More recent research confirms the effect on sleep consolidation.',
+          'The one caveat: volume matters. The AAP recommends keeping white noise machines at 50 dB or less and at least 7 feet from the baby. Placing a machine directly in the crib at high volume causes hearing concerns.',
+          'The free alternative: a fan pointed away from baby, a phone app, or a smart speaker works. But a dedicated machine on a timer, positioned correctly, is genuinely useful and costs $30–$50.',
+          "This is the one gadget on this list that earns its place. A good white noise machine extends naps, masks household noise, and creates a consistent sleep cue that travels with you.",
+          'Verdict: worth it. The Hatch Rest and LectroFan are the most recommended models.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: '4. Baby food maker',
+        body: 'All-in-one devices that steam and blend baby food in the same container. Marketed as simplifying the transition to solids at 4–6 months.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'A regular blender handles this identically. Steam vegetables in a pot, blend in a blender you already own, freeze in an ice cube tray.',
+          'The use window is narrow — roughly 4 to 8 months, when purees transition to soft table food.',
+          'Some parents prefer the convenience of an all-in-one; others use it twice and return it.',
+          'Verdict: skip unless you know you plan to make large batches of homemade baby food and want a dedicated appliance. Your blender does this.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: '5. Diaper pail',
+        body: "Specialized diaper disposal systems (Diaper Genie, Ubbi, Munchkin STEP) promise odor containment with proprietary refill cartridges.",
+      },
+      {
+        type: 'bullets',
+        items: [
+          'The Ubbi is the most recommended because it uses standard garbage bags instead of proprietary refills — the ongoing cost of cartridges is a real irritant with the Diaper Genie.',
+          'Effectiveness varies: a lidded trash can emptied every 24–48 hours manages odor comparably for most families.',
+          "The case for buying one: if your nursery is far from your kitchen trash, or you have a small apartment where odor management matters, a dedicated pail near the changing station is genuinely convenient.",
+          'Verdict: marginal. A lidded trash can works fine for most families. If you want one, the Ubbi is the pick — no proprietary refills.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: '6. UV bottle sterilizer',
+        body: 'UV sterilizers use ultraviolet light to kill bacteria on bottles, nipples, and pump parts. Some also include a drying function.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          "The CDC is clear: for healthy full-term babies in homes with safe tap water, sterilization isn't necessary. Thorough washing in hot soapy water or in the dishwasher is sufficient.",
+          'Sterilization is recommended for: premature or immunocompromised babies, during illness, when tap water quality is uncertain, or after a baby has been ill.',
+          'If your pediatrician recommends sterilizing, boiling for 5 minutes works identically to a UV unit and costs nothing.',
+          'Verdict: skip unless you have a specific medical reason to sterilize. The dishwasher does the job for most families.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The scorecard',
+      },
+      {
+        type: 'table',
+        cols: ['Gadget', 'Verdict', 'Free/cheap alternative'],
+        rows: [
+          ['Bottle warmer', 'Skip (unless high-volume overnight pumping)', 'Mug of hot water — 2–5 minutes'],
+          ['Wipe warmer', 'Skip', 'Hold wipe in fist for 10 seconds'],
+          ['White noise machine', 'Worth it', 'Fan or phone app works, but machine is better'],
+          ['Baby food maker', 'Skip', 'Blender + ice cube tray'],
+          ['Diaper pail', 'Marginal — your call', 'Lidded trash can, emptied daily'],
+          ['UV sterilizer', 'Skip (most families)', 'Dishwasher or boiling'],
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🔊',
+            name: 'LectroFan Classic White Noise Machine',
+            note: 'Non-looping fan and white noise sounds, precise volume control, compact — the most recommended standalone white noise machine',
+            url: 'https://www.amazon.com/s?k=lectrofan+classic+white+noise+machine&tag=sprigloop-20',
+          },
+          {
+            emoji: '🌙',
+            name: 'Hatch Rest Baby Sound Machine',
+            note: 'App-controlled, doubles as night light and ok-to-wake clock as baby grows — premium pick that scales past the infant stage',
+            url: 'https://www.amazon.com/s?k=hatch+rest+baby+sound+machine&tag=sprigloop-20',
+          },
+          {
+            emoji: '🍼',
+            name: 'Kiinde Kozii Bottle Warmer',
+            note: 'Water bath warming (gentler than steam), works with most bottle types including storage bags — best pick if you decide to buy a warmer',
+            url: 'https://www.amazon.com/s?k=kiinde+kozii+bottle+warmer&tag=sprigloop-20',
+          },
+          {
+            emoji: '🗑️',
+            name: 'Ubbi Steel Odor Locking Diaper Pail',
+            note: 'Uses standard garbage bags (no proprietary refills), powder-coated steel construction — best diaper pail if you want one',
+            url: 'https://www.amazon.com/s?k=ubbi+steel+diaper+pail&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'CDC — How to Clean, Sanitize, and Store Infant Feeding Items', url: 'https://www.cdc.gov/hygiene/personal-hygiene/infant-feeding-items.html' },
+          { label: 'AAP — Sterilizing Baby Bottles', url: 'https://www.healthychildren.org/English/ages-stages/baby/feeding-nutrition/Pages/Cleaning-Infant-Feeding-Items.aspx' },
+          { label: 'Spencer et al. (1990) — White Noise and Infant Sleep (Archives of Disease in Childhood)', url: 'https://adc.bmj.com/content/65/1/135' },
+          { label: 'AAP — White Noise and Hearing Concerns', url: 'https://www.healthychildren.org/English/news/Pages/Infant-Sleep-Machines-and-Hearing-Loss.aspx' },
+          { label: 'Consumer Reports — Bottle Warmers Buying Guide', url: 'https://www.consumerreports.org/babies-kids/bottle-warmers/buying-guide/' },
+          { label: 'AAP — Safe Sleep Environment', url: 'https://www.aap.org/en/patient-care/safe-sleep/' },
+        ],
+      },
+    ],
+  },
 ]
 
 export function getGuide(slug) {

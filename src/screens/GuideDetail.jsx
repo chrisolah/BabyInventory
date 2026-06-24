@@ -7,22 +7,22 @@ import IvyBanner from '../components/IvyBanner'
 import styles from './GuideDetail.module.css'
 
 const RELATED_GUIDES = {
-  'how-much-does-a-newborn-need': ['when-does-baby-outgrow-each-size', 'baby-clothing-guide', 'newborn-safe-sleep-setup'],
+  'how-much-does-a-newborn-need': ['baby-stuff-youll-never-use', 'when-does-baby-outgrow-each-size', 'baby-clothing-guide'],
   'when-does-baby-outgrow-each-size': ['how-to-organize-baby-clothes-by-size', 'what-to-do-with-outgrown-baby-clothes', 'baby-clothing-guide'],
   'what-to-do-with-outgrown-baby-clothes': ['when-does-baby-outgrow-each-size', 'how-to-organize-baby-clothes-by-size', 'baby-clothing-guide'],
   'baby-registry-what-you-actually-need': ['how-to-build-your-baby-registry', 'what-you-need-before-baby-arrives', 'how-much-does-a-newborn-need'],
   'how-to-organize-baby-clothes-by-size': ['when-does-baby-outgrow-each-size', 'what-to-do-with-outgrown-baby-clothes', 'baby-clothing-guide'],
-  'baby-gear-splurge-vs-save': ['certified-vs-generic-baby-products', 'how-to-choose-a-baby-stroller', 'choosing-a-car-seat'],
+  'baby-gear-splurge-vs-save': ['what-to-buy-secondhand-vs-new', 'is-a-baby-mattress-worth-the-splurge', 'do-you-need-a-baby-monitor'],
   'how-to-build-your-baby-registry': ['baby-registry-what-you-actually-need', 'what-you-need-before-baby-arrives', 'how-much-does-a-baby-cost-first-year'],
   'baby-clothing-guide': ['when-does-baby-outgrow-each-size', 'how-to-organize-baby-clothes-by-size', 'how-much-does-a-newborn-need'],
-  'newborn-safe-sleep-setup': ['baby-sleep-cues-and-wake-windows', 'how-to-swaddle-a-baby', 'how-much-does-a-newborn-need'],
-  'bottle-feeding-newborn-what-you-need': ['how-to-introduce-a-bottle', 'breastfeeding-supplies-checklist', 'introducing-solid-foods-what-you-need'],
+  'newborn-safe-sleep-setup': ['is-a-baby-mattress-worth-the-splurge', 'baby-sleep-cues-and-wake-windows', 'how-to-swaddle-a-baby'],
+  'bottle-feeding-newborn-what-you-need': ['do-you-need-a-bottle-warmer', 'how-to-introduce-a-bottle', 'breastfeeding-supplies-checklist'],
   'cloth-vs-disposable-diapers': ['how-many-diapers-does-a-baby-go-through', 'what-to-pack-in-a-diaper-bag', 'how-to-use-diaper-care-products'],
   'choosing-a-car-seat': ['how-to-install-a-car-seat', 'certified-vs-generic-baby-products', 'baby-gear-splurge-vs-save'],
   'baby-toys-first-year-by-age': ['how-to-do-tummy-time', 'how-to-use-a-baby-carrier-safely', 'baby-gear-splurge-vs-save'],
   'newborn-health-kit-what-to-have': ['how-to-bathe-a-newborn', 'newborn-safe-sleep-setup', 'how-much-does-a-newborn-need'],
   'how-to-bathe-a-newborn': ['newborn-health-kit-what-to-have', 'how-to-do-tummy-time', 'how-much-does-a-newborn-need'],
-  'certified-vs-generic-baby-products': ['choosing-a-car-seat', 'baby-gear-splurge-vs-save', 'how-to-choose-a-baby-stroller'],
+  'certified-vs-generic-baby-products': ['what-to-buy-secondhand-vs-new', 'choosing-a-car-seat', 'baby-gear-splurge-vs-save'],
   'what-you-need-before-baby-arrives': ['how-much-does-a-newborn-need', 'baby-registry-what-you-actually-need', 'how-much-does-a-baby-cost-first-year'],
   'how-much-does-a-baby-cost-first-year': ['how-much-to-save-before-baby-arrives', 'what-you-need-before-baby-arrives', 'baby-gear-splurge-vs-save'],
   'how-much-to-save-before-baby-arrives': ['how-much-does-a-baby-cost-first-year', 'baby-gear-splurge-vs-save', 'what-you-need-before-baby-arrives'],
@@ -39,6 +39,11 @@ const RELATED_GUIDES = {
   'how-to-use-a-breast-pump': ['breastfeeding-supplies-checklist', 'how-to-introduce-a-bottle', 'bottle-feeding-newborn-what-you-need'],
   'baby-sleep-cues-and-wake-windows': ['newborn-safe-sleep-setup', 'how-to-swaddle-a-baby', 'how-much-does-a-newborn-need'],
   'how-to-use-diaper-care-products': ['cloth-vs-disposable-diapers', 'how-many-diapers-does-a-baby-go-through', 'what-to-pack-in-a-diaper-bag'],
+  'is-a-baby-mattress-worth-the-splurge': ['newborn-safe-sleep-setup', 'what-to-buy-secondhand-vs-new', 'baby-gear-splurge-vs-save'],
+  'do-you-need-a-baby-monitor': ['newborn-safe-sleep-setup', 'baby-gear-splurge-vs-save', 'certified-vs-generic-baby-products'],
+  'what-to-buy-secondhand-vs-new': ['is-a-baby-mattress-worth-the-splurge', 'baby-stuff-youll-never-use', 'baby-gear-splurge-vs-save'],
+  'baby-stuff-youll-never-use': ['what-to-buy-secondhand-vs-new', 'do-you-need-a-bottle-warmer', 'how-much-does-a-newborn-need'],
+  'do-you-need-a-bottle-warmer': ['baby-stuff-youll-never-use', 'what-to-buy-secondhand-vs-new', 'bottle-feeding-newborn-what-you-need'],
 }
 
 function renderSection(section, i, slug) {
