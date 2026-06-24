@@ -78,13 +78,12 @@ export default function Guides() {
     if (activeTab) {
       list = list.filter(g => g.tags.includes(activeTab))
     }
-    if (query.trim()) {
-      const q = query.toLowerCase()
-      list = list.filter(g =>
-        g.title.toLowerCase().includes(q) ||
-        (g.subtitle || '').toLowerCase().includes(q) ||
-        (g.description || '').toLowerCase().includes(q)
-      )
+    const tokens = query.toLowerCase().split(/\s+/).filter(Boolean)
+    if (tokens.length > 0) {
+      list = list.filter(g => {
+        const haystack = [g.title, g.subtitle, g.description].join(' ').toLowerCase()
+        return tokens.every(token => haystack.includes(token))
+      })
     }
     return list
   }, [activeTab, query])
