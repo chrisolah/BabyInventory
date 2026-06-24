@@ -8,6 +8,31 @@ import styles from './Guides.module.css'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
+// Fuzzy search helpers ────────────────────────────────────────────────────
+function levenshtein(a, b) {
+  const m = a.length, n = b.length
+  const dp = Array.from({ length: m + 1 }, (_, i) =>
+    Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
+  )
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
+  return dp[m][n]
+}
+
+// Allow 0 edits for ≤3 chars, 1 edit for 4–6 chars, 2 edits for 7+
+function fuzzyToken(token, haystack) {
+  if (haystack.includes(token)) return true
+  const allowed = token.length <= 3 ? 0 : token.length <= 6 ? 1 : 2
+  if (allowed === 0) return false
+  return haystack.split(/\s+/).some(word =>
+    Math.abs(word.length - token.length) <= allowed &&
+    levenshtein(token, word) <= allowed
+  )
+}
+
 const TABS = [
   { label: 'All',        tag: null },
   { label: 'How-tos',   tag: 'How To' },
@@ -78,11 +103,11 @@ export default function Guides() {
     if (activeTab) {
       list = list.filter(g => g.tags.includes(activeTab))
     }
-    const tokens = query.toLowerCase().split(/\s+/).filter(Boolean)
+    const tokens = query.toLowerCase().split(/\s+/).filter(t => t.length >= 2)
     if (tokens.length > 0) {
       list = list.filter(g => {
         const haystack = [g.title, g.subtitle, g.description].join(' ').toLowerCase()
-        return tokens.every(token => haystack.includes(token))
+        return tokens.every(token => fuzzyToken(token, haystack))
       })
     }
     return list
