@@ -159,10 +159,7 @@ export default function Guides() {
                   <button
                     key={guide.slug}
                     className={styles.newStripCard}
-                    onClick={() => {
-                      track.event('new_strip_guide_clicked', { slug: guide.slug })
-                      navigate(`/guides/${guide.slug}`)
-                    }}
+                    onClick={() => navigate(`/guides/${guide.slug}`)}
                   >
                     <span className={`${styles.typePill} ${TYPE_CLASS[type]}`}>{type}</span>
                     <p className={styles.newStripCardTitle}>{guide.title}</p>
