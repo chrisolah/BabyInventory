@@ -277,8 +277,13 @@
     flex-direction: column;
   }
 
+  .searchInput {
+    height: 52px;
+    font-size: 16px; /* prevents iOS auto-zoom on focus */
+  }
+
   .searchButton {
     width: 100%;
-    height: 46px;
+    height: 52px;
   }
 }
