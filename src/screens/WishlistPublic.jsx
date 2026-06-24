@@ -61,6 +61,7 @@ export default function WishlistPublic() {
   const [claimTarget, setClaimTarget] = useState(null)
   const [selectedCat, setSelectedCat] = useState('priority')
   const [giftInfoDismissed, setGiftInfoDismissed] = useState(false)
+  const [skipBannerDismissed, setSkipBannerDismissed] = useState(false)
   const [selectedSize, setSelectedSize] = useState(null)
 
   useEffect(() => {
@@ -220,10 +221,10 @@ export default function WishlistPublic() {
       )}
 
       {/* ── Skip notice ───────────────────────────────────────── */}
-      {(skipCats.size > 0 || skipSizes.length > 0 || skipSlots.length > 0) && (
+      {!skipBannerDismissed && (skipCats.size > 0 || skipSizes.length > 0 || skipSlots.length > 0) && (
         <div className={styles.skipBanner}>
           <span aria-hidden="true">🙏</span>
-          <div>
+          <div className={styles.skipBannerBody}>
             {skipCats.size > 0 && (
               <div>
                 <strong>Well stocked on:</strong>{' '}
@@ -243,6 +244,11 @@ export default function WishlistPublic() {
               </div>
             )}
           </div>
+          <button
+            className={styles.skipBannerClose}
+            onClick={() => setSkipBannerDismissed(true)}
+            aria-label="Dismiss"
+          >✕</button>
         </div>
       )}
 
