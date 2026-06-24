@@ -9,9 +9,9 @@ import styles from './GuideDetail.module.css'
 const RELATED_GUIDES = {
   'how-much-does-a-newborn-need': ['baby-stuff-youll-never-use', 'when-does-baby-outgrow-each-size', 'baby-clothing-guide'],
   'when-does-baby-outgrow-each-size': ['how-to-organize-baby-clothes-by-size', 'what-to-do-with-outgrown-baby-clothes', 'baby-clothing-guide'],
-  'what-to-do-with-outgrown-baby-clothes': ['when-does-baby-outgrow-each-size', 'how-to-organize-baby-clothes-by-size', 'baby-clothing-guide'],
+  'what-to-do-with-outgrown-baby-clothes': ['how-to-store-baby-clothes-by-size', 'what-baby-items-to-borrow-not-buy', 'when-does-baby-outgrow-each-size'],
   'baby-registry-what-you-actually-need': ['how-to-build-your-baby-registry', 'what-you-need-before-baby-arrives', 'how-much-does-a-newborn-need'],
-  'how-to-organize-baby-clothes-by-size': ['when-does-baby-outgrow-each-size', 'what-to-do-with-outgrown-baby-clothes', 'baby-clothing-guide'],
+  'how-to-organize-baby-clothes-by-size': ['how-to-store-baby-clothes-by-size', 'when-does-baby-outgrow-each-size', 'what-to-do-with-outgrown-baby-clothes'],
   'baby-gear-splurge-vs-save': ['what-to-buy-secondhand-vs-new', 'is-a-baby-mattress-worth-the-splurge', 'do-you-need-a-baby-monitor'],
   'how-to-build-your-baby-registry': ['baby-registry-what-you-actually-need', 'what-you-need-before-baby-arrives', 'how-much-does-a-baby-cost-first-year'],
   'baby-clothing-guide': ['when-does-baby-outgrow-each-size', 'how-to-organize-baby-clothes-by-size', 'how-much-does-a-newborn-need'],
@@ -41,9 +41,12 @@ const RELATED_GUIDES = {
   'how-to-use-diaper-care-products': ['cloth-vs-disposable-diapers', 'how-many-diapers-does-a-baby-go-through', 'what-to-pack-in-a-diaper-bag'],
   'is-a-baby-mattress-worth-the-splurge': ['newborn-safe-sleep-setup', 'what-to-buy-secondhand-vs-new', 'baby-gear-splurge-vs-save'],
   'do-you-need-a-baby-monitor': ['newborn-safe-sleep-setup', 'baby-gear-splurge-vs-save', 'certified-vs-generic-baby-products'],
-  'what-to-buy-secondhand-vs-new': ['is-a-baby-mattress-worth-the-splurge', 'baby-stuff-youll-never-use', 'baby-gear-splurge-vs-save'],
+  'what-to-buy-secondhand-vs-new': ['what-baby-items-to-borrow-not-buy', 'is-a-baby-mattress-worth-the-splurge', 'baby-stuff-youll-never-use'],
   'baby-stuff-youll-never-use': ['what-to-buy-secondhand-vs-new', 'do-you-need-a-bottle-warmer', 'how-much-does-a-newborn-need'],
   'do-you-need-a-bottle-warmer': ['baby-stuff-youll-never-use', 'what-to-buy-secondhand-vs-new', 'bottle-feeding-newborn-what-you-need'],
+  'how-to-store-baby-clothes-by-size': ['how-to-organize-baby-clothes-by-size', 'when-does-baby-outgrow-each-size', 'how-to-build-a-baby-capsule-wardrobe'],
+  'how-to-build-a-baby-capsule-wardrobe': ['how-to-store-baby-clothes-by-size', 'how-much-does-a-newborn-need', 'what-to-buy-secondhand-vs-new'],
+  'what-baby-items-to-borrow-not-buy': ['what-to-buy-secondhand-vs-new', 'baby-stuff-youll-never-use', 'how-much-does-a-newborn-need'],
 }
 
 function renderSection(section, i, slug) {

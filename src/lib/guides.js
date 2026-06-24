@@ -4382,6 +4382,357 @@ export const GUIDES = [
       },
     ],
   },
+
+  // ── Guide 28: How to Store Baby Clothes by Size ─────────────────────────
+  {
+    slug: 'how-to-store-baby-clothes-by-size',
+    title: 'How to Store Baby Clothes by Size',
+    subtitle: 'A practical system for organizing, labeling, and cycling through baby clothing so nothing gets lost, missed, or outgrown in a bin.',
+    description: 'Baby clothes pile up fast and disappear faster. Here is a storage system — by size, not age — that keeps the right items accessible and makes every hand-me-down usable.',
+    date: 'June 2026',
+    lastmod: '2026-06-24',
+    readTime: '6 min',
+    tags: ['Planning', 'Gear'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from professional organizer guidance, pediatric clothing sizing standards, and parenting community best practices. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: "Baby clothes are one of the most time-sensitive items in your home. A size 3–6M sleeper unused for six weeks is a sleeper your baby may never fit into. A good storage system doesn't just keep things tidy — it makes sure every item you have actually gets used, and every item you pass on is in good shape for the next family.",
+      },
+      {
+        type: 'note',
+        body: 'Store by size, not by age. "3 months" and "3–6 months" can mean very different things across brands — and for any given baby, the relevant size is defined by their weight, not their birthdate. Always label bins by size label (NB, 0–3M, 3–6M, etc.) rather than by month.',
+      },
+      {
+        type: 'h2',
+        heading: 'Before you store: sort and inspect',
+        body: 'Every item going into storage should be washed and inspected first. Stains set permanently over months in a bin. A quick check now saves regret later.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Wash everything before storing — even items that look clean. Invisible milk residue and sweat yellow in storage.',
+          'Treat stains before washing, not after. Once an item has been through the dryer with a stain set in, the stain is permanent.',
+          'Inspect seams, snaps, and zippers. An item with a broken snap or fraying seam isn\'t worth storing — it won\'t be usable when it comes back out.',
+          'Decide now: keep, pass on, or donate. Don\'t store items you wouldn\'t dress your baby in again. The bin fills up fast.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The labeling system that actually works',
+        body: "Label every container with the size label exactly as it appears on the clothing tag — NB, 0–3M, 3–6M, 6–9M, 9–12M, 12–18M, 18–24M. Don't consolidate (\"0–6M\" bins cause headaches), and don't label by month instead of size.",
+      },
+      {
+        type: 'table',
+        cols: ['Size label', 'Typical weight range', 'Storage tip'],
+        rows: [
+          ['Newborn (NB)', '5–8 lbs', 'Keep small — most babies use this size for 2–4 weeks or skip it entirely. One small bin or a section of a larger one.'],
+          ['0–3M', '8–12 lbs', 'Your heaviest-used size. Items leave this bin fast — keep it accessible, not buried.'],
+          ['3–6M', '12–16 lbs', 'Second-heaviest rotation. Start pulling from this bin around 6–8 weeks after birth.'],
+          ['6–9M', '16–19 lbs', 'Narrower window. Don\'t overbuy — this size lasts 6–8 weeks on average.'],
+          ['9–12M', '19–22 lbs', 'Also narrow. Many parents buy too much here. 6–8 items is plenty.'],
+          ['12–18M', '22–27 lbs', 'First size where you get a real 3–4 months of wear. Worth more investment.'],
+          ['18–24M', '27–30 lbs', 'Similar window to 12–18M. Baby is in this size for 3–5 months.'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Container options by storage location',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Under-crib bins: clear, flat, lidded bins (IKEA SAMLA or similar) stack neatly and let you see contents without opening. Label the front and top.',
+          'Closet shelves: fabric cube organizers with labels on the front work well. Group by size from left to right or top to bottom so the progression is visual.',
+          'Closet rod: use closet dividers — circular rings that slide onto the rod with the size printed on them. Hang current and next size only; store everything else in bins.',
+          'Vacuum storage bags: work well for bulk off-season storage (e.g., summer clothes going into winter storage) but make it harder to access individual items. Use only for long-term storage, not active rotation.',
+          'Dresser: dedicate drawers to current size and next size only. Keep future sizes in bins out of the way.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The two-bin active system',
+        body: 'The most practical setup for the 0–18 month window: keep two sizes accessible at all times — the size your baby is currently wearing, and the next size up. Everything else stays in labeled bins in storage. When your baby moves up a size, pull the next bin forward, and move the outgrown clothes into a "pass on" bin.',
+      },
+      {
+        type: 'h2',
+        heading: 'The pass-on bin',
+        body: "Every household with a baby should have one designated bin for outgrown clothes — items cleaned, inspected, and ready to go to the next family. Don't mix pass-on items back into active storage. When the bin fills up, it's ready to hand off — to another Sprigloop family, a buy-nothing group, or a consignment shop.",
+      },
+      {
+        type: 'h2',
+        heading: 'Tracking what you have (and what you need)',
+        body: 'The hardest part of baby clothes storage isn\'t the physical organization — it\'s knowing what you already have before you buy more. Parents routinely buy 0–3M items they already have sitting in a bin, or miss a size entirely because nothing was ready. Sprigloop\'s inventory tracker lets you log what you own by size and see gaps in your wardrobe before they become last-minute runs to the store.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '📦',
+            name: 'IRIS USA Clear Storage Bins with Lids (6-pack)',
+            note: 'Clear sides mean you can see contents at a glance; stackable; label the front with masking tape and a marker',
+            url: 'https://www.amazon.com/s?k=iris+usa+clear+storage+bins+with+lids+baby+clothes&tag=sprigloop-20',
+          },
+          {
+            emoji: '🏷️',
+            name: 'Baby Closet Dividers by Size (NB–24M)',
+            note: 'Hang on the closet rod to separate sizes visually; the most practical tool for an active closet rotation',
+            url: 'https://www.amazon.com/s?k=baby+closet+dividers+by+size+newborn+24+months&tag=sprigloop-20',
+          },
+          {
+            emoji: '🖊️',
+            name: 'Tough Tags Clothing Labels',
+            note: 'Iron-on or stick-on labels for bins and individual items you want to track; survives washing',
+            url: 'https://www.amazon.com/s?k=tough+tags+clothing+labels+iron+on&tag=sprigloop-20',
+          },
+          {
+            emoji: '🌬️',
+            name: 'Space-Saving Vacuum Storage Bags (Large)',
+            note: 'Best for seasonal long-term storage (summer clothes going into winter); not ideal for active rotation',
+            url: 'https://www.amazon.com/s?k=space+saving+vacuum+storage+bags+large+clothes&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'The Bump — Baby Clothes Size Chart', url: 'https://www.thebump.com/a/baby-clothes-sizes' },
+          { label: "Carter's — How Kids' Clothing Sizes Work", url: 'https://www.carters.com/crib-notes-blog/parenting/how-kids-clothing-sizes-work' },
+          { label: 'Babylist — How Many Baby Clothes Do You Need?', url: 'https://www.babylist.com/hello-baby/how-many-baby-clothes-do-i-need' },
+          { label: 'Real Simple — How to Organize Baby Clothes', url: 'https://www.realsimple.com/home-organizing/organizing/how-to-organize-baby-clothes' },
+          { label: 'Good Housekeeping — Best Storage Bins for Baby Clothes', url: 'https://www.goodhousekeeping.com/home/organizing-tips/g32334870/best-storage-for-baby-clothes/' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 29: Baby Capsule Wardrobe ─────────────────────────────────────
+  {
+    slug: 'how-to-build-a-baby-capsule-wardrobe',
+    title: 'How to Build a Baby Capsule Wardrobe',
+    subtitle: 'The minimum useful set of baby clothing per size — enough to get through each stage without overbuying items your baby will wear twice.',
+    description: "A capsule wardrobe for a baby isn't about minimalism for its own sake. It's about buying the right things in the right quantities so nothing goes to waste during a window that lasts weeks, not years.",
+    date: 'June 2026',
+    lastmod: '2026-06-24',
+    readTime: '7 min',
+    tags: ['Planning', 'Clothing'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from pediatric sizing data, laundry frequency research, and parenting community wardrobe guidance. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: "A capsule wardrobe for adults is about building a timeless, mix-and-match closet. A capsule wardrobe for a baby is something simpler: buying enough of the right things that your baby is always dressed, always comfortable, and you're not drowning in items that were worn once before they were outgrown. Given that most baby sizes last 6–10 weeks, the math is unforgiving — overbuy and you waste money, underbuy and you're doing laundry daily.",
+      },
+      {
+        type: 'note',
+        body: "These quantities assume laundry every 2–3 days. If you wash daily, cut each number by about a third. If you wash once a week, add 30–40%. The core principle: enough for 2–3 days of normal use plus one bad day (blowout, spit-up, weather change).",
+      },
+      {
+        type: 'h2',
+        heading: 'Why babies specifically need a capsule approach',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Most sizes last 6–10 weeks. At that pace, overbought items in a size literally never get worn before the baby grows out of them.',
+          'Baby clothing gets washed constantly — 2–4 times per week is typical. Items wear out faster than in adult wardrobes, so quality over quantity matters more.',
+          'The "just in case" instinct causes most overbuy. Having 14 onesies feels safe, but 7 performs identically with laundry every 3 days.',
+          'Gifts skew toward the same categories (onesies, sleepers) and the same sizes (0–3M). Factor this in — you will receive more 0–3M items than you expect.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The core capsule: what every size needs',
+        body: 'These are the items that carry the most weight per size. Everything else is optional.',
+      },
+      {
+        type: 'table',
+        cols: ['Item', 'Qty (washing every 2–3 days)', 'Notes'],
+        rows: [
+          ['Short-sleeve onesies / bodysuits', '5–7', 'Foundation of every outfit. Go neutral — they pair with everything.'],
+          ['Long-sleeve onesies / bodysuits', '3–5', 'More useful than short-sleeve in cooler months; layer under everything.'],
+          ['Sleepers / footie pajamas', '4–6', 'Used every night plus naps. Zip closures beat snaps at 3am.'],
+          ['Soft pants or leggings', '3–4', 'No hard waistbands — babies are lying down most of the day.'],
+          ['Socks', '5–7 pairs', 'They fall off constantly. Buy more than you think you need.'],
+          ['Light outer layer (cardigan or zip jacket)', '1–2', 'Temperature regulation; not a daily item.'],
+          ['Hats', '2–3', 'Newborn period only for warmth; transition to sun hats after 3 months.'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'What to skip per size',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Shoes (NB–9M): babies who aren\'t walking don\'t need shoes. Socks do the same job and stay on better.',
+          'Jeans or structured denim: uncomfortable for a baby who spends 20 hours a day lying or sitting. Save for photos if you want them.',
+          'Button-front shirts: fine for the occasional photo, not for daily use. Snaps and zippers serve daily function.',
+          'More than 1–2 "occasion" outfits per size: weddings, holidays, and special events are rare relative to the number of days in a size window. One or two is enough.',
+          'Matching sets you won\'t mix: if a top only pairs with one bottom, it\'s not a capsule item.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'How to build for each size window',
+        body: "The newborn and 0–3M windows are the riskiest for overbuy — and the most common targets for generous gifting. Build conservatively here. The 12–18M and 18–24M windows last longer and are worth more investment.",
+      },
+      {
+        type: 'table',
+        cols: ['Size', 'Typical window', 'Capsule strategy'],
+        rows: [
+          ['Newborn (NB)', '2–4 weeks', 'Buy almost nothing — 4–6 onesies and 3–4 sleepers max. Wash often. You will receive gifts.'],
+          ['0–3M', '6–10 weeks', 'Full capsule (quantities above). This is the heaviest-use window. Buy quality items that survive 20+ washes.'],
+          ['3–6M', '8–10 weeks', 'Full capsule. Consider buying slightly fewer — gifting often fills this size too.'],
+          ['6–9M', '6–8 weeks', 'Narrow window. Reduce quantities by about 20% from the full capsule.'],
+          ['9–12M', '8–10 weeks', 'Similar to 6–9M. Baby is more mobile — prioritize non-restrictive bottoms.'],
+          ['12–18M', '3–4 months', 'Longer window — worth full quantities plus a few extras. First size where shoes make sense (walking).'],
+          ['18–24M', '3–5 months', 'Similar to 12–18M. Baby is into everything — go durable over cute.'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Building from secondhand',
+        body: "Baby clothing is the single best category to source secondhand. A 3–6M onesie worn for six weeks is indistinguishable from new after washing. Sprigloop connects families with outgrown clothing from babies who've just moved through the same sizes — it's the most direct way to build a capsule at a fraction of retail cost. When sourcing secondhand, apply the same capsule logic: take only what you'd buy new, in the quantities you actually need.",
+      },
+      {
+        type: 'h2',
+        heading: 'Tracking your capsule',
+        body: "The capsule approach only works if you know what you have. The most common mistake: buying duplicates of items already in storage, or not realizing a size is nearly empty until you're doing laundry at 11pm. Sprigloop's inventory tracker shows you exactly what you own by size and flags gaps in your wardrobe before they become problems.",
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '👶',
+            name: "Simple Joys by Carter's Baby Bodysuits (6-pack)",
+            note: "Carter's 0–3M and 3–6M onesies are the benchmark for capsule-friendly basics — neutral colors, tag-free, survive hundreds of washes",
+            url: "https://www.amazon.com/s?k=simple+joys+carters+baby+bodysuit+6+pack&tag=sprigloop-20",
+          },
+          {
+            emoji: '🌙',
+            name: 'Gerber Baby Zip-Up Sleep N Play Footie Pajamas (3-pack)',
+            note: 'The workhorse sleeper. Zipper only, no snaps, soft cotton — exactly what you want for the middle-of-the-night change',
+            url: 'https://www.amazon.com/s?k=gerber+baby+zip+up+footie+pajamas+3+pack&tag=sprigloop-20',
+          },
+          {
+            emoji: '🧦',
+            name: 'Jefferies Socks Baby Non-Skid Socks (6-pair)',
+            note: 'Grippers on the bottom for babies starting to pull up; the elastic is gentler than most and actually stays on',
+            url: 'https://www.amazon.com/s?k=jefferies+socks+baby+non+skid+6+pair&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'Babylist — How Many Baby Clothes Do I Need?', url: 'https://www.babylist.com/hello-baby/how-many-baby-clothes-do-i-need' },
+          { label: 'Huckleberry — How Many Baby Clothes Do You Need?', url: 'https://huckleberrycare.com/blog/how-many-baby-clothes-do-you-need' },
+          { label: 'Mommy on Purpose — How Many Baby Clothes in Each Size?', url: 'https://mommyonpurpose.com/how-many-baby-clothes-do-i-need-in-each-size/' },
+          { label: "Carter's — How Kids' Clothing Sizes Work", url: 'https://www.carters.com/crib-notes-blog/parenting/how-kids-clothing-sizes-work' },
+          { label: 'The Bump — Baby Clothes Size Chart', url: 'https://www.thebump.com/a/baby-clothes-sizes' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 30: What Baby Items to Borrow Not Buy ──────────────────────────
+  {
+    slug: 'what-baby-items-to-borrow-not-buy',
+    title: 'What Baby Items Are Worth Borrowing (Not Buying)',
+    subtitle: "The gear that gets used for weeks, not years — and how to get it without paying full price for something you'll use twice.",
+    description: "Some baby items have a use window so narrow that buying them new makes no financial sense. Here's what to borrow, what to accept from other families, and the short list of things you should never borrow.",
+    date: 'June 2026',
+    lastmod: '2026-06-24',
+    readTime: '5 min',
+    tags: ['Planning', 'Gear'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from CPSC safety guidelines, AAP recommendations, and consumer research on infant gear usage patterns. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: "Not every piece of baby gear justifies its purchase price when you run the math. A baby bouncer used for four months, a newborn insert used for six weeks, a baby bathtub used until your baby can sit up — these are items with a narrow window and a full retail price. The right move for a significant chunk of baby gear isn't to buy it, it's to borrow it, accept it from another family, or find it through a community exchange.",
+      },
+      {
+        type: 'h2',
+        heading: 'Great candidates for borrowing',
+      },
+      {
+        type: 'table',
+        cols: ['Item', 'Typical use window', 'Why borrow'],
+        rows: [
+          ['Baby bouncer / rocker', '2–5 months', 'Most babies use this heavily for a few months, then interest drops. Paying $80–$150 new for a 3-month item rarely makes sense.'],
+          ['Baby bathtub', '2–6 months', 'Used until baby can sit supported. A $30 item you use for a few months — borrow, return, done.'],
+          ['Newborn stroller insert / car seat insert', '0–4 months', 'Supports baby\'s head and posture until they have neck control. Narrow window, easy to borrow.'],
+          ['Nursing pillow (Boppy / My Brest Friend)', '0–6 months', 'Very useful for breastfeeding support; also helpful for propped sitting around 4–5 months. Wash the cover before use.'],
+          ['Baby play gym / activity mat', '2–6 months', 'Active window is roughly 2–6 months. Heavy use, then they\'re rolling away from it. Inspect toys for loose parts.'],
+          ['Bassinet', '0–4 months', 'Most babies move to a crib by 3–4 months. A bassinet is a large, expensive, short-window item. Borrow if you can — but check recalls.'],
+          ['Baby swing', '0–4 months', 'Some babies love swings, some don\'t. Borrowing first lets you find out without the $150–$300 commitment.'],
+          ['Jumper / exersaucer', '5–9 months', 'Active roughly 4 months. Large, takes up space, short window. Borrow or buy used.'],
+          ['Infant floor seat (Bumbo style)', '4–7 months', 'Narrow window between "can\'t sit" and "can sit independently." Borrow.'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Baby clothing: borrow, accept, or source secondhand',
+        body: "Clothing is the single largest borrow/accept opportunity. A baby goes through 6–8 sizes in the first two years. Buying every size new at retail is expensive and largely unnecessary — babies outgrow each size in weeks, and a washed onesie from another family is functionally identical to a new one. Sprigloop is built around this: clothing passed on from families whose babies have just outgrown it goes directly to families who need it now. It's the most direct path to a full wardrobe for each size without buying everything new.",
+      },
+      {
+        type: 'h2',
+        heading: 'Safety checks before borrowing anything',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Check the CPSC recall database (cpsc.gov/recalls) for any borrowed gear. Filter by product category. If the specific model has a recall, check whether a free repair kit is available before using.',
+          'Inspect all straps, buckles, and weight limits. Harness systems on bouncers and high chairs degrade with UV exposure and repeated use. If anything looks worn, frayed, or cracked, don\'t use it.',
+          'For sleep surfaces (bassinets, play yards used for sleep): inspect the mattress surface for softening or sagging. A surface that conforms to your hand should not be used for sleep.',
+          'For bouncers and swings: test the motion mechanism before baby is in it. A grinding noise or resistance that wasn\'t there originally suggests wear that could lead to failure.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Never borrow these',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Car seat — crash history is impossible to verify visually. A seat involved in even a moderate crash may have structural damage that makes it unsafe. Always buy new.',
+          'Crib mattress — soft, worn mattress surfaces are a SIDS risk. Buy new. See our full guide on baby mattresses.',
+          'Bike helmet or baby helmet — same as car seats: internal damage from a single impact is invisible but real.',
+          'Open-system breast pump — by FDA classification, open-system pumps (where milk can contact internal motor parts) are single-user devices. They cannot be fully sterilized. Closed-system pumps like the Spectra S1/S2 can be safely shared with new parts.',
+          'Anything with a broken or missing part — a bouncer without its harness or a swing with a cracked tray is not safe regardless of recall status.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Where to borrow',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Sprigloop families — clothing and soft goods from families whose babies have just outgrown them. Built for exactly this.',
+          'Buy-nothing groups — local Facebook groups and Nextdoor neighborhood groups where neighbors give away items for free. Excellent for large gear like swings and bouncers.',
+          'Family and friends — the most direct source. Ask specifically what size/stage of gear you\'re approaching — "do you still have a bouncer from when your kids were infants?" gets a useful answer.',
+          'Baby gear libraries — some cities have nonprofit gear lending programs. Search your city + "baby gear library" or "toy library."',
+          'Community parenting groups — MOPS (Mothers of Preschoolers), La Leche League, and hospital new-parent groups often have informal gear-sharing networks.',
+        ],
+      },
+      {
+        type: 'note',
+        body: "The borrow-not-buy mindset pairs well with knowing what you actually need before a baby arrives. Our guide on what a newborn actually needs gives you real quantities by category so you can tell the difference between items worth owning and items worth borrowing.",
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'CPSC — Recalls Database', url: 'https://www.cpsc.gov/Recalls' },
+          { label: 'FDA — Single-Use vs. Multiple-User Breast Pumps', url: 'https://www.fda.gov/medical-devices/breast-pumps/single-use-vs-multiple-user-breast-pumps' },
+          { label: 'AAP — Safe Sleep Environment', url: 'https://www.aap.org/en/patient-care/safe-sleep/' },
+          { label: 'Safe Kids Worldwide — When to Replace a Car Seat', url: 'https://www.safekids.org/tip/when-replace-car-seat' },
+          { label: 'Consumer Reports — Baby Gear Worth Skipping', url: 'https://www.consumerreports.org/babies-kids/baby-gear/baby-gear-you-probably-dont-need-a1075538938/' },
+          { label: 'Babylist — Baby Gear You Don\'t Need', url: 'https://www.babylist.com/hello-baby/baby-stuff-you-dont-need' },
+        ],
+      },
+    ],
+  },
 ]
 
 export function getGuide(slug) {
