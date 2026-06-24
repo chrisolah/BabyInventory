@@ -6,6 +6,8 @@ import { GUIDES } from '../lib/guides'
 import IvyBanner from '../components/IvyBanner'
 import styles from './Guides.module.css'
 
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
+
 const TABS = [
   { label: 'All',        tag: null },
   { label: 'How-tos',   tag: 'How To' },
@@ -46,6 +48,14 @@ export default function Guides() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState(null)
   const [query, setQuery] = useState('')
+
+  const recentGuides = useMemo(() => {
+    const cutoff = Date.now() - THIRTY_DAYS_MS
+    return GUIDES
+      .filter(g => g.lastmod && new Date(g.lastmod).getTime() >= cutoff)
+      .sort((a, b) => new Date(b.lastmod) - new Date(a.lastmod))
+      .slice(0, 6)
+  }, [])
 
   useEffect(() => {
     track.pageViewed({ page: 'guides', referrer: document.referrer })
@@ -110,6 +120,35 @@ export default function Guides() {
             including the American Academy of Pediatrics. Sources are linked in each article.
           </p>
         </header>
+
+        {/* New this month strip */}
+        {recentGuides.length > 0 && (
+          <div className={styles.newStrip}>
+            <div className={styles.newStripHeader}>
+              <span className={styles.newStripLabel}>New this month</span>
+              <span className={styles.newStripCount}>{recentGuides.length} articles added</span>
+            </div>
+            <div className={styles.newStripScroll}>
+              {recentGuides.map(guide => {
+                const type = guideType(guide)
+                return (
+                  <button
+                    key={guide.slug}
+                    className={styles.newStripCard}
+                    onClick={() => {
+                      track.event('new_strip_guide_clicked', { slug: guide.slug })
+                      navigate(`/guides/${guide.slug}`)
+                    }}
+                  >
+                    <span className={`${styles.typePill} ${TYPE_CLASS[type]}`}>{type}</span>
+                    <p className={styles.newStripCardTitle}>{guide.title}</p>
+                    <p className={styles.newStripCardMeta}>{guide.readTime} read &nbsp;&middot;&nbsp; {guide.date}</p>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Search */}
         <div className={styles.searchWrap}>
