@@ -431,9 +431,7 @@ export default function AddItem() {
   // ── Submit ────────────────────────────────────────────────────────────────
   async function submit(e) {
     e.preventDefault()
-    // eslint-disable-next-line no-console
-    console.log('[trial-gate] submit called — canSubmit:', canSubmit(), 'saving:', saving, 'household:', !!household, 'householdItems.length:', householdItems.length)
-    if (!canSubmit() || saving) return
+if (!canSubmit() || saving) return
     setSaving(true)
     setError(null)
 
