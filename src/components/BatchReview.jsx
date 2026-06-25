@@ -91,7 +91,7 @@ export default function BatchReview({
   mode = 'tag',
 }) {
   const navigate = useNavigate()
-  const { household, currentBaby, babies, reloadItems } = useHousehold()
+  const { household, currentBaby, babies, items: householdItems, reloadItems } = useHousehold()
   const { requireRealAccount } = useUpgradeGate()
 
   // The default baby_id for any row that hasn't been explicitly assigned
@@ -266,7 +266,7 @@ export default function BatchReview({
     // account. If the user dismisses, _runSave is never called and we
     // leave the review surface in its current state.
     try {
-      await requireRealAccount(_runSave)
+      await requireRealAccount(_runSave, { skipGate: householdItems.length < 5 })
     } catch (e) {
       if (e?.cancelled) return
       // _runSave handles its own error captioning when the inserts fail;

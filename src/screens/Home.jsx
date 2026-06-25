@@ -37,7 +37,7 @@ const CATEGORIES = [
 //
 // Unlike the old Home, this screen does NOT redirect to /inventory when
 // items exist. The Category Hub IS the home screen regardless of inventory
-// state. Onboarding redirect is preserved (step < 5 → /onboarding).
+// state. Onboarding redirect is preserved (step < 4 → /onboarding).
 export default function Home() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -59,6 +59,17 @@ export default function Home() {
   function dismissRegistryPrompt() {
     try { localStorage.setItem('sl_registry_prompt_dismissed', '1') } catch {}
     setShowRegistryPrompt(false)
+  }
+
+  // Invite nudge: shown after first item saved, persists until explicitly dismissed.
+  // Replaces the old onboarding invite step which fired too early (before adding anything).
+  const [showInviteNudge, setShowInviteNudge] = useState(() => {
+    try { return !localStorage.getItem('sl_invite_nudge_dismissed') } catch { return false }
+  })
+
+  function dismissInviteNudge() {
+    try { localStorage.setItem('sl_invite_nudge_dismissed', '1') } catch {}
+    setShowInviteNudge(false)
   }
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] ?? ''
@@ -102,7 +113,7 @@ export default function Home() {
       }
 
       const step = data?.onboarding_step ?? 0
-      if (step < 5) {
+      if (step < 4) {
         navigate('/onboarding', { replace: true })
         return
       }
@@ -353,6 +364,27 @@ export default function Home() {
                 Share
               </button>
               <button type="button" className={styles.wishlistPromptDismiss} onClick={dismissRegistryPrompt} aria-label="Dismiss">×</button>
+            </div>
+          </div>
+        )}
+
+        {/* Invite nudge — shown after first item added, dismissed permanently */}
+        {showInviteNudge && !itemsLoading && totalOwnedCount > 0 && (
+          <div className={styles.wishlistPrompt}>
+            <div className={styles.wishlistPromptIcon}>👨‍👩‍👧</div>
+            <div className={styles.wishlistPromptBody}>
+              <div className={styles.wishlistPromptTitle}>Invite a co-parent or family member</div>
+              <div className={styles.wishlistPromptSub}>They&rsquo;ll see the full wardrobe and can add items too.</div>
+            </div>
+            <div className={styles.wishlistPromptActions}>
+              <button
+                type="button"
+                className={styles.wishlistPromptBtn}
+                onClick={() => { dismissInviteNudge(); navigate('/profile?invite=1'); track.ctaClicked('home_invite_nudge') }}
+              >
+                Invite
+              </button>
+              <button type="button" className={styles.wishlistPromptDismiss} onClick={dismissInviteNudge} aria-label="Dismiss">×</button>
             </div>
           </div>
         )}

@@ -8,7 +8,7 @@ import LogoutButton from '../components/LogoutButton'
 import TagScanner from '../components/TagScanner'
 import styles from './Onboarding.module.css'
 
-// Onboarding is a single-screen state machine with five UI steps plus a done
+// Onboarding is a single-screen state machine with four UI steps plus a done
 // screen. We intentionally don't nest routes — the flow is strictly linear
 // and internal state is simpler to reason about than URL-driven navigation.
 //
@@ -17,9 +17,12 @@ import styles from './Onboarding.module.css'
 //   0 → not started       → step "household"
 //   1 → household created → step "baby"      (household pre-loaded)
 //   2 → baby added        → step "receiving" (household + babies pre-loaded)
-//   3 → receiving saved   → step "invite"
-//   4 → invite handled    → step "scan"     (try the photo-scan feature)
-//   5 → complete          → redirect to /home
+//   3 → receiving saved   → step "scan"     (try the photo-scan feature)
+//   4 → complete          → redirect to /home
+//
+// The invite step was removed 2026-06-25. It fired too early (before the
+// user had added anything worth sharing). A nudge card on Home replaces it,
+// shown after the first item is saved and dismissed permanently by the user.
 //
 // The receiving step is opt-in: toggle defaults to off, skipping advances
 // the flow with opted-in=false. We still bump onboarding_step when they
@@ -42,9 +45,9 @@ import styles from './Onboarding.module.css'
 // A row in user_activity_summary exists for every user (auto-created on signup
 // via trigger, backfilled for existing users). We bump onboarding_step after
 // each successful transition so resume is reliable across sessions/devices.
-const STEPS = ['household', 'baby', 'receiving', 'invite', 'scan']
+const STEPS = ['household', 'baby', 'receiving', 'scan']
 const STEP_TO_INDEX = Object.fromEntries(STEPS.map((s, i) => [s, i]))
-const ONBOARDING_COMPLETE = STEPS.length  // = 5
+const ONBOARDING_COMPLETE = STEPS.length  // = 4
 
 // Size + gender enums reused from Profile's ReceivingSection. Kept local so
 // Onboarding can't drift if Profile ever adds a size (constraint in the DB
@@ -90,50 +93,6 @@ function doneSubCopy(babies) {
     : 'Your wardrobe is ready. Start by adding what you have.'
 }
 
-// Pull a structured error code out of supabase-js's FunctionsHttpError. The
-// edge function returns { error: <code>, ... } JSON for non-2xx; supabase-js
-// surfaces the original Response on err.context. Mirrors the helper inside
-// InviteMemberModal — kept inline rather than imported because Onboarding's
-// invite step is a single call site and the modal helper isn't exported.
-async function extractInviteErrorCode(fnErr) {
-  const ctx = fnErr?.context
-  if (ctx && typeof ctx.clone === 'function') {
-    try {
-      const parsed = await ctx.clone().json()
-      if (parsed?.error) return parsed.error
-    } catch { /* not JSON */ }
-    if (ctx.status === 401) return 'invalid_session'
-    if (ctx.status === 403) return 'not_household_owner'
-    if (ctx.status === 409) return 'duplicate_active'
-    if (ctx.status === 429) return 'rate_limited'
-  }
-  return 'unknown'
-}
-
-// Onboarding-specific error copy. Slightly less granular than the modal's
-// since the user has less context here — and the skip path is always one
-// tap away, so over-explaining is wasted effort.
-function messageForInviteError(code) {
-  switch (code) {
-    case 'invalid_email':       return "That doesn't look like a valid email address."
-    case 'cannot_invite_self':  return "You can't invite yourself — that's the address you signed up with."
-    case 'duplicate_active':    return "There's already a pending invite to this address. Ask them to check their inbox (and spam)."
-    case 'rate_limited':        return "You've sent a lot of invites recently. Try again in a bit."
-    case 'invalid_session':     return "Your session expired. Sign out and back in, then try again."
-    case 'not_household_owner': return "Only household owners can send invites."
-    case 'email_send_failed':   return "We saved the invite but the email didn't go out. Try resending in a moment."
-    default:                    return "Something went wrong sending the invite. Try again, or skip for now."
-  }
-}
-
-function inviteWardrobeCopy(babies) {
-  const named = babies.map(b => b.name).filter(Boolean)
-  if (named.length === babies.length && named.length > 0) {
-    const noun = named.length === 1 ? 'wardrobe' : 'wardrobes'
-    return `${joinNames(named)}'s ${noun}`
-  }
-  return babies.length > 1 ? 'the wardrobes' : 'the wardrobe'
-}
 
 export default function Onboarding() {
   const navigate = useNavigate()
@@ -171,9 +130,6 @@ export default function Onboarding() {
   const [receivingSizes,    setReceivingSizes]    = useState([])
   const [receivingGenders,  setReceivingGenders]  = useState([])
   const [receivingNotes,    setReceivingNotes]    = useState('')
-
-  // Step 4 — invite
-  const [inviteEmail, setInviteEmail] = useState('')
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -492,8 +448,8 @@ export default function Onboarding() {
       has_notes: !!notesToWrite,
     })
 
-    await bumpOnboardingStep(3)
-    setStep('invite')
+    await bumpOnboardingStep(STEP_TO_INDEX['scan'])
+    setStep('scan')
   }
 
   function toggleReceivingSize(size) {
@@ -506,75 +462,6 @@ export default function Onboarding() {
     setReceivingGenders(curr =>
       curr.includes(gender) ? curr.filter(g => g !== gender) : [...curr, gender]
     )
-  }
-
-  // ── Step 4 — invite ──────────────────────────────────────────────────
-  // Both paths (send + skip) advance into the scan step rather than
-  // completing onboarding directly. We bump onboarding_step to 5 so a
-  // resume after closing the tab on this page lands on scan, not invite.
-  //
-  // Send goes through the same `send-household-invite` edge function as
-  // InviteMemberModal — we deliberately don't lift that modal in here
-  // (its UX is a popover dialog with its own success splash) but we do
-  // want feature parity, so the call shape is identical: household_id,
-  // invited_email, role='member'. Errors get mapped to user-facing copy
-  // inline; on success we advance to the scan step. The user can resend
-  // / invite more from Profile → Household later.
-  async function sendInvite() {
-    const trimmed = inviteEmail.trim()
-    if (!trimmed) return
-    if (!household?.id) {
-      // Defensive: household is set in step 1; we shouldn't be on step 4
-      // without it. Surface anyway in case of a resume edge case where
-      // the household lookup didn't repopulate.
-      setError("We couldn't find your household. Refresh the page and try again.")
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    const { data, error: fnErr } = await supabase.functions.invoke(
-      'send-household-invite',
-      {
-        body: {
-          household_id:  household.id,
-          invited_email: trimmed,
-          role: 'member',
-        },
-      },
-    )
-
-    setLoading(false)
-
-    if (fnErr) {
-      // Mirror InviteMemberModal's error mapping at a coarser granularity —
-      // onboarding doesn't surface the full taxonomy because the user has
-      // less context here. The friendliest fallback wins; users can retry
-      // from Profile if anything looks off.
-      const code = await extractInviteErrorCode(fnErr)
-      setError(messageForInviteError(code))
-      // false here matches the existing analytics meaning ("not skipped"),
-      // which we keep so funnel comparisons across the rewire don't break.
-      track.inviteSent(false)
-      return
-    }
-
-    if (!data?.ok) {
-      setError("Something went wrong sending the invite. Try again, or skip for now.")
-      track.inviteSent(false)
-      return
-    }
-
-    track.inviteSent(false)
-    await bumpOnboardingStep(STEP_TO_INDEX.scan)
-    setStep('scan')
-  }
-
-  async function skipInvite() {
-    track.inviteSent(true)
-    await bumpOnboardingStep(STEP_TO_INDEX.scan)
-    setStep('scan')
   }
 
   function finishOnboarding() {
@@ -998,44 +885,6 @@ export default function Onboarding() {
                 ? 'Saving…'
                 : acceptHandMeDowns ? 'Continue' : 'Not right now'}
             </button>
-          </>
-        )}
-
-        {step === 'invite' && (
-          <>
-            <h1 className={styles.title}>Invite a family member?</h1>
-            <p className={styles.sub}>
-              Co-parents, grandparents, anyone helping out — they'll get access to
-              {' '}{inviteWardrobeCopy(babies)}.
-            </p>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Email address</label>
-              <input
-                className={styles.input}
-                type="email"
-                placeholder="partner@example.com"
-                value={inviteEmail}
-                onChange={e => setInviteEmail(e.target.value)}
-                autoComplete="email"
-              />
-            </div>
-            {error && <div className={styles.error}>{error}</div>}
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={sendInvite}
-              disabled={!inviteEmail.trim() || loading}
-            >
-              {loading ? 'Sending…' : 'Send invite'}
-            </button>
-            <div className={styles.skipLink}>
-              <button type="button" className={styles.skipBtn} onClick={skipInvite} disabled={loading}>
-                Skip for now
-              </button>
-            </div>
-            <p className={styles.helperNote}>
-              They'll get an email with a one-click link to join. The link is good for 7 days.
-            </p>
           </>
         )}
 

@@ -38,9 +38,11 @@ export function UpgradeGateProvider({ children }) {
   const pendingRef = useRef(null)
   pendingRef.current = pending
 
+  // skipGate: true → run action directly even for anonymous users (used to
+  // allow free saves until the trial item threshold is reached).
   const requireRealAccount = useCallback(
-    async (action) => {
-      if (!isAnonymous) {
+    async (action, { skipGate = false } = {}) => {
+      if (!isAnonymous || skipGate) {
         return action()
       }
       return new Promise((resolve, reject) => {

@@ -83,6 +83,7 @@ export default function AddItem() {
     household,
     babies,
     currentBaby,
+    items: householdItems,
     loading: householdLoading,
     error: householdError,
     reloadItems,
@@ -569,7 +570,7 @@ export default function AddItem() {
           reloadItems()
           navigate('/inventory')
         }
-      })
+      }, { skipGate: householdItems.length < 5 })
       setSaving(false)
     } catch (e) {
       setSaving(false)
