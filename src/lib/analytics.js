@@ -75,6 +75,10 @@ export const track = {
   signupCompleted: () =>
     logEvent('signup_completed', 'acquisition', { method: 'email' }, { id: 'acquisition', step: 5 }),
 
+  // Onboarding funnel (4-step flow as of 2026-06-25: household → baby → receiving → scan).
+  // Step numbers reflect the current flow. Historical events from removed steps
+  // (size_mode_selected removed 2026-04-25, invite_sent removed 2026-06-25) remain
+  // in the DB and are visible in historical funnel windows but no longer emitted.
   onboardingStarted: () =>
     logEvent('onboarding_started', 'onboarding', {}, { id: 'onboarding', step: 1 }),
   householdNamed: () =>
@@ -83,21 +87,12 @@ export const track = {
     logEvent('baby_added', 'onboarding', props, { id: 'onboarding', step: 3 }),
   babiesAddedOnboarding: (props) =>
     logEvent('babies_added_onboarding', 'onboarding', props),
-  // Note: size_mode_selected event was removed 2026-04-25 along with the
-  // sizemode picker (Onboarding + Profile). The funnel-step numbering on
-  // the remaining events is preserved as historical labels — they no
-  // longer line up with the current 5-step onboarding state machine, but
-  // changing them would muddy event-stream continuity.
-  inviteSent: (skipped) =>
-    logEvent('invite_sent', 'onboarding', { skipped }, { id: 'onboarding', step: 5 }),
   onboardingCompleted: () =>
-    logEvent('onboarding_completed', 'onboarding', {}, { id: 'onboarding', step: 6 }),
+    logEvent('onboarding_completed', 'onboarding', {}, { id: 'onboarding', step: 4 }),
   firstItemAdded: (props) =>
-    logEvent('first_item_added', 'onboarding', props, { id: 'onboarding', step: 7 }),
-  // Onboarding scan step (added 2026-04-25). The scan CTA is itself optional,
-  // so we track engagement vs skip separately from the underlying tag-scan
-  // events. `onboarding_scan_completed` fires for both single-scan and batch
-  // paths — `mode` carries which one.
+    logEvent('first_item_added', 'onboarding', props, { id: 'onboarding', step: 5 }),
+  // Scan step is opt-in; track engagement vs skip separately.
+  // `onboarding_scan_completed` covers both single-scan and batch paths — `mode` carries which one.
   onboardingScanSkipped: () =>
     logEvent('onboarding_scan_skipped', 'onboarding', {}),
   onboardingScanCompleted: (props) =>
