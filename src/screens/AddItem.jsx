@@ -436,6 +436,8 @@ export default function AddItem() {
     setError(null)
 
     try {
+      // eslint-disable-next-line no-console
+      console.log('[trial-gate] householdItems.length:', householdItems.length, 'skipGate:', householdItems.length < 5)
       await requireRealAccount(async () => {
 
         if (isClothing) {
