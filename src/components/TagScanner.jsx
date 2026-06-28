@@ -1108,6 +1108,49 @@ export default function TagScanner({
   const [batchItems, setBatchItems] = useState([])
   const [reviewOpen, setReviewOpen] = useState(false)
 
+  // ── Batch draft persistence ─────────────────────────────────────────────
+  // Saves fields + confidence (no image data URLs) to sessionStorage so the
+  // batch survives an accidental page refresh. Capacitor's WKWebView doesn't
+  // fire beforeunload on native refresh, so the BatchReview overlay guard
+  // can't protect us there. sessionStorage is cleared by the browser when the
+  // tab closes, so there's no stale-draft hazard across sessions.
+  const DRAFT_KEY = 'sprigloop_batch_draft'
+
+  // Restore on mount — runs once. If a draft exists, repopulate the batch and
+  // re-open the review screen. Items won't have thumbnail images (data URLs
+  // aren't stored) but all detected fields + confidence are intact.
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(DRAFT_KEY)
+      if (!saved) return
+      const draft = JSON.parse(saved)
+      if (Array.isArray(draft.items) && draft.items.length > 0) {
+        setBatchItems(draft.items)
+        setBatchMode(true)
+        if (draft.reviewOpen) setReviewOpen(true)
+      }
+    } catch { /* ignore parse errors — corrupt draft is just lost */ }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Persist on every batch change. Strip image data URLs — they're too large
+  // for sessionStorage and aren't needed for the save flow; the user just
+  // won't see thumbnails for restored items.
+  useEffect(() => {
+    if (batchItems.length === 0) {
+      sessionStorage.removeItem(DRAFT_KEY)
+      return
+    }
+    try {
+      const draft = {
+        reviewOpen,
+        items: batchItems.map(({ id, fields, confidence, confirmed }) => ({
+          id, fields, confidence, confirmed: confirmed || false,
+        })),
+      }
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
+    } catch { /* ignore quota errors — draft just won't persist */ }
+  }, [batchItems, reviewOpen])
+
   // Shared upload + extract path. Both the camera shutter and the file
   // picker funnel through here so error handling — and analytics —
   // stay in one place.

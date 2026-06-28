@@ -122,7 +122,15 @@ When two images are provided, the first is a close-up of the hangtag (use it as 
 
 Return ONLY a single JSON object with these keys:
 - brand: the brand name EXACTLY as printed on the tag, transcribed letter-by-letter from what you see in the image. CRITICAL: do not "correct" or "normalize" an unfamiliar brand name to a more common one. If the tag says "Pekkle", return "Pekkle" — not "Pampers" or any other similar-looking brand you may know. If the tag says "Gerber" return "Gerber". If you cannot confidently read the brand text from the image, return null. NEVER substitute a brand from your prior knowledge of common baby brands for what is actually printed. The user's small, indie, or store-label brands matter just as much as the big-name ones, and getting them wrong is worse than returning null.
-- size_label: one of ${SIZES.map(s => `"${s}"`).join(', ')}, mapped from what the tag says (e.g. "3M" or "3 months" → "0-3M"; "6M" or "6 months" → "3-6M"; "9M" or "9 months" → "6-9M"; "12M" or "12 months" → "9-12M"; "18M" → "12-18M"; "24M" or "2T" → "18-24M"). Some brands (notably Carter's) print a single number without "M" — treat these the same way: a bare "3" → "0-3M", "6" → "3-6M", "9" → "6-9M", "12" → "9-12M", "18" → "12-18M", "24" → "18-24M". If the tag shows a range that spans two bands, pick the lower one. Use null if no size is readable.
+- size_label: one of ${SIZES.map(s => `"${s}"`).join(', ')}. Use this exact lookup table — match what is printed on the SIZE label (ignore wash-care symbols, fabric content numbers, and garment model numbers):
+  NB / Newborn / 0-3M → "0-3M"
+  3M / 3 months / 3 → "0-3M"
+  6M / 6 months / 6 → "3-6M"
+  9M / 9 months / 9 → "6-9M"
+  12M / 12 months / 12 → "9-12M"   ← CRITICAL: "12M" maps to "9-12M", NEVER to "0-3M"
+  18M / 18 months / 18 → "12-18M"
+  24M / 24 months / 24 / 2T → "18-24M"
+  If the tag shows a range explicitly (e.g. "12-18M"), return that range directly. If the range spans two bands, pick the lower one. IMPORTANT: only read the size from the size label — ignore all other numbers on the tag (wash temperature, fabric percentages, style codes, etc.). Return null if no size text is visible or readable.
 - category: one of ${CATEGORIES.map(c => `"${c}"`).join(', ')}, inferred from the garment visible in the image. Use null if you can't tell.
 - item_type: one of ${SLOT_IDS.map(s => `"${s}"`).join(', ')}, the most specific slot that fits. Must be consistent with the chosen category. Use null if unsure.
 - season: one of ${SEASONS.map(s => `"${s}"`).join(', ')}, inferred from the visible garment (sleeve length, fabric weight, lining, layering, exposure to weather). Use the wider garment shot for this if it's available; the close-up tag photo usually doesn't give enough garment context. Rules of thumb:
