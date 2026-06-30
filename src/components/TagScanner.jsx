@@ -4,6 +4,78 @@ import { track } from '../lib/analytics'
 import BatchReview from './BatchReview'
 import styles from './TagScanner.module.css'
 
+// ── Batch photo persistence via IndexedDB ────────────────────────────────────
+// sessionStorage can't hold data URLs (too large). IndexedDB is available in
+// WKWebView (iOS 10+) and survives in-app refreshes, so we use it to persist
+// thumbnails across accidental refreshes while the batch is in progress.
+const PHOTO_DB_NAME  = 'sprigloop_batch_photos'
+const PHOTO_DB_STORE = 'photos'
+const PHOTO_DB_VER   = 1
+
+function openPhotoDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(PHOTO_DB_NAME, PHOTO_DB_VER)
+    req.onupgradeneeded = (e) => {
+      e.target.result.createObjectStore(PHOTO_DB_STORE)
+    }
+    req.onsuccess = (e) => resolve(e.target.result)
+    req.onerror   = (e) => reject(e.target.error)
+  })
+}
+
+async function savePhotosToIDB(items) {
+  try {
+    const db = await openPhotoDB()
+    const tx = db.transaction(PHOTO_DB_STORE, 'readwrite')
+    const store = tx.objectStore(PHOTO_DB_STORE)
+    for (const it of items) {
+      const photos = {}
+      if (it.thumbnailDataUrl)        photos.thumbnailDataUrl        = it.thumbnailDataUrl
+      if (it.garmentThumbnailDataUrl) photos.garmentThumbnailDataUrl = it.garmentThumbnailDataUrl
+      if (it.tagThumbnailDataUrl)     photos.tagThumbnailDataUrl     = it.tagThumbnailDataUrl
+      if (it.itemDataUrl)             photos.itemDataUrl             = it.itemDataUrl
+      if (Object.keys(photos).length > 0) store.put(photos, it.id)
+    }
+    tx.commit?.()
+  } catch { /* silent — degradation is no thumbnails, not a crash */ }
+}
+
+async function loadPhotosFromIDB(itemIds) {
+  try {
+    const db = await openPhotoDB()
+    const tx = db.transaction(PHOTO_DB_STORE, 'readonly')
+    const store = tx.objectStore(PHOTO_DB_STORE)
+    const map = {}
+    await Promise.all(itemIds.map(
+      (id) => new Promise((res) => {
+        const req = store.get(id)
+        req.onsuccess = () => { if (req.result) map[id] = req.result; res() }
+        req.onerror   = () => res()
+      })
+    ))
+    return map
+  } catch { return {} }
+}
+
+async function clearPhotosFromIDB(itemIds) {
+  try {
+    const db = await openPhotoDB()
+    const tx = db.transaction(PHOTO_DB_STORE, 'readwrite')
+    const store = tx.objectStore(PHOTO_DB_STORE)
+    for (const id of itemIds) store.delete(id)
+    tx.commit?.()
+  } catch { /* silent */ }
+}
+
+async function clearAllPhotosFromIDB() {
+  try {
+    const db = await openPhotoDB()
+    const tx = db.transaction(PHOTO_DB_STORE, 'readwrite')
+    tx.objectStore(PHOTO_DB_STORE).clear()
+    tx.commit?.()
+  } catch { /* silent */ }
+}
+
 // TagScanner — Phase 2 step 1 (2026-04-24): live camera preview + tag-shaped
 // crop guide.
 //
@@ -1117,27 +1189,33 @@ export default function TagScanner({
   const DRAFT_KEY = 'sprigloop_batch_draft'
 
   // Restore on mount — runs once. If a draft exists, repopulate the batch and
-  // re-open the review screen. Items won't have thumbnail images (data URLs
-  // aren't stored) but all detected fields + confidence are intact.
+  // re-open the review screen. Photos are loaded from IndexedDB and merged in.
   useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem(DRAFT_KEY)
-      if (!saved) return
-      const draft = JSON.parse(saved)
-      if (Array.isArray(draft.items) && draft.items.length > 0) {
-        setBatchItems(draft.items)
+    (async () => {
+      try {
+        const saved = sessionStorage.getItem(DRAFT_KEY)
+        if (!saved) return
+        const draft = JSON.parse(saved)
+        if (!Array.isArray(draft.items) || draft.items.length === 0) return
+        // Load any persisted photos from IndexedDB and merge them back in.
+        const photoMap = await loadPhotosFromIDB(draft.items.map((it) => it.id))
+        const restored = draft.items.map((it) => ({
+          ...it,
+          ...(photoMap[it.id] || {}),
+        }))
+        setBatchItems(restored)
         setBatchMode(true)
         if (draft.reviewOpen) setReviewOpen(true)
-      }
-    } catch { /* ignore parse errors — corrupt draft is just lost */ }
+      } catch { /* ignore parse errors — corrupt draft is just lost */ }
+    })()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Persist on every batch change. Strip image data URLs — they're too large
-  // for sessionStorage and aren't needed for the save flow; the user just
-  // won't see thumbnails for restored items.
+  // Persist on every batch change. Fields go to sessionStorage (fast, sync);
+  // photo data URLs go to IndexedDB (async, handles large blobs).
   useEffect(() => {
     if (batchItems.length === 0) {
       sessionStorage.removeItem(DRAFT_KEY)
+      clearAllPhotosFromIDB()
       return
     }
     try {
@@ -1149,6 +1227,10 @@ export default function TagScanner({
       }
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
     } catch { /* ignore quota errors — draft just won't persist */ }
+    // Async photo save — fires and is not awaited so the sync setState path
+    // above completes immediately. Photos that fail to save just won't appear
+    // after a refresh; the item data is still intact.
+    savePhotosToIDB(batchItems)
   }, [batchItems, reviewOpen])
 
   // Shared upload + extract path. Both the camera shutter and the file
