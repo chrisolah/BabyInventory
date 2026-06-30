@@ -303,6 +303,40 @@ export function HouseholdProvider({ children }) {
     setRefreshCounter(c => c + 1)
   }, [])
 
+  // Reload items when the app comes back to the foreground so changes made
+  // by another household member on a different device show up immediately.
+  // Two signals cover both web and native:
+  //   - visibilitychange: fires when switching browser tabs or the iOS app
+  //     goes background/foreground in a WKWebView.
+  //   - Capacitor App 'appStateChange': fires on native iOS foreground
+  //     transitions more reliably than visibilitychange in some WKWebView
+  //     configurations (e.g. when the OS suspends the web view).
+  useEffect(() => {
+    if (!user || !household?.id) return
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') setRefreshCounter(c => c + 1)
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    // Capacitor App plugin — no-op if not running inside a native shell.
+    let removeCapacitorListener = null
+    ;(async () => {
+      try {
+        const { App } = await import('@capacitor/app')
+        const handle = await App.addListener('appStateChange', ({ isActive }) => {
+          if (isActive) setRefreshCounter(c => c + 1)
+        })
+        removeCapacitorListener = () => handle.remove()
+      } catch { /* not in Capacitor, ignore */ }
+    })()
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      removeCapacitorListener?.()
+    }
+  }, [user, household?.id])
+
   // Public setter — also writes to localStorage so a reload restores the
   // selection. Swallows invalid ids (any uuid not in the current list)
   // rather than silently accepting them.

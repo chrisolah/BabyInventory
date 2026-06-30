@@ -441,6 +441,13 @@ export function getSlotForItem(item) {
   const category = item.category
   if (!category) return null
 
+  // Pass 0: direct slot ID match. item_type is stored as the slot id (e.g.
+  // 'sleep_gowns') when set via the AddItem / BatchReview selectors, so we
+  // can short-circuit before keyword matching — which would otherwise miss
+  // because slot IDs use underscores while keywords use spaces.
+  const exactSlot = SLOTS.find(s => s.category === category && s.id === type)
+  if (exactSlot) return exactSlot
+
   // Pass 1: keyword match within the item's category
   for (const slot of SLOTS) {
     if (slot.category !== category) continue
