@@ -318,23 +318,7 @@ export function HouseholdProvider({ children }) {
       if (document.visibilityState === 'visible') setRefreshCounter(c => c + 1)
     }
     document.addEventListener('visibilitychange', handleVisibility)
-
-    // Capacitor App plugin — no-op if not running inside a native shell.
-    let removeCapacitorListener = null
-    ;(async () => {
-      try {
-        const { App } = await import('@capacitor/app')
-        const handle = await App.addListener('appStateChange', ({ isActive }) => {
-          if (isActive) setRefreshCounter(c => c + 1)
-        })
-        removeCapacitorListener = () => handle.remove()
-      } catch { /* not in Capacitor, ignore */ }
-    })()
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility)
-      removeCapacitorListener?.()
-    }
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [user, household?.id])
 
   // Public setter — also writes to localStorage so a reload restores the
