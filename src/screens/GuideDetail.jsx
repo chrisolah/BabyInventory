@@ -186,8 +186,37 @@ export default function GuideDetail() {
     const descMeta = document.querySelector('meta[name="description"]')
     const prevDesc = descMeta?.getAttribute('content')
 
-    document.title = `${guide.title} — Sprigloop Guides`
+    const pageTitle = `${guide.title} — Sprigloop Guides`
+    document.title = pageTitle
     descMeta?.setAttribute('content', guide.description)
+
+    // Open Graph + Twitter tags are hardcoded once in index.html to the
+    // homepage's title/description/url, and nothing updated them per-route —
+    // so every guide, when pinned/shared, showed the generic homepage
+    // preview instead of its own. Swap them in the same way document.title
+    // and the description meta already do, and restore on unmount so
+    // navigating away (or to another guide) doesn't leave stale tags behind.
+    // og:image is intentionally left as the generic brand image — guides
+    // don't have their own featured images yet.
+    const guideUrl = `https://sprigloop.com/guides/${guide.slug}`
+    const ogTagSelectors = {
+      'og:title': pageTitle,
+      'og:description': guide.description,
+      'og:url': guideUrl,
+      'twitter:title': pageTitle,
+      'twitter:description': guide.description,
+    }
+    const prevOgValues = {}
+    for (const [key, value] of Object.entries(ogTagSelectors)) {
+      const selector = key.startsWith('og:')
+        ? `meta[property="${key}"]`
+        : `meta[name="${key}"]`
+      const el = document.querySelector(selector)
+      if (el) {
+        prevOgValues[key] = el.getAttribute('content')
+        el.setAttribute('content', value)
+      }
+    }
 
     const jsonLd = document.createElement('script')
     jsonLd.type = 'application/ld+json'
@@ -213,6 +242,13 @@ export default function GuideDetail() {
     return () => {
       document.title = prevTitle
       if (prevDesc != null) descMeta?.setAttribute('content', prevDesc)
+      for (const key of Object.keys(ogTagSelectors)) {
+        if (prevOgValues[key] == null) continue
+        const selector = key.startsWith('og:')
+          ? `meta[property="${key}"]`
+          : `meta[name="${key}"]`
+        document.querySelector(selector)?.setAttribute('content', prevOgValues[key])
+      }
       document.getElementById('guide-jsonld')?.remove()
     }
   }, [guide, slug])
