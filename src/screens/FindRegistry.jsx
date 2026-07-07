@@ -71,6 +71,20 @@ export default function FindRegistry() {
 
   return (
     <div className={styles.page}>
+      <nav className={styles.nav}>
+        <button
+          className={styles.logo}
+          onClick={() => navigate('/')}
+          aria-label="Back to Sprigloop home"
+        >
+          sprigloop
+        </button>
+        <button className={styles.signupBtn} onClick={() => navigate('/signup')}>Join</button>
+        <button className={styles.loginBtn} onClick={() => navigate('/login')}>
+          Log in
+        </button>
+      </nav>
+      <div className={styles.content}>
       <div className={styles.inner}>
         <div className={styles.header}>
           <h1 className={styles.title}>Find a registry</h1>
@@ -181,6 +195,7 @@ export default function FindRegistry() {
             {' '}to build your own registry.
           </p>
         </div>
+      </div>
       </div>
     </div>
   )
