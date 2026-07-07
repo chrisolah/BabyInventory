@@ -57,7 +57,6 @@ export default function WishlistPublic() {
   // { slotId, slotType, sizeLabel, label, maxQty } — null = sheet closed
   const [claimTarget, setClaimTarget] = useState(null)
   const [selectedCat, setSelectedCat] = useState('priority')
-  const [giftInfoDismissed, setGiftInfoDismissed] = useState(false)
   const [skipBannerDismissed, setSkipBannerDismissed] = useState(false)
   const [selectedSize, setSelectedSize] = useState(null)
 
@@ -244,23 +243,24 @@ export default function WishlistPublic() {
       {/* ── Gift-giver info card ── sits directly under the hero, on a
           white background matching it, so the top of the page reads as
           one continuous block instead of white-hero-then-colored-card.
-          Swapped with the skip notice below on 2026-07-08. */}
-      {!giftInfoDismissed && (
-        <div className={styles.infoCardWrap}>
-          <div className={styles.infoCardWrapInner}>
-            <div className={styles.infoCard}>
-              <button className={styles.infoDismiss} onClick={() => setGiftInfoDismissed(true)} aria-label="Dismiss">×</button>
-              <div className={styles.infoTitle}>This registry is a little different</div>
-              <p className={styles.infoBody}>
-                It&rsquo;s built from what {household?.name ? `the ${household.name}'s` : 'the family'}{' '}
-                already own — so every item here is a real gap, not a guess.
-                Quantities show exactly how many are still needed, and claiming an item
-                coordinates with other gift-givers automatically.
-              </p>
-            </div>
+          Swapped with the skip notice below on 2026-07-08. Not dismissable
+          (2026-07-08) — this is the one piece of context that explains why
+          the registry looks different from every other one a gift-giver
+          has seen, so it always stays visible rather than being a one-time
+          tip someone can accidentally swipe away. */}
+      <div className={styles.infoCardWrap}>
+        <div className={styles.infoCardWrapInner}>
+          <div className={styles.infoCard}>
+            <div className={styles.infoTitle}>This registry is a little different</div>
+            <p className={styles.infoBody}>
+              It&rsquo;s built from what {household?.name ? `the ${household.name}'s` : 'the family'}{' '}
+              already own — so every item here is a real gap, not a guess.
+              Quantities show exactly how many are still needed, and claiming an item
+              coordinates with other gift-givers automatically.
+            </p>
           </div>
         </div>
-      )}
+      </div>
 
       {/* ── Category chip nav ─────────────────────────────────── */}
       <div className={styles.catRow}>
@@ -336,9 +336,13 @@ export default function WishlistPublic() {
       })()}
 
       <div className={styles.body}>
-        {/* ── Gift-giver info card ── */}
-        {/* ── Skip notice — swapped with the info card above on 2026-07-08 ── */}
-        {!skipBannerDismissed && (skipCats.size > 0 || skipSizes.length > 0 || skipSlots.length > 0) && (
+        {/* ── Skip notice — swapped with the info card above on 2026-07-08.
+            The per-item "Not included by choice" list was dropped the same
+            day: once a household hides more than a handful of slots (which
+            got a lot easier after the per-size hide fix), the list of names
+            ran on long enough to be more clutter than context. Well-stocked
+            categories and covered sizes stay — those are short by nature. */}
+        {!skipBannerDismissed && (skipCats.size > 0 || skipSizes.length > 0) && (
           <div className={styles.skipBanner}>
             <span aria-hidden="true">🙏</span>
             <div className={styles.skipBannerBody}>
@@ -348,20 +352,8 @@ export default function WishlistPublic() {
                   {[...skipCats].map(c => CAT_LABEL[c] || c).join(', ')} — no gifts needed here!
                 </div>
               )}
-              {skipSlots.length > 0 && (
-                <div className={skipCats.size > 0 ? styles.skipLine : ''}>
-                  <strong>Not included by choice:</strong>{' '}
-                  {skipSlots.map(raw => {
-                    // Clothing hides are stored as "slotId:sizeLabel"; non-clothing
-                    // stays a plain slotId with no colon.
-                    const [id, size] = raw.split(':')
-                    const label = (CLOTHING_SLOT[id] || ITEM_SLOT[id])?.label || id.replace(/_/g, ' ')
-                    return size ? `${label} (${size})` : label
-                  }).join(', ')} — the parents have chosen not to include {skipSlots.length === 1 ? 'this' : 'these'} in their registry.
-                </div>
-              )}
               {skipSizes.length > 0 && (
-                <div className={(skipCats.size > 0 || skipSlots.length > 0) ? styles.skipLine : ''}>
+                <div className={skipCats.size > 0 ? styles.skipLine : ''}>
                   <strong>Clothing sizes covered:</strong>{' '}
                   {skipSizes.join(', ')} — these won&rsquo;t appear below.
                 </div>
