@@ -19,12 +19,28 @@ import {
   SUB_CATEGORY_LABELS,
   SUB_CATEGORIES_BY_CATEGORY,
   ITEM_BY_ID,
+  getCategorySummary,
+  computeCategorycoverage,
 } from '../lib/categories'
 import HeaderActions from '../components/HeaderActions'
 import IvySprig from '../components/IvySprig'
 import BabySwitcher from '../components/BabySwitcher'
 import Eyebrow from '../components/Eyebrow'
 import BottomNav from '../components/BottomNav'
+import CoverageSummaryCard from '../components/CoverageSummaryCard'
+import {
+  CategoryChipRow,
+  CategorySidebar,
+  ClothingNavIcon,
+  SleepNavIcon,
+  FeedingNavIcon,
+  DiaperNavIcon,
+  TravelNavIcon,
+  PlayNavIcon,
+  HealthNavIcon,
+  BathNavIcon,
+  BookmarkNavIcon,
+} from '../components/CategoryNav'
 import styles from './Inventory.module.css'
 
 // Inventory has two tabs:
@@ -171,6 +187,11 @@ export default function Inventory() {
     }
   }, [searchParams])
   const isClothing = selectedTopCategory === 'clothing'
+
+  function handleCategorySelect(cat) {
+    if (cat.id === 'wishlist') navigate('/registry/edit')
+    else setSelectedTopCategory(cat.id)
+  }
 
   // ── Inline action handlers (Owned tab) ─────────────────────────────────
   // Two paths from each Owned row's inline chips:
@@ -786,6 +807,66 @@ export default function Inventory() {
 
   const ageInfo = useMemo(() => inferAgeRange(ageAnchor), [ageAnchor])
 
+  // ── Hero coverage summary ────────────────────────────────────────────────
+  // Same "X% · N of M items" hero treatment Plan and Home already use —
+  // Inventory never had one, so the page jumped straight from the category
+  // chips into a list with nothing anchoring the top. Reuses the exact same
+  // coverage math Plan uses, just scoped to whichever tab is selected here.
+  const heroSummary = useMemo(() => {
+    if (selectedTopCategory === 'wishlist') return null
+    if (isClothing) {
+      if (!selectedAgeRange) return null
+      const rows = computeCoverage(babyFilteredItems, selectedAgeRange, coverageBabyCount)
+      let owned = 0
+      let recommended = 0
+      for (const row of rows) {
+        owned += Math.min(row.ownedCount, row.recommended)
+        recommended += row.recommended
+      }
+      return {
+        pct: Math.round((owned / Math.max(1, recommended)) * 100),
+        title: 'Clothing wardrobe',
+        subtitle: `${owned} of ${recommended} items · ${selectedAgeRange}`,
+      }
+    }
+    const { owned, recommended } = getCategorySummary(babyFilteredItems, selectedTopCategory)
+    return {
+      pct: Math.round((owned / Math.max(1, recommended)) * 100),
+      title: `${CATEGORY_META[selectedTopCategory]?.label || ''} checklist`,
+      subtitle: `${owned} of ${recommended} items`,
+    }
+  }, [selectedTopCategory, isClothing, selectedAgeRange, babyFilteredItems, coverageBabyCount])
+
+  // Per-section owned/recommended — feeds GroupHeader's "X of Y" progress
+  // fragment and complete/partial accent color. Grouped the same way
+  // ownedGrouped/catOwnedGrouped already group for display (by clothing
+  // category, or by non-clothing sub-category).
+  const ownedGroupCoverage = useMemo(() => {
+    if (!isClothing || !selectedAgeRange) return {}
+    const rows = computeCoverage(babyFilteredItems, selectedAgeRange, coverageBabyCount)
+    const map = {}
+    for (const row of rows) {
+      const cat = row.slot.category
+      if (!map[cat]) map[cat] = { owned: 0, recommended: 0 }
+      map[cat].owned += Math.min(row.ownedCount, row.recommended)
+      map[cat].recommended += row.recommended
+    }
+    return map
+  }, [isClothing, selectedAgeRange, babyFilteredItems, coverageBabyCount])
+
+  const catGroupCoverage = useMemo(() => {
+    if (isClothing) return {}
+    const rows = computeCategorycoverage(babyFilteredItems, selectedTopCategory)
+    const map = {}
+    for (const row of rows) {
+      const sub = row.slot.sub_category
+      if (!map[sub]) map[sub] = { owned: 0, recommended: 0 }
+      map[sub].owned += Math.min(row.ownedCount, row.recommended)
+      map[sub].recommended += row.recommended
+    }
+    return map
+  }, [isClothing, babyFilteredItems, selectedTopCategory])
+
   // ── Prediction card state + data ───────────────────────────────────────
   // Persists open/collapsed across sessions. Defaults open so first-time
   // users see the full card without having to expand it.
@@ -987,45 +1068,20 @@ export default function Inventory() {
       )}
 
       {/* Category selector — horizontal scroll row (mobile) */}
-      <div className={styles.catRow}>
-        {INVENTORY_CATEGORIES.map(cat => {
-          const active = selectedTopCategory === cat.id
-          return (
-            <button
-              key={cat.id}
-              type="button"
-              className={`${styles.catChip} ${styles[`catChip_${cat.color}`]} ${active ? styles.catChipActive : ''}`}
-              onClick={() => cat.id === 'wishlist' ? navigate('/registry/edit') : setSelectedTopCategory(cat.id)}
-              aria-label={cat.label}
-              aria-pressed={active}
-            >
-              <div className={`${styles.catChipIcon} ${styles[`catChipIcon_${cat.color}`]}`}>
-                <cat.icon />
-              </div>
-              <span className={styles.catChipLabel}>{cat.label}</span>
-            </button>
-          )
-        })}
-      </div>
+      <CategoryChipRow
+        categories={INVENTORY_CATEGORIES}
+        activeId={selectedTopCategory}
+        onSelect={handleCategorySelect}
+      />
 
       {/* Desktop two-column layout */}
       <div className={styles.desktopLayout}>
         {/* Left: persistent category sidebar (desktop only) */}
-        <aside className={styles.catSidebar} aria-label="Category">
-          <div className={styles.catSidebarLabel}>Category</div>
-          {INVENTORY_CATEGORIES.map(cat => (
-            <button
-              key={cat.id}
-              type="button"
-              className={`${styles.catSidebarItem} ${selectedTopCategory === cat.id ? styles.catSidebarItemActive : ''}`}
-              onClick={() => cat.id === 'wishlist' ? navigate('/registry/edit') : setSelectedTopCategory(cat.id)}
-              aria-label={cat.label}
-            >
-              <span className={styles.catSidebarIcon}><cat.icon /></span>
-              <span className={styles.catSidebarText}>{cat.label}</span>
-            </button>
-          ))}
-        </aside>
+        <CategorySidebar
+          categories={INVENTORY_CATEGORIES}
+          activeId={selectedTopCategory}
+          onSelect={handleCategorySelect}
+        />
 
       <main className={styles.body}>
         {loading && <div className={styles.loading}>Loading…</div>}
@@ -1061,6 +1117,14 @@ export default function Inventory() {
               ageInfo={ageInfo}
             />
 
+            {heroSummary && (
+              <CoverageSummaryCard
+                pct={heroSummary.pct}
+                title={heroSummary.title}
+                subtitle={heroSummary.subtitle}
+              />
+            )}
+
             {ownedGrouped.length === 0 && (
               <OwnedEmptyState
                 ageRange={selectedAgeRange}
@@ -1081,6 +1145,8 @@ export default function Inventory() {
                     collapsed={collapsed}
                     onToggle={() => toggleOwnedGroup(group.category)}
                     contentId={id}
+                    owned={ownedGroupCoverage[group.category]?.owned}
+                    recommended={ownedGroupCoverage[group.category]?.recommended}
                   />
                   {!collapsed && (
                     <div className={styles.itemCardGrid} id={id}>
@@ -1174,6 +1240,14 @@ export default function Inventory() {
 
             {!isClothing && selectedTopCategory !== 'wishlist' && (
               <>
+                {heroSummary && (
+                  <CoverageSummaryCard
+                    pct={heroSummary.pct}
+                    title={heroSummary.title}
+                    subtitle={heroSummary.subtitle}
+                  />
+                )}
+
                 {catOwnedGrouped.length === 0 && (
                   <div className={styles.empty}>
                     <div className={styles.emptyTitle}>Nothing here yet</div>
@@ -1200,6 +1274,8 @@ export default function Inventory() {
                         collapsed={catGroupCollapsed}
                         onToggle={() => toggleCatGroup(group.subCat)}
                         contentId={catGroupId}
+                        owned={catGroupCoverage[group.subCat]?.owned}
+                        recommended={catGroupCoverage[group.subCat]?.recommended}
                       />
                       {!catGroupCollapsed && (
                         <div className={styles.itemCardGrid} id={catGroupId}>
@@ -1386,18 +1462,33 @@ function Sprout() {
 // as a <button> so keyboard + assistive-tech users get proper semantics, and
 // flips a chevron depending on collapsed state. The parent decides meta copy
 // (e.g. "6 items" on Owned vs "4 of 9" on Wish list) so this stays dumb.
-function GroupHeader({ title, meta, collapsed, onToggle, contentId }) {
+// `owned`/`recommended` are optional — when both are provided (and
+// recommended > 0) the header picks up a small "X of Y" progress fragment
+// plus a colored left accent, the same complete/partial language Plan's
+// SlotCard uses (green = fully covered, amber = still a gap). Sections with
+// no recommendation model (Outgrown, Tucked away) just omit the props and
+// render exactly as before — this is purely additive.
+function GroupHeader({ title, meta, collapsed, onToggle, contentId, owned, recommended }) {
+  const hasProgress = recommended != null && recommended > 0
+  const complete = hasProgress && owned >= recommended
+  const accentClass = hasProgress
+    ? (complete ? styles.groupHeaderComplete : styles.groupHeaderPartial)
+    : ''
+
   return (
     <button
       type="button"
-      className={styles.groupHeader}
+      className={`${styles.groupHeader} ${accentClass}`}
       onClick={onToggle}
       aria-expanded={!collapsed}
       aria-controls={contentId}
     >
       <span className={styles.groupTitle}>{title}</span>
       <span className={styles.groupHeaderRight}>
-        <span className={styles.groupCount}>{meta}</span>
+        <span className={styles.groupCount}>
+          {meta}
+          {hasProgress && <span className={styles.groupProgress}> · {owned} of {recommended}</span>}
+        </span>
         <svg
           className={`${styles.groupChev} ${collapsed ? styles.groupChevCollapsed : ''}`}
           viewBox="0 0 10 6"
@@ -1659,81 +1750,8 @@ function WishlistView({ items, onItemTap, onAddWish }) {
   )
 }
 
-// ── Category nav icons ────────────────────────────────────────────────────
-function ClothingNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M7 2L4 5l2.5 1.5V17h7V6.5L16 5l-3-3-2 2-2-2z"
-        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function SleepNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M3 10.5A7.5 7.5 0 0013.5 3a7.5 7.5 0 100 15A7.5 7.5 0 003 10.5z"
-        stroke="currentColor" strokeWidth="1.3" />
-    </svg>
-  )
-}
-function FeedingNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M8 2v3a4 4 0 004 4v9a1 1 0 01-2 0v-5H8v5a1 1 0 01-2 0V2h2z"
-        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function DiaperNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M2 9h16" stroke="currentColor" strokeWidth="1.3" />
-      <circle cx="10" cy="12" r="1.5" fill="currentColor" />
-    </svg>
-  )
-}
-function TravelNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M2 14h16M5 14V9l5-4 5 4v5" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-      <circle cx="6" cy="15.5" r="1.5" stroke="currentColor" strokeWidth="1.1" />
-      <circle cx="14" cy="15.5" r="1.5" stroke="currentColor" strokeWidth="1.1" />
-    </svg>
-  )
-}
-function PlayNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M7.5 7.5l5 2.5-5 2.5V7.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function HealthNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M10 17S3 12.5 3 7.5A4 4 0 0110 5a4 4 0 017 2.5C17 12.5 10 17 10 17z"
-        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function BathNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M3 11h14v1.5a5 5 0 01-10 0" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-      <path d="M5 11V5.5A1.5 1.5 0 017.5 5a1.5 1.5 0 011.5 1.5V7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-    </svg>
-  )
-}
-function WishlistNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M5 3h10a1 1 0 011 1v12l-6-3-6 3V4a1 1 0 011-1z"
-        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    </svg>
-  )
-}
+// Category nav icons now live in src/components/CategoryNav.jsx — shared
+// with Plan (2026-07-07 consolidation).
 
 const INVENTORY_CATEGORIES = [
   { id: 'clothing',  label: 'Clothing',  icon: ClothingNavIcon,  color: 'teal'   },
@@ -1744,7 +1762,7 @@ const INVENTORY_CATEGORIES = [
   { id: 'play',      label: 'Play',      icon: PlayNavIcon,      color: 'coral'  },
   { id: 'health',    label: 'Health',    icon: HealthNavIcon,    color: 'red'    },
   { id: 'bath',      label: 'Bath',      icon: BathNavIcon,      color: 'green'  },
-  { id: 'wishlist',  label: 'Registry',  icon: WishlistNavIcon,  color: 'teal'   },
+  { id: 'wishlist',  label: 'Registry',  icon: BookmarkNavIcon,  color: 'teal'   },
 ]
 
 // ── Non-clothing item card ────────────────────────────────────────────────

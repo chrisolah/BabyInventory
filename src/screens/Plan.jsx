@@ -24,10 +24,23 @@ import {
 } from '../lib/categories'
 import BabySwitcher from '../components/BabySwitcher'
 import Eyebrow from '../components/Eyebrow'
-import DonutChart from '../components/DonutChart'
 import BottomNav from '../components/BottomNav'
 import HeaderActions from '../components/HeaderActions'
 import ShareRegistryModal from '../components/ShareWishlistModal'
+import CoverageSummaryCard from '../components/CoverageSummaryCard'
+import {
+  CategoryChipRow,
+  CategorySidebar,
+  ClothingNavIcon,
+  SleepNavIcon,
+  FeedingNavIcon,
+  DiaperNavIcon,
+  TravelNavIcon,
+  PlayNavIcon,
+  HealthNavIcon,
+  BathNavIcon,
+  BookmarkNavIcon,
+} from '../components/CategoryNav'
 import styles from './Plan.module.css'
 
 // Plan — the "wish list + guide" hub. Route: /plan
@@ -66,7 +79,7 @@ const PLAN_CATEGORIES = [
   { id: 'play',      label: 'Play',      live: true, icon: PlayNavIcon,     color: 'coral'  },
   { id: 'health',    label: 'Health',    live: true, icon: HealthNavIcon,   color: 'red'    },
   { id: 'bath',      label: 'Bath',      live: true, icon: BathNavIcon,     color: 'green'  },
-  { id: 'registry',  label: 'Registry',  live: true, icon: RegistryNavIcon, color: 'teal'   },
+  { id: 'registry',  label: 'Registry',  live: true, icon: BookmarkNavIcon, color: 'teal'   },
 ]
 
 const CATEGORY_ORDER = [
@@ -375,6 +388,11 @@ export default function Plan() {
     setSelectedAgeRange(ageInfo.nextRange)
   }
 
+  function handleCategorySelect(cat) {
+    if (cat.id === 'registry') navigate('/registry/edit')
+    else setSelectedCategory(cat.id)
+  }
+
   function handleSlotTap(slotId) {
     track.recommendationClicked({ age_range: selectedAgeRange, slot: slotId })
     navigate(`/inventory/slot/${selectedAgeRange}/${slotId}`)
@@ -406,45 +424,20 @@ export default function Plan() {
       <BabySwitcher from="plan" />
 
       {/* Category selector — horizontal scroll row (mobile) */}
-      <div className={styles.catRow}>
-        {PLAN_CATEGORIES.map(cat => {
-          const active = selectedCategory === cat.id
-          return (
-            <button
-              key={cat.id}
-              type="button"
-              className={`${styles.catChip} ${styles[`catChip_${cat.color}`]} ${active ? styles.catChipActive : ''}`}
-              onClick={() => cat.id === 'registry' ? navigate('/registry/edit') : setSelectedCategory(cat.id)}
-              aria-label={cat.label}
-              aria-pressed={active}
-            >
-              <div className={`${styles.catChipIcon} ${styles[`catChipIcon_${cat.color}`]}`}>
-                <cat.icon />
-              </div>
-              <span className={styles.catChipLabel}>{cat.label}</span>
-            </button>
-          )
-        })}
-      </div>
+      <CategoryChipRow
+        categories={PLAN_CATEGORIES}
+        activeId={selectedCategory}
+        onSelect={handleCategorySelect}
+      />
 
       {/* Desktop two-column layout */}
       <div className={styles.desktopLayout}>
         {/* Left: persistent category sidebar (desktop only) */}
-        <aside className={styles.catSidebar} aria-label="Category">
-          <div className={styles.catSidebarLabel}>Category</div>
-          {PLAN_CATEGORIES.map(cat => (
-            <button
-              key={cat.id}
-              type="button"
-              className={`${styles.catSidebarItem} ${selectedCategory === cat.id ? styles.catSidebarItemActive : ''}`}
-              onClick={() => cat.id === 'registry' ? navigate('/registry/edit') : setSelectedCategory(cat.id)}
-              aria-label={cat.label}
-            >
-              <span className={styles.catSidebarIcon}><cat.icon /></span>
-              <span className={styles.catSidebarText}>{cat.label}</span>
-            </button>
-          ))}
-        </aside>
+        <CategorySidebar
+          categories={PLAN_CATEGORIES}
+          activeId={selectedCategory}
+          onSelect={handleCategorySelect}
+        />
 
         {/* Right: main content */}
       <main className={styles.body}>
@@ -649,82 +642,9 @@ export default function Plan() {
   )
 }
 
-// ── Category nav icons ────────────────────────────────────────────────────────
-function ClothingNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M7 2L4 5l2.5 1.5V17h7V6.5L16 5l-3-3-2 2-2-2z"
-        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function SleepNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M3 10.5A7.5 7.5 0 0013.5 3a7.5 7.5 0 100 15A7.5 7.5 0 003 10.5z"
-        stroke="currentColor" strokeWidth="1.3" />
-    </svg>
-  )
-}
-function FeedingNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M8 2v3a4 4 0 004 4v9a1 1 0 01-2 0v-5H8v5a1 1 0 01-2 0V2h2z"
-        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function DiaperNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M2 9h16" stroke="currentColor" strokeWidth="1.3" />
-      <circle cx="10" cy="12" r="1.5" fill="currentColor" />
-    </svg>
-  )
-}
-function TravelNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M2 14h16M5 14V9l5-4 5 4v5" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-      <circle cx="6" cy="15.5" r="1.5" stroke="currentColor" strokeWidth="1.1" />
-      <circle cx="14" cy="15.5" r="1.5" stroke="currentColor" strokeWidth="1.1" />
-    </svg>
-  )
-}
-function PlayNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M7.5 7.5l5 2.5-5 2.5V7.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function HealthNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M10 17S3 12.5 3 7.5A4 4 0 0110 5a4 4 0 017 2.5C17 12.5 10 17 10 17z"
-        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function BathNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M3 11h14v1.5a5 5 0 01-10 0" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-      <path d="M5 11V5.5A1.5 1.5 0 017.5 5a1.5 1.5 0 011.5 1.5V7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function RegistryNavIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
-      <path d="M5 3h10a1 1 0 011 1v12l-6-3-6 3V4a1 1 0 011-1z"
-        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    </svg>
-  )
-}
+// Category nav icons + CoverageSummaryCard now live in src/components/
+// (CategoryNav.jsx, CoverageSummaryCard.jsx) — shared with Inventory as of
+// 2026-07-07 so the two screens can't silently drift apart.
 
 // ── Registry view — all needed items across every category ────────────────────
 const WISHLIST_CATEGORY_ORDER = [
@@ -856,29 +776,6 @@ function PlanGuideLink({ category, navigate }) {
     >
       📖 Read our guide for this category →
     </button>
-  )
-}
-
-// ── Coverage summary card ─────────────────────────────────────────────────────
-function CoverageSummaryCard({ pct, title, subtitle }) {
-  return (
-    <div className={styles.summaryCard}>
-      <div className={styles.summaryLeft}>
-        <div className={styles.summaryPct}>{pct}%</div>
-        <div className={styles.summaryTitle}>{title}</div>
-        <div className={styles.summarySub}>{subtitle}</div>
-      </div>
-      <div className={styles.summaryRight}>
-        <DonutChart
-          size={80}
-          strokeWidth={8}
-          pct={pct}
-          color="rgba(255,255,255,0.9)"
-          trackColor="rgba(255,255,255,0.18)"
-          textColor="#fff"
-        />
-      </div>
-    </div>
   )
 }
 

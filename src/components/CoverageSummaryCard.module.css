@@ -1,0 +1,41 @@
+.summaryCard {
+  background: var(--teal-dark);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.summaryLeft {
+  flex: 1;
+  min-width: 0;
+}
+
+.summaryPct {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.summaryTitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 3px;
+}
+
+.summarySub {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+}
+
+.summaryRight {
+  flex-shrink: 0;
+}
