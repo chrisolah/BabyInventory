@@ -152,8 +152,9 @@ export default function Plan() {
     })
   }, [])
 
-  const quickAddItem = useCallback(async (target) => {
+  const quickAddItem = useCallback(async (target, qty = 1) => {
     if (!household?.id) return
+    const quantity = Math.max(1, Math.floor(qty) || 1)
     if (target.kind === 'clothing') {
       const babyId = (selectedBabyId !== 'all' && currentBaby?.id) ? currentBaby.id : (babies[0]?.id ?? null)
       await supabase.schema(currentSchema).from('clothing_items').insert({
@@ -164,7 +165,7 @@ export default function Plan() {
         item_type: target.slotId,
         size_label: target.sizeLabel,
         inventory_status: 'owned',
-        quantity: 1,
+        quantity,
         source: 'quick_add',
       })
     } else {
@@ -176,11 +177,11 @@ export default function Plan() {
         item_type: target.slotId,
         slot_id: target.slotId,
         inventory_status: 'owned',
-        quantity: 1,
+        quantity,
         source: 'quick_add',
       })
     }
-    track.itemSaved?.({ mode: 'quick_add', category: target.topCategory || 'clothing', size_label: target.sizeLabel || null })
+    track.itemSaved?.({ mode: 'quick_add', category: target.topCategory || 'clothing', size_label: target.sizeLabel || null, quantity })
     await reloadItems()
   }, [household?.id, selectedBabyId, currentBaby, babies, reloadItems])
 
@@ -640,7 +641,7 @@ export default function Plan() {
           onClose={() => setManageTarget(null)}
           onQtyChange={(qty) => changeSlotQty(manageTarget.slotId, manageTarget.sizeLabel, qty)}
           onStopTracking={() => { toggleSlotHidden(manageTarget.kind, manageTarget.slotId, true); setManageTarget(null) }}
-          onQuickAdd={() => quickAddItem(manageTarget)}
+          onQuickAdd={(qty) => quickAddItem(manageTarget, qty)}
         />
       )}
 
@@ -947,21 +948,23 @@ function SlotCard({ row, onClick, gapRow, onStarToggle, onManage }) {
           type="button"
           className={styles.manageBtn}
           onClick={e => { e.stopPropagation(); onManage() }}
-          aria-label={`Manage ${slot.label}`}
+          aria-label={`Edit ${slot.label} in Plan`}
         >
-          <DotsIcon />
+          <EditIcon />
         </button>
       )}
     </div>
   )
 }
 
-function DotsIcon() {
+function EditIcon() {
   return (
-    <svg viewBox="0 0 16 4" width="14" height="4" aria-hidden="true">
-      <circle cx="2" cy="2" r="1.6" fill="currentColor" />
-      <circle cx="8" cy="2" r="1.6" fill="currentColor" />
-      <circle cx="14" cy="2" r="1.6" fill="currentColor" />
+    <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true">
+      <path
+        d="M11.1 2.1a1.2 1.2 0 011.7 0l1.1 1.1a1.2 1.2 0 010 1.7L5.6 13.2l-3.4.7.7-3.4L11.1 2.1z"
+        stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round"
+      />
+      <path d="M9.7 3.5l2.8 2.8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
   )
 }
@@ -1003,26 +1006,33 @@ function HiddenSlotsPanel({ open, onToggleOpen, slots, onTrackAgain }) {
 }
 
 // ── Manage slot sheet ──────────────────────────────────────────────────────────
-// Reachable via the "⋯" button on any slot card. Lets a parent quick-add one
-// unit straight to Inventory (no scan, no form), change the recommended
-// count, or stop tracking the slot in Plan altogether.
+// Reachable via the edit button on any slot card. Lets a parent quick-add a
+// batch straight to Inventory (no scan, no form — e.g. "I have 5 sleep gowns"
+// all in one go), change the recommended count, or stop tracking the slot
+// in Plan altogether.
 function SlotManageSheet({ target, currentQty, onClose, onQtyChange, onStopTracking, onQuickAdd }) {
-  const [qty, setQty] = useState(currentQty)
+  const [targetQty, setTargetQty] = useState(currentQty)
+  const [addQty, setAddQty] = useState(1)
   const [adding, setAdding] = useState(false)
-  const [added, setAdded] = useState(false)
+  const [justAdded, setJustAdded] = useState(null)
 
-  function adjust(delta) {
-    const next = Math.max(1, qty + delta)
-    setQty(next)
+  function adjustTarget(delta) {
+    const next = Math.max(1, targetQty + delta)
+    setTargetQty(next)
     onQtyChange(next)
+  }
+
+  function adjustAddQty(delta) {
+    setAddQty(q => Math.max(1, q + delta))
   }
 
   async function handleQuickAdd() {
     setAdding(true)
-    await onQuickAdd()
+    const qty = addQty
+    await onQuickAdd(qty)
     setAdding(false)
-    setAdded(true)
-    setTimeout(() => setAdded(false), 1500)
+    setJustAdded(qty)
+    setTimeout(() => setJustAdded(null), 1800)
   }
 
   function onBackdropClick(e) {
@@ -1041,19 +1051,28 @@ function SlotManageSheet({ target, currentQty, onClose, onQtyChange, onStopTrack
         </div>
 
         <div className={styles.sheetField}>
-          <label className={styles.sheetLabel}>Recommended count</label>
+          <label className={styles.sheetLabel}>How many do you already have?</label>
           <div className={styles.qtyControl}>
-            <button type="button" className={styles.qtyBtn} onClick={() => adjust(-1)} disabled={qty <= 1} aria-label="Decrease">−</button>
-            <span className={styles.qtyValue}>{qty}</span>
-            <button type="button" className={styles.qtyBtn} onClick={() => adjust(1)} aria-label="Increase">+</button>
+            <button type="button" className={styles.qtyBtn} onClick={() => adjustAddQty(-1)} disabled={addQty <= 1} aria-label="Decrease">−</button>
+            <span className={styles.qtyValue}>{addQty}</span>
+            <button type="button" className={styles.qtyBtn} onClick={() => adjustAddQty(1)} aria-label="Increase">+</button>
           </div>
-          <p className={styles.sheetHint}>This updates the count everywhere — Plan and your Registry share the same target.</p>
         </div>
 
         <button type="button" className={styles.sheetQuickAddBtn} onClick={handleQuickAdd} disabled={adding}>
-          {added ? '✓ Added to Inventory' : adding ? 'Adding…' : '+ Quick add 1 to Inventory'}
+          {justAdded ? `✓ Added ${justAdded} to Inventory` : adding ? 'Adding…' : `+ Quick add ${addQty} to Inventory`}
         </button>
-        <p className={styles.sheetHint}>Adds one owned item straight to Inventory, tagged &ldquo;Quick added&rdquo; — no scanning or details needed. Edit it any time from Inventory.</p>
+        <p className={styles.sheetHint}>Adds {addQty > 1 ? `${addQty} owned items` : 'one owned item'} straight to Inventory in one go, tagged &ldquo;Quick added&rdquo; — no scanning or details needed. Edit any time from Inventory.</p>
+
+        <div className={styles.sheetField}>
+          <label className={styles.sheetLabel}>Recommended count</label>
+          <div className={styles.qtyControl}>
+            <button type="button" className={styles.qtyBtn} onClick={() => adjustTarget(-1)} disabled={targetQty <= 1} aria-label="Decrease">−</button>
+            <span className={styles.qtyValue}>{targetQty}</span>
+            <button type="button" className={styles.qtyBtn} onClick={() => adjustTarget(1)} aria-label="Increase">+</button>
+          </div>
+          <p className={styles.sheetHint}>This updates the target everywhere — Plan and your Registry share the same number.</p>
+        </div>
 
         <button type="button" className={styles.sheetStopBtn} onClick={onStopTracking}>
           Stop tracking in Plan
