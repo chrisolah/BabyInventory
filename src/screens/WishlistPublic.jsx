@@ -7,7 +7,7 @@
 // Data shape from RPC:
 //   share:    { token, message, target_date, show_priority, skip_categories, included_categories }
 //   household: { name }
-//   babies:   [{ name, due_date, date_of_birth }]
+//   babies:   [{ id, name, gender, due_date, date_of_birth }]
 //   clothing: [{ id, slot_id, category, size_label, is_priority, baby_id, owned_count }]
 //   items:    [{ id, slot_id, top_category, sub_category, is_priority, owned_count }]
 //   claims:   [{ slot_id, slot_type, size_label, claimer_name, quantity, claimed_at }]
@@ -15,7 +15,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
-import { SLOTS, AGE_RANGES, recommendedQty } from '../lib/wardrobe'
+import { SLOTS, AGE_RANGES, recommendedQty, isSlotHiddenForBabies } from '../lib/wardrobe'
 import { ITEMS, CATEGORY_META, CONSUMABLE_SLOT_IDS } from '../lib/categories'
 import { getWishlistProduct } from '../lib/wishlistProducts'
 import styles from './WishlistPublic.module.css'
@@ -194,7 +194,17 @@ export default function WishlistPublic() {
   // shouldn't hide socks for 9-12M) since clothing gaps are inherently
   // per-size; non-clothing entries have no size axis, so they stay keyed by
   // plain slotId. (Fixed 2026-07-07 — hiding used to be slot-only for both.)
-  const clothing = (pageData.clothing || []).filter(r => !skipSlots.includes(`${r.slot_id}:${r.size_label}`))
+  //
+  // Gender-exclusive slots (dresses, hair accessories) are also excluded for
+  // boy babies here, same rule Plan and AddItem already apply. Each clothing
+  // gap row is seeded per baby, so it always has exactly one baby to check.
+  const babiesById = Object.fromEntries((babies || []).map(b => [b.id, b]))
+  const clothing = (pageData.clothing || []).filter(r => {
+    if (skipSlots.includes(`${r.slot_id}:${r.size_label}`)) return false
+    const slot = CLOTHING_SLOT[r.slot_id]
+    const baby = babiesById[r.baby_id]
+    return !isSlotHiddenForBabies(slot, baby ? [baby] : [])
+  })
   const items    = (pageData.items || []).filter(r => !skipSlots.includes(r.slot_id))
 
   return (

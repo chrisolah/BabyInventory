@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
-import { SLOTS, AGE_RANGES, recommendedQty } from '../lib/wardrobe'
+import { SLOTS, AGE_RANGES, recommendedQty, isSlotHiddenForBabies } from '../lib/wardrobe'
 import { ITEMS as ITEM_DEFS, CATEGORY_META, CONSUMABLE_SLOT_IDS } from '../lib/categories'
 import IvySprig from '../components/IvySprig'
 import BottomNav from '../components/BottomNav'
@@ -161,7 +161,16 @@ export default function WishlistEdit() {
 
   if (loading) return <div className={styles.page}><div className={styles.loadingBar} /></div>
 
-  const clothing = pageData?.clothing || []
+  // Gender-exclusive clothing slots (dresses, hair accessories) are hidden
+  // for boy babies — same rule Plan and AddItem already apply. Each clothing
+  // gap row is seeded per baby (unlike non-clothing gaps, which are
+  // household-level), so it always has exactly one baby to check against.
+  const babiesById = Object.fromEntries((pageData?.babies || []).map(b => [b.id, b]))
+  const clothing = (pageData?.clothing || []).filter(r => {
+    const slot = CLOTHING_SLOT[r.slot_id]
+    const baby = babiesById[r.baby_id]
+    return !isSlotHiddenForBabies(slot, baby ? [baby] : [])
+  })
   const items    = pageData?.items    || []
   const household_data = pageData?.household
 
