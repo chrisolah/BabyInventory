@@ -612,6 +612,15 @@
   gap: 8px;
   justify-content: center;
 }
+/* "All guides" sits on its own centered row below the pill list instead of
+   wrapping into the grid — at narrow widths each guide pill already takes a
+   full row on its own, so leaving "All guides" inside .guidesStripGrid meant
+   it landed alone next to the last pill instead of centered like the rest. */
+.guidesStripMoreRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
 .guidesPill {
   all: unset;
   font-size: 13px;

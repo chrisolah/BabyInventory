@@ -296,6 +296,8 @@ export default function Landing() {
                 {guide.title}
               </button>
             ))}
+          </div>
+          <div className={styles.guidesStripMoreRow}>
             <button className={styles.guidesPillMore} onClick={() => navigate('/guides')}>
               All guides &rarr;
             </button>
