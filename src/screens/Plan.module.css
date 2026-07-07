@@ -463,6 +463,16 @@
   text-align: left;
   transition: background 0.15s, border-color 0.15s;
   width: 100%;
+  /* .slotCardGrid is a CSS grid, which stretches every .slotCardWrapper in a
+     row to match the tallest one by default — but without this, the visible
+     card inside stayed at its own shorter natural height, leaving invisible
+     space below it inside the stretched wrapper. The star/edit buttons are
+     positioned absolute against the WRAPPER (bottom:6px/top:6px), so on any
+     card shorter than its row-mates, they landed in that empty space below
+     the actual card instead of inside it — visually "falling out" the
+     bottom. Filling the wrapper's full height keeps the card's own edges
+     matched to where the wrapper actually ends. */
+  height: 100%;
 }
 
 .slotCard:hover { background: var(--gray-50); }
