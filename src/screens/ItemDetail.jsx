@@ -616,6 +616,9 @@ export default function ItemDetail() {
                 {!isClothing && item.age_relevance && (
                   <DetailRow label="Age range" value={item.age_relevance} />
                 )}
+                {item.source === 'quick_add' && (
+                  <DetailRow label="Added via" value="Quick add from Plan" />
+                )}
               </dl>
             </section>
 

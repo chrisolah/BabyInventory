@@ -6,17 +6,21 @@ import { track } from '../lib/analytics'
 import {
   AGE_RANGES,
   CATEGORY_LABELS,
+  SLOTS,
+  recommendedQty,
   computeCoverage,
   otherWishes,
   inferAgeRange,
   shouldShowOutgrowBanner,
   pluralize,
+  isSlotHiddenForBabies,
 } from '../lib/wardrobe'
 import {
   SUB_CATEGORY_LABELS,
   SUB_CATEGORIES_BY_CATEGORY,
   computeCategorycoverage,
   getCategorySummary,
+  ITEMS_BY_CATEGORY,
 } from '../lib/categories'
 import BabySwitcher from '../components/BabySwitcher'
 import Eyebrow from '../components/Eyebrow'
@@ -93,6 +97,93 @@ export default function Plan() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [selectedAgeRange, setSelectedAgeRange] = useState(null)
 
+  // ── Plan-only tracking prefs + count overrides ─────────────────────────
+  // hiddenPrefs: slots the parent removed from Plan tracking. Keyed
+  // "kind:slot_id" (kind = 'clothing' | 'item'). Completely separate from
+  // the Registry share's skip_slots — hiding here never affects the
+  // Registry, and vice versa.
+  // qtyOverrides: the SAME registry_quantity_overrides table the Registry
+  // edit screen uses, keyed "slot_id:size_label". Reusing it means a count
+  // change made from Plan shows up on the Registry too, and vice versa —
+  // one number, wherever you edit it.
+  const [hiddenPrefs, setHiddenPrefs] = useState(new Set())
+  const [qtyOverrides, setQtyOverrides] = useState({})
+  const [manageTarget, setManageTarget] = useState(null)
+  const [showHiddenClothing, setShowHiddenClothing] = useState(false)
+  const [showHiddenCat, setShowHiddenCat] = useState(false)
+
+  useEffect(() => {
+    if (!household?.id) return
+    let cancelled = false
+    async function loadPrefs() {
+      const [{ data: prefRows }, { data: overrideRows }] = await Promise.all([
+        supabase.schema(currentSchema).from('plan_slot_prefs')
+          .select('slot_id, kind, hidden').eq('household_id', household.id),
+        supabase.schema(currentSchema).from('registry_quantity_overrides')
+          .select('slot_id, size_label, desired_qty').eq('household_id', household.id),
+      ])
+      if (cancelled) return
+      setHiddenPrefs(new Set((prefRows || []).filter(r => r.hidden).map(r => `${r.kind}:${r.slot_id}`)))
+      const map = {}
+      for (const o of overrideRows || []) map[`${o.slot_id}:${o.size_label || ''}`] = o.desired_qty
+      setQtyOverrides(map)
+    }
+    loadPrefs()
+    return () => { cancelled = true }
+  }, [household?.id])
+
+  const toggleSlotHidden = useCallback(async (kind, slotId, nextHidden) => {
+    setHiddenPrefs(prev => {
+      const next = new Set(prev)
+      const key = `${kind}:${slotId}`
+      if (nextHidden) next.add(key); else next.delete(key)
+      return next
+    })
+    await supabase.schema(currentSchema).rpc('set_plan_slot_hidden', {
+      p_slot_id: slotId, p_kind: kind, p_hidden: nextHidden,
+    })
+  }, [])
+
+  const changeSlotQty = useCallback(async (slotId, sizeLabel, newQty) => {
+    const key = `${slotId}:${sizeLabel || ''}`
+    setQtyOverrides(prev => ({ ...prev, [key]: newQty }))
+    await supabase.schema(currentSchema).rpc('upsert_registry_qty_override', {
+      p_slot_id: slotId, p_size_label: sizeLabel || null, p_desired_qty: newQty,
+    })
+  }, [])
+
+  const quickAddItem = useCallback(async (target) => {
+    if (!household?.id) return
+    if (target.kind === 'clothing') {
+      const babyId = (selectedBabyId !== 'all' && currentBaby?.id) ? currentBaby.id : (babies[0]?.id ?? null)
+      await supabase.schema(currentSchema).from('clothing_items').insert({
+        household_id: household.id,
+        baby_id: babyId,
+        slot_id: target.slotId,
+        category: target.category,
+        item_type: target.slotId,
+        size_label: target.sizeLabel,
+        inventory_status: 'owned',
+        quantity: 1,
+        source: 'quick_add',
+      })
+    } else {
+      await supabase.schema(currentSchema).from('items').insert({
+        household_id: household.id,
+        baby_id: null,
+        top_category: target.topCategory,
+        sub_category: target.subCategory,
+        item_type: target.slotId,
+        slot_id: target.slotId,
+        inventory_status: 'owned',
+        quantity: 1,
+        source: 'quick_add',
+      })
+    }
+    track.itemSaved?.({ mode: 'quick_add', category: target.topCategory || 'clothing', size_label: target.sizeLabel || null })
+    await reloadItems()
+  }, [household?.id, selectedBabyId, currentBaby, babies, reloadItems])
+
   // Initialize age range from baby's DOB. Read ?size= query param to
   // support jump-in from the prediction card in Inventory.
   const ageAnchor = currentBaby ?? babies[0] ?? null
@@ -118,10 +209,44 @@ export default function Plan() {
 
   const coverageBabyCount = selectedBabyId === 'all' ? Math.max(1, babies.length) : 1
 
+  // Whichever babies are relevant to the current view — used for gender
+  // filtering. Only hides a slot when EVERY baby in scope is a boy.
+  const babiesInScope = useMemo(() => {
+    if (selectedBabyId === 'all') return babies
+    return currentBaby ? [currentBaby] : babies
+  }, [selectedBabyId, babies, currentBaby])
+
+  // Applies a quantity override (if set) to a coverage row, recomputing
+  // needed/status the same way computeCoverage itself does.
+  function applyQtyOverride(row, overrideKey) {
+    const override = qtyOverrides[overrideKey]
+    if (override == null) return row
+    const recommended = override
+    const needed = Math.max(recommended - row.ownedCount, 0)
+    let status = 'gap'
+    if (row.ownedCount === 0) status = 'empty'
+    else if (row.ownedCount >= recommended) status = 'complete'
+    return { ...row, recommended, needed, status }
+  }
+
   const coverage = useMemo(() => {
     if (!selectedAgeRange) return []
-    return computeCoverage(babyFilteredItems, selectedAgeRange, coverageBabyCount)
-  }, [babyFilteredItems, selectedAgeRange, coverageBabyCount])
+    const rows = computeCoverage(babyFilteredItems, selectedAgeRange, coverageBabyCount)
+    return rows
+      .filter(row => !hiddenPrefs.has(`clothing:${row.slot.id}`))
+      .filter(row => !isSlotHiddenForBabies(row.slot, babiesInScope))
+      .map(row => applyQtyOverride(row, `${row.slot.id}:${selectedAgeRange}`))
+  }, [babyFilteredItems, selectedAgeRange, coverageBabyCount, hiddenPrefs, qtyOverrides, babiesInScope])
+
+  // Clothing slots hidden from Plan for the current age range — surfaced as
+  // a small "N hidden - show" affordance so they can be tracked again.
+  const hiddenClothingSlots = useMemo(() => {
+    if (!selectedAgeRange) return []
+    return SLOTS
+      .filter(s => hiddenPrefs.has(`clothing:${s.id}`))
+      .filter(s => recommendedQty(s, selectedAgeRange, coverageBabyCount) > 0)
+      .filter(s => !isSlotHiddenForBabies(s, babiesInScope))
+  }, [selectedAgeRange, coverageBabyCount, hiddenPrefs, babiesInScope])
 
   const otherWishItems = useMemo(() => {
     if (!selectedAgeRange) return []
@@ -162,11 +287,21 @@ export default function Plan() {
 
   const catCoverage = useMemo(() => {
     if (isClothing) return []
-    return computeCategorycoverage(
+    const rows = computeCategorycoverage(
       babyFilteredItems.filter(it => it.top_category === selectedCategory),
       selectedCategory,
     )
-  }, [isClothing, babyFilteredItems, selectedCategory])
+    return rows
+      .filter(row => !hiddenPrefs.has(`item:${row.slot.id}`))
+      .map(row => applyQtyOverride(row, `${row.slot.id}:`))
+  }, [isClothing, babyFilteredItems, selectedCategory, hiddenPrefs, qtyOverrides])
+
+  // Non-clothing items hidden from Plan for the current category.
+  const hiddenCatSlots = useMemo(() => {
+    if (isClothing) return []
+    return (ITEMS_BY_CATEGORY[selectedCategory] || [])
+      .filter(s => hiddenPrefs.has(`item:${s.id}`))
+  }, [isClothing, selectedCategory, hiddenPrefs])
 
   const catCoverageSummary = useMemo(() => {
     if (isClothing) return { owned: 0, recommended: 0 }
@@ -382,11 +517,29 @@ export default function Plan() {
                       onClick={() => handleSlotTap(row.slot.id)}
                       gapRow={clothingGapBySlotSize[`${row.slot.id}:${selectedAgeRange}`]}
                       onStarToggle={toggleGapPriority}
+                      onManage={() => setManageTarget({
+                        kind: 'clothing',
+                        slotId: row.slot.id,
+                        sizeLabel: selectedAgeRange,
+                        category: row.slot.category,
+                        label: row.slot.label,
+                        hint: row.slot.hint,
+                        recommended: row.recommended,
+                      })}
                     />
                   ))}
                 </div>
               </section>
             ))}
+
+            {hiddenClothingSlots.length > 0 && (
+              <HiddenSlotsPanel
+                open={showHiddenClothing}
+                onToggleOpen={() => setShowHiddenClothing(o => !o)}
+                slots={hiddenClothingSlots}
+                onTrackAgain={(slotId) => toggleSlotHidden('clothing', slotId, false)}
+              />
+            )}
 
           </>
         )}
@@ -437,11 +590,30 @@ export default function Plan() {
                       onClick={() => navigate(`/add-item?category=${selectedCategory}`)}
                       gapRow={itemGapBySlot[row.slot.id]}
                       onStarToggle={toggleGapPriority}
+                      onManage={() => setManageTarget({
+                        kind: 'item',
+                        slotId: row.slot.id,
+                        sizeLabel: null,
+                        topCategory: selectedCategory,
+                        subCategory: row.slot.sub_category,
+                        label: row.slot.label,
+                        hint: row.slot.hint,
+                        recommended: row.recommended,
+                      })}
                     />
                   ))}
                 </div>
               </section>
             ))}
+
+            {hiddenCatSlots.length > 0 && (
+              <HiddenSlotsPanel
+                open={showHiddenCat}
+                onToggleOpen={() => setShowHiddenCat(o => !o)}
+                slots={hiddenCatSlots}
+                onTrackAgain={(slotId) => toggleSlotHidden('item', slotId, false)}
+              />
+            )}
 
             <button
               type="button"
@@ -461,6 +633,16 @@ export default function Plan() {
 
       <BottomNav />
       {showShareModal && <ShareRegistryModal onClose={() => setShowShareModal(false)} />}
+      {manageTarget && (
+        <SlotManageSheet
+          target={manageTarget}
+          currentQty={qtyOverrides[`${manageTarget.slotId}:${manageTarget.sizeLabel || ''}`] ?? manageTarget.recommended}
+          onClose={() => setManageTarget(null)}
+          onQtyChange={(qty) => changeSlotQty(manageTarget.slotId, manageTarget.sizeLabel, qty)}
+          onStopTracking={() => { toggleSlotHidden(manageTarget.kind, manageTarget.slotId, true); setManageTarget(null) }}
+          onQuickAdd={() => quickAddItem(manageTarget)}
+        />
+      )}
 
     </div>
   )
@@ -724,7 +906,7 @@ function FlatGroupHeader({ title, owned, recommended, onAdd }) {
 }
 
 // ── Slot card ─────────────────────────────────────────────────────────────────
-function SlotCard({ row, onClick, gapRow, onStarToggle }) {
+function SlotCard({ row, onClick, gapRow, onStarToggle, onManage }) {
   const { slot, ownedCount, recommended, status } = row
 
   const countClass =
@@ -760,6 +942,123 @@ function SlotCard({ row, onClick, gapRow, onStarToggle }) {
           <StarIcon filled={gapRow.is_priority} />
         </button>
       )}
+      {onManage && (
+        <button
+          type="button"
+          className={styles.manageBtn}
+          onClick={e => { e.stopPropagation(); onManage() }}
+          aria-label={`Manage ${slot.label}`}
+        >
+          <DotsIcon />
+        </button>
+      )}
+    </div>
+  )
+}
+
+function DotsIcon() {
+  return (
+    <svg viewBox="0 0 16 4" width="14" height="4" aria-hidden="true">
+      <circle cx="2" cy="2" r="1.6" fill="currentColor" />
+      <circle cx="8" cy="2" r="1.6" fill="currentColor" />
+      <circle cx="14" cy="2" r="1.6" fill="currentColor" />
+    </svg>
+  )
+}
+
+// ── Hidden-from-Plan panel ─────────────────────────────────────────────────────
+// Small collapsible list surfacing slots the parent stopped tracking, so
+// there's always a way back — mirrors the Registry's own hide/show pattern.
+function HiddenSlotsPanel({ open, onToggleOpen, slots, onTrackAgain }) {
+  return (
+    <div className={styles.hiddenPanel}>
+      <button
+        type="button"
+        className={styles.hiddenPanelToggle}
+        onClick={onToggleOpen}
+        aria-expanded={open}
+      >
+        <span>{slots.length} hidden from Plan</span>
+        <svg
+          className={`${styles.groupChev} ${!open ? styles.groupChevCollapsed : ''}`}
+          viewBox="0 0 10 6" width="10" height="6" aria-hidden="true"
+        >
+          <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className={styles.hiddenPanelList}>
+          {slots.map(slot => (
+            <div key={slot.id} className={styles.hiddenPanelRow}>
+              <span>{slot.label}</span>
+              <button type="button" className={styles.hiddenPanelTrackBtn} onClick={() => onTrackAgain(slot.id)}>
+                Track again
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Manage slot sheet ──────────────────────────────────────────────────────────
+// Reachable via the "⋯" button on any slot card. Lets a parent quick-add one
+// unit straight to Inventory (no scan, no form), change the recommended
+// count, or stop tracking the slot in Plan altogether.
+function SlotManageSheet({ target, currentQty, onClose, onQtyChange, onStopTracking, onQuickAdd }) {
+  const [qty, setQty] = useState(currentQty)
+  const [adding, setAdding] = useState(false)
+  const [added, setAdded] = useState(false)
+
+  function adjust(delta) {
+    const next = Math.max(1, qty + delta)
+    setQty(next)
+    onQtyChange(next)
+  }
+
+  async function handleQuickAdd() {
+    setAdding(true)
+    await onQuickAdd()
+    setAdding(false)
+    setAdded(true)
+    setTimeout(() => setAdded(false), 1500)
+  }
+
+  function onBackdropClick(e) {
+    if (e.target === e.currentTarget) onClose()
+  }
+
+  return (
+    <div className={styles.sheetOverlay} onClick={onBackdropClick}>
+      <div className={styles.sheet} role="dialog" aria-modal="true">
+        <div className={styles.sheetHead}>
+          <div>
+            <div className={styles.sheetTitle}>{target.label}</div>
+            {target.sizeLabel && <div className={styles.sheetSubtitle}>{target.sizeLabel}</div>}
+          </div>
+          <button type="button" className={styles.sheetX} onClick={onClose} aria-label="Close">×</button>
+        </div>
+
+        <div className={styles.sheetField}>
+          <label className={styles.sheetLabel}>Recommended count</label>
+          <div className={styles.qtyControl}>
+            <button type="button" className={styles.qtyBtn} onClick={() => adjust(-1)} disabled={qty <= 1} aria-label="Decrease">−</button>
+            <span className={styles.qtyValue}>{qty}</span>
+            <button type="button" className={styles.qtyBtn} onClick={() => adjust(1)} aria-label="Increase">+</button>
+          </div>
+          <p className={styles.sheetHint}>This updates the count everywhere — Plan and your Registry share the same target.</p>
+        </div>
+
+        <button type="button" className={styles.sheetQuickAddBtn} onClick={handleQuickAdd} disabled={adding}>
+          {added ? '✓ Added to Inventory' : adding ? 'Adding…' : '+ Quick add 1 to Inventory'}
+        </button>
+        <p className={styles.sheetHint}>Adds one owned item straight to Inventory, tagged &ldquo;Quick added&rdquo; — no scanning or details needed. Edit it any time from Inventory.</p>
+
+        <button type="button" className={styles.sheetStopBtn} onClick={onStopTracking}>
+          Stop tracking in Plan
+        </button>
+      </div>
     </div>
   )
 }

@@ -103,9 +103,17 @@ function buildItemDisplay(item) {
   if (item.condition) metaParts.push(CONDITION_LABEL[item.condition] || item.condition)
   if (item.season) metaParts.push(SEASON_LABEL[item.season] || item.season)
 
+  // Quick-added items (via Plan's "+ Quick add" — no scan, no form) get a
+  // small marker instead of leaving brand/name blank with no explanation.
+  const isQuickAdd = item.source === 'quick_add'
+  if (isQuickAdd) metaParts.push('Quick added')
+
   // Cap at 3 parts so the meta line doesn't ellipsize away the more
-  // identifying earlier fields on narrow screens.
-  return { primary, meta: metaParts.slice(0, 3).join(' · ') }
+  // identifying earlier fields on narrow screens. The quick-add marker is
+  // exempted from the cap — it's short and worth always showing.
+  const capped = metaParts.filter(p => p !== 'Quick added').slice(0, 3)
+  if (isQuickAdd) capped.push('Quick added')
+  return { primary, meta: capped.join(' · '), isQuickAdd }
 }
 
 // Display order for the Owned tab (categories grouping).

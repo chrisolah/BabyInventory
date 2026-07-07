@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { useUpgradeGate } from '../contexts/UpgradeGateContext'
 import { track } from '../lib/analytics'
-import { SLOTS, SLOT_BY_ID, AGE_RANGES, getSlotForItem } from '../lib/wardrobe'
+import { SLOTS, SLOT_BY_ID, AGE_RANGES, getSlotForItem, isSlotHiddenForBabies } from '../lib/wardrobe'
 import {
   ITEMS_BY_SUB_CATEGORY,
   SUB_CATEGORIES_BY_CATEGORY,
@@ -184,9 +184,28 @@ export default function AddItem() {
   }, [isClothing, subCategory])
 
   // ── Clothing slot options ─────────────────────────────────────────────────
+  // Gender-exclusive slots (dresses, hair accessories) are left out of the
+  // picker when every baby in scope is a boy — this only shapes what's
+  // offered when adding a new item, existing items are never touched.
+  const babiesForGenderFilter = useMemo(
+    () => (currentBaby ? [currentBaby] : babies),
+    [currentBaby, babies],
+  )
   const clothingTypeOptions = useMemo(
-    () => (category ? SLOTS.filter(s => s.category === category) : []),
-    [category],
+    () => (category
+      ? SLOTS.filter(s => s.category === category && !isSlotHiddenForBabies(s, babiesForGenderFilter))
+      : []),
+    [category, babiesForGenderFilter],
+  )
+
+  // Drop a whole category from the picker if every slot in it is gender-hidden
+  // (dresses_and_skirts only contains 'dresses', so it disappears entirely
+  // for boy babies rather than showing an empty Type dropdown).
+  const visibleClothingCategories = useMemo(
+    () => CLOTHING_CATEGORIES.filter(c =>
+      SLOTS.some(s => s.category === c.value && !isSlotHiddenForBabies(s, babiesForGenderFilter))
+    ),
+    [babiesForGenderFilter],
   )
 
   // ── Analytics on mount ────────────────────────────────────────────────────
@@ -705,7 +724,7 @@ if (!canSubmit() || saving) return
                   required
                 >
                   <option value="">Pick one…</option>
-                  {CLOTHING_CATEGORIES.map(c => (
+                  {visibleClothingCategories.map(c => (
                     <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
                 </select>

@@ -866,3 +866,155 @@
 .arrivalBannerTitle { font-size: 13px; font-weight: 600; color: #fff; }
 .arrivalBannerSub { font-size: 11px; color: rgba(255,255,255,0.75); }
 .arrivalBannerArrow { font-size: 16px; color: rgba(255,255,255,0.7); flex-shrink: 0; }
+
+/* ── Manage slot button (bottom-right corner, opposite the priority star) ── */
+.manageBtn {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 0;
+  cursor: pointer;
+  color: var(--gray-300);
+  transition: color 0.15s, background 0.15s;
+  z-index: 1;
+}
+.manageBtn:hover { color: var(--gray-600); background: var(--gray-100); }
+
+/* ── Hidden-from-Plan panel ────────────────────────────────── */
+.hiddenPanel {
+  margin: 4px 10px 8px;
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.hiddenPanelToggle {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--gray-500);
+}
+.hiddenPanelList {
+  display: flex;
+  flex-direction: column;
+  border-top: 0.5px solid var(--gray-200);
+}
+.hiddenPanelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--gray-700);
+  border-top: 0.5px solid var(--gray-100);
+}
+.hiddenPanelRow:first-child { border-top: none; }
+.hiddenPanelTrackBtn {
+  all: unset;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--teal);
+  padding: 6px 8px;
+}
+
+/* ── Slot manage sheet ─────────────────────────────────────── */
+.sheetOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+}
+.sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--white);
+  border-radius: 20px 20px 0 0;
+  padding: 18px 18px 28px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sheetHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.sheetTitle { font-family: var(--font-body); font-size: 16px; font-weight: 600; color: var(--gray-900); }
+.sheetSubtitle { font-family: var(--font-body); font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+.sheetX {
+  all: unset;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--gray-400);
+  padding: 4px;
+}
+.sheetField { display: flex; flex-direction: column; gap: 6px; }
+.sheetLabel { font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--gray-600); }
+.sheetHint { font-family: var(--font-body); font-size: 11px; color: var(--gray-400); line-height: 1.4; margin: 0; }
+.qtyControl { display: flex; align-items: center; gap: 12px; }
+.qtyBtn {
+  all: unset;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.5px solid var(--gray-200);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--gray-700);
+}
+.qtyBtn:disabled { opacity: 0.4; cursor: default; }
+.qtyValue { font-family: var(--font-body); font-size: 15px; font-weight: 600; min-width: 20px; text-align: center; }
+.sheetQuickAddBtn {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  text-align: center;
+  background: var(--teal);
+  color: #fff;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sheetQuickAddBtn:disabled { opacity: 0.7; cursor: default; }
+.sheetStopBtn {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  text-align: center;
+  color: #b91c1c;
+  border: 0.5px solid var(--gray-200);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}

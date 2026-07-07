@@ -176,12 +176,21 @@ export default function WishlistPublic() {
     )
   }
 
-  const { share, household, babies, clothing, items } = pageData
+  const { share, household, babies } = pageData
   // Filter out 'clothing' — it was a legacy skip_category before slot/size filtering existed
   const skipCats    = new Set((share.skip_categories || []).filter(c => c !== 'clothing'))
   const skipSizes   = share.skip_sizes || []
   const skipSlots   = share.skip_slots || []
   const showPriority = share.show_priority !== false
+
+  // skip_slots is applied here, client-side, rather than in the RPC — that
+  // keeps the RPC a raw data source both this page AND the household's own
+  // /registry/edit screen can use without one hiding data the other needs.
+  // (WishlistEdit needs to see hidden slots so it can render the un-hide
+  // toggle; this public page is the one place that should actually exclude
+  // them.) Applies to both clothing and non-clothing rows.
+  const clothing = (pageData.clothing || []).filter(r => !skipSlots.includes(r.slot_id))
+  const items    = (pageData.items || []).filter(r => !skipSlots.includes(r.slot_id))
 
   return (
     <div className={styles.page}>

@@ -33,8 +33,10 @@ export const ARRIVAL_TIERS = [
       // Sleep — bassinet for room-sharing (AAP first 6 months recommendation)
       { type: 'item', id: 'bassinet',      category: 'sleep' },
       { type: 'item', id: 'fitted_sheets', category: 'sleep' },
-      // Feeding — burp cloths needed immediately regardless of method
-      { type: 'clothing', id: 'burp_cloths', size: '0-3M', category: 'clothing' },
+      // Feeding — burp cloths needed immediately regardless of method.
+      // Moved from clothing to Feeding (categories.js) on 2026-07-07 — no
+      // longer size-specific, so no `size` field here.
+      { type: 'item', id: 'burp_cloths', category: 'feeding' },
       // Diapering
       { type: 'item', id: 'changing_pad', category: 'diapering' },
       { type: 'item', id: 'wipes',        category: 'diapering' },

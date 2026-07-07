@@ -46,6 +46,7 @@ export const SUB_CATEGORY_LABELS = {
   breastfeeding:      'Breastfeeding',
   bottle_feeding:     'Bottle feeding',
   solids:             'Starting solids',
+  bibs_and_burp:      'Bibs & burp cloths',
   // diapering
   diapers:            'Diapers',
   changing_station:   'Changing station',
@@ -395,6 +396,34 @@ export const ITEMS = [
     priority: 'nice_to_have',
     recommended: 2,
     hint: 'Great for teething too',
+  },
+
+  // Bibs & burp cloths
+  // Moved here from wardrobe.js (clothing) on 2026-07-07 — these aren't really
+  // size-specific, so tracking them per age range just meant re-adding the
+  // same bibs at every size transition. One flat household-level count instead.
+  {
+    id: 'bibs',
+    label: 'Bibs',
+    singular: 'Bib',
+    top_category: 'feeding',
+    sub_category: 'bibs_and_burp',
+    keywords: ['bib'],
+    priority: 'nice_to_have',
+    recommended: 6,
+    hint: 'Drool bibs early on, feeding bibs once solids start',
+    fallback: true,
+  },
+  {
+    id: 'burp_cloths',
+    label: 'Burp cloths',
+    singular: 'Burp cloth',
+    top_category: 'feeding',
+    sub_category: 'bibs_and_burp',
+    keywords: ['burp', 'muslin'],
+    priority: 'nice_to_have',
+    recommended: 6,
+    hint: null,
   },
 
   // ── DIAPERING ─────────────────────────────────────────────────────────────

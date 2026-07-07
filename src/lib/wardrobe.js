@@ -174,6 +174,10 @@ export const SLOTS = [
     hint: null,
     recommended: 2,
     fallback: true,
+    // Traditionally girl-coded. Filtered out of recommendations/AddItem's
+    // picker for boy babies (see genderExclusiveSlots below) — existing
+    // owned items are never touched, this only affects what gets suggested.
+    genderExclusive: 'girl',
   },
 
   // ── Sleepwear ─────────────────────────────────────────────────────────
@@ -360,30 +364,10 @@ export const SLOTS = [
     recommended: 2,
     perAge: { '0-3M': 2, '3-6M': 2, '6-9M': 1, '9-12M': 1, '12-18M': 1, '18-24M': 1 },
   },
-  {
-    id: 'bibs',
-    label: 'Bibs',
-    singular: 'Bib',
-    category: 'accessories',
-    keywords: ['bib'],
-    hint: null,
-    // Two distinct use cases drive the curve: drool/spit-up bibs in the
-    // newborn period (4-6 work), then feeding bibs starting around 4-6
-    // months when solids begin (consensus 7-8 needed for one per meal).
-    // Tapers as feeding gets cleaner past 12 months.
-    recommended: 5,
-    perAge: { '0-3M': 4, '3-6M': 6, '6-9M': 7, '9-12M': 7, '12-18M': 5, '18-24M': 4 },
-  },
-  {
-    id: 'burp_cloths',
-    label: 'Burp cloths',
-    singular: 'Burp cloth',
-    category: 'accessories',
-    keywords: ['burp', 'muslin'],
-    hint: null,
-    recommended: 6,
-    perAge: { '0-3M': 6, '3-6M': 6, '6-9M': 5, '9-12M': 4, '12-18M': 2, '18-24M': 2 },
-  },
+  // Note: bibs and burp cloths moved to categories.js (Feeding > bibs_and_burp)
+  // on 2026-07-07 — they aren't really size-specific, so tracking them as a
+  // clothing slot forced parents to re-add them at every age range for no
+  // real benefit. See lib/categories.js for their new home.
   {
     id: 'hair_accessories',
     label: 'Hair accessories',
@@ -396,6 +380,8 @@ export const SLOTS = [
     // accumulate variety.
     recommended: 1,
     perAge: { '0-3M': 1, '3-6M': 1, '6-9M': 1, '9-12M': 1, '12-18M': 2, '18-24M': 2 },
+    // See note on `dresses` above — filtered out for boy babies.
+    genderExclusive: 'girl',
   },
 
   // ── Swimwear ──────────────────────────────────────────────────────────
@@ -706,4 +692,22 @@ export function formatTransitionEta(daysToNextRange) {
 // Tiny helper so UI code doesn't have to sprinkle ternaries everywhere.
 export function pluralize(n, singular, plural) {
   return n === 1 ? singular : (plural || singular + 's')
+}
+
+// ── Gender-based slot filtering ────────────────────────────────────────────
+// A couple of slots (dresses, hair accessories) are traditionally girl-coded
+// (see `genderExclusive` on those slots above). For boy babies we skip them
+// in recommendations and the AddItem picker — this never touches existing
+// owned items, it only shapes what gets suggested going forward.
+//
+// `babies` is whichever babies are in scope for the current view (a single
+// selected baby, or every baby in the household for the "all babies" view).
+// A slot is hidden only when EVERY baby in scope is unambiguously a boy —
+// if any baby is a girl, gender-neutral, or has no gender set, the slot
+// stays visible (we only ever hide, never assume).
+export function isSlotHiddenForBabies(slot, babies) {
+  if (!slot?.genderExclusive) return false
+  const list = (babies || []).filter(Boolean)
+  if (list.length === 0) return false
+  return list.every(b => b.gender === 'boy')
 }
