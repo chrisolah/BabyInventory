@@ -4733,6 +4733,538 @@ export const GUIDES = [
       },
     ],
   },
+
+  // ── Guide 41 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'baby-proofing-checklist',
+    title: 'The Baby-Proofing Checklist: What to Do and When',
+    subtitle: 'A stage-by-stage, room-by-room guide — so the house is ready before your baby is mobile enough to test it.',
+    description: 'Babyproofing usually gets left until baby is already crawling around finding trouble. This guide breaks it into three stages tied to real developmental milestones, so nothing gets missed and nothing gets done too early.',
+    date: 'July 2026',
+    lastmod: '2026-07-07',
+    readTime: '7 min',
+    tags: ['Safety', 'Checklist', 'Planning'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from CPSC safety guidance, AAP developmental and safety recommendations, and consumer safety research. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Babyproofing isn\'t one task you finish before the baby comes home — it\'s three separate passes, each tied to what your baby can physically do at the time. Proofing for a newborn who can\'t roll over is mostly about the big, permanent stuff. Proofing for a crawler is about floor-level hazards. Proofing for a walker is a different house again. Doing it in stages means you\'re never scrambling to install a stove knob cover the same week your baby figures out how to pull up on the oven door.',
+      },
+      {
+        type: 'note',
+        body: 'You don\'t need to babyproof the entire house at once. Most safety experts recommend starting with one "safe zone" — a room where you know your baby can be set down and explore without supervision being life-or-death — and expanding from there as mobility increases.',
+      },
+      {
+        type: 'h2',
+        heading: 'The three stages',
+        body: 'Tie the work to what your baby can actually do, not to a fixed age. Some babies crawl at 6 months, some at 10 — the stage matters more than the calendar.',
+      },
+      {
+        type: 'table',
+        cols: ['Stage', 'Typical timing', 'Focus'],
+        rows: [
+          ['Stage 1 — Pre-mobile', 'Before birth to ~4 months', 'Big, permanent fixes: anchored furniture, outlet covers, cords, water heater temp, crib placement'],
+          ['Stage 2 — Rolling & sitting', '~4–7 months', 'Floor-level sweep: choking hazards within reach, blind cords, low shelves, corner guards'],
+          ['Stage 3 — Crawling & pulling up', '~7–15 months', 'Cabinet and drawer locks, stair gates, stove and toilet, trash cans, anything a standing baby can now reach'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Stage 1: before baby is mobile',
+        body: 'Do this before the due date if you can — it\'s the stuff that\'s genuinely hard to retrofit once you\'re also sleep-deprived and holding a baby.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Anchor bookcases, dressers, and TVs to the wall — furniture tip-overs are a leading cause of injury for babies and toddlers, and this matters long before a baby can climb.',
+          'Set your water heater to 120°F (49°C) or lower to prevent scald burns.',
+          'Cover unused outlets and secure loose cords, including window blind cords — cordless blinds are the safest option if you\'re replacing window coverings anyway.',
+          'Cushion sharp furniture corners and edges, especially at coffee-table height.',
+          'Install stair gates at the top and bottom of any staircase, even though your newborn won\'t go near the stairs for months — it\'s a much easier install before you\'re also managing a mobile baby.',
+          'Keep the crib and any sleep space clear of cords, blinds, and climbable furniture nearby.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Stage 2: once baby starts rolling and sitting (roughly 4–7 months)',
+        body: 'This is the floor-level sweep. Get down on the floor at your baby\'s eye level — it\'s the single best way to spot what you\'ve missed.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Clear small objects, coins, and anything smaller than a toilet paper tube from floor level — choking hazards are the biggest new risk at this stage.',
+          'Add corner and edge guards to coffee tables, hearths, and low furniture now that baby is close to them unsupervised.',
+          'Secure any remaining cords — phone chargers, lamp cords — out of reach.',
+          'Lower crib mattress height once baby can push up on hands and knees.',
+          'Do a second sweep of anything within arm\'s reach from a seated position, not just a lying-down one.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Stage 3: once baby crawls or pulls up to stand (roughly 7–15 months)',
+        body: 'This is when most of the "babyproofing kit" products actually earn their keep — a crawling, cruising baby can reach cabinets, drawers, and standing-height hazards that were irrelevant a month earlier.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Install cabinet and drawer locks in the kitchen and bathroom — especially anywhere cleaning products, medications, or sharp objects are stored.',
+          'Add stove knob covers and, if possible, a stove guard to prevent reaching hot surfaces or pulling pots down.',
+          'Install a toilet lid lock — both a drowning risk and a magnet for curious hands.',
+          'Confirm stair gates are pressure-mounted only at the bottom of stairs and hardware-mounted at the top (pressure-mounted gates can give way under a standing child\'s weight at the top of a staircase).',
+          'Secure trash cans and diaper pails with a locking lid.',
+          'Move all cleaning supplies, medications, and small button-battery items up and out of reach — button batteries are especially dangerous if swallowed and need immediate emergency care.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🔌',
+            name: 'Outlet Covers & Plug Protectors (Multi-Pack)',
+            note: 'Cheap, fast Stage 1 fix — do every accessible outlet in one pass',
+            url: 'https://www.amazon.com/s?k=baby+outlet+covers+multi+pack&tag=sprigloop-20',
+          },
+          {
+            emoji: '🔒',
+            name: 'Cabinet & Drawer Safety Locks (Multi-Pack)',
+            note: 'Adhesive or magnetic styles — kitchen and bathroom first',
+            url: 'https://www.amazon.com/s?k=baby+cabinet+drawer+safety+locks&tag=sprigloop-20',
+          },
+          {
+            emoji: '🚪',
+            name: 'Hardware-Mounted Baby Gate (for stair tops)',
+            note: 'Pressure-mounted gates are fine at the bottom of stairs — use hardware-mounted at the top',
+            url: 'https://www.amazon.com/s?k=hardware+mounted+baby+gate+stairs&tag=sprigloop-20',
+          },
+          {
+            emoji: '🛡️',
+            name: 'Furniture Corner & Edge Guards',
+            note: 'Coffee tables and hearths are the usual first stops',
+            url: 'https://www.amazon.com/s?k=furniture+corner+edge+guards+baby&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Room-by-room quick hits',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Kitchen: stove knob covers, cabinet locks on anything with chemicals or sharp tools, secure trash can, unplug small appliances when not in use.',
+          'Bathroom: toilet lock, cabinet locks on medications and cleaning supplies, non-slip mat, water heater set to 120°F or lower.',
+          'Living room: anchored furniture and TV, corner guards, cordless or secured window blinds, fireplace/hearth guard if applicable.',
+          'Nursery: crib away from windows and cords, no loose bedding or pillows per AAP safe sleep guidance, outlet covers, secured dresser.',
+        ],
+      },
+      {
+        type: 'note',
+        body: 'You don\'t need every item on every list on day one. Health & Safety items like outlet covers, cabinet locks, and gates are easy to track in Sprigloop\'s Plan tab as your baby approaches each stage, so you can see at a glance what\'s already covered and what still needs doing before the next milestone hits.',
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'Consumer Reports — Babyproofing Checklist & Safety Guide', url: 'https://www.consumerreports.org/babyproofing/babyproofing-checklist-baby-safety-guide-a3304634900/' },
+          { label: 'Babylist — Childproofing Checklist: 21 Tips from an ER Doctor', url: 'https://www.babylist.com/hello-baby/doctor-childproofing-checklist' },
+          { label: 'CPSC — Childproofing Your Home', url: 'https://www.cpsc.gov/safety-education/safety-guides/kids-and-babies/Childproofing-Your-Home' },
+          { label: 'The Bump — Baby Proofing Checklist', url: 'https://www.thebump.com/a/checklist-babyproofing-part-1' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 42 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'baby-sleep-regressions-by-age',
+    title: 'Baby Sleep Regressions, by Age: What\'s Normal and What Helps',
+    subtitle: 'The 4, 8–10, 12, and 18-month regressions explained — why they happen, how long they last, and what actually helps.',
+    description: 'Your baby was sleeping fine, and then suddenly wasn\'t. Here\'s what\'s happening at each major regression age, how long it typically lasts, and what helps without creating habits you\'ll have to undo later.',
+    date: 'July 2026',
+    lastmod: '2026-07-07',
+    readTime: '7 min',
+    tags: ['Sleep', 'Newborn', 'Planning'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from pediatric sleep research, AAP safe sleep guidance, and infant sleep specialists. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'A sleep regression is a stretch — usually two to six weeks — where a baby who was sleeping reasonably well suddenly starts fighting naps, waking more overnight, or refusing bedtime. They cluster around predictable ages because they line up with real developmental leaps: new sleep-cycle wiring, separation anxiety, new physical skills your baby wants to practice at 2am, or a language explosion. Knowing which one you\'re in changes what actually helps.',
+      },
+      {
+        type: 'note',
+        body: 'Regressions are temporary. If disrupted sleep has lasted more than about six weeks with no improvement, or if something feels off beyond typical fussiness, it\'s worth ruling out illness, teething pain, or reflux rather than assuming it\'s "just a phase."',
+      },
+      {
+        type: 'table',
+        cols: ['Age', 'What\'s developing', 'Typical duration'],
+        rows: [
+          ['~4 months', 'Permanent shift to adult-style sleep cycles (light/deep stages)', '2–6 weeks to adjust — doesn\'t fully "end," baby adapts to the new pattern'],
+          ['~8–10 months', 'Separation anxiety, crawling, pulling to stand', '2–4 weeks'],
+          ['~12 months', 'Walking, sometimes the 2-nap-to-1-nap transition overlapping', '2–6 weeks'],
+          ['~18 months', 'Language explosion, molars, growing independence and limit-testing', '2–6 weeks'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The 4-month regression: the one that sticks',
+        body: 'This one is different from the others. Around 4 months, a baby\'s sleep architecture permanently reorganizes into the same light-and-deep-cycle pattern adults have — which means more brief wakings between cycles. It\'s not really a "regression" that resolves back to how things were; it\'s a new normal your baby (and you) adjusts to. This is also the point where many families start intentional sleep habits, since the newborn "sleeps anywhere" phase is ending.',
+      },
+      {
+        type: 'h2',
+        heading: '8–10 month regression',
+        body: 'Separation anxiety peaks here, right alongside crawling and pulling to stand. Babies this age will often wake and cry specifically for a parent, and may practice their new physical skills — standing up in the crib — at 2am simply because they can. This one tends to resolve once the physical skill becomes second nature and doesn\'t need practicing at night anymore.',
+      },
+      {
+        type: 'h2',
+        heading: '12-month regression',
+        body: 'Walking is the headline event, but this age also overlaps with when some babies are ready to drop from two naps to one — and a nap transition can look exactly like a regression if you\'re not expecting it. If short nights are paired with fighting the morning nap specifically, it may be a nap-transition issue rather than a true regression.',
+      },
+      {
+        type: 'h2',
+        heading: '18-month regression',
+        body: 'Language is exploding, molars are often coming in at the same time (teething and sleep disruption overlap a lot at this age — see our teething guide for what\'s actually tooth pain vs. something else), and toddlers this age are testing limits everywhere, including at bedtime. Expect more resistance to the bedtime routine itself, not just more night waking.',
+      },
+      {
+        type: 'h2',
+        heading: 'What generally helps, across all of them',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Keep the routine consistent even when sleep is rough — predictability is more stabilizing during a regression, not less useful.',
+          'Watch wake windows for age — an overtired baby fights sleep harder, which makes a regression feel worse than it is.',
+          'Offer extra comfort without guilt — more cuddles or a longer settling routine during a regression won\'t "spoil" a baby, and reverting once the regression passes is normal.',
+          'Keep the sleep environment consistent: dark room, white noise, and the same safe-sleep setup you\'d use any other night.',
+          'Resist the urge to introduce a brand-new sleep prop or tool specifically to fix a regression — anything you add during a rough patch may become something you have to remove later.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🌙',
+            name: 'White Noise Machine for Nursery',
+            note: 'Consistent sound helps mask household noise during lighter sleep cycles',
+            url: 'https://www.amazon.com/s?k=white+noise+machine+baby+nursery&tag=sprigloop-20',
+          },
+          {
+            emoji: '🌑',
+            name: 'Blackout Curtains for Nursery',
+            note: 'Helps naps hold up against daylight, especially useful around the nap-transition ages',
+            url: 'https://www.amazon.com/s?k=blackout+curtains+nursery&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'Sleep Foundation — 4-Month Sleep Regression', url: 'https://www.sleepfoundation.org/baby-sleep/4-month-sleep-regression' },
+          { label: 'Cleveland Clinic — Infant Sleep Regression: What Parents Need to Know', url: 'https://health.clevelandclinic.org/the-4-month-sleep-regression-what-parents-need-to-know' },
+          { label: 'Pampers — Understanding Sleep Regression in Your Baby', url: 'https://www.pampers.com/en-us/baby/sleep/article/sleep-regression' },
+          { label: 'Huckleberry — Baby Sleep Regression Ages: Causes, Charts, Months', url: 'https://huckleberrycare.com/blog/navigate-sleep-regressions-and-pattern-shifts-like-a-pro' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 43 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'baby-teething-symptoms-and-remedies',
+    title: 'Baby Teething: Symptoms, Timeline, and Safe Remedies',
+    subtitle: 'What\'s actually teething, what isn\'t, the order teeth come in, and what pediatricians and the FDA say is safe to use.',
+    description: 'A practical guide to teething symptoms and the eruption timeline, plus safe vs. unsafe remedies — including the specific products the FDA and AAP warn parents away from.',
+    date: 'July 2026',
+    lastmod: '2026-07-07',
+    readTime: '6 min',
+    tags: ['Health', 'Newborn', 'How To'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from FDA safety alerts, AAP guidance, and pediatric dental sources. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Teething gets blamed for almost everything in the second half of a baby\'s first year — fevers, diarrhea, sleepless weeks. Some of that is real; a lot of it isn\'t. Here\'s what teething actually looks like, when to expect it, and which remedies are genuinely safe versus the ones the FDA has specifically warned against.',
+      },
+      {
+        type: 'h2',
+        heading: 'When teeth actually come in',
+        body: 'The first tooth usually appears between 4 and 12 months, most commonly around 6 months. The order is fairly consistent even though the timing varies a lot between babies.',
+      },
+      {
+        type: 'table',
+        cols: ['Teeth', 'Typical age'],
+        rows: [
+          ['Lower central incisors (bottom front two)', '6–12 months'],
+          ['Upper central incisors (top front two)', '6–12 months'],
+          ['Lateral incisors (next to the front teeth)', '9–16 months'],
+          ['First molars', '13–19 months'],
+          ['Canines', '16–23 months'],
+          ['Second molars', '23–33 months'],
+        ],
+      },
+      {
+        type: 'note',
+        body: 'By age 3, most kids have all 20 primary teeth. Plenty of babies don\'t follow this order exactly — a late or early first tooth by a few months is normal and not something to worry about on its own.',
+      },
+      {
+        type: 'h2',
+        heading: 'Symptoms that are actually teething',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Increased drooling, sometimes enough to cause a mild rash around the mouth and chin.',
+          'Chewing and gnawing on hands, toys, or anything within reach.',
+          'Swollen, tender, or slightly bulging gums where a tooth is coming through.',
+          'Mild irritability or fussiness, usually worse in the days right before a tooth breaks through.',
+          'Rubbing at the ear or cheek on the same side as the erupting tooth — the pain can radiate.',
+          'A slight rise in temperature, but not a true fever.',
+        ],
+      },
+      {
+        type: 'note',
+        body: 'Despite how common the belief is, research doesn\'t support teething as a cause of high fever, diarrhea, vomiting, or congestion. If your baby has any of those alongside "teething" symptoms, treat it as a separate illness and check with your pediatrician — see our guide on newborn fever for the exact thresholds that matter by age.',
+      },
+      {
+        type: 'h2',
+        heading: 'Safe remedies',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'A chilled — not frozen — clean washcloth for baby to chew on.',
+          'Firm rubber teething rings (avoid freezing them; frozen rings are hard enough to hurt sensitive gums).',
+          'Gentle gum massage with a clean finger.',
+          'Extra nursing, bottle, or cuddle time for comfort — meeting the higher need for reassurance during a rough stretch is fine.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'What to avoid',
+        body: 'The FDA and AAP have specific, evidence-based warnings here — these aren\'t just "some parents prefer to skip it" recommendations.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Benzocaine gels and liquids (Orajel and similar products) — the FDA has warned these can cause methemoglobinemia, a rare but serious and potentially life-threatening drop in the blood\'s oxygen-carrying capacity, in infants and young children.',
+          'Amber teething necklaces and any teething jewelry — the AAP does not recommend infants wear any jewelry, the FDA has documented choking and strangulation deaths from broken beads, and there\'s no scientific evidence they reduce pain.',
+          'Homeopathic teething tablets containing belladonna — these have been subject to FDA safety warnings and recalls after reports of serious adverse events in infants.',
+          'Frozen (not just chilled) teethers — too hard on sensitive gums and can cause more harm than relief.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🦷',
+            name: 'Silicone Teething Rings (Multi-Pack)',
+            note: 'Firm, food-grade silicone — safe to chill, don\'t freeze',
+            url: 'https://www.amazon.com/s?k=silicone+baby+teething+rings&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'WebMD — Teething in Babies: Symptoms and Remedies', url: 'https://www.webmd.com/parenting/baby/teething-symptoms-remedies' },
+          { label: 'Texas Children\'s — Teething Tips: Symptoms, Relief & Remedies', url: 'https://www.texaschildrens.org/content/wellness/teething-tips-new-information-parents' },
+          { label: 'FDA — Safely Soothing Teething Pain in Infants and Children', url: 'https://www.fda.gov/consumers/consumer-updates/safely-soothing-teething-pain-infants-and-children' },
+          { label: 'HealthyChildren.org (AAP) — Teething Necklaces and Beads: A Caution for Parents', url: 'https://www.healthychildren.org/English/ages-stages/baby/teething-tooth-care/Pages/Amber-Teething-Necklaces.aspx' },
+          { label: 'AAP News — FDA: Teething Necklaces Can Lead to Choking, Strangulation', url: 'https://publications.aap.org/aapnews/news/9241/FDA-Teething-necklaces-can-lead-to-choking' },
+          { label: 'MouthHealthy (ADA) — Baby Teeth Eruption Charts', url: 'https://www.mouthhealthy.org/all-topics-a-z/eruption-charts' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 44 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'newborn-fever-when-to-worry',
+    title: 'Newborn Fever: When It\'s an Emergency and When to Wait',
+    subtitle: 'The age-based thresholds pediatricians actually use — and the warning signs that matter more than the number on the thermometer.',
+    description: 'A fever in a newborn means something different than a fever in a one-year-old. This guide breaks down the exact age-based thresholds for when to go to the ER, call the doctor, or just keep watching.',
+    date: 'July 2026',
+    lastmod: '2026-07-07',
+    readTime: '6 min',
+    tags: ['Health', 'Newborn', 'Safety'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from pediatric hospital guidance and emergency medicine sources. Sources are linked throughout. This is not medical advice — always follow your own pediatrician\'s guidance.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'A 101° fever means something completely different in a 2-week-old than it does in a 2-year-old. Young infants have immature immune systems and can\'t reliably show the usual signs of serious illness, so pediatricians use much stricter, age-based rules for the first few months of life. Knowing the actual thresholds — rather than guessing — takes a lot of the panic out of the moment the thermometer beeps.',
+      },
+      {
+        type: 'note',
+        body: 'A fever is defined as a rectal temperature of 100.4°F (38°C) or higher. For babies under 3 months, rectal is the only reliably accurate method — forehead and ear thermometers run less accurate in young infants, right when accuracy matters most.',
+      },
+      {
+        type: 'table',
+        cols: ['Age', 'Threshold', 'What to do'],
+        rows: [
+          ['Under 2 months', 'Rectal temp ≥ 100.4°F', 'Go to the emergency department immediately — a fever this young is treated as a medical emergency until proven otherwise.'],
+          ['2–3 months', 'Temp ≥ 100.4°F (any method)', 'Call your pediatrician immediately — same day, don\'t wait.'],
+          ['3 months and up', 'Fever of 101°F or under, baby otherwise acting well', 'Usually okay to wait and be evaluated the next day if you\'re comfortable — call sooner if anything else feels off.'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Why age changes everything',
+        body: 'In the first two to three months, a baby\'s immune system hasn\'t matured enough to reliably fight off infection or show clear signs of how sick they actually are. A newborn with a serious bacterial infection can look only mildly unwell. Because of that, pediatric guidelines treat any fever in this window as something that needs to be evaluated right away, rather than watched at home — even if the baby seems otherwise fine.',
+      },
+      {
+        type: 'h2',
+        heading: 'Warning signs that matter more than the number',
+        body: 'At any age, these symptoms warrant a call regardless of the exact temperature reading.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Inconsolable crying that doesn\'t respond to normal comfort.',
+          'Very difficult to wake, or unusually limp and lethargic.',
+          'A fever accompanied by a rash.',
+          'Severe vomiting or diarrhea.',
+          'Signs of difficulty breathing.',
+          'Refusing to feed, or noticeably fewer wet diapers than usual.',
+          'Any symptom that feels different from your baby\'s normal sick behavior — parents\' instincts are a legitimate part of this decision, not something to second-guess away.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'While you\'re waiting to be seen',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Dress your baby lightly — don\'t bundle up a feverish baby, which can trap heat in.',
+          'Offer fluids regularly — breast milk or formula for babies under 6 months, per your pediatrician\'s guidance.',
+          'Only give acetaminophen if your pediatrician has specifically approved it and told you the weight-based dose — don\'t estimate. Ibuprofen is not recommended for babies under 6 months.',
+          'Recheck the temperature with a rectal thermometer if you used a different method the first time — it\'s the most reliable for young infants.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🌡️',
+            name: 'Digital Rectal Thermometer for Infants',
+            note: 'Most accurate method for babies under 3 months — worth having before you need it',
+            url: 'https://www.amazon.com/s?k=digital+rectal+thermometer+infant&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'Children\'s Hospital of Philadelphia — Fever in a Newborn', url: 'https://www.chop.edu/conditions-diseases/fever-newborn' },
+          { label: 'Mayo Clinic — Sick Baby? When to Seek Medical Attention', url: 'https://www.mayoclinic.org/healthy-lifestyle/infant-and-toddler-health/in-depth/healthy-baby/art-20047793' },
+          { label: 'MedlinePlus — When Your Baby or Infant Has a Fever', url: 'https://medlineplus.gov/ency/patientinstructions/000319.htm' },
+          { label: 'Kid Care Pediatrics — Newborn Fever: When to Worry', url: 'https://kidcarepediatrics.com/newborn-fever/' },
+          { label: 'WebMD — Fever in Babies: Causes, Symptoms, and Treatments', url: 'https://www.webmd.com/parenting/baby/fever-in-babies' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 45 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'formula-feeding-how-much-how-often',
+    title: 'How Much Formula Should My Baby Drink? A Month-by-Month Guide',
+    subtitle: 'Real ounces, real frequency, by age — plus how to tell if your baby is eating enough.',
+    description: 'Formula feeding charts vary wildly from source to source. This one uses CDC and AAP figures to give you actual ounces and feeding frequency by month, plus the signs your baby is getting enough.',
+    date: 'July 2026',
+    lastmod: '2026-07-07',
+    readTime: '6 min',
+    tags: ['Feeding', 'Newborn', 'Checklist'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from CDC infant nutrition guidance and AAP feeding recommendations. Sources are linked throughout. Always follow your pediatrician\'s specific guidance for your baby.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Every formula can and box has slightly different numbers, and it\'s easy to end up second-guessing whether your baby is eating too little or too much. Here\'s a straightforward, age-based breakdown of typical ounces per feeding and feedings per day, drawn from CDC and AAP guidance — plus a simple weight-based rule of thumb that works at any age.',
+      },
+      {
+        type: 'table',
+        cols: ['Age', 'Ounces per feeding', 'Feedings per day'],
+        rows: [
+          ['First few days', '1–2 oz', '8–12'],
+          ['2 weeks – 1 month', '2–4 oz', '8–12'],
+          ['1–2 months', '4 oz', '7–8'],
+          ['2–4 months', '4–5 oz', '6–7'],
+          ['4–6 months', '5–6 oz', '5–6'],
+          ['6+ months', '6–8 oz', '4–5 (as solids increase, formula volume typically decreases)'],
+        ],
+      },
+      {
+        type: 'note',
+        body: 'A simple rule of thumb: about 2.5 oz of formula per pound of body weight per day, generally capping around 32 oz/day for most babies. This is a starting point, not a strict target — follow your baby\'s hunger and fullness cues over the number on the chart.',
+      },
+      {
+        type: 'h2',
+        heading: 'Signs your baby is getting enough',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Steady weight gain at pediatrician checkups — this is the metric that matters most, more than any single day\'s intake.',
+          'At least 6 wet diapers a day after the first week.',
+          'Baby seems satisfied and relaxed after most feeds, not immediately rooting again.',
+          'Regular, appropriate stools for age.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'When to check in with your pediatrician',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Slow or stalled weight gain between checkups.',
+          'Frequent forceful spit-up or vomiting, not just normal newborn spit-up.',
+          'Consistently seems hungry again right after finishing a full feeding.',
+          'Fewer than 6 wet diapers a day past the first week.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Mixing and prep basics',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Follow the water-to-powder ratio on the package exactly — don\'t dilute to stretch formula further or concentrate it to add calories without a pediatrician\'s specific direction.',
+          'Use the water source your pediatrician recommends for your area.',
+          'Prepared bottles can be refrigerated for up to 24 hours; once a bottle has been started, use or discard it within 1–2 hours rather than saving it for later.',
+          'Warm bottles by running them under warm water or using a bottle warmer — never microwave, which heats unevenly and can create hot spots.',
+        ],
+      },
+      {
+        type: 'p',
+        body: 'If you\'re still working out which bottles and gear you actually need, our guide on bottle feeding a newborn covers the full checklist — and how to introduce a bottle walks through paced feeding technique if you\'re combining breast and bottle.',
+      },
+      {
+        type: 'products',
+        items: [
+          {
+            emoji: '🍼',
+            name: 'Wide-Neck Baby Bottles (6-Pack)',
+            note: 'Slow-flow nipples for newborns, easy to size up as baby grows',
+            url: 'https://www.amazon.com/s?k=wide+neck+baby+bottles+6+pack+newborn&tag=sprigloop-20',
+          },
+          {
+            emoji: '🥄',
+            name: 'Formula Dispenser / Mixing Pitcher',
+            note: 'Pre-measures water-to-powder ratio for consistent bottles, useful overnight',
+            url: 'https://www.amazon.com/s?k=baby+formula+mixing+pitcher+dispenser&tag=sprigloop-20',
+          },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'CDC — How Much and How Often to Feed Infant Formula', url: 'https://www.cdc.gov/infant-toddler-nutrition/formula-feeding/how-much-and-how-often.html' },
+          { label: 'HealthyChildren.org (AAP) — Amount and Schedule of Baby Formula Feedings', url: 'https://www.healthychildren.org/English/ages-stages/baby/formula-feeding/Pages/amount-and-schedule-of-formula-feedings.aspx' },
+          { label: 'Nemours KidsHealth — Formula Feeding FAQs: How Much and How Often', url: 'https://kidshealth.org/en/parents/formulafeed-often.html' },
+          { label: 'March of Dimes — Feeding Your Baby Formula', url: 'https://www.marchofdimes.org/find-support/topics/parenthood/feeding-your-baby-formula' },
+        ],
+      },
+    ],
+  },
 ]
 
 export function getGuide(slug) {
