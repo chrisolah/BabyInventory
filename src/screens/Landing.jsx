@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { track } from '../lib/analytics'
 import { useAuth } from '../hooks/useAuth'
+import { GUIDES } from '../lib/guides'
 import IvyBanner from '../components/IvyBanner'
 import styles from './Landing.module.css'
 
@@ -16,6 +17,15 @@ import styles from './Landing.module.css'
 //
 // Removed from previous version: features 3-up, scan spotlight, opt-in,
 // mission band. Content is tighter; wishlist angle is now prominent.
+
+// Guides strip (section 5, below) shows whichever 5 guides were most
+// recently updated, instead of a hardcoded list — so it never goes stale
+// again the way the original hardcoded picks did (2026-07-07). GUIDES is a
+// static import, so this only needs to be computed once at module load.
+const FEATURED_GUIDES = [...GUIDES]
+  .filter(g => g.lastmod)
+  .sort((a, b) => new Date(b.lastmod) - new Date(a.lastmod))
+  .slice(0, 5)
 
 export default function Landing() {
   const navigate = useNavigate()
@@ -277,21 +287,15 @@ export default function Landing() {
           <div className={styles.eyebrow}>Free guides</div>
           <h2 className={styles.guidesStripTitle}>New parent guides from Sprigloop</h2>
           <div className={styles.guidesStripGrid}>
-            <button className={styles.guidesPill} onClick={() => navigate('/guides/how-much-does-a-newborn-need')}>
-              How Much Does a Newborn Actually Need?
-            </button>
-            <button className={styles.guidesPill} onClick={() => navigate('/guides/when-does-baby-outgrow-each-size')}>
-              When Does Baby Outgrow Each Size?
-            </button>
-            <button className={styles.guidesPill} onClick={() => navigate('/guides/baby-registry-what-you-actually-need')}>
-              Baby Registry: What You Actually Need
-            </button>
-            <button className={styles.guidesPill} onClick={() => navigate('/guides/newborn-safe-sleep-setup')}>
-              Newborn Safe Sleep Setup
-            </button>
-            <button className={styles.guidesPill} onClick={() => navigate('/guides/baby-gear-splurge-vs-save')}>
-              Baby Gear: Splurge vs. Save
-            </button>
+            {FEATURED_GUIDES.map(guide => (
+              <button
+                key={guide.slug}
+                className={styles.guidesPill}
+                onClick={() => navigate(`/guides/${guide.slug}`)}
+              >
+                {guide.title}
+              </button>
+            ))}
             <button className={styles.guidesPillMore} onClick={() => navigate('/guides')}>
               All guides &rarr;
             </button>
@@ -305,7 +309,7 @@ export default function Landing() {
           <h2 className={styles.finalTitle}>Start before baby arrives.</h2>
           <p className={styles.finalSub}>Use it through every size. Pass it on when you&rsquo;re done.</p>
           <button className={styles.finalBtn} onClick={handleFinalCta} disabled={starting}>
-            {starting ? 'Starting…' : 'Try Sprigloop — it’s free'}
+            {starting ? 'Starting…' : 'Try Sprigloop free'}
           </button>
           <div className={styles.finalNote}>No account needed to start</div>
         </div>
