@@ -286,24 +286,38 @@ export default function WishlistPublic() {
       <div className={styles.catRow}>
         <div className={styles.catRowInner}>
           {WISHLIST_CATS.map(cat => {
-            // compute badge count
+            // compute badge count — same computeStillNeeded used to filter
+            // the actual cards below, so the badge and the visible list can
+            // never drift apart again the way they did before this fix.
             let count = 0
             if (cat.id === 'priority') {
-              count = [...(clothing||[]), ...(items||[])].filter(r => r.is_priority).length
+              count = [
+                ...(clothing||[]).map(r => ({ r, slotType: 'clothing' })),
+                ...(items||[]).map(r => ({ r, slotType: 'item' })),
+              ].filter(({ r, slotType }) => {
+                if (!r.is_priority) return false
+                const { isCovered } = computeStillNeeded({
+                  slotType, slotId: r.slot_id, sizeLabel: slotType === 'clothing' ? r.size_label : null,
+                  ownedCount: r.owned_count, claimsMap, qtyOverridesMap,
+                })
+                return !isCovered
+              }).length
             } else if (cat.id === 'clothing') {
               count = (clothing||[]).filter(r => {
-                const slot = CLOTHING_SLOT[r.slot_id]
-                const rec = recommendedQty(slot, r.size_label)
-                const k = claimKey('clothing', r.slot_id, r.size_label)
-                return Math.max(0, rec - (r.owned_count||0) - (claimsMap[k]?.total||0)) > 0
+                const { isCovered } = computeStillNeeded({
+                  slotType: 'clothing', slotId: r.slot_id, sizeLabel: r.size_label,
+                  ownedCount: r.owned_count, claimsMap, qtyOverridesMap,
+                })
+                return !isCovered
               }).length
             } else {
               count = (items||[]).filter(r => {
                 if (r.top_category !== cat.id) return false
-                const slot = ITEM_SLOT[r.slot_id]
-                const rec = slot?.recommended ?? 1
-                const k = claimKey('item', r.slot_id, null)
-                return Math.max(0, rec - (r.owned_count||0) - (claimsMap[k]?.total||0)) > 0
+                const { isCovered } = computeStillNeeded({
+                  slotType: 'item', slotId: r.slot_id, sizeLabel: null,
+                  ownedCount: r.owned_count, claimsMap, qtyOverridesMap,
+                })
+                return !isCovered
               }).length
             }
             const active = selectedCat === cat.id
@@ -361,7 +375,13 @@ export default function WishlistPublic() {
           const rows = [
             ...(clothing||[]).filter(r => r.is_priority).map(r => ({...r, _type:'clothing', topCategory:'clothing'})),
             ...(items||[]).filter(r => r.is_priority).map(r => ({...r, _type:'item'})),
-          ]
+          ].filter(r => {
+            const { isCovered } = computeStillNeeded({
+              slotType: r._type, slotId: r.slot_id, sizeLabel: r._type === 'clothing' ? r.size_label : null,
+              ownedCount: r.owned_count, claimsMap, qtyOverridesMap,
+            })
+            return !isCovered
+          })
           return rows.length === 0
             ? <div className={styles.emptyState}><div className={styles.emptyEmoji}>☆</div><p className={styles.emptyText}>No priority items yet.</p></div>
             : <div className={styles.cardGrid}>{rows.map(r => <SlotCard key={`${r._type}-${r.id}`} slotType={r._type} topCategory={r.topCategory || r.top_category} slotId={r.slot_id} sizeLabel={r.size_label||null} ownedCount={r.owned_count||0} claimsMap={claimsMap} qtyOverridesMap={qtyOverridesMap} isPriority onClaim={setClaimTarget} />)}</div>
@@ -369,7 +389,15 @@ export default function WishlistPublic() {
 
         {/* ── Clothing ── */}
         {selectedCat === 'clothing' && (() => {
-          const filtered = (clothing||[]).filter(r => !selectedSize || r.size_label === selectedSize)
+          const filtered = (clothing||[])
+            .filter(r => !selectedSize || r.size_label === selectedSize)
+            .filter(r => {
+              const { isCovered } = computeStillNeeded({
+                slotType: 'clothing', slotId: r.slot_id, sizeLabel: r.size_label,
+                ownedCount: r.owned_count, claimsMap, qtyOverridesMap,
+              })
+              return !isCovered
+            })
           const bySize = {}
           for (const r of filtered) {
             const s = r.size_label || 'No size'
@@ -390,7 +418,13 @@ export default function WishlistPublic() {
 
         {/* ── Non-clothing categories ── */}
         {selectedCat !== 'priority' && selectedCat !== 'clothing' && (() => {
-          const rows = (items||[]).filter(r => r.top_category === selectedCat)
+          const rows = (items||[]).filter(r => r.top_category === selectedCat).filter(r => {
+            const { isCovered } = computeStillNeeded({
+              slotType: 'item', slotId: r.slot_id, sizeLabel: null,
+              ownedCount: r.owned_count, claimsMap, qtyOverridesMap,
+            })
+            return !isCovered
+          })
           if (rows.length === 0) return <div className={styles.emptyState}><div className={styles.emptyEmoji}>🌱</div><p className={styles.emptyText}>No gaps in this category.</p></div>
           return <div className={styles.cardGrid}>{rows.map(r => <SlotCard key={r.id} slotType="item" topCategory={r.top_category} slotId={r.slot_id} sizeLabel={null} ownedCount={r.owned_count||0} claimsMap={claimsMap} qtyOverridesMap={qtyOverridesMap} isPriority={r.is_priority} onClaim={setClaimTarget} />)}</div>
         })()}
@@ -675,20 +709,36 @@ const PUB_CAT_COLOR = {
   health: 'red', bath: 'green',
 }
 
+// Single source of truth for "is this gap still needed" — feeds the SlotCard
+// display, the category badge counts, and the tab-level row filtering. These
+// three used to be computed independently and drifted apart: the badge count
+// correctly excluded fully-covered items, but the actual card list below it
+// didn't, so a covered slot still rendered a "Covered" card even though its
+// own category badge said 0 remaining. Fixed 2026-07-07 by computing this
+// once, here, and having everything else call it.
+function computeStillNeeded({ slotType, slotId, sizeLabel, ownedCount, claimsMap, qtyOverridesMap }) {
+  const isClothing = slotType === 'clothing'
+  const isConsumable = !isClothing && CONSUMABLE_SLOT_IDS.has(slotId)
+  if (isConsumable) return { stillNeeded: 1, isCovered: false, claimData: null }
+  const slot = isClothing ? CLOTHING_SLOT[slotId] : ITEM_SLOT[slotId]
+  const recommended = isClothing ? recommendedQty(slot, sizeLabel) : (slot?.recommended ?? 1)
+  const overrideKey = `${slotId}:${sizeLabel || ''}`
+  const desiredQty = qtyOverridesMap?.[overrideKey] ?? recommended
+  const claimData = claimsMap[claimKey(slotType, slotId, sizeLabel)] || { total: 0, claimers: [] }
+  const stillNeeded = Math.max(0, desiredQty - (ownedCount || 0) - claimData.total)
+  return { stillNeeded, isCovered: stillNeeded === 0, claimData }
+}
+
 function SlotCard({ slotType, topCategory, slotId, sizeLabel, ownedCount, claimsMap, qtyOverridesMap, isPriority, onClaim }) {
   const isClothing   = slotType === 'clothing'
   const isConsumable = !isClothing && CONSUMABLE_SLOT_IDS.has(slotId)
   const slot         = isClothing ? CLOTHING_SLOT[slotId] : ITEM_SLOT[slotId]
   const label        = slot?.label || slotId.replace(/_/g, ' ')
-  const recommended  = isClothing
-    ? recommendedQty(slot, sizeLabel)
-    : (slot?.recommended ?? 1)
-  const overrideKey  = `${slotId}:${sizeLabel || ''}`
-  const desiredQty   = qtyOverridesMap?.[overrideKey] ?? recommended
 
-  const claimData   = claimsMap[claimKey(slotType, slotId, sizeLabel)] || { total: 0, claimers: [] }
-  const stillNeeded = isConsumable ? 1 : Math.max(0, desiredQty - ownedCount - claimData.total)
-  const isCovered   = !isConsumable && stillNeeded === 0
+  const { stillNeeded, isCovered, claimData: computedClaimData } = computeStillNeeded({
+    slotType, slotId, sizeLabel, ownedCount, claimsMap, qtyOverridesMap,
+  })
+  const claimData = computedClaimData || claimsMap[claimKey(slotType, slotId, sizeLabel)] || { total: 0, claimers: [] }
 
   function handleClaim() {
     onClaim({
