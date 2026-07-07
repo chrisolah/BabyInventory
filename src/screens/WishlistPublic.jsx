@@ -189,7 +189,12 @@ export default function WishlistPublic() {
   // (WishlistEdit needs to see hidden slots so it can render the un-hide
   // toggle; this public page is the one place that should actually exclude
   // them.) Applies to both clothing and non-clothing rows.
-  const clothing = (pageData.clothing || []).filter(r => !skipSlots.includes(r.slot_id))
+  //
+  // Clothing entries are keyed "slotId:sizeLabel" (hiding socks for 0-3M
+  // shouldn't hide socks for 9-12M) since clothing gaps are inherently
+  // per-size; non-clothing entries have no size axis, so they stay keyed by
+  // plain slotId. (Fixed 2026-07-07 — hiding used to be slot-only for both.)
+  const clothing = (pageData.clothing || []).filter(r => !skipSlots.includes(`${r.slot_id}:${r.size_label}`))
   const items    = (pageData.items || []).filter(r => !skipSlots.includes(r.slot_id))
 
   return (
@@ -243,7 +248,13 @@ export default function WishlistPublic() {
             {skipSlots.length > 0 && (
               <div className={skipCats.size > 0 ? styles.skipLine : ''}>
                 <strong>Not included by choice:</strong>{' '}
-                {skipSlots.map(id => (CLOTHING_SLOT[id] || ITEM_SLOT[id])?.label || id.replace(/_/g, ' ')).join(', ')} — the parents have chosen not to include {skipSlots.length === 1 ? 'this' : 'these'} in their registry.
+                {skipSlots.map(raw => {
+                  // Clothing hides are stored as "slotId:sizeLabel"; non-clothing
+                  // stays a plain slotId with no colon.
+                  const [id, size] = raw.split(':')
+                  const label = (CLOTHING_SLOT[id] || ITEM_SLOT[id])?.label || id.replace(/_/g, ' ')
+                  return size ? `${label} (${size})` : label
+                }).join(', ')} — the parents have chosen not to include {skipSlots.length === 1 ? 'this' : 'these'} in their registry.
               </div>
             )}
             {skipSizes.length > 0 && (

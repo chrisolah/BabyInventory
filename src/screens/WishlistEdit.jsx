@@ -126,10 +126,16 @@ export default function WishlistEdit() {
     setWorking(prev => { const s = new Set(prev); s.delete(id); return s })
   }, [reloadGaps])
 
-  const toggleVisibility = useCallback(async (slotId) => {
+  // Clothing hides are scoped per size ("slotId:sizeLabel") so hiding socks
+  // for 0-3M doesn't also hide socks for 9-12M. Non-clothing items have no
+  // size axis, so sizeLabel is null there and the key stays a plain slotId.
+  // (Fixed 2026-07-07 — every hide used to be slot-only, so hiding one size
+  // silently hid that item everywhere.)
+  const toggleVisibility = useCallback(async (slotId, sizeLabel) => {
+    const key = sizeLabel ? `${slotId}:${sizeLabel}` : slotId
     setSkipSlots(prev => {
       const next = new Set(prev)
-      if (next.has(slotId)) next.delete(slotId); else next.add(slotId)
+      if (next.has(key)) next.delete(key); else next.add(key)
       saveSkips(next)
       return next
     })
@@ -166,7 +172,7 @@ export default function WishlistEdit() {
   // Count gaps per category for badge
   const catCounts = {
     priority: priorityCount,
-    clothing: clothing.filter(r => !skipSlots.has(r.slot_id)).length,
+    clothing: clothing.filter(r => !skipSlots.has(`${r.slot_id}:${r.size_label}`)).length,
     sleep: items.filter(r => r.top_category === 'sleep' && !skipSlots.has(r.slot_id)).length,
     feeding: items.filter(r => r.top_category === 'feeding' && !skipSlots.has(r.slot_id)).length,
     diapering: items.filter(r => r.top_category === 'diapering' && !skipSlots.has(r.slot_id)).length,
@@ -374,7 +380,9 @@ function GapCard({ row, skipSlots, working, onPriority, onToggleVisibility, qtyO
   const overrideKey = `${row.slot_id}:${row.size_label || ''}`
   const desiredQty  = qtyOverrides?.[overrideKey] ?? recommended
   const stillNeeded = Math.max(0, desiredQty - (row.owned_count || 0))
-  const hidden      = skipSlots.has(row.slot_id)
+  // Clothing hide state is scoped per size; non-clothing has no size axis.
+  const skipKey     = isClothing ? `${row.slot_id}:${row.size_label}` : row.slot_id
+  const hidden      = skipSlots.has(skipKey)
   const color       = isClothing ? 'purple' : (CAT_COLOR[row.top_category] || 'gray')
 
   function adjustQty(delta) {
@@ -424,7 +432,7 @@ function GapCard({ row, skipSlots, working, onPriority, onToggleVisibility, qtyO
           )}
           <button
             className={`${styles.hideBtn} ${hidden ? styles.hideBtnActive : ''}`}
-            onClick={() => onToggleVisibility(row.slot_id)}
+            onClick={() => onToggleVisibility(row.slot_id, isClothing ? row.size_label : null)}
             disabled={working}
             aria-label={hidden ? 'Show to family & friends' : 'Hide from family & friends'}
           >{hidden ? '👁' : '×'}</button>
