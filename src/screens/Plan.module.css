@@ -681,7 +681,11 @@
   gap: 5px;
   border: 0.5px solid var(--gray-200);
   border-radius: 12px;
-  padding: 11px 12px;
+  /* Extra right padding reserves a fixed column for the star/edit buttons
+     that sit absolutely-positioned over this card (see .starBtn/.manageBtn
+     below) — without it, longer hint text ran underneath the pencil icon
+     instead of ellipsizing cleanly before it. */
+  padding: 11px 28px 11px 12px;
   background: var(--white);
   cursor: pointer;
   text-align: left;
