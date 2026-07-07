@@ -17,6 +17,7 @@ import { useParams } from 'react-router-dom'
 import { supabase, currentSchema } from '../lib/supabase'
 import { SLOTS, AGE_RANGES, recommendedQty, isSlotHiddenForBabies } from '../lib/wardrobe'
 import { ITEMS, CATEGORY_META, CONSUMABLE_SLOT_IDS } from '../lib/categories'
+import { computeStillNeeded, claimKey } from '../lib/registryCoverage'
 import { getWishlistProduct } from '../lib/wishlistProducts'
 import styles from './WishlistPublic.module.css'
 
@@ -46,10 +47,6 @@ const WISHLIST_CATS = [
 // Build slot label lookup maps once
 const CLOTHING_SLOT = Object.fromEntries(SLOTS.map(s => [s.id, s]))
 const ITEM_SLOT     = Object.fromEntries(ITEMS.map(i => [i.id, i]))
-
-function claimKey(slotType, slotId, sizeLabel) {
-  return `${slotType}:${slotId}:${sizeLabel || ''}`
-}
 
 export default function WishlistPublic() {
   const { token } = useParams()
@@ -709,25 +706,9 @@ const PUB_CAT_COLOR = {
   health: 'red', bath: 'green',
 }
 
-// Single source of truth for "is this gap still needed" — feeds the SlotCard
-// display, the category badge counts, and the tab-level row filtering. These
-// three used to be computed independently and drifted apart: the badge count
-// correctly excluded fully-covered items, but the actual card list below it
-// didn't, so a covered slot still rendered a "Covered" card even though its
-// own category badge said 0 remaining. Fixed 2026-07-07 by computing this
-// once, here, and having everything else call it.
-function computeStillNeeded({ slotType, slotId, sizeLabel, ownedCount, claimsMap, qtyOverridesMap }) {
-  const isClothing = slotType === 'clothing'
-  const isConsumable = !isClothing && CONSUMABLE_SLOT_IDS.has(slotId)
-  if (isConsumable) return { stillNeeded: 1, isCovered: false, claimData: null }
-  const slot = isClothing ? CLOTHING_SLOT[slotId] : ITEM_SLOT[slotId]
-  const recommended = isClothing ? recommendedQty(slot, sizeLabel) : (slot?.recommended ?? 1)
-  const overrideKey = `${slotId}:${sizeLabel || ''}`
-  const desiredQty = qtyOverridesMap?.[overrideKey] ?? recommended
-  const claimData = claimsMap[claimKey(slotType, slotId, sizeLabel)] || { total: 0, claimers: [] }
-  const stillNeeded = Math.max(0, desiredQty - (ownedCount || 0) - claimData.total)
-  return { stillNeeded, isCovered: stillNeeded === 0, claimData }
-}
+// computeStillNeeded/claimKey now live in src/lib/registryCoverage.js —
+// shared with WishlistEdit so the two registry surfaces can't compute
+// coverage differently and drift apart (2026-07-07).
 
 function SlotCard({ slotType, topCategory, slotId, sizeLabel, ownedCount, claimsMap, qtyOverridesMap, isPriority, onClaim }) {
   const isClothing   = slotType === 'clothing'

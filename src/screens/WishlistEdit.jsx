@@ -4,6 +4,7 @@ import { supabase, currentSchema } from '../lib/supabase'
 import { useHousehold } from '../contexts/HouseholdContext'
 import { SLOTS, AGE_RANGES, recommendedQty, isSlotHiddenForBabies } from '../lib/wardrobe'
 import { ITEMS as ITEM_DEFS, CATEGORY_META, CONSUMABLE_SLOT_IDS } from '../lib/categories'
+import { computeStillNeeded, claimKey } from '../lib/registryCoverage'
 import IvySprig from '../components/IvySprig'
 import BottomNav from '../components/BottomNav'
 import styles from './WishlistEdit.module.css'
@@ -174,21 +175,57 @@ export default function WishlistEdit() {
   const items    = pageData?.items    || []
   const household_data = pageData?.household
 
-  const priorityClothing = clothing.filter(r => r.is_priority)
-  const priorityItems    = items.filter(r => r.is_priority)
+  // Claims count toward "covered" here too — a gift-giver claiming an item
+  // should register as covered in the household's own edit view, not just
+  // what the household has bought or added themselves.
+  const claimsMap = (() => {
+    const map = {}
+    for (const c of pageData?.claims || []) {
+      const k = claimKey(c.slot_type, c.slot_id, c.size_label)
+      if (!map[k]) map[k] = { total: 0, claimers: [] }
+      map[k].total += c.quantity
+      map[k].claimers.push({ name: c.claimer_name, qty: c.quantity })
+    }
+    return map
+  })()
+
+  // A gap counts as "active" (shows in badges, stays a real priority) only
+  // if it's neither explicitly hidden nor fully covered (owned + claimed
+  // already meets the target). Fully-covered gaps still render in the main
+  // Clothing/Sleep/etc lists below — GapCard shows them with the same
+  // inactive treatment as an explicit hide, just without writing anything
+  // to skip_slots, so they come back on their own if the count changes
+  // later. This mirrors the public registry page, which excludes covered
+  // items outright. (2026-07-07)
+  function isActiveGap(r, slotType) {
+    const skipKey = slotType === 'clothing' ? `${r.slot_id}:${r.size_label}` : r.slot_id
+    if (skipSlots.has(skipKey)) return false
+    const { isCovered } = computeStillNeeded({
+      slotType, slotId: r.slot_id, sizeLabel: slotType === 'clothing' ? r.size_label : null,
+      ownedCount: r.owned_count, claimsMap, qtyOverridesMap: qtyOverrides,
+    })
+    return !isCovered
+  }
+
+  // The Priority tab specifically drops covered items — a covered item
+  // isn't a priority anymore. The main category tabs don't filter rows this
+  // way; they keep every row visible and let GapCard show the inactive state.
+  const priorityClothing = clothing.filter(r => r.is_priority && isActiveGap(r, 'clothing'))
+  const priorityItems    = items.filter(r => r.is_priority && isActiveGap(r, 'item'))
   const priorityCount    = priorityClothing.length + priorityItems.length
 
-  // Count gaps per category for badge
+  // Count gaps per category for badge — matches isActiveGap so the badge
+  // can't drift from what GapCard actually shows as active below it.
   const catCounts = {
     priority: priorityCount,
-    clothing: clothing.filter(r => !skipSlots.has(`${r.slot_id}:${r.size_label}`)).length,
-    sleep: items.filter(r => r.top_category === 'sleep' && !skipSlots.has(r.slot_id)).length,
-    feeding: items.filter(r => r.top_category === 'feeding' && !skipSlots.has(r.slot_id)).length,
-    diapering: items.filter(r => r.top_category === 'diapering' && !skipSlots.has(r.slot_id)).length,
-    travel: items.filter(r => r.top_category === 'travel' && !skipSlots.has(r.slot_id)).length,
-    play: items.filter(r => r.top_category === 'play' && !skipSlots.has(r.slot_id)).length,
-    health: items.filter(r => r.top_category === 'health' && !skipSlots.has(r.slot_id)).length,
-    bath: items.filter(r => r.top_category === 'bath' && !skipSlots.has(r.slot_id)).length,
+    clothing: clothing.filter(r => isActiveGap(r, 'clothing')).length,
+    sleep: items.filter(r => r.top_category === 'sleep' && isActiveGap(r, 'item')).length,
+    feeding: items.filter(r => r.top_category === 'feeding' && isActiveGap(r, 'item')).length,
+    diapering: items.filter(r => r.top_category === 'diapering' && isActiveGap(r, 'item')).length,
+    travel: items.filter(r => r.top_category === 'travel' && isActiveGap(r, 'item')).length,
+    play: items.filter(r => r.top_category === 'play' && isActiveGap(r, 'item')).length,
+    health: items.filter(r => r.top_category === 'health' && isActiveGap(r, 'item')).length,
+    bath: items.filter(r => r.top_category === 'bath' && isActiveGap(r, 'item')).length,
   }
 
   const householdName = household_data?.name || household?.name || 'Your'
@@ -296,7 +333,7 @@ export default function WishlistEdit() {
         {selectedCat === 'priority' && (
           <CategoryView
             rows={[...priorityClothing.map(r=>({...r,_type:'clothing'})), ...priorityItems.map(r=>({...r,_type:'item'}))]}
-            skipSlots={skipSlots} working={working}
+            skipSlots={skipSlots} working={working} claimsMap={claimsMap}
             onPriority={togglePriority} onToggleVisibility={toggleVisibility}
             qtyOverrides={qtyOverrides} onQtyChange={upsertQty}
             emptyText="Star items to mark them as most needed for family and friends."
@@ -304,7 +341,7 @@ export default function WishlistEdit() {
         )}
         {selectedCat === 'clothing' && (
           <ClothingCategoryView
-            rows={clothing} skipSlots={skipSlots} working={working}
+            rows={clothing} skipSlots={skipSlots} working={working} claimsMap={claimsMap}
             selectedSize={selectedSize}
             onPriority={togglePriority} onToggleVisibility={toggleVisibility}
             qtyOverrides={qtyOverrides} onQtyChange={upsertQty}
@@ -313,7 +350,7 @@ export default function WishlistEdit() {
         {NON_CLOTHING_ORDER.includes(selectedCat) && (
           <CategoryView
             rows={items.filter(r => r.top_category === selectedCat).map(r=>({...r,_type:'item'}))}
-            skipSlots={skipSlots} working={working}
+            skipSlots={skipSlots} working={working} claimsMap={claimsMap}
             onPriority={togglePriority} onToggleVisibility={toggleVisibility}
             qtyOverrides={qtyOverrides} onQtyChange={upsertQty}
             emptyText={`No ${selectedCat} gaps yet.`}
@@ -327,7 +364,7 @@ export default function WishlistEdit() {
 }
 
 // Clothing grouped by size
-function ClothingCategoryView({ rows, skipSlots, working, selectedSize, onPriority, onToggleVisibility, qtyOverrides, onQtyChange }) {
+function ClothingCategoryView({ rows, skipSlots, working, claimsMap, selectedSize, onPriority, onToggleVisibility, qtyOverrides, onQtyChange }) {
   const filteredRows = selectedSize ? rows.filter(r => r.size_label === selectedSize) : rows
   const bySize = {}
   for (const r of filteredRows) {
@@ -347,7 +384,7 @@ function ClothingCategoryView({ rows, skipSlots, working, selectedSize, onPriori
           <div className={styles.cardGrid}>
             {bySize[size].map(row => (
               <GapCard key={row.id} row={{...row,_type:'clothing'}}
-                skipSlots={skipSlots} working={working.has(row.id)}
+                skipSlots={skipSlots} working={working.has(row.id)} claimsMap={claimsMap}
                 onPriority={onPriority} onToggleVisibility={onToggleVisibility}
                 qtyOverrides={qtyOverrides} onQtyChange={onQtyChange}
               />
@@ -359,13 +396,13 @@ function ClothingCategoryView({ rows, skipSlots, working, selectedSize, onPriori
   )
 }
 
-function CategoryView({ rows, skipSlots, working, onPriority, onToggleVisibility, qtyOverrides, onQtyChange, emptyText }) {
+function CategoryView({ rows, skipSlots, working, claimsMap, onPriority, onToggleVisibility, qtyOverrides, onQtyChange, emptyText }) {
   if (rows.length === 0) return <div className={styles.empty}>{emptyText}</div>
   return (
     <div className={styles.cardGrid}>
       {rows.map(row => (
         <GapCard key={`${row._type}-${row.id}`} row={row}
-          skipSlots={skipSlots} working={working.has(row.id)}
+          skipSlots={skipSlots} working={working.has(row.id)} claimsMap={claimsMap}
           onPriority={onPriority} onToggleVisibility={onToggleVisibility}
           qtyOverrides={qtyOverrides} onQtyChange={onQtyChange}
         />
@@ -380,18 +417,28 @@ const CAT_COLOR = {
   health: 'red', bath: 'green',
 }
 
-function GapCard({ row, skipSlots, working, onPriority, onToggleVisibility, qtyOverrides, onQtyChange }) {
+function GapCard({ row, skipSlots, working, claimsMap, onPriority, onToggleVisibility, qtyOverrides, onQtyChange }) {
   const isClothing  = row._type === 'clothing'
   const slot        = isClothing ? CLOTHING_SLOT[row.slot_id] : ITEM_SLOT[row.slot_id]
   const label       = slot?.label || row.slot_id
   const isConsumable = !isClothing && CONSUMABLE_SLOT_IDS.has(row.slot_id)
-  const recommended = isClothing ? recommendedQty(slot, row.size_label) : (slot?.recommended ?? 1)
   const overrideKey = `${row.slot_id}:${row.size_label || ''}`
-  const desiredQty  = qtyOverrides?.[overrideKey] ?? recommended
-  const stillNeeded = Math.max(0, desiredQty - (row.owned_count || 0))
+  const desiredQty  = qtyOverrides?.[overrideKey] ?? recommendedQty(slot, row.size_label)
   // Clothing hide state is scoped per size; non-clothing has no size axis.
   const skipKey     = isClothing ? `${row.slot_id}:${row.size_label}` : row.slot_id
   const hidden      = skipSlots.has(skipKey)
+  // Fully-covered gaps (owned + claimed already meets the target) default to
+  // the same inactive treatment as an explicit hide, even though nothing was
+  // added to skip_slots — mirrors the public registry page, which now
+  // excludes covered items outright. Distinguished from a real hide with its
+  // own label/icon so a parent can tell "I hid this" apart from "this filled
+  // up on its own." (2026-07-07)
+  const { stillNeeded, isCovered } = computeStillNeeded({
+    slotType: row._type, slotId: row.slot_id, sizeLabel: isClothing ? row.size_label : null,
+    ownedCount: row.owned_count, claimsMap: claimsMap || {}, qtyOverridesMap: qtyOverrides,
+  })
+  const showAsCovered = isCovered && !hidden
+  const inactive    = hidden || showAsCovered
   const color       = isClothing ? 'purple' : (CAT_COLOR[row.top_category] || 'gray')
 
   function adjustQty(delta) {
@@ -400,13 +447,14 @@ function GapCard({ row, skipSlots, working, onPriority, onToggleVisibility, qtyO
   }
 
   return (
-    <div className={`${styles.card} ${hidden ? styles.cardHidden : ''} ${working ? styles.cardWorking : ''}`}>
+    <div className={`${styles.card} ${inactive ? styles.cardHidden : ''} ${working ? styles.cardWorking : ''}`}>
       <div className={`${styles.cardBand} ${styles[`band_${color}`]}`} />
       <div className={styles.cardBody}>
         <div className={styles.cardTop}>
           <span className={styles.cardLabel}>{label}</span>
-          {row.is_priority && !hidden && <span className={styles.cardStar}>★</span>}
+          {row.is_priority && !inactive && <span className={styles.cardStar}>★</span>}
           {hidden && <span className={styles.cardHiddenIcon}>🚫</span>}
+          {showAsCovered && <span className={styles.cardHiddenIcon}>✓</span>}
         </div>
 
         {isClothing && row.size_label && (
@@ -417,7 +465,7 @@ function GapCard({ row, skipSlots, working, onPriority, onToggleVisibility, qtyO
           <div className={styles.cardNeedConsumable}>Keep stocked</div>
         ) : (
           <div className={styles.cardNeedRow}>
-            {!hidden && (
+            {!inactive && (
               <div className={styles.qtyControl}>
                 <button className={styles.qtyBtn} onClick={() => adjustQty(-1)} disabled={working || desiredQty <= 1} aria-label="Decrease">−</button>
                 <span className={styles.qtyValue}>{desiredQty}</span>
@@ -425,13 +473,13 @@ function GapCard({ row, skipSlots, working, onPriority, onToggleVisibility, qtyO
               </div>
             )}
             <div className={styles.cardNeed}>
-              {hidden ? 'Hidden' : `Need ${stillNeeded} more`}
+              {hidden ? 'Hidden' : showAsCovered ? 'Covered' : `Need ${stillNeeded} more`}
             </div>
           </div>
         )}
 
         <div className={styles.cardControls}>
-          {!hidden && (
+          {!inactive && (
             <button
               className={`${styles.starBtn} ${row.is_priority ? styles.starBtnActive : ''}`}
               onClick={() => onPriority(row, row._type)}
