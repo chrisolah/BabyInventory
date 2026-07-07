@@ -53,3 +53,16 @@ export function pinterestPageView() {
   if (typeof window === 'undefined' || !window.pintrk) return
   window.pintrk('page')
 }
+
+// Fired once, exactly when a brand-new account row is created — currently
+// that's only signInAnonymously() in useAuth.jsx, which every "Try Sprigloop
+// free" CTA (Landing, HowItWorks, NativeWelcome) funnels through. This is
+// deliberately NOT fired on ordinary sign-in/session-resume (onAuthStateChange
+// SIGNED_IN also fires for returning users), which would wildly overcount
+// "signups" with logins. eventId should be the new user's id — stable and
+// unique per real signup, which is what Pinterest's dedup wants.
+export function pinterestTrackSignup({ eventId } = {}) {
+  if (!TAG_ID) return
+  if (typeof window === 'undefined' || !window.pintrk) return
+  window.pintrk('track', 'signup', eventId ? { event_id: eventId } : undefined)
+}

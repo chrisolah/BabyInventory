@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { pinterestTrackSignup } from '../lib/analytics-pinterest'
 
 const AuthContext = createContext(null)
 
@@ -105,6 +106,10 @@ export function AuthProvider({ children }) {
     // but doing it here too means the caller can navigate immediately after
     // await without racing the listener.
     if (data?.user) setUser(data.user)
+    // Pinterest "signup" conversion — fires exactly once, here, per real new
+    // trial. Deliberately not fired from onAuthStateChange, which also fires
+    // for returning logins and would overcount.
+    pinterestTrackSignup({ eventId: data?.user?.id })
     return { user: data?.user ?? null, error: null }
   }
 
