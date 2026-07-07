@@ -7,6 +7,7 @@ import { HouseholdProvider } from './contexts/HouseholdContext'
 import { UpgradeGateProvider } from './contexts/UpgradeGateContext'
 import { track } from './lib/analytics'
 import { gaPageView } from './lib/analytics-ga'
+import { pinterestPageView } from './lib/analytics-pinterest'
 import './styles/globals.css'
 
 import Landing from './screens/Landing'
@@ -148,11 +149,13 @@ function TrackPageViews() {
       track.pageViewed({ page, path: pathname })
     }
 
-    // Google Analytics page_view: we DO want landing + how-it-works here
-    // since those are the marketing surfaces GA is measuring. Still skip
-    // /admin so Chris reading his own dashboard doesn't pollute the data.
+    // Google Analytics + Pinterest page_view: we DO want landing +
+    // how-it-works here since those are the marketing surfaces both are
+    // measuring. Still skip /admin so Chris reading his own dashboard
+    // doesn't pollute the data.
     if (!pathname.startsWith('/admin')) {
       gaPageView(pathname)
+      pinterestPageView()
     }
   }, [pathname])
   return null

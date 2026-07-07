@@ -4,11 +4,16 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import { initGA } from './lib/analytics-ga'
+import { initPinterestTag } from './lib/analytics-pinterest'
 
 // Inject gtag.js once at boot. No-ops if VITE_GA_MEASUREMENT_ID is unset, so
 // beta/local builds never load Google Analytics. Page_view events are fired
 // from App.jsx's TrackPageViews so SPA navigations register.
 initGA()
+
+// Same deal for the Pinterest conversion tag — no-ops if
+// VITE_PINTEREST_TAG_ID is unset. Page views also fired from TrackPageViews.
+initPinterestTag()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
