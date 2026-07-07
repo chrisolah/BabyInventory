@@ -446,6 +446,25 @@ function GapCard({ row, skipSlots, working, claimsMap, onPriority, onToggleVisib
     if (next !== desiredQty) onQtyChange(row.slot_id, row.size_label || null, next)
   }
 
+  // A single eyeball/× toggle covers both ways a card can go inactive.
+  // Previously the button only ever looked at `hidden`, so a covered-but-
+  // not-explicitly-hidden card showed "×" (as if it were still active) even
+  // though it displayed as inactive — and un-hiding an explicitly-hidden
+  // card that was ALSO covered just fell back to the covered state, which
+  // still showed "×", making it look like the toggle did nothing. Now the
+  // icon reflects `inactive` (hidden OR covered) either way, and clicking it:
+  //   - removes the explicit hide, if there is one
+  //   - otherwise, if it's only inactive because it's covered, bumps the
+  //     target quantity by one — there's nothing in skip_slots to remove,
+  //     so "show this again" has to mean "I still want one more." (2026-07-07)
+  function handleToggleVisibility() {
+    if (!hidden && showAsCovered) {
+      onQtyChange(row.slot_id, row.size_label || null, desiredQty + 1)
+    } else {
+      onToggleVisibility(row.slot_id, isClothing ? row.size_label : null)
+    }
+  }
+
   return (
     <div className={`${styles.card} ${inactive ? styles.cardHidden : ''} ${working ? styles.cardWorking : ''}`}>
       <div className={`${styles.cardBand} ${styles[`band_${color}`]}`} />
@@ -488,11 +507,11 @@ function GapCard({ row, skipSlots, working, claimsMap, onPriority, onToggleVisib
             >{row.is_priority ? '★ Priority' : '☆ Prioritize'}</button>
           )}
           <button
-            className={`${styles.hideBtn} ${hidden ? styles.hideBtnActive : ''}`}
-            onClick={() => onToggleVisibility(row.slot_id, isClothing ? row.size_label : null)}
+            className={`${styles.hideBtn} ${inactive ? styles.hideBtnActive : ''}`}
+            onClick={handleToggleVisibility}
             disabled={working}
-            aria-label={hidden ? 'Show to family & friends' : 'Hide from family & friends'}
-          >{hidden ? '👁' : '×'}</button>
+            aria-label={inactive ? 'Show as needed' : 'Hide from family & friends'}
+          >{inactive ? '👁' : '×'}</button>
         </div>
       </div>
     </div>
