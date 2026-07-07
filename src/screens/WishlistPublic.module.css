@@ -225,6 +225,19 @@
   margin-top: 4px;
 }
 
+/* ── Gift-giver info card wrap — sits directly under the hero, full-width
+   white background matching it so the top of the page reads as one
+   continuous block instead of white-hero-then-colored-card. The card
+   itself keeps its own green tint; this is just the space around it. ── */
+.infoCardWrap {
+  background: #fff;
+  padding: 12px 16px 16px;
+}
+.infoCardWrapInner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
 /* ── Gift-giver info card ──────────────────────────────────── */
 .infoCard {
   position: relative;
