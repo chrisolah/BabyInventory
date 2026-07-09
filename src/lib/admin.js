@@ -217,6 +217,47 @@ export async function getHouseholdEventStream({ householdId, limit = 150 } = {})
   return data ?? []
 }
 
+// ── Registry activity (recipient-side: /registry/:token) ───────────────────
+// Backed by 20260709000000_admin_registry_analytics.sql. Views + product
+// clicks come from beta.events (registry_page_viewed / registry_product_clicked,
+// added to analytics.js the same day); claims read beta.wishlist_claims
+// directly since that table already records every claim.
+
+export async function getRegistryOverview({ sinceDays = 30, excludeAdmins = true } = {}) {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_registry_overview', { _since_days: sinceDays, _exclude_admins: excludeAdmins })
+  if (error) throw error
+  return data?.[0] ?? null
+}
+
+export async function getRegistryViewsDaily({ sinceDays = 30, excludeAdmins = true } = {}) {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_registry_views_daily', { _since_days: sinceDays, _exclude_admins: excludeAdmins })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getRegistryClaimsDaily({ sinceDays = 30, excludeAdmins = true } = {}) {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_registry_claims_daily', { _since_days: sinceDays, _exclude_admins: excludeAdmins })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getRegistryProductClicks({ sinceDays = 30, excludeAdmins = true } = {}) {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_registry_product_clicks', { _since_days: sinceDays, _exclude_admins: excludeAdmins })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getRegistryLeaderboard({ sinceDays = 30, excludeAdmins = true, limit = 10 } = {}) {
+  const { data, error } = await supabase.schema(currentSchema)
+    .rpc('admin_registry_leaderboard', { _since_days: sinceDays, _exclude_admins: excludeAdmins, _limit: limit })
+  if (error) throw error
+  return data ?? []
+}
+
 // Time-window chips for the toolbar. `days = null` means "no upper bound" —
 // passed to the RPC as a very large number so we get everything.
 export const TIME_WINDOWS = [

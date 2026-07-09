@@ -22,10 +22,16 @@ import {
   getReferrerBreakdown,
   getAuthSplit,
   getHouseholdEventStream,
+  getRegistryOverview,
+  getRegistryViewsDaily,
+  getRegistryClaimsDaily,
+  getRegistryProductClicks,
+  getRegistryLeaderboard,
   FUNNELS,
   TIME_WINDOWS,
 } from '../lib/admin'
 import { GUIDES } from '../lib/guides'
+import { getWishlistProduct } from '../lib/wishlistProducts'
 
 const GUIDE_TITLE = Object.fromEntries(GUIDES.map(g => [g.slug, g.title]))
 import styles from './Admin.module.css'
@@ -119,6 +125,7 @@ export default function Admin() {
             ['users',    'Users'],
             ['product',  'Product'],
             ['guides',   'Guides'],
+            ['registry', 'Registry'],
           ].map(([id, label]) => (
             <button
               key={id}
@@ -147,6 +154,9 @@ export default function Admin() {
           )}
           {tab === 'guides' && (
             <GuidesTab sinceDays={window.days} excludeAdmins={excludeAdmins} />
+          )}
+          {tab === 'registry' && (
+            <RegistryTab sinceDays={window.days} excludeAdmins={excludeAdmins} />
           )}
         </div>
       </main>
@@ -493,6 +503,177 @@ function GuidesTab({ sinceDays, excludeAdmins }) {
           </table>
         </div>
       )}
+
+    </div>
+  )
+}
+
+// ── Registry tab ─────────────────────────────────────────────────────────────
+// Gift-giver-side activity for shared registries: /registry/:token views,
+// claims, and "Sprigloop pick" affiliate clicks. Views + clicks come from
+// beta.events (added 2026-07-09 — WishlistPublic.jsx fired zero events
+// before this); claims read beta.wishlist_claims directly since that table
+// already records every claim with a timestamp.
+function RegistryTab({ sinceDays, excludeAdmins }) {
+  const [overview, setOverview] = useState(null)
+  const [views, setViews] = useState(null)
+  const [claims, setClaims] = useState(null)
+  const [clicks, setClicks] = useState(null)
+  const [leaders, setLeaders] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([
+      getRegistryOverview({ sinceDays, excludeAdmins }),
+      getRegistryViewsDaily({ sinceDays, excludeAdmins }),
+      getRegistryClaimsDaily({ sinceDays, excludeAdmins }),
+      getRegistryProductClicks({ sinceDays, excludeAdmins }),
+      getRegistryLeaderboard({ sinceDays, excludeAdmins, limit: 10 }),
+    ]).then(([ov, v, c, cl, lb]) => {
+      setOverview(ov); setViews(v); setClaims(c); setClicks(cl); setLeaders(lb)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [sinceDays, excludeAdmins])
+
+  if (loading) return <div className={styles.loading}>Loading…</div>
+
+  const maxViews  = Math.max(...(views || []).map(r => Number(r.views)), 1)
+  const maxClaims = Math.max(...(claims || []).map(r => Number(r.claims)), 1)
+  const maxClicks = Math.max(...(clicks || []).map(r => Number(r.clicks)), 1)
+
+  return (
+    <div className={styles.overviewGrid}>
+
+      {/* Summary row — span 2 */}
+      <div className={styles.overviewCard} style={{ gridColumn: 'span 2' }}>
+        <div className={styles.overviewCardTitle}>Registry activity (last {sinceDays <= 30 ? sinceDays : '30+'}d)</div>
+        <div className={styles.northStar} style={{ marginTop: 8 }}>
+          <div className={styles.nsCard}>
+            <div className={styles.nsStat}>{overview?.total_views ?? 0}</div>
+            <div className={styles.nsLabel}>Views</div>
+          </div>
+          <div className={styles.nsDivider} />
+          <div className={styles.nsCard}>
+            <div className={styles.nsStat}>{overview?.unique_visitors ?? 0}</div>
+            <div className={styles.nsLabel}>Unique visitors</div>
+          </div>
+          <div className={styles.nsDivider} />
+          <div className={styles.nsCard}>
+            <div className={styles.nsStat}>{overview?.total_claims ?? 0}</div>
+            <div className={styles.nsLabel}>Claims</div>
+          </div>
+          <div className={styles.nsDivider} />
+          <div className={styles.nsCard}>
+            <div className={styles.nsStat}>{overview?.claim_conversion ?? 0}%</div>
+            <div className={styles.nsLabel}>View → claim</div>
+          </div>
+          <div className={styles.nsDivider} />
+          <div className={styles.nsCard}>
+            <div className={styles.nsStat}>{overview?.picks_clicks ?? 0}</div>
+            <div className={styles.nsLabel}>Pick clicks</div>
+          </div>
+          <div className={styles.nsDivider} />
+          <div className={styles.nsCard}>
+            <div className={styles.nsStat}>{overview?.active_registries ?? 0}<span style={{ fontSize: 14 }}>/{overview?.total_registries ?? 0}</span></div>
+            <div className={styles.nsLabel}>Active registries</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Views over time */}
+      <div className={styles.overviewCard}>
+        <div className={styles.overviewCardTitle}>Views over time</div>
+        {views && views.length > 0 ? (
+          <div className={styles.barList}>
+            {views.map(r => (
+              <div key={r.day} className={styles.bar}>
+                <div className={styles.barLabel}>{formatDay(r.day)}</div>
+                <div className={styles.barTrack}>
+                  <div className={styles.barFill} style={{ width: `${(Number(r.views) / maxViews) * 100}%` }} />
+                </div>
+                <div className={styles.barValue}>{Number(r.views)}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.empty}>No registry views in this window yet.</div>
+        )}
+      </div>
+
+      {/* Claims over time */}
+      <div className={styles.overviewCard}>
+        <div className={styles.overviewCardTitle}>Claims over time</div>
+        {claims && claims.length > 0 ? (
+          <div className={styles.barList}>
+            {claims.map(r => (
+              <div key={r.day} className={styles.bar}>
+                <div className={styles.barLabel}>{formatDay(r.day)}</div>
+                <div className={styles.barTrack}>
+                  <div className={styles.barFill} style={{ width: `${(Number(r.claims) / maxClaims) * 100}%` }} />
+                </div>
+                <div className={styles.barValue}>{Number(r.claims)}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.empty}>No claims in this window yet.</div>
+        )}
+      </div>
+
+      {/* Sprigloop picks — click leaderboard */}
+      <div className={styles.overviewCard} style={{ gridColumn: 'span 2' }}>
+        <div className={styles.overviewCardTitle}>Sprigloop picks — clicks</div>
+        {clicks && clicks.length > 0 ? (
+          <div className={styles.guideLeaderboard}>
+            {clicks.map((c, i) => {
+              const product = getWishlistProduct(c.slot_id)
+              const label = product?.name || c.slot_id.replace(/_/g, ' ')
+              const pct = Math.round((Number(c.clicks) / maxClicks) * 100)
+              return (
+                <div key={c.slot_id} className={styles.guideRow}>
+                  <div className={styles.guideRank}>{i + 1}</div>
+                  <div className={styles.guideInfo}>
+                    <div className={styles.guideTitle}>{label}</div>
+                    <div className={styles.guideBar}>
+                      <div className={styles.guideBarFill} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  <div className={styles.guideStats}>
+                    <span className={styles.guideStat}>{Number(c.clicks)} clicks</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className={styles.empty}>No pick clicks recorded yet.</div>
+        )}
+      </div>
+
+      {/* Top registries */}
+      <div className={styles.overviewCard} style={{ gridColumn: 'span 2' }}>
+        <div className={styles.overviewCardTitle}>Top registries</div>
+        {leaders && leaders.length > 0 ? (
+          <table className={styles.growthTable}>
+            <thead>
+              <tr><th>Household</th><th>Views</th><th>Claims</th><th>Last activity</th></tr>
+            </thead>
+            <tbody>
+              {leaders.map(l => (
+                <tr key={l.household_id}>
+                  <td style={{ fontSize: 12 }}>{l.household_name || '(unnamed household)'}</td>
+                  <td>{Number(l.views)}</td>
+                  <td>{Number(l.claims)}</td>
+                  <td style={{ fontSize: 11, color: '#9ca3af' }}>{l.last_activity ? timeAgo(l.last_activity) : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className={styles.empty}>No registry activity yet.</div>
+        )}
+      </div>
 
     </div>
   )

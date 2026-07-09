@@ -295,6 +295,20 @@ export const track = {
   // is tapped — tells us how often in-app guide surfacing drives reads.
   guidePlanLinkClicked: (props) =>
     logEvent('guide_plan_link_clicked', 'content', props),
+
+  // ── Public registry (gift-giver side) ───────────────────────────────────
+  // WishlistPublic.jsx (/registry/:token) is unauthenticated — no user_id on
+  // these events, just session_id from the visitor's browser tab. RLS allows
+  // anon inserts (events_insert_anyone), so this works with no auth session.
+  // `token` on both events lets admin RPCs join back to wishlist_shares to
+  // attribute activity to a specific household's registry.
+  registryPageViewed: (props) =>
+    logEvent('registry_page_viewed', 'content', props),
+  // Fires when a gift-giver taps a "Sprigloop pick" affiliate link, either
+  // on the item card (before claiming) or in the claim confirmation sheet.
+  // `context` distinguishes the two tap points.
+  registryProductClicked: (props) =>
+    logEvent('registry_product_clicked', 'content', props),
 }
 
 export { getSessionId }

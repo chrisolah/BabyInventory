@@ -19,6 +19,7 @@ import { SLOTS, AGE_RANGES, recommendedQty, isSlotHiddenForBabies } from '../lib
 import { ITEMS, CATEGORY_META, CONSUMABLE_SLOT_IDS } from '../lib/categories'
 import { computeStillNeeded, claimKey } from '../lib/registryCoverage'
 import { getWishlistProduct } from '../lib/wishlistProducts'
+import { track } from '../lib/analytics'
 import styles from './WishlistPublic.module.css'
 
 // ── Category icons + nav (matches RegistryEdit) ───────────────────────────────
@@ -74,6 +75,7 @@ export default function WishlistPublic() {
     if (error || data?.error) { setNotFound(true); return }
     setPageData(data)
     setClaims(data.claims || [])
+    track.registryPageViewed({ token })
   }
 
   // Build quantity-overrides map: "slot_id:size_label" → desired_qty
@@ -443,6 +445,7 @@ export default function WishlistPublic() {
 
       {claimTarget && (
         <ClaimSheet
+          token={token}
           target={claimTarget}
           onSubmit={submitClaim}
           onUnclaim={submitUnclaim}
@@ -782,6 +785,9 @@ function SlotCard({ slotType, topCategory, slotId, sizeLabel, ownedCount, claims
                 className={styles.buyLink}
                 target="_blank"
                 rel="noopener noreferrer sponsored"
+                onClick={() => track.registryProductClicked({
+                  token, slot_id: slotId, product: product.name, context: 'card',
+                })}
               >
                 Sprigloop pick →
               </a>
@@ -796,7 +802,7 @@ function SlotCard({ slotType, topCategory, slotId, sizeLabel, ownedCount, claims
 
 // ── Claim sheet ───────────────────────────────────────────────────────────────
 
-function ClaimSheet({ target, onSubmit, onUnclaim, onClose }) {
+function ClaimSheet({ token, target, onSubmit, onUnclaim, onClose }) {
   const [name, setName] = useState('')
   const [anon, setAnon] = useState(false)
   const [quantity, setQuantity] = useState(1)
@@ -862,6 +868,9 @@ function ClaimSheet({ target, onSubmit, onUnclaim, onClose }) {
                     className={styles.sheetProductLink}
                     target="_blank"
                     rel="noopener noreferrer sponsored"
+                    onClick={() => track.registryProductClicked({
+                      token, slot_id: target.slotId, product: product.name, context: 'claim_sheet',
+                    })}
                   >
                     {product.name} →
                   </a>
