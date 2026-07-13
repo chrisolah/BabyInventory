@@ -189,8 +189,8 @@ export function HouseholdProvider({ children }) {
   // categories. All existing code that reads category/size_label/etc. still
   // works — those fields only exist on clothing rows, which is correct.
   //
-  // Signed photo URLs are resolved for clothing items only (beta.items has no
-  // photo column yet).
+  // Signed photo URLs are resolved for both clothing_items (garment_signed_url)
+  // and beta.items (item_photo_signed_url).
   const [refreshCounter, setRefreshCounter] = useState(0)
 
   useEffect(() => {

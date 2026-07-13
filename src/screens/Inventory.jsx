@@ -1552,6 +1552,7 @@ function OwnedEmptyState({ ageRange, totalOwnedCount, onAdd }) {
 function ItemCard({ item, onClick, onPassOn, onTuckAway, working }) {
   const sizeLabel = item.size_label || ''
   const display = buildItemDisplay(item)
+  const photoUrl = item.garment_signed_url || item.item_photo_signed_url
 
   return (
     <button
@@ -1561,10 +1562,10 @@ function ItemCard({ item, onClick, onPassOn, onTuckAway, working }) {
       aria-label={`Open ${display.primary}`}
     >
       <div className={styles.itemCardPhotoWrap} aria-hidden="true">
-        {item.garment_signed_url ? (
+        {photoUrl ? (
           <>
             <img
-              src={item.garment_signed_url}
+              src={photoUrl}
               alt=""
               className={styles.itemCardPhoto}
               loading="lazy"
@@ -1626,6 +1627,7 @@ function SectionItemCard({ item, onClick, onPassOnChip, onMoveBackChip, working 
   const display = buildItemDisplay(item)
   const sizeLabel = item.size_label || ''
   const isInBag = item.inventory_status === 'pass_along'
+  const photoUrl = item.garment_signed_url || item.item_photo_signed_url
 
   return (
     <button
@@ -1635,10 +1637,10 @@ function SectionItemCard({ item, onClick, onPassOnChip, onMoveBackChip, working 
       aria-label={`Open ${display.primary}`}
     >
       <div className={styles.itemCardPhotoWrap} aria-hidden="true">
-        {item.garment_signed_url ? (
+        {photoUrl ? (
           <>
             <img
-              src={item.garment_signed_url}
+              src={photoUrl}
               alt=""
               className={styles.itemCardPhoto}
               loading="lazy"
