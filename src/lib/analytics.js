@@ -1,5 +1,8 @@
 import { supabase, currentSchema } from './supabase'
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+
 function getSessionId() {
   // Brand-prefixed storage key. Was `ll_session_id` (Littleloop legacy);
   // renamed 2026-05-05 ahead of soft launch. The rename costs existing
@@ -60,6 +63,56 @@ export async function logEvent(eventName, eventGroup, properties = {}, funnel = 
     }
   } catch {
     // Silently swallow all errors — analytics must never break the app
+  }
+}
+
+// Reliable variant for clicks that immediately open an outbound link
+// (target="_blank" affiliate cards). A normal fetch here races the browser
+// opening the new tab / backgrounding the app — on mobile (and the
+// Capacitor iOS app, which hands off target="_blank" to Safari with no
+// Browser plugin keeping the webview foregrounded) the in-flight insert can
+// get cancelled before it lands, silently dropping the event. Found
+// 2026-07-16: admin dash showed 4 tracked clicks against 11 real Amazon
+// Associates clicks over the same 7 days.
+//
+// `keepalive: true` tells the browser to complete the request even if the
+// page is being torn down/backgrounded — the same guarantee sendBeacon
+// gives, but unlike sendBeacon it lets us set the headers PostgREST/RLS
+// requires (apikey, Authorization, Content-Profile), so we hand-build the
+// REST call instead of going through supabase-js (which doesn't expose a
+// per-call keepalive option). Historical undercounted clicks from before
+// this fix aren't recoverable — the events were never inserted, only lost.
+async function logEventKeepAlive(eventName, eventGroup, properties = {}) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+
+    const event = {
+      session_id: getSessionId(),
+      device_type: getDeviceType(),
+      event_name: eventName,
+      event_group: eventGroup,
+      properties,
+      user_id: session?.user?.id ?? null,
+      funnel_id: null,
+      funnel_step: null,
+    }
+
+    await fetch(`${SUPABASE_URL}/rest/v1/events`, {
+      method: 'POST',
+      keepalive: true,
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,
+        'Accept-Profile': currentSchema,
+        'Content-Profile': currentSchema,
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify(event),
+    })
+  } catch {
+    // Silently swallow all errors — analytics must never break the app or
+    // the outbound click it's attached to
   }
 }
 
@@ -289,8 +342,10 @@ export const track = {
     logEvent('guide_read', 'content', props),
   // affiliateLinkClicked fires whenever a product card in a guide is tapped.
   // `guide` is the slug, `product` is the product name, `url` is the dest.
+  // Uses logEventKeepAlive (not logEvent) — this click immediately opens an
+  // outbound link, so the insert needs to survive the tab/app switch.
   affiliateLinkClicked: (props) =>
-    logEvent('affiliate_link_clicked', 'content', props),
+    logEventKeepAlive('affiliate_link_clicked', 'content', props),
   // guidePlanLinkClicked fires when the "Read our guide" link in the Plan tab
   // is tapped — tells us how often in-app guide surfacing drives reads.
   guidePlanLinkClicked: (props) =>
@@ -306,9 +361,10 @@ export const track = {
     logEvent('registry_page_viewed', 'content', props),
   // Fires when a gift-giver taps a "Sprigloop pick" affiliate link, either
   // on the item card (before claiming) or in the claim confirmation sheet.
-  // `context` distinguishes the two tap points.
+  // `context` distinguishes the two tap points. Uses logEventKeepAlive —
+  // see note on affiliateLinkClicked above.
   registryProductClicked: (props) =>
-    logEvent('registry_product_clicked', 'content', props),
+    logEventKeepAlive('registry_product_clicked', 'content', props),
 }
 
 export { getSessionId }
