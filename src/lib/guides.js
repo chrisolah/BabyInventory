@@ -5265,6 +5265,590 @@ export const GUIDES = [
       },
     ],
   },
+
+  // ── Guide 46 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'how-to-track-your-babys-inventory',
+    title: 'How to Keep Track of What Your Baby Actually Has',
+    subtitle: 'The low-effort systems that actually stick, and why "I\'ll just remember" stops working around month three.',
+    description: 'A practical system for tracking baby clothes and gear by size and location, so you stop overbuying duplicates, forgetting what\'s packed away, and scrambling right before a size change.',
+    date: 'July 2026',
+    lastmod: '2026-07-24',
+    readTime: '6 min',
+    tags: ['Planning', 'Checklist'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from parent organization guides and general best practices for tracking children\'s clothing and gear. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'In the first few weeks, you know exactly what\'s in the closet. Then the gifts start arriving, a cousin drops off a bag of hand-me-downs, and three different people buy the same 3-6 month sleeper because nobody knew you already had five. By month two or three, most parents can\'t actually say what they own, what size it is, or where it\'s stored. This is a system for fixing that, not a case for why you should have started sooner.',
+      },
+      {
+        type: 'h2',
+        heading: 'Why it gets away from you so fast',
+        body: 'Babies move through sizes every two to three months, which means your inventory is never static. Add multiple caregivers buying gifts, hand-me-downs arriving in batches, and out-of-season clothes getting boxed up for later, and it stops being something you can hold in your head.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Gifts and hand-me-downs arrive out of order — you might get 12-month clothes before you\'ve used the 6-month ones.',
+          'What\'s "in the closet" and what\'s "in a bin in the garage" quietly become two different inventories nobody\'s tracking together.',
+          'Multiple people (partners, grandparents, friends) buy for the baby without visibility into what\'s already covered.',
+          'By the time a size actually gets used, it\'s easy to forget you have three of one item and none of another.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The three things worth tracking',
+        body: 'You don\'t need to log every detail. Three fields cover almost everything you\'ll actually use this for.',
+      },
+      {
+        type: 'table',
+        cols: ['What', 'Why it matters'],
+        rows: [
+          ['Category', 'Clothing item type (bodysuit, sleeper, pants) or gear (car seat, high chair)'],
+          ['Size', 'Current size and the size it moves to next'],
+          ['Location', 'In rotation, packed away for later, or passed along'],
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Low-effort systems that work',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'A paper checklist taped inside the closet door — low-tech, but it works if you actually update it after every wash-and-put-away session.',
+          'A shared note (Notes app, Google Keep) split by size, so both caregivers can add to it from their phone.',
+          'A simple spreadsheet with columns for category, size, quantity, and location — best if you\'re already the spreadsheet type.',
+        ],
+      },
+      {
+        type: 'note',
+        body: 'The system that fails usually isn\'t the wrong idea, it\'s the one that takes too long to update. Most paper lists and spreadsheets get abandoned within a few weeks, not because tracking wasn\'t useful, but because logging a new item took longer than just eyeballing the drawer.',
+      },
+      {
+        type: 'h2',
+        heading: 'What a dedicated app buys you',
+        body: 'This is the actual argument for using something built for it instead of a generic list. Logging an item by photo or quick entry takes about as long as putting it in the drawer, which is the difference between a system you keep using and one you abandon by week three. Sprigloop\'s inventory and Plan tab work this way — tracking what you have by size and flagging gaps automatically, so you\'re not the one cross-referencing a spreadsheet against a size chart.',
+      },
+      {
+        type: 'p',
+        body: 'If you\'ve already got a backlog of hand-me-downs to sort through before you start tracking anything, our guide on organizing baby clothes by size covers the initial sort. Our guide on when babies outgrow each size gives you a sense of how much runway you have before the next size change actually hits.',
+      },
+      {
+        type: 'products',
+        items: [
+          { emoji: '🗂️', name: 'Baby Closet Size Dividers', note: 'Label by size (NB, 0-3M, 3-6M...) so everyone reaching for an outfit reaches for the right one', url: 'https://www.amazon.com/s?k=baby+closet+size+dividers&tag=sprigloop-20' },
+          { emoji: '📦', name: 'Clear Stackable Storage Bins with Labels', note: 'For sizes not in rotation yet — clear bins mean you can see what\'s inside without digging', url: 'https://www.amazon.com/s?k=clear+stackable+storage+bins+with+labels&tag=sprigloop-20' },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'Pehr — How To Organize Baby Clothes: 15 Best Methods & Tips', url: 'https://pehr.com/blogs/seed/how-to-organize-baby-clothes' },
+          { label: 'Extra Space Storage — How to Organize Baby Clothes', url: 'https://www.extraspace.com/blog/home-organization/how-to-organize-baby-clothes/' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 47 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'where-to-donate-baby-clothes',
+    title: 'Where to Donate Baby Clothes (When You Don\'t Know Anyone Who Needs Them)',
+    subtitle: 'Real options beyond the donation bin, including a few most parents don\'t know exist.',
+    description: 'A guide to where outgrown baby clothes and gear can actually go when there\'s no specific family in mind, from diaper banks to clothing recyclers to local giving networks.',
+    date: 'July 2026',
+    lastmod: '2026-07-24',
+    readTime: '5 min',
+    tags: ['Pass Along', 'Sustainability', 'Decluttering'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from nonprofit donation networks and retailer recycling programs. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Most parents intend to pass along what their baby outgrows. But if there\'s no cousin with a younger baby and no neighbor who\'s expecting, "I\'ll donate it" can stall out fast, especially since traditional donation channels like Goodwill and the Salvation Army often won\'t take baby gear (car seats, cribs, and similar items) for liability reasons, even though they\'ll usually take clothing. Here\'s where things actually go when there\'s no specific person in mind.',
+      },
+      {
+        type: 'h2',
+        heading: 'Clothing-specific options',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'General thrift stores (Goodwill, Salvation Army) still accept gently used baby clothing, even when they turn away gear.',
+          'Local Buy Nothing groups, organized by neighborhood or zip code, let you give items directly to a nearby family for free, no shipping or grading required.',
+          'Retailer take-back programs like H&M\'s in-store garment collecting box accept any brand, in any condition, including baby clothes, and route them to resale, reuse, or textile recycling.',
+          'If you\'re already using Sprigloop, the pass-along flow routes an outgrown item onward to another Sprigloop family or a local partner without you needing to track down a recipient yourself.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'For gear that clothing charities won\'t take',
+        body: 'Car seats, cribs, and other structural gear come with real liability concerns for a typical thrift store\'s intake process. A few alternatives exist specifically for this category.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'GoodBuy Gear, a resale marketplace built specifically for baby and kid gear, accepts trade-ins for many major brands (Bugaboo, UPPAbaby, Nuna, and Maxi-Cosi among them) either by mail or at buybuy BABY locations, and pays out via gift card.',
+          'Manufacturer buyback programs are becoming more common. Evrloop, for example, issues a cash rebate of up to 20% of the original price when you ship back its bouncers and high chairs, then recycles or composts the returned materials rather than reselling the item as-is.',
+          'Always check a car seat\'s expiration date before passing it along — most expire 6 to 10 years from manufacture, and an expired seat shouldn\'t be resold or donated by any reputable program.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Diapers and unopened supplies',
+        body: 'If you\'re clearing out unopened diapers in a size your baby has outgrown, diaper banks are worth checking before you donate them alongside clothing. The National Diaper Bank Network has more than 200 member diaper banks across the US that accept both opened and unopened packages.',
+      },
+      {
+        type: 'note',
+        body: 'A quick gut check before donating anything: if an item has been recalled, it shouldn\'t be passed along, sold, or donated, only disposed of per the recall notice. Our guide on checking for baby gear recalls covers how to look that up in under a minute.',
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'National Diaper Bank Network — Where to Donate Diapers', url: 'https://nationaldiaperbanknetwork.org/where-to-donate-diapers/' },
+          { label: 'H&M — Garment Collecting', url: 'https://www2.hm.com/en_us/sustainability-hm/services/garment-collecting.html' },
+          { label: 'The Buy Nothing Project — All About the Buy Nothing Project', url: 'https://buynothingproject.org/all-about-the-buy-nothing-project' },
+          { label: 'The Bump — It\'s Easier Than Ever to Trade in Your Outgrown Baby Gear', url: 'https://www.thebump.com/news/good-buy-gear-buy-buy-baby-trade-in' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 48 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'sustainable-circular-baby-gear-brands',
+    title: 'Sustainable and Circular Baby Gear Brands Worth Knowing',
+    subtitle: 'A look at the brands and marketplaces actually built around reuse and buyback, not just "eco" marketing.',
+    description: 'A guide to baby gear brands and resale marketplaces built around circularity, buyback, and reducing landfill waste, and how they differ from standard sustainability claims.',
+    date: 'July 2026',
+    lastmod: '2026-07-24',
+    readTime: '6 min',
+    tags: ['Gear', 'Sustainability'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from brand sustainability pages, press coverage, and resale industry reporting. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: '"Sustainable" gets used loosely in baby gear marketing. Sometimes it means recycled packaging; sometimes it means an actual buyback program that keeps a product out of a landfill for good. Baby gear is a particularly wasteful category — most of it is used for well under a year, built to survive years of abuse, and then either sits in a garage or gets thrown out because donation and resale channels don\'t always know what to do with it. A handful of brands and marketplaces are building around that problem directly.',
+      },
+      {
+        type: 'h2',
+        heading: 'Manufacturer buyback: Evrloop',
+        body: 'Evrloop, a newer entrant in the high chair and bouncer category, builds products from recycled and regenerative materials and backs them with a lifetime buyback promise: return the product via a prepaid shipping label when you\'re done with it, and Evrloop issues a cash rebate of up to 20% of the original price, then recycles or composts the returned materials into new products. It\'s a different model than resale — the goal isn\'t to get the exact same item to a second family, it\'s to make sure the raw materials get another life even after the product itself is done.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Products are made from 100% regenerative and recycled materials, engineered to meet ASTM and CPSC safety standards.',
+          'The buyback process: scan a QR code on the product, ship it back with a prepaid label, and receive a rebate once it\'s received.',
+          'Positioned explicitly around reducing a baby\'s carbon footprint, aiming to keep gear out of landfills entirely rather than just extending its life by one owner.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Resale marketplaces: GoodBuy Gear',
+        body: 'A different approach to the same problem is extending a product\'s life across multiple families instead of manufacturing it to be recycled. GoodBuy Gear is a managed resale marketplace built specifically for baby and kid gear, accepting trade-ins for major brands including Bugaboo, UPPAbaby, Nuna, and Maxi-Cosi, either by mail or in person at buybuy BABY locations, and paying out in cash or gift card credit.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Items are inspected and cleaned before resale rather than just relisted as-is, which matters for gear with real safety requirements like car seats and cribs.',
+          'The company has reported recirculating the large majority of trade-in items back to new families rather than landfills.',
+          'Because it partners directly with brands, it\'s a practical option even for gear that clothing-focused donation charities won\'t take.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'The difference that actually matters',
+        body: 'The useful distinction when evaluating a brand\'s sustainability claims isn\'t "recycled materials" versus not, it\'s whether there\'s an actual end-of-life plan. A buyback promise or a resale partnership means someone has thought through what happens to the product after your family is done with it, rather than leaving that entirely up to you.',
+      },
+      {
+        type: 'note',
+        body: 'If you\'re deciding what to do with gear you already own, our guide on where to donate baby clothes covers clothing-specific options, and our guide on checking for baby gear recalls is worth running before you resell or pass along anything, since a recalled item shouldn\'t be resold or donated at all.',
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'Evrloop — Sustainability', url: 'https://www.evrloop.com/pages/sustainability' },
+          { label: 'Evrloop — How It Works (Buyback)', url: 'https://www.evrloop.com/pages/how-it-works' },
+          { label: 'The Bump — It\'s Easier Than Ever to Trade in Your Outgrown Baby Gear', url: 'https://www.thebump.com/news/good-buy-gear-buy-buy-baby-trade-in' },
+          { label: 'GoodBuy Gear — Certified Resale Collective', url: 'https://goodbuygear.com/pages/certified-resale-collective' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 49 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'seasonal-baby-clothing-guide',
+    title: 'Seasonal Baby Clothing: What You Actually Need for Summer vs. Winter',
+    subtitle: 'TOG ratings, layering rules, and the one winter habit that actually undoes your car seat\'s safety.',
+    description: 'A season-by-season guide to dressing a baby for sleep and outings, including TOG ratings by room temperature and why bulky winter coats don\'t belong in a car seat harness.',
+    date: 'July 2026',
+    lastmod: '2026-07-24',
+    readTime: '6 min',
+    tags: ['Clothing', 'Planning'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from NHTSA car seat safety guidance and standard TOG rating charts used across major sleep sack brands. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Dressing a baby for the actual season sounds simple until you\'re standing in a nursery at 2am trying to decide whether one more layer helps or overheats them, or wrestling a snowsuit under a car seat harness that suddenly won\'t click. This is less about buying more clothes and more about dressing for the room you\'re actually in.',
+      },
+      {
+        type: 'h2',
+        heading: 'Sleep: dress for room temperature, not the weather outside',
+        body: 'Room temperature, not the forecast, should decide how a baby is dressed for sleep. Sleep sack TOG ratings (a measure of warmth — higher number is warmer) are built around this.',
+      },
+      {
+        type: 'table',
+        cols: ['Room temperature', 'TOG rating', 'Under the sack'],
+        rows: [
+          ['75°F and up', '0.5 TOG', 'Diaper or sleeveless bodysuit'],
+          ['69–74°F', '1.0 TOG', 'Short-sleeve bodysuit or lightweight romper'],
+          ['61–68°F', '2.5 TOG', 'Long-sleeve bodysuit or romper'],
+          ['60°F and under', '3.5 TOG', 'Long-sleeve layers underneath'],
+        ],
+      },
+      {
+        type: 'note',
+        body: 'If the room falls between two ranges, pick the lower TOG and add a thin layer if needed. Overheating is a known risk factor in sleep-related infant deaths, so it\'s safer to run slightly cool than slightly warm. A simple check: feel the back of the neck or chest — it should be warm, not hot or sweaty. Hands and feet run cooler than core temperature and aren\'t a reliable gauge.',
+      },
+      {
+        type: 'h2',
+        heading: 'Summer',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Breathable fabrics (cotton, muslin) over synthetic blends, especially for sleepwear.',
+          'A wide-brim sun hat and lightweight long sleeves for direct sun exposure, rather than sunscreen alone, which most guidance doesn\'t recommend over large areas of skin for infants under 6 months.',
+          'Skip the summer instinct to underdress for sleep — even in a warm room, babies still need a sleep sack per the TOG chart, not just a diaper and nothing else.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Winter',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Layer with thin, breathable pieces rather than one bulky item, both for sleep and for dressing in general.',
+          'For the car seat specifically: no coat or bulky layers under the harness. A compressed coat leaves the harness loose in a crash even if it looked snug going in.',
+          'Instead, dress baby in thin layers, buckle the harness snugly, then add a coat backward over the harness or a blanket over the top once they\'re strapped in.',
+          'Test harness tightness with the pinch test — if you can pinch a fold of webbing at the shoulder, it\'s too loose.',
+        ],
+      },
+      {
+        type: 'p',
+        body: 'Our guide on how to install a car seat correctly covers harness and installation basics in more depth, and our guide on how much a newborn actually needs has clothing quantities by category if you\'re still stocking up.',
+      },
+      {
+        type: 'products',
+        items: [
+          { emoji: '🌡️', name: 'Digital Room Thermometer', note: 'The TOG chart only works if you know the actual room temperature, not a guess', url: 'https://www.amazon.com/s?k=digital+room+thermometer+nursery&tag=sprigloop-20' },
+          { emoji: '🧥', name: 'Car Seat Poncho (No-Coat Alternative)', note: 'Wraps over the harness instead of going underneath it, keeping the fit safe', url: 'https://www.amazon.com/s?k=car+seat+poncho+no+coat+alternative&tag=sprigloop-20' },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'NHTSA — Keep Your Little Ones Warm and Safe in Their Car Seats', url: 'https://www.nhtsa.gov/keep-your-little-ones-warm-and-safe-their-car-seats' },
+          { label: 'HALO Sleep — TOG Chart & Rating: What Is a TOG Value, Exactly?', url: 'https://www.halosleep.com/blogs/halo/tog-chart' },
+          { label: 'ergoPouch — TOG Rating Guide & Temperature Chart', url: 'https://www.ergopouch.com/pages/what-to-wear-guide' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 50 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'signs-baby-clothes-dont-fit',
+    title: 'How to Tell If Baby Clothes Still Fit (Signs It\'s Time to Size Up)',
+    subtitle: 'The tells that show up before your baby actually looks like they\'ve outgrown something.',
+    description: 'A practical checklist of the physical signs that baby clothing no longer fits, since sizing labels are inconsistent across brands and growth doesn\'t happen on a predictable schedule.',
+    date: 'July 2026',
+    lastmod: '2026-07-24',
+    readTime: '5 min',
+    tags: ['Clothing', 'How To'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from CDC growth chart guidance and general baby clothing sizing conventions. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Baby clothing sizes are only loosely standardized. A 6-9 month label from one brand can fit like a 3-6 month label from another, and growth spurts don\'t check a calendar first. Rather than tracking the size printed on the tag, these are the physical signs that tell you it\'s actually time to move up, before something is so tight it\'s uncomfortable.',
+      },
+      {
+        type: 'h2',
+        heading: 'Sizing labels are a starting point, not a rule',
+        body: 'Sizes are typically based on weight and height ranges rather than age, and manufacturers set those ranges independently, which is why the same size label fits differently across brands. Your baby\'s growth percentile, tracked at pediatrician visits against CDC growth charts, is a better thing to watch than the number on the tag.',
+      },
+      {
+        type: 'h2',
+        heading: 'Signs it\'s time to size up',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Snaps or zippers strain to close, or leave visible red marks or indentations on the skin afterward.',
+          'Wrists or ankles are noticeably exposed on sleepers or long-sleeve items that used to cover them.',
+          'Footie pajamas develop tight seams across the toes, or your baby seems to be curling their toes to fit.',
+          'The waistband of pants or the diaper area feels tight enough to leave a mark, rather than sitting comfortably.',
+          'Your baby seems more resistant or fussy specifically during dressing, when nothing else about their mood has changed.',
+          'You\'re doing more laundry than usual because the same few items are the only ones that still fit.',
+        ],
+      },
+      {
+        type: 'note',
+        body: 'A little room to grow is fine, and often intentional — footie pajamas especially are designed with extra length. The signs above describe clothes that are actively tight, not clothes that simply have room left in them.',
+      },
+      {
+        type: 'h2',
+        heading: 'What to do once you notice',
+        body: 'Pull anything showing these signs out of daily rotation right away rather than waiting for laundry day, and move it to wherever you\'re storing the next size, or set it aside if you\'re planning to pass it along.',
+      },
+      {
+        type: 'p',
+        body: 'Our guide on organizing baby clothes by size and our guide on how to store baby clothes by size both cover systems for keeping the next size ready to go instead of scrambling for it.',
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'CDC — Growth Charts', url: 'https://www.cdc.gov/growthcharts/index.htm' },
+          { label: 'Pehr — How To Organize Baby Clothes: 15 Best Methods & Tips', url: 'https://pehr.com/blogs/seed/how-to-organize-baby-clothes' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 51 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'daycare-prep-what-to-pack-and-label',
+    title: 'Daycare Prep: What to Pack and Label',
+    subtitle: 'The checklist for starting daycare or a new sitter, plus the safe-sleep rules that surprise a lot of first-time parents.',
+    description: 'A packing and labeling checklist for starting daycare, including what most centers require, how to handle the transition, and the crib safety standards licensed infant rooms follow.',
+    date: 'July 2026',
+    lastmod: '2026-07-24',
+    readTime: '6 min',
+    tags: ['Planning', 'Checklist'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from CDC and Administration for Children and Families childcare safety guidance and HealthyChildren.org recommendations. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Starting daycare comes with its own packing list, most of it unfamiliar the first time around, plus a set of safety rules for infant rooms that catch a lot of parents off guard, especially around what\'s allowed in a crib. Here\'s what to actually pack, how to label it so it survives daycare\'s laundry rotation, and what a licensed infant room is required to do differently than home.',
+      },
+      {
+        type: 'h2',
+        heading: 'What to pack',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'A full change of clothes (2-3 sets), labeled and in a designated bag — most centers require this from day one and ask you to top it off as needed.',
+          'Diapers and wipes for the week, or per the center\'s specific supply policy.',
+          'Bottles and formula or breast milk, labeled with your baby\'s name and the date, per the center\'s storage and labeling rules.',
+          'A sleep sack or wearable blanket if the center uses cribs for infants — most licensed infant rooms won\'t allow loose blankets regardless of what you use at home.',
+          'A comfort item, if allowed. Some infant rooms restrict soft items in cribs specifically, even a lovey, so check the center\'s policy before assuming it\'s fine.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Labeling that actually survives',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Permanent marker or iron-on labels directly on clothing tags — stick-on labels tend to fall off in a shared daycare laundry.',
+          'Label bottles and containers with name and date, not just name, since centers commonly discard anything without a clear date for food safety reasons.',
+          'A one-page laminated card in the diaper bag with feeding schedule, allergies, and emergency contacts saves a lot of first-week phone calls.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Why infant room cribs look different than yours',
+        body: 'Licensed childcare programs generally follow the same evidence-based safe sleep rules the AAP recommends at home: a firm, flat surface, a fitted sheet only, nothing else in the crib, and back-sleeping for every nap. This is why a center may decline a blanket, crib bumper, or positioner you\'re used to using at home — it\'s not a judgment on your setup, it\'s a licensing requirement.',
+      },
+      {
+        type: 'note',
+        body: 'If you\'re prepping for daycare and also still setting up sleep at home, our guide on setting up a safe sleep space for a newborn covers the same standards for your own nursery.',
+      },
+      {
+        type: 'h2',
+        heading: 'Before the first day',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Ask directly about the center\'s illness policy — most exclude a child with a fever above a set threshold, and knowing the number in advance avoids a surprised pickup call.',
+          'Do a short trial drop-off if the center allows it, even an hour, before the first full day.',
+          'Confirm what the center supplies (diaper cream, sunscreen with a permission form) versus what you need to bring.',
+        ],
+      },
+      {
+        type: 'products',
+        items: [
+          { emoji: '🏷️', name: 'Waterproof Daycare Labels', note: 'Survives shared daycare laundry better than stick-on labels', url: 'https://www.amazon.com/s?k=waterproof+daycare+labels+baby+clothes&tag=sprigloop-20' },
+          { emoji: '🎒', name: 'Baby Diaper Bag Backpack', note: 'Worth having a dedicated daycare bag separate from your everyday one', url: 'https://www.amazon.com/s?k=baby+diaper+bag+backpack+waterproof&tag=sprigloop-20' },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'CDC — Providing Care for Babies to Sleep Safely', url: 'https://www.cdc.gov/sudden-infant-death/sleep-safely/index.html' },
+          { label: 'Child Care Technical Assistance Network — Safe Sleep Information for Child Care Providers', url: 'https://childcareta.acf.hhs.gov/safe-sleep-information-child-care-providers' },
+          { label: 'HealthyChildren.org (AAP) — Choosing a Child Care Center', url: 'https://www.healthychildren.org/English/family-life/work-and-child-care/Pages/choosing-a-child-care-center.aspx' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 52 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'starting-solids-foods-to-avoid-choking-hazards',
+    title: 'Starting Solids: Foods to Avoid and Choking Hazards by Age',
+    subtitle: 'What the CDC and AAP actually say to skip, cut differently, or introduce early on purpose.',
+    description: 'A safety-focused guide to starting solids: which foods to avoid entirely before age 1, how to cut common choking hazards safely, and why current guidance recommends introducing allergens earlier, not later.',
+    date: 'July 2026',
+    lastmod: '2026-07-24',
+    readTime: '6 min',
+    tags: ['Feeding', 'Safety'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from CDC infant nutrition guidance, AAP food allergy guidelines, and HealthyChildren.org choking prevention resources. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Starting solids comes with two separate categories of advice that get mixed together a lot: foods that are unsafe because of choking risk, and foods that used to be delayed out of allergy caution but are now actively recommended earlier. Here\'s both, kept separate, with what changed and why.',
+      },
+      {
+        type: 'h2',
+        heading: 'Foods to avoid entirely before 12 months',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Honey, in any form, including baked into foods. Honey can carry Clostridium botulinum spores that cause infant botulism, and cooking doesn\'t destroy them — there\'s no safe type, raw, pasteurized, or otherwise.',
+          'Cow\'s milk as a drink (not mixed into food) before 12 months — it doesn\'t provide the right nutrient balance for infants and can strain young kidneys.',
+          'Unpasteurized juices, milk, or cheeses.',
+          'Added salt and added sugar — a baby\'s kidneys and taste preferences are both still developing.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Choking hazards and how to cut them safely',
+        body: 'Children under 4 are still developing the chewing and swallowing coordination to handle certain shapes and textures safely, regardless of how many teeth they have.',
+      },
+      {
+        type: 'table',
+        cols: ['Food', 'The risk', 'How to serve it safely'],
+        rows: [
+          ['Grapes', 'Whole grapes are close to airway-sized and slippery', 'Quartered lengthwise, not just halved'],
+          ['Hot dogs / sausages', 'Tube shape and texture can fully plug an airway', 'Cut lengthwise first, then into small pieces — never coin-sliced'],
+          ['Nuts and seeds', 'Hard, small, and easy to inhale', 'Whole nuts avoided; nut butters thinned and spread instead'],
+          ['Popcorn', 'Hard, irregular shape', 'Avoided entirely until well past toddlerhood'],
+          ['Raw hard vegetables and fruit (carrots, apples)', 'Hard chunks are difficult to gum down', 'Steamed soft or grated finely'],
+          ['Chunks of meat or cheese', 'Can be swallowed before fully chewed', 'Cut into pieces no larger than about a half-inch'],
+        ],
+      },
+      {
+        type: 'note',
+        body: 'The CDC recommends cutting food into pieces about a quarter-inch or smaller for infants, and about a half-inch for toddlers, and always supervising seated meals. Never let a baby or toddler eat in a moving car seat or stroller without someone watching.',
+      },
+      {
+        type: 'h2',
+        heading: 'Allergens: introduce early, on purpose',
+        body: 'Guidance has changed meaningfully here. Older advice recommended delaying common allergens; current AAP and NIAID-backed guidelines recommend introducing them early, around 4 to 6 months, specifically because early introduction has been shown to reduce the risk of developing a food allergy, particularly for peanut.',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Peanut (as a thinned puree or peanut-flavored puff, never whole nuts), egg, and other common allergens are now recommended as early introductions for most infants once solids have started.',
+          'For infants with severe eczema or an existing egg allergy, who are at higher risk of peanut allergy specifically, guidelines recommend checking with a pediatrician or allergist before introducing peanut, sometimes with an in-office test first.',
+          'Introduce one new allergen at a time, and watch for a reaction over the following days before adding another.',
+        ],
+      },
+      {
+        type: 'p',
+        body: 'If you\'re still working out feeding gear and quantities before starting solids, our guide on introducing solid foods covers the checklist, and our guides on breastfeeding supplies and bottle feeding a newborn cover what comes before solids.',
+      },
+      {
+        type: 'products',
+        items: [
+          { emoji: '🥣', name: 'Silicone Fresh Food Feeder', note: 'A safe way to offer soft or frozen foods without chunks that could be a choking risk', url: 'https://www.amazon.com/s?k=silicone+baby+fresh+food+feeder&tag=sprigloop-20' },
+          { emoji: '🥜', name: 'Stage 1 Peanut Butter Puffs', note: 'A common way pediatricians recommend introducing peanut without whole nuts', url: 'https://www.amazon.com/s?k=stage+1+peanut+butter+puffs+baby&tag=sprigloop-20' },
+        ],
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'CDC — Foods and Drinks to Avoid or Limit', url: 'https://www.cdc.gov/infant-toddler-nutrition/foods-and-drinks/foods-and-drinks-to-avoid-or-limit.html' },
+          { label: 'HealthyChildren.org (AAP) — Choking Prevention for Babies & Children', url: 'https://www.healthychildren.org/English/health-issues/injuries-emergencies/Pages/Choking-Prevention.aspx' },
+          { label: 'American Academy of Pediatrics — Guidelines for Early Food Introduction and Patterns of Food Allergy', url: 'https://publications.aap.org/pediatrics/article/156/5/e2024070516/204636/Guidelines-for-Early-Food-Introduction-and' },
+          { label: 'FoodAllergy.org — Peanut Early Introduction Guidelines', url: 'https://www.foodallergy.org/resources/peanut-early-introduction-guidelines' },
+        ],
+      },
+    ],
+  },
+
+  // ── Guide 53 ─────────────────────────────────────────────────────────────
+  {
+    slug: 'how-to-check-if-baby-gear-recalled',
+    title: 'How to Check if Baby Gear Has Been Recalled',
+    subtitle: 'A 5-minute habit that\'s prevented real harm, especially for secondhand and hand-me-down gear.',
+    description: 'How to search for baby product recalls before you use, buy, or pass along gear, including the categories with the worst recall history and how to get alerted automatically.',
+    date: 'July 2026',
+    lastmod: '2026-07-24',
+    readTime: '5 min',
+    tags: ['Gear', 'Safety'],
+    aiDisclosure: 'This article was researched and written with AI assistance, drawing from CPSC recall records and reporting on major infant product recalls. Sources are linked throughout.',
+    sections: [
+      {
+        type: 'lede',
+        body: 'Recalls happen more often in baby gear than in most categories, and hand-me-downs, secondhand finds, and gifts are exactly the items most likely to be years old and never checked. It\'s a five-minute habit, not a research project, and it matters most for the categories with the worst safety track record.',
+      },
+      {
+        type: 'h2',
+        heading: 'How to actually check',
+      },
+      {
+        type: 'bullets',
+        items: [
+          'Search cpsc.gov/Recalls directly by product name, brand, or category — the Consumer Product Safety Commission posts every recall here, filterable and searchable.',
+          'Sign up for CPSC email alerts. Most recalls post on Thursday mornings, and an alert is faster than remembering to check.',
+          'Register any new product with the manufacturer when you buy it — this is the only way a company can reach you directly if a recall happens later, rather than relying on you seeing the news.',
+          'For a product you\'re worried about but haven\'t seen an official recall for, SaferProducts.gov is where consumer incident reports get filed, worth a search before assuming silence means it\'s fine.',
+        ],
+      },
+      {
+        type: 'h2',
+        heading: 'Categories with the worst recall history',
+        body: 'A few product categories account for a disproportionate share of serious infant product recalls, worth being extra cautious with secondhand or older items in particular.',
+      },
+      {
+        type: 'table',
+        cols: ['Category', 'What happened'],
+        rows: [
+          ['Inclined infant sleepers', 'Fisher-Price\'s Rock \'n Play Sleeper was recalled in 2019 after more than 30 reported infant deaths, and re-recalled in 2023 after dozens more; a 2022 federal law subsequently banned the sale of inclined sleepers for infants outright.'],
+          ['Infant loungers', 'The Boppy Newborn Lounger was recalled in 2021 after 8 reported infant deaths from suffocation risk; two more deaths were reported afterward involving loungers still in use post-recall.'],
+          ['Drop-side cribs', 'Banned for manufacture and sale in the US since 2011 after multiple entrapment and suffocation deaths — any drop-side crib still in a family, especially secondhand, predates the ban and shouldn\'t be used.'],
+          ['Infant walkers', 'Frequently recalled for fall and entrapment hazards; the CPSC maintains an ongoing mandatory safety standard specifically because of how often walkers fail it.'],
+        ],
+      },
+      {
+        type: 'note',
+        body: 'Any of these products found secondhand, at a yard sale, or handed down should be checked against the recall list before use, not assumed safe just because it looks fine. A recalled product should never be resold, donated, or passed along — only disposed of according to the recall notice\'s instructions.',
+      },
+      {
+        type: 'p',
+        body: 'If you\'re evaluating whether a specific product is worth buying new versus secondhand at all, our guide on what\'s worth buying secondhand vs. new covers that decision, and our guide on certified vs. generic baby products covers the safety certifications worth checking for on anything new.',
+      },
+      {
+        type: 'sources',
+        items: [
+          { label: 'CPSC — Recalls & Product Safety Warnings', url: 'https://www.cpsc.gov/Recalls' },
+          { label: 'CPSC — Fisher-Price Recalls Rock \'n Play Sleepers Due to Reports of Deaths', url: 'https://www.cpsc.gov/Recalls/2019/Fisher-Price-Recalls-Rock-n-Play-Sleepers-Due-to-Reports-of-Deaths' },
+          { label: 'CPSC — CPSC and The Boppy Company Urge Consumers to Stop Using Recalled Newborn Loungers', url: 'https://www.cpsc.gov/Warnings/2023/CPSC-and-The-Boppy-Company-Urge-Consumers-to-Stop-Using-Recalled-Boppy-Newborn-Loungers-and-Urge-Online-Marketplaces-to-Stop-Selling-the-Recalled-Product-Two-Additional-Infant-Deaths-Reported-Shortly-After-2021-Recall' },
+          { label: 'NPR — Fisher-Price Re-Announces Recall of Rock \'n Play Sleeper Linked to Child Deaths', url: 'https://www.npr.org/2023/01/10/1148139282/fisher-price-rock-n-play-infant-deaths-recall-sleeper-kids2' },
+        ],
+      },
+    ],
+  },
 ]
 
 export function getGuide(slug) {
